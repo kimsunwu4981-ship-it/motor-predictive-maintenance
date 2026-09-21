@@ -1,0 +1,63 @@
+# colors.yaml — 컬러맵 정의 (RGB 0~1 선형)
+#
+# 모듈 A: 정상(원래 재질) → 주황 → 빨강 발광
+# 모듈 B: 과전류 빨강 / 정상 초록 / 저전류 파랑
+
+thermal:
+  # 색 보간 위치는 **부품별 임계값으로 정규화**한 값이다 (절대 온도가 아님).
+  #   pos 0.0 = 정상 상한(normal) 이하 → 원래 재질 유지
+  #   pos 0.5 = 주의(caution) 진입,  pos 0.8 = 경고(warning) 진입,  pos 1.0 = 위험 심화
+  # 로터는 90 °C 까지 정상이고 베어링은 70 °C 부터 주의이므로, 같은 80 °C 라도 색이 달라야 한다.
+  stops:
+    - { pos: 0.00, color: [0.55, 0.62, 0.65], blend: 0.00, emissive: [0.0, 0.0, 0.0], intensity: 0.0 }
+    - { pos: 0.35, color: [0.90, 0.62, 0.22], blend: 0.25, emissive: [0.9, 0.45, 0.10], intensity: 0.4 }
+    - { pos: 0.50, color: [0.95, 0.48, 0.12], blend: 0.55, emissive: [1.0, 0.38, 0.06], intensity: 1.5 }
+    - { pos: 0.80, color: [1.00, 0.18, 0.04], blend: 0.90, emissive: [1.0, 0.14, 0.03], intensity: 4.0 }
+    - { pos: 1.00, color: [1.00, 0.06, 0.02], blend: 1.00, emissive: [1.0, 0.06, 0.02], intensity: 8.0 }
+  # 정규화 구간 경계 (thresholds 의 normal/caution/warning 에 대응)
+  normalize:
+    normal_pos: 0.0
+    caution_pos: 0.5
+    warning_pos: 0.8
+    danger_span_C: 30.0        # 경고 초과 30 K 를 pos 1.0 으로 본다
+  pulse:
+    enabled: true
+    start_stage: warning        # 경고 단계부터 맥동
+    hz: 0.8                     # CLAUDE.md §5.2 "0.5~1 Hz"
+    depth: 0.35                 # 발광 강도 변동폭 비율
+
+electrical:
+  over_danger:   { color: [1.00, 0.08, 0.05], emissive: [1.0, 0.08, 0.05], intensity: 6.0 }
+  over_caution:  { color: [1.00, 0.45, 0.10], emissive: [1.0, 0.45, 0.10], intensity: 3.0 }
+  normal:        { color: [0.15, 0.95, 0.35], emissive: [0.12, 0.85, 0.30], intensity: 2.0 }
+  under_caution: { color: [0.25, 0.60, 1.00], emissive: [0.25, 0.60, 1.0],  intensity: 2.5 }
+  under_danger:  { color: [0.10, 0.35, 1.00], emissive: [0.10, 0.35, 1.0],  intensity: 4.0 }
+  short_loop:    { color: [1.00, 0.05, 0.05], emissive: [1.0, 0.05, 0.05],  intensity: 12.0, pulse_hz: 1.5 }
+
+# 상별 기본 식별색 (전류 경로 구분용, 상태색이 우선 적용됨)
+phases:
+  A: [0.95, 0.85, 0.20]
+  B: [0.20, 0.85, 0.95]
+  C: [0.85, 0.35, 0.95]
+
+# HUD 상태 등급 색
+status:
+  normal:  [0.15, 0.95, 0.35]
+  caution: [1.00, 0.75, 0.10]
+  warning: [1.00, 0.45, 0.10]
+  danger:  [1.00, 0.10, 0.05]
+
+# 부품별 기본 재질 (정상 온도에서 보이는 원래 색). Blender 렌더 씬의 재질을 승계.
+# key 는 prim_map.yaml 의 parts 키와 일치한다.
+base_materials:
+  housing_frame:  { color: [0.30, 0.40, 0.43], roughness: 0.50, metallic: 0.0 }   # 회청색 도장
+  endshield_de:   { color: [0.30, 0.40, 0.43], roughness: 0.50, metallic: 0.0 }
+  endshield_nde:  { color: [0.30, 0.40, 0.43], roughness: 0.50, metallic: 0.0 }
+  terminal_box:   { color: [0.30, 0.40, 0.43], roughness: 0.50, metallic: 0.0 }
+  fan_cover:      { color: [0.28, 0.37, 0.40], roughness: 0.60, metallic: 0.0 }
+  eyebolt:        { color: [0.30, 0.40, 0.43], roughness: 0.55, metallic: 0.3 }
+  bearing_de:     { color: [0.60, 0.60, 0.60], roughness: 0.30, metallic: 1.0 }   # 기계가공 강
+  bearing_nde:    { color: [0.60, 0.60, 0.60], roughness: 0.30, metallic: 1.0 }
+  shaft:          { color: [0.28, 0.24, 0.20], roughness: 0.45, metallic: 0.9 }   # 흑피 강
+  rotor:          { color: [0.30, 0.28, 0.26], roughness: 0.60, metallic: 0.8 }   # 로터 코어
+  fan:            { color: [0.55, 0.55, 0.55], roughness: 0.50, metallic: 0.9 }   # 알루미늄

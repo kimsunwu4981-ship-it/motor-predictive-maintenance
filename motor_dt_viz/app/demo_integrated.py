@@ -1,0 +1,564 @@
+# -*- coding: utf-8 -*-
+"""demo_integrated.py — Phase 4: 통합 모드 + 제어 패널 + 자동 재생 (원클릭 데모).
+
+모듈 A(발열 색상) + 모듈 B(전류 흐름)를 한 화면에서 구동한다.
+통합 모드에서는 모듈 B 의 상전류가 모듈 A 의 권선 동손(I²R) 입력이 된다
+  → ITSC 발생 → 과전류(빨간 흐름) → 수십 초 뒤 권선 과열 (CLAUDE.md §6.3 핵심 스토리)
+
+실행:
+  C:\\ISSACS~1\\python.bat motor_dt_viz\\app\\demo_integrated.py --gui
+  C:\\ISSACS~1\\python.bat motor_dt_viz\\app\\demo_integrated.py --gui --autoplay   # 즉시 자동 재생
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import math
+import os
+import sys
+import time
+import traceback
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, ROOT)
+LOG_DIR = os.path.join(ROOT, "logs")
+OUT_DIR = os.path.join(ROOT, "docs", "screenshots")
+os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(OUT_DIR, exist_ok=True)
+
+
+def _hook(t, v, tb):
+    with open(os.path.join(LOG_DIR, "demo_integrated_error.txt"), "w", encoding="utf-8") as f:
+        f.write("".join(traceback.format_exception(t, v, tb)))
+
+
+sys.excepthook = _hook
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--gui", action="store_true")
+ap.add_argument("--autoplay", action="store_true", help="기동 직후 자동 재생 시작")
+ap.add_argument("--mode", choices=("mechanical", "electrical", "integrated"),
+                default="integrated", help="시작 모드 (기계 전용 / 전기 전용 / 통합)")
+ap.add_argument("--max_s", type=float, default=0.0, help="지정 시간 후 종료 (0=무제한)")
+ap.add_argument("--profile", action="store_true", help="구간별 소요 시간을 측정해 로그에 남긴다")
+ap.add_argument("--low", action="store_true",
+                help="저사양 PC 프리셋 (해상도·입자 수·물리 서브스텝 절반)")
+ap.add_argument("--record", metavar="MP4",
+                help="ffmpeg 로 Isaac Sim 창을 녹화하고 영상↔로그 오프셋을 기록한다")
+ap.add_argument("--no_timecode", action="store_true",
+                help="HUD 타임코드를 숨긴다 (오프셋 확정 후 발표용 녹화에 쓴다)")
+ap.add_argument("--switch_seq", metavar="mode:sec,...",
+                help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
+args = ap.parse_args()
+
+from isaacsim import SimulationApp  # noqa: E402
+
+# 프로파일 실측: render 8.9 ms / physics 2.6 ms / 나머지 2.1 ms (RTX 4060 기준 68.9 fps).
+# 병목은 렌더링이므로 --low 는 해상도를 먼저 낮추고, 물리 서브스텝과 입자 수를 함께 줄인다.
+_W, _H = (1280, 720) if args.low else (1600, 900)
+PHYSICS_SUBSTEPS = 2 if args.low else 4
+PHYSICS_DT = 1.0 / (60 * PHYSICS_SUBSTEPS)         # 서브스텝을 줄여도 프레임당 총 1/60 s 는 유지
+PARTICLES_PER_PATH = 12 if args.low else None      # None = config 값 사용
+
+simulation_app = SimulationApp({"headless": not args.gui, "width": _W, "height": _H})
+import carb  # noqa: E402
+
+carb.settings.get_settings().set("/physics/cudaDevice", -1)
+
+import numpy as np  # noqa: E402
+from isaacsim.core.api import World  # noqa: E402
+from isaacsim.core.prims import SingleArticulation  # noqa: E402
+from isaacsim.core.utils.stage import get_current_stage, open_stage  # noqa: E402
+from isaacsim.core.utils.types import ArticulationAction  # noqa: E402
+from isaacsim.core.utils.viewports import set_camera_view  # noqa: E402
+from omni.physx import get_physx_simulation_interface  # noqa: E402
+from pxr import Gf, UsdGeom, UsdLux  # noqa: E402
+
+from engine.config_loader import load  # noqa: E402
+from engine.current_model import CurrentModel  # noqa: E402
+from engine.fault_injector import FaultInjector  # noqa: E402
+from engine.scenario_player import ScenarioPlayer  # noqa: E402
+from engine.thermal_model import ThermalModel  # noqa: E402
+from viz.colormap import ElectricalColormap  # noqa: E402
+from viz.current_particles import CurrentParticles  # noqa: E402
+from viz.current_paths import CurrentPathBuilder  # noqa: E402
+from viz.material_driver import MaterialDriver  # noqa: E402
+
+# ------------------------------------------------------------------ 스테이지
+open_stage(os.path.join(ROOT, "assets", "motor_physics.usd"))
+world = World(stage_units_in_meters=1.0, physics_dt=1 / 240, rendering_dt=1 / 60,
+              physics_prim_path="/physicsScene")
+stage = get_current_stage()
+
+dome = UsdLux.DomeLight.Define(stage, "/World/DomeLight")
+dome.CreateIntensityAttr(380.0)
+dome.CreateColorAttr(Gf.Vec3f(0.11, 0.13, 0.17))
+keyl = UsdLux.DistantLight.Define(stage, "/World/KeyLight")
+keyl.CreateIntensityAttr(1600.0)
+UsdGeom.Xformable(keyl).AddRotateXYZOp().Set(Gf.Vec3f(-40, 25, 0))
+filll = UsdLux.DistantLight.Define(stage, "/World/FillLight")
+filll.CreateIntensityAttr(650.0)
+UsdGeom.Xformable(filll).AddRotateXYZOp().Set(Gf.Vec3f(-55, -130, 0))
+for L in (dome, keyl, filll):
+    UsdLux.ShadowAPI.Apply(L.GetPrim()).CreateShadowEnableAttr(False)
+
+# 모터가 화면을 채워야 결함 부위(베어링 발광·권선 색)를 심사위원이 알아본다.
+# 케이블은 화면 왼쪽 위로 뻗어나가며 일부만 보이면 충분하다.
+CAM_WIDE = ([-1.15, -1.55, 0.95], [0.15, -0.05, 0.22])    # 모터 중심 + 케이블 일부
+CAM_CLOSE = ([-0.62, -0.86, 0.42], [0.30, 0.0, 0.02])     # 모터 클로즈업(베어링·단락루프)
+set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
+world.reset()
+
+# ------------------------------------------------------------------ 시각화 구성
+driver = MaterialDriver(stage, prefer_omnipbr=True,
+                        update_hz=float(load("electrical")["rms"]["update_hz"]))
+driver.setup()
+builder = CurrentPathBuilder(stage)
+builder.build_all()
+particles = CurrentParticles(stage, builder, per_path=PARTICLES_PER_PATH)
+tracks = builder.names("cable") + builder.names("winding") + ["short_loop"]
+particles.attach(tracks)
+ecmap = ElectricalColormap()
+
+# ------------------------------------------------------------------ 엔진
+tm = ThermalModel()
+cm = CurrentModel()
+injector = FaultInjector()
+player = ScenarioPlayer.for_mode(args.mode)
+THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
+NODE_LABELS = {n.key: n.label for n in tm.nodes}
+HUD_TEMP_KEYS = ["bearing_de", "winding", "rotor", "frame"]
+HUD_TEMP_EN = {"bearing_de": "DE bearing", "winding": "Stator winding",
+               "rotor": "Rotor", "frame": "Housing"}
+
+i_line = cm.motor.rated_current("rated_line_A")
+i_phase = cm.motor.rated_current("rated_phase_A")
+RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"},
+         "short_loop": i_phase}
+
+# ------------------------------------------------------------------ 회전 구동
+art = SingleArticulation(prim_path="/World/Motor", name="motor")
+art.initialize()
+ctrl = art.get_articulation_controller()
+av = art._articulation_view
+ctrl.set_gains(kps=np.array([0.0]), kds=np.array([0.0]))
+av.set_max_efforts(np.array([[1.0e4]]))
+av.set_joint_velocities(np.array([[0.0]]))
+
+mc = load("motor")
+V = lambda d: d["value"] if isinstance(d, dict) else d  # noqa: E731
+w_sync = float(V(mc["rating"]["sync_rpm"])) * 2 * math.pi / 60
+s_rated = float(V(mc["rating"]["slip"]))
+T_rated = float(V(mc["rating"]["torque_Nm"]))
+T_max = T_rated * 2.5
+sim = get_physx_simulation_interface()
+
+# ------------------------------------------------------------------ UI
+from ui.control_panel import ControlPanel, DemoState, normalize_mode  # noqa: E402
+
+state = DemoState()
+state.mode = args.mode
+panel = hud = None
+if args.gui:
+    try:
+        panel = ControlPanel(state)
+    except Exception as e:
+        print("[demo] 제어 패널 생성 실패:", e, flush=True)
+    try:
+        from viz.hud import MotorHUD
+        hud = MotorHUD()
+        hud.set_mode(args.mode)
+    except Exception as e:
+        print("[demo] HUD 생성 실패:", e, flush=True)
+
+CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
+           "itsc_12turn": "Inter-turn short (12 turns)", "overload": "Overload 135%",
+           "single_phasing": "Single phasing (phase A lost)", "no_load": "No load",
+           "voltage_unbalance": "Supply voltage unbalance"}
+STEP_EN_BY_MODE = {
+    "integrated": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
+                   "itsc_4turn": "3. Inter-turn short (early, 4T)",
+                   "itsc_12turn": "4. Inter-turn short (progressing, 12T)",
+                   "conclusion": "5. Conclusion"},
+    "mechanical": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
+                   "misalignment": "3. Shaft misalignment", "fan_failure": "4. Cooling fan failure",
+                   "brake_drag": "5. Brake drag", "overload": "6. Overload (thermal)",
+                   "cooldown": "7. Faults cleared - cooling down"},
+    "electrical": {"healthy": "1. Healthy (balanced)", "itsc_4turn": "2. Inter-turn short (4T)",
+                   "itsc_12turn": "3. Inter-turn short (12T)", "overload": "4. Overload",
+                   "voltage_unbalance": "5. Supply voltage unbalance",
+                   "single_phasing": "6. Single phasing (phase A lost)", "no_load": "7. No load"},
+}
+
+# ------------------------------------------------------------------ 로깅
+csv_path = os.path.join(LOG_DIR, f"demo_{time.strftime('%Y%m%d_%H%M%S')}.csv")
+csv_file = open(csv_path, "w", newline="", encoding="utf-8")
+writer = csv.writer(csv_file)
+writer.writerow(["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
+                 *[f"T_{k}" for k in tm.node_keys], "Ia_rms", "Ib_rms", "Ic_rms",
+                 "i2_over_i1", "vibration_mms", "iso_zone", "fps"])
+
+fs_a = cm.f0 * 256
+t_win = np.arange(0, 4 / cm.f0, 1 / fs_a)
+
+# ------------------------------------------------------------------ 프로파일
+# --profile 일 때만 구간 시간을 누적한다. 평소에는 _prof 가 아무것도 하지 않는다.
+_prof_sum: dict[str, float] = {}
+_prof_n = 0
+
+
+class _Prof:
+    """with _prof("physics"): ... 로 구간 시간을 ms 단위로 누적한다."""
+
+    __slots__ = ("key", "t0")
+
+    def __init__(self, key: str):
+        self.key = key
+
+    def __enter__(self):
+        self.t0 = time.perf_counter()
+        return self
+
+    def __exit__(self, *exc):
+        _prof_sum[self.key] = _prof_sum.get(self.key, 0.0) + (time.perf_counter() - self.t0) * 1e3
+        return False
+
+
+class _NoProf:
+    __slots__ = ()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+_NOPROF = _NoProf()
+_prof = _Prof if args.profile else (lambda key: _NOPROF)
+
+# t_wall 은 프레임 수 × 1/60 이라 렌더가 60 fps 보다 빠르면 실제 시간보다 빨리 흐른다.
+# scenario.yaml 의 duration_s 는 '실제 발표 시간'이므로 시나리오와 열 적분은
+# 벽시계 dt 로 진행해야 한다. 영상↔로그 동기화도 실제 시간축이라야 성립한다.
+t_wall = 0.0          # 렌더 프레임 기준 (기존 CSV 호환용)
+t_real = 0.0          # 실제 경과 시간 — 시나리오·열·영상 동기화의 기준
+_t0 = time.time()
+_prev_wall = _t0
+_fps_hist: list[float] = []
+status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
+
+# ------------------------------------------------------------------ 녹화
+# 영상과 로그 CSV 의 시간축을 맞추는 것이 대시보드 동기 재생의 전제다.
+#   video_offset_s = 시나리오 t=0 이 영상에서 몇 초 지점인가
+# ffmpeg 기동 시각과 시나리오 시작 시각의 차이로 자동 계산하고,
+# HUD 타임코드로 영상에서 직접 눈으로 검증할 수 있게 한다.
+recorder = None
+rec_meta: dict = {}
+RECORD_PREROLL_S = 2.0          # 녹화 시작 후 시나리오를 시작하기까지의 여유
+WINDOW_TITLE = "Isaac Sim Python 4.5.0"
+
+
+def _focus_window(title: str):
+    """Isaac Sim 창을 앞으로 가져오고 화면 좌표를 돌려준다.
+
+    반환: (x, y, w, h) 또는 None
+    """
+    import ctypes
+    from ctypes import wintypes
+    u = ctypes.windll.user32
+    hwnd = u.FindWindowW(None, title)
+    if not hwnd:
+        return None
+    u.ShowWindow(hwnd, 9)          # SW_RESTORE — 최소화 상태면 되돌린다
+    u.SetForegroundWindow(hwnd)
+    u.BringWindowToTop(hwnd)
+    time.sleep(0.5)
+    r = wintypes.RECT()
+    if not u.GetWindowRect(hwnd, ctypes.byref(r)):
+        return None
+    # libx264 는 짝수 해상도를 요구한다
+    w = (r.right - r.left) & ~1
+    h = (r.bottom - r.top) & ~1
+    return max(r.left, 0), max(r.top, 0), w, h
+
+
+def _start_recording(path: str, rect):
+    """데스크톱을 캡처해 창 영역만 잘라낸다.
+
+    gdigrab 의 `title=` 캡처는 Isaac Sim 에서 쓸 수 없다. Vulkan 으로 직접
+    그리기 때문에 창 DC 가 갱신되지 않아, 녹화 내내 기동 직후의 첫 화면만
+    반복해서 찍힌다(실측: 62초 지점에도 시나리오가 시작되지 않은 화면).
+    데스크톱 DC 는 합성 결과라서 정상적으로 갱신된다.
+    """
+    import subprocess
+    os.makedirs(os.path.dirname(os.path.abspath(path)) or ".", exist_ok=True)
+    cmd = ["ffmpeg", "-y", "-f", "gdigrab", "-framerate", "30"]
+    if rect:
+        x, y, w, h = rect
+        cmd += ["-offset_x", str(x), "-offset_y", str(y), "-video_size", f"{w}x{h}"]
+    cmd += ["-i", "desktop",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+            "-pix_fmt", "yuv420p", path]
+    p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return p, time.time()
+
+
+def _stop_recording(p) -> None:
+    """ffmpeg 에 q 를 보내 moov atom 까지 정상적으로 쓰게 한다 (kill 하면 파일이 깨진다)."""
+    try:
+        p.stdin.write(b"q")
+        p.stdin.flush()
+        p.wait(timeout=20)
+    except Exception:
+        p.kill()
+
+
+if args.record:
+    # 창이 뜬 직후에는 렌더가 아직 안정되지 않아 몇 프레임 돌려준다
+    for _ in range(30):
+        world.render()
+    _rect = _focus_window(WINDOW_TITLE)
+    recorder, _rec_t0 = _start_recording(args.record, _rect)
+    rec_meta = {"video": os.path.abspath(args.record), "fps": 30,
+                "ffmpeg_start_wall": _rec_t0, "window_rect": _rect}
+    # 프리롤 동안에도 계속 렌더한다. time.sleep 으로 멈추면 창이 응답 없음 상태가 되어
+    # gdigrab 가 낡은 화면을 캡처한다.
+    _preroll_end = time.time() + RECORD_PREROLL_S
+    while time.time() < _preroll_end:
+        world.render()
+
+# 모드 전환 잔상 검증: "모드:시각" 목록을 시간 순으로 적용한다
+switch_plan = []
+if args.switch_seq:
+    for item in args.switch_seq.split(","):
+        m, _, sec = item.partition(":")
+        switch_plan.append((float(sec), normalize_mode(m.strip())))
+    switch_plan.sort()
+
+if args.autoplay:
+    state.request_play = True
+
+while simulation_app.is_running():
+    # ---------- 실제 경과 시간 ----------
+    _now = time.time()
+    dt_real = _now - _prev_wall
+    _prev_wall = _now
+    dt_real = min(max(dt_real, 1e-4), 0.1)     # 첫 프레임·끊김 구간의 스파이크를 막는다
+    t_real += dt_real
+
+    # ---------- 예약된 모드 전환 (검증용) ----------
+    while switch_plan and t_real >= switch_plan[0][0]:
+        _, _m = switch_plan.pop(0)
+        state.mode = _m
+        state.request_mode_reset = True
+        if panel:
+            panel._refresh_mode_buttons()
+        print(f"[demo] 모드 전환 → {_m} (t_real={t_real:.1f}s)", flush=True)
+
+    # ---------- 모드 전환: 이전 모드의 잔상을 모두 지운다 ----------
+    if state.request_mode_reset:
+        state.mode = normalize_mode(state.mode)
+        player = ScenarioPlayer.for_mode(state.mode)
+        tm.reset()
+        driver.reset_to_base()                 # 발열 색·발광 제거
+        driver.set_opacity(["endshield_de"], 1.0)
+        driver.set_opacity(["housing_frame"], 1.0)
+        particles.set_visible(False)           # 전류 입자 제거
+        for _nm in tracks:                     # 전류 경로 커브 제거
+            builder.set_visible(_nm, False)
+        if hud:
+            hud.set_mode(state.mode)
+        state.playing_scenario = False
+        state.request_mode_reset = False
+        state.dirty = True
+        t_real = 0.0
+
+    # ---------- 패널 요청 처리 ----------
+    if state.request_reset:
+        tm.reset()
+        player.reset()
+        state.playing_scenario = False
+        state.request_reset = False
+        t_real = 0.0
+    if state.request_play:
+        tm.reset()
+        player.start()
+        state.playing_scenario = True
+        state.request_play = False
+        t_real = 0.0                 # 시나리오 t=0 을 실제 시간축의 원점으로 삼는다
+        if recorder is not None and "scenario_start_wall" not in rec_meta:
+            # 시나리오 t=0 의 벽시계 시각. 영상 오프셋의 기준점이다.
+            rec_meta["scenario_start_wall"] = time.time()
+            rec_meta["video_offset_s"] = round(
+                rec_meta["scenario_start_wall"] - rec_meta["ffmpeg_start_wall"], 3)
+
+    # ---------- 시나리오 재생이면 상태를 시나리오가 결정 ----------
+    frame = None
+    if state.playing_scenario:
+        frame = player.advance(dt_real)
+        state.mode = frame.mode
+        state.load = frame.load
+        state.time_scale = frame.time_scale
+        state.electrical_case = frame.electrical_case
+        state.thermal_faults = list(frame.thermal_faults)
+        if frame.finished:
+            state.playing_scenario = False
+            if panel:
+                panel.set_status("Scenario finished")
+        if panel:
+            panel.sync_from_state()
+
+    mode = state.mode
+    case = state.electrical_case
+    faults = list(state.thermal_faults)
+
+    # ---------- 전류 ----------
+    with _prof("current"):
+        t_slow = t_real * state.slowmo
+        st_line = cm.analyze(t_win, cm.waveform(t_win + t_slow, case, "rated_line_A"), case, "rated_line_A")
+        st_phase = cm.analyze(t_win, cm.waveform(t_win + t_slow, case, "rated_phase_A"), case, "rated_phase_A")
+        winding_pu = cm.winding_current_pu(st_phase) if mode in ("electrical", "integrated") else None
+
+    # ---------- 열 (통합 모드에서만 전류 연동) ----------
+    with _prof("thermal"):
+        if mode in ("mechanical", "integrated"):
+            th = tm.step(dt_sim_s=dt_real * state.time_scale, load=state.load, faults=faults,
+                         winding_current_pu=winding_pu if mode == "integrated" else None,
+                         use_duty_cycle=False)
+        else:
+            th = tm.step(dt_sim_s=0.0, load=state.load, faults=[], use_duty_cycle=False)
+
+    # ---------- 회전 ----------
+    with _prof("physics"):
+        for _ in range(PHYSICS_SUBSTEPS):
+            w = float(art.get_joint_velocities()[0])
+            s = (w_sync - w) / w_sync
+            T_m = max(-T_max, min(T_rated * s / s_rated, T_max))
+            T_l = -T_rated * state.load * (1.0 if w > 1.0 else max(w, 0.0))
+            ctrl.apply_action(ArticulationAction(joint_efforts=np.array([T_m + T_l - 0.015 * w])))
+            sim.simulate(PHYSICS_DT, t_wall)
+            sim.fetch_results()
+
+    # ---------- 시각: 부품 색 ----------
+    with _prof("materials"):
+        if mode in ("mechanical", "integrated"):
+            driver.update(th.temperature_C, th.stage, t_real, thresholds=THRESHOLDS)
+        # 결함 부위 하우징 투시 (베어링이 경고 이상일 때) 또는 단락루프 강조
+        xray_on = state.highlight_short_loop or (
+            mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
+        driver.set_opacity(["endshield_de"], 0.40 if xray_on else 1.0)
+        if state.highlight_short_loop:
+            driver.housing_transparent(True, opacity=0.25)
+        elif mode in ("electrical", "integrated"):
+            driver.set_opacity(["housing_frame"], 0.68)
+        else:
+            driver.set_opacity(["housing_frame"], 1.0)
+
+    # ---------- 시각: 전류 경로·입자 ----------
+    with _prof("paths"):
+        show_current = mode in ("electrical", "integrated")
+        particles.set_visible(show_current)
+        loop = cm.short_loop(case)
+        cur, stt = {}, {}
+        inst_l = cm.sample(t_slow, case, "rated_line_A")
+        inst_p = cm.sample(t_slow, case, "rated_phase_A")
+        for i, ph in enumerate("ABC"):
+            cur[f"cable_{ph}"], stt[f"cable_{ph}"] = inst_l[i], st_line.status[i]
+            cur[f"winding_{ph}"], stt[f"winding_{ph}"] = inst_p[i], st_phase.status[i]
+        if loop:
+            cur["short_loop"] = float(loop["current_pu"]) * i_phase * math.sin(2 * math.pi * cm.f0 * t_slow)
+            stt["short_loop"] = "short_loop"
+        else:
+            cur["short_loop"], stt["short_loop"] = 0.0, "normal"
+        for name in tracks:
+            builder.set_visible(name, show_current and (name != "short_loop" or loop is not None))
+            if show_current:
+                builder.set_color(name, ecmap.sample(stt[name], t_real)["diffuse"])
+    with _prof("particles"):
+        if show_current:
+            particles.update(dt_real, cur, stt, t_real, RATED)
+
+    # ---------- 카메라 ----------
+    if state.highlight_short_loop:
+        set_camera_view(eye=CAM_CLOSE[0], target=CAM_CLOSE[1])
+    elif state.dirty:
+        set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
+    state.dirty = False
+
+    # ---------- HUD ----------
+    vib = th.vibration_mms
+    zone = injector.iso_zone(vib)
+    with _prof("hud"):
+        if hud:
+            if mode in ("electrical", "integrated"):
+                hud.update_current(st_line)
+            if mode in ("mechanical", "integrated"):
+                hud.update_thermal({k: th.temperature_C[k] for k in HUD_TEMP_KEYS},
+                                   {k: th.stage[k] for k in HUD_TEMP_KEYS},
+                                   HUD_TEMP_EN, HUD_TEMP_KEYS)
+                hud.update_vibration(vib, zone)
+            _steps_en = STEP_EN_BY_MODE.get(mode, {})
+            title = _steps_en.get(frame.step_id, frame.label) if frame else CASE_EN.get(case, case)
+            sub = (frame.subtitle_en if frame else
+                   f"Mode: {mode} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
+            hud.update_scenario(title, sub if not frame else f"[{CASE_EN.get(case, case)}]  {sub}",
+                                source=frame.source_en if frame else "")
+            # 타임코드는 CSV 의 t_s 와 같은 값이다 (영상에서 오프셋을 눈으로 검증할 때 쓴다)
+            hud.update_timecode(None if args.no_timecode else t_real)
+
+    with _prof("render"):
+        world.render()
+    _prof_n += 1
+    t_wall += 1 / 60
+
+    # ---------- 로깅 ----------
+    if int(t_real * 60) % 15 == 0:
+        wall = time.time() - _t0
+        fps = t_wall / wall * 60.0 if wall > 0.5 else 0.0
+        _fps_hist.append(fps)
+        rpm = float(art.get_joint_velocities()[0]) * 60 / (2 * math.pi)
+        writer.writerow([round(t_wall, 2), round(t_real, 3), mode, frame.step_id if frame else "manual", case,
+                         "|".join(faults), round(state.load, 2), round(rpm, 1),
+                         *[round(th.temperature_C[k], 1) for k in tm.node_keys],
+                         *[round(v, 1) for v in st_line.rms_A], round(st_line.i2_over_i1, 4),
+                         round(vib, 2), zone, round(fps, 1)])
+        with open(status_path, "w", encoding="utf-8") as f:
+            json.dump({"t": round(t_wall, 2), "t_real": round(t_real, 2), "mode": mode, "case": case,
+                       "step": frame.step_id if frame else "manual",
+                       "scenario": state.playing_scenario,
+                       "i2i1": round(st_line.i2_over_i1, 4),
+                       "bearing_de": round(th.temperature_C["bearing_de"], 1),
+                       "winding": round(th.temperature_C["winding"], 1),
+                       "stage_bearing": th.stage["bearing_de"], "stage_winding": th.stage["winding"],
+                       "fps": round(fps, 1)}, f, ensure_ascii=False)
+
+    if args.max_s and t_real >= args.max_s:
+        break
+
+if recorder is not None:
+    _stop_recording(recorder)
+    rec_meta["ffmpeg_stop_wall"] = time.time()
+    rec_meta["duration_s"] = round(rec_meta["ffmpeg_stop_wall"] - rec_meta["ffmpeg_start_wall"], 2)
+    rec_meta["log_csv"] = csv_path
+    rec_meta["timecode_burned_in"] = not args.no_timecode
+    rec_name = os.path.splitext(os.path.basename(args.record))[0]
+    with open(os.path.join(LOG_DIR, f"recording_{rec_name}.json"), "w", encoding="utf-8") as f:
+        json.dump(rec_meta, f, ensure_ascii=False, indent=2)
+
+csv_file.close()
+steady = [f for f in _fps_hist[5:] if f > 0]
+summary = {"csv": csv_path, "duration_s": round(t_real, 1), "frames_t_wall_s": round(t_wall, 1),
+           "fps": {"mean": round(sum(steady) / len(steady), 1) if steady else None,
+                   "min": round(min(steady), 1) if steady else None,
+                   "pass": bool(steady and min(steady) >= 30)}}
+if args.profile and _prof_n:
+    per_frame = {k: round(v / _prof_n, 3) for k, v in sorted(_prof_sum.items(),
+                                                             key=lambda kv: -kv[1])}
+    summary["profile_ms_per_frame"] = {**per_frame, "_measured": round(sum(per_frame.values()), 3),
+                                       "_frames": _prof_n}
+with open(os.path.join(LOG_DIR, "demo_integrated.json"), "w", encoding="utf-8") as f:
+    json.dump(summary, f, ensure_ascii=False, indent=2)
+print("[demo] DONE", csv_path, flush=True)
+simulation_app.close()

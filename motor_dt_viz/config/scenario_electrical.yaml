@@ -1,0 +1,120 @@
+# scenario_electrical.yaml — 전기적 결함 전용 자동 재생 시나리오
+#
+# 부품 발열 색은 이 모드에서 **원래 재질로 고정**된다(MaterialDriver.reset_to_base).
+# 온도 HUD 도 숨긴다. 화면에는 전류 흐름만 남는다.
+# 열 시뮬레이션은 dt=0 으로 정지시키므로 time_scale 은 의미가 없지만 필드는 유지한다.
+#
+# 전류 파형은 케이스를 바꾸면 즉시 반응하므로, 열처럼 누적을 기다릴 필요가 없다.
+# 그래서 단계마다 20~30 초면 충분하다. 총 재생 시간 = 165 s (2분 45초)
+#
+# source : 화면에 표시할 데이터 출처 (정직성 표기)
+#   ⚠️ Maxwell 2D FEM 결과는 쓰지 않았다(AEDT 라이선스 부재, electrical.yaml 3~13행).
+#      모든 케이스가 해석식 3상 모델이며, ITSC 는 목표 I₂/I₁ 을 크기 불평형으로
+#      역산해 재현한 등가 표현이다. 측정값·FEM 해석처럼 보이게 쓰지 마라.
+
+playback:
+  total_target_s: 165
+  subtitle_font_size: 26
+  hud_update_hz: 15
+
+steps:
+  - id: healthy
+    label: "1. 정상 (3상 균형)"
+    subtitle: "세 상 전류가 고르게 흐른다 — 선전류 43.7 A, I₂/I₁ 0.006"
+    subtitle_en: "All three phases balanced - line current 43.7 A, I2/I1 = 0.006"
+    source: "해석식 3상 모델"
+    source_en: "Analytic 3-phase model"
+    duration_s: 20
+    time_scale: 60
+    mode: electrical
+    electrical_case: healthy
+    faults: []
+    load: 1.0
+
+  - id: itsc_4turn
+    label: "2. 턴간 단락 초기 (4턴)"
+    subtitle: "권선 코일 4턴이 붙었다 — 전류 크기보다 I₂/I₁ 0.104 에서 먼저 드러난다"
+    subtitle_en: "4 shorted turns - shows up in I2/I1 (0.104) before the current magnitude"
+    source: "해석식 모델 · 목표 I₂/I₁ 을 재현한 등가 표현"
+    source_en: "Analytic model - equivalent representation reproducing target I2/I1"
+    duration_s: 25
+    time_scale: 60
+    mode: electrical
+    electrical_case: itsc_4turn
+    faults: []
+    load: 1.0
+
+  - id: itsc_12turn
+    label: "3. 턴간 단락 진행 (12턴)"
+    subtitle: "단락 범위가 넓어져 A상이 88 A (201 %) — I₂/I₁ 0.269"
+    subtitle_en: "Short spreads to 12 turns - phase A hits 88 A (201 %), I2/I1 = 0.269"
+    source: "해석식 모델 · 목표 I₂/I₁ 을 재현한 등가 표현"
+    source_en: "Analytic model - equivalent representation reproducing target I2/I1"
+    duration_s: 30
+    time_scale: 60
+    mode: electrical
+    electrical_case: itsc_12turn
+    faults: []
+    load: 1.0
+    highlight: true
+
+  - id: overload
+    label: "4. 과부하 운전"
+    subtitle: "세 상이 고르게 함께 늘어난다 — 균형이 유지되므로 I₂/I₁ 은 0 에 가깝다"
+    subtitle_en: "All three phases rise together - balance holds, so I2/I1 stays near zero"
+    source: "해석식 3상 모델"
+    source_en: "Analytic 3-phase model"
+    duration_s: 20
+    time_scale: 60
+    mode: electrical
+    electrical_case: overload
+    faults: []
+    load: 1.35
+
+  - id: voltage_unbalance
+    label: "5. 공급전압 불평형"
+    subtitle: "색은 아직 모두 정상이지만 I₂/I₁ 이 0.006 → 0.060 으로 열 배 오른다 — 크기보다 균형이 먼저 무너진다"
+    subtitle_en: "Colors still read normal, but I2/I1 rises tenfold (0.006 -> 0.060) - balance breaks before magnitude"
+    source: "해석식 3상 모델"
+    source_en: "Analytic 3-phase model"
+    duration_s: 25
+    time_scale: 60
+    mode: electrical
+    electrical_case: voltage_unbalance
+    faults: []
+    load: 1.0
+
+  - id: single_phasing
+    label: "6. 결상 (A상 끊김)"
+    subtitle: "끊긴 상은 파랑, 남은 두 상이 그 몫까지 떠안아 빨강이 된다"
+    subtitle_en: "The lost phase turns blue; the remaining two carry its share and turn red"
+    source: "해석식 3상 모델"
+    source_en: "Analytic 3-phase model"
+    duration_s: 25
+    time_scale: 60
+    mode: electrical
+    electrical_case: single_phasing
+    faults: []
+    load: 1.0
+
+  - id: no_load
+    label: "7. 무부하 (저전류)"
+    subtitle: "부하가 없으면 자화전류만 흘러 세 상이 모두 파랗다"
+    subtitle_en: "With no load only the magnetizing current flows - all three phases go blue"
+    source: "해석식 3상 모델"
+    source_en: "Analytic 3-phase model"
+    duration_s: 20
+    time_scale: 60
+    mode: electrical
+    electrical_case: no_load
+    faults: []
+    load: 0.0
+
+# 수동 모드 기본값 (제어 패널 초기 상태)
+manual_defaults:
+  mode: electrical
+  load: 1.0
+  time_scale: 60
+  slowmo_factor: 0.016667
+  electrical_case: healthy
+  faults: []

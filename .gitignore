@@ -1,0 +1,57 @@
+# 이 저장소는 소스와 문서만 담는다.
+# 프로젝트 폴더 전체는 1.7 GB 이고 대부분이 재생성 가능한 산출물이라 제외한다.
+
+# ---- 파이썬 ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# ---- 가상환경 / 설치된 패키지 (1.3 GB) ----
+모터 전기적 결함/
+venv/
+.venv/
+env/
+
+# ---- 시뮬레이션 데이터셋 (279 MB, 재생성 가능) ----
+sim/output/
+*.npz
+
+# ---- CAD·렌더 원본 (43 MB, Fusion/Blender 에서 재생성) ----
+# export/*.blend 처럼 한 단계만 쓰면 export/blender/*.blend 를 놓친다
+*.blend
+*.blend1
+*.step
+*.stp
+*.f3d
+*.f3z
+export/step_parts/
+export/mesh/
+export/render/
+
+# ---- 영상 (발표 산출물, 용량 큼) ----
+*.mp4
+*.avi
+모터결함_애니메이션/
+모터결함_애니메이션_v1/
+
+# ---- 실행 로그 (매 실행마다 생성) ----
+motor_dt_viz/logs/
+sim/logs/
+*.log
+
+# ---- 분리 작업 전 로컬 백업 (25 MB) ----
+_backup_*/
+
+# ---- 대시보드 빌드 산출물 ----
+dashboard/node_modules/
+dashboard/dist/
+dashboard/public/media/
+dashboard/public/data/
+
+# ---- OS / 편집기 ----
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

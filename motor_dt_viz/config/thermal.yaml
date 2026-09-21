@@ -1,0 +1,171 @@
+# thermal.yaml — 집중정수 열회로(Lumped Thermal RC) 파라미터
+#
+# 모델: C_i·dT_i/dt = P_loss,i(t) − (T_i−T_amb)/R_i + Σ_j (T_j−T_i)/R_ij
+#
+# ── 튜닝 근거 ──────────────────────────────────────────────────────────────
+# 22 kW·η0.90 → 전손실 ≈ 22000·(1−0.9)/0.9 ≈ 2,440 W.
+# 유도전동기 손실 배분 관행(고정자동손 35 / 회전자동손 20 / 철손 25 / 기계손 15 / 표유 5 %)에 따라
+#   권선 855 W · 로터 490 W · 고정자코어 610 W · 베어링+풍손 366 W 로 배분했다.
+# 열용량 C = 질량 × 비열(강철 470, 구리 385 J/kg·K). 질량은 CAD 물성(sim/config/cad_mass_properties.json).
+# 열저항 R 은 "정격 100 % 부하 정상 운전에서 프레임 약 75 °C, 권선 약 95 °C 로 수렴"하도록 역산했다
+#   (IEC 60034-1 F종 절연 허용 상승 105 K 대비 여유, 크레인 S4 듀티 관행 범위).
+# 결함 주입 시 계수 배율(fault_multiplier)은 "시뮬레이션 시간 2~5분 내 경고(90 °C) 돌파"를 목표로 잡았다.
+# ⚠️ 단순화 가정: 공극 복사·축방향 전도 분포를 무시한 1차 RC 근사이며, 실측 교정 전 값이다.
+
+ambient:
+  temperature_C: 25.0
+  note: "실내 크레인 운전 환경 가정"
+
+# 온도 단계 (CLAUDE.md §5.1). 부품별 개별 임계값 허용
+stages:
+  default:   { normal: 70.0, caution: 90.0, warning: 110.0 }
+  winding:   { normal: 95.0, caution: 120.0, warning: 140.0, note: "F종 절연 기준(허용 155 °C)" }
+  bearing:   { normal: 70.0, caution: 85.0,  warning: 95.0,  note: "그리스 수명 기준" }
+  rotor:     { normal: 90.0, caution: 110.0, warning: 130.0, note: "농형 로터는 권선보다 고온이 정상" }
+
+# 열 노드 (부품) — prim_map.yaml 의 parts 키와 대응
+nodes:
+  winding:
+    label: "고정자 권선"
+    mass_kg: 25.0            # EST: 22kW 급 고정자 권선 구리 질량 추정
+    specific_heat: 385.0     # 구리
+    R_amb: 0.40              # K/W — 프레임 경유 간접 방열이라 크게
+    loss_W_rated: 855.0      # 동손 (I²R) — 통합 모드에서는 모듈 B 전류로 대체
+    loss_model: "copper_i2r"
+    prim_key: null           # 3D 모델에 없음 → 모듈 B 오버레이 권선에 색 표시
+  stator_core:
+    label: "고정자 코어"
+    mass_kg: 60.0            # EST
+    specific_heat: 470.0
+    R_amb: 0.25
+    loss_W_rated: 610.0      # 철손 (부하 의존성 낮음)
+    loss_model: "iron_const"
+    prim_key: null           # 모델에 없음 → housing_frame 으로 대체 표시
+  rotor:
+    label: "로터"
+    mass_kg: 65.9
+    specific_heat: 470.0
+    R_amb: 0.35
+    loss_W_rated: 490.0      # 2차 동손 ∝ 슬립×부하
+    loss_model: "rotor_slip"
+    prim_key: rotor
+  shaft:
+    label: "샤프트"
+    mass_kg: 26.0
+    specific_heat: 470.0
+    R_amb: 0.50
+    loss_W_rated: 0.0        # 자체 발열 없음, 로터·베어링에서 전도
+    loss_model: "none"
+    prim_key: shaft
+  bearing_de:
+    label: "DE 베어링"
+    mass_kg: 3.13
+    specific_heat: 470.0
+    R_amb: 1.30
+    loss_W_rated: 110.0      # 마찰손실 ∝ 하중 × 회전속도 (권상측 하중 큼)
+    loss_model: "bearing_friction"
+    prim_key: bearing_de
+  bearing_nde:
+    label: "NDE 베어링"
+    mass_kg: 2.03
+    specific_heat: 470.0
+    R_amb: 1.45
+    loss_W_rated: 70.0
+    loss_model: "bearing_friction"
+    prim_key: bearing_nde
+  endshield_de:
+    label: "DE 엔드실드"
+    mass_kg: 34.1
+    specific_heat: 470.0
+    R_amb: 0.14
+    loss_W_rated: 0.0
+    loss_model: "none"
+    prim_key: endshield_de
+  endshield_nde:
+    label: "NDE 엔드실드"
+    mass_kg: 33.9
+    specific_heat: 470.0
+    R_amb: 0.14
+    loss_W_rated: 0.0
+    loss_model: "none"
+    prim_key: endshield_nde
+  frame:
+    label: "하우징(프레임)"
+    mass_kg: 77.0
+    specific_heat: 470.0
+    R_amb: 0.030             # 냉각핀 + 팬 강제대류 → 가장 낮은 열저항
+    loss_W_rated: 0.0        # 자체 발열 없음 (2차 전달)
+    loss_model: "none"
+    prim_key: housing_frame
+
+# 노드 간 열전달 저항 R_ij (K/W). 값이 작을수록 잘 전달된다.
+couplings:
+  - [winding, stator_core, 0.020]
+  - [stator_core, frame, 0.015]
+  - [rotor, shaft, 0.040]
+  - [rotor, frame, 0.180]          # 공극 복사·대류 (간접)
+  - [shaft, bearing_de, 0.150]
+  - [shaft, bearing_nde, 0.170]
+  - [bearing_de, endshield_de, 0.120]
+  - [bearing_nde, endshield_nde, 0.130]
+  - [endshield_de, frame, 0.040]
+  - [endshield_nde, frame, 0.040]
+
+# 크레인 권상 듀티 사이클 (CLAUDE.md §5.1) — ED% 기반
+duty_cycle:
+  enabled: true
+  ed_percent: 40.0           # ISO 4301-1 M5 급 관행
+  phases:                    # (구간명, 지속 s, 부하율)
+    - { name: lift,  duration_s: 12.0, load: 1.00 }
+    - { name: hold,  duration_s: 4.0,  load: 0.15 }
+    - { name: lower, duration_s: 12.0, load: 0.55 }   # 하강: 중력 보조로 부하 감소
+    - { name: idle,  duration_s: 17.0, load: 0.00 }
+
+# 결함별 손실·방열 변화 배율
+faults:
+  bearing_de_fault:
+    label: "DE 베어링 결함"
+    target: bearing_de
+    loss_multiplier: 5.0      # CLAUDE.md §5.1 "손실 계수 ×2~5"
+    # 그리스 탄화·간극 변화로 축/하우징 전도가 나빠져 국부 발열이 커진다 (R_ij 배율)
+    coupling_multiplier:
+      - [shaft, bearing_de, 2.0]
+      - [bearing_de, endshield_de, 2.5]
+    vibration_mms: 4.8        # ISO 20816-3 Act(4.5) 초과
+  bearing_nde_fault:
+    label: "NDE 베어링 결함"
+    target: bearing_nde
+    loss_multiplier: 5.0
+    coupling_multiplier:
+      - [shaft, bearing_nde, 2.0]
+      - [bearing_nde, endshield_nde, 2.5]
+    vibration_mms: 4.2
+  misalignment:
+    label: "축 정렬 불량"
+    target: bearing_de
+    loss_multiplier: 2.5
+    also: { shaft: 2.0 }
+    vibration_mms: 3.6
+  fan_failure:
+    label: "냉각팬 고장"
+    target: frame
+    r_amb_multiplier: 3.2     # 강제대류 상실 → 자연대류
+    vibration_mms: 1.2
+  brake_drag:
+    label: "브레이크 끌림"
+    target: shaft
+    extra_loss_W: 900.0       # 브레이크 드래그 발열이 축으로 유입
+    vibration_mms: 2.0
+  overload:
+    label: "과부하"
+    load_multiplier: 1.35     # 부하율 135 %
+    vibration_mms: 2.2
+
+# 표시용 필터 (색 급변 방지)
+display:
+  ema_tau_s: 1.5             # 표시 온도 지수이동평균 시간상수
+  hysteresis_C: 2.0          # 단계 경계 히스테리시스
+
+solver:
+  method: rk4                # euler | rk4
+  max_dt_s: 0.5              # 내부 적분 최대 스텝 (시간 배속 적용 후 분할)

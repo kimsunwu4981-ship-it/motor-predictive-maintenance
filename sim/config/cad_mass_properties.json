@@ -1,0 +1,19 @@
+{
+  "_source": "Fusion 360 physicalProperties (재질: 강철 7850 kg/m3, 축 AISI1045, 팬 알루미늄). 관성은 월드 원점(DE 축단 중심, 축선=X) 기준 kg·m². 형상 치수 전부 미확인(추정: IEC 200L).",
+  "HM_Shaft": {"mass_kg": 26.0022, "com_m": [0.4133, 0.0, -0.0001], "I_origin_kgm2": [0.018027, 5.567046, 5.567101]},
+  "HM_Rotor_Core": {"mass_kg": 65.9217, "com_m": [0.425, 0.0, 0.0], "I_origin_kgm2": [0.444345, 12.500634, 12.500634]},
+  "HM_Fan": {"mass_kg": 1.0254, "com_m": [0.765, 0.0, 0.0], "I_origin_kgm2": [0.005721, 0.6031, 0.6031]},
+  "HM_Frame": {"mass_kg": 76.9916, "com_m": [0.42466, 0.0, -0.01211], "I_origin_kgm2": [2.892231, 16.659618, 16.261731]},
+  "HM_Endshield_DE": {"mass_kg": 34.1376, "com_m": [0.17626, 0.0, 0.0], "I_origin_kgm2": [0.602468, 1.384019, 1.384019]},
+  "HM_Endshield_NDE": {"mass_kg": 33.8987, "com_m": [0.67188, 0.0, 0.0], "I_origin_kgm2": [0.586664, 15.615868, 15.615868]},
+  "HM_Fan_Cover": {"mass_kg": 3.6688, "com_m": [0.8445, 0.0, 0.0], "I_origin_kgm2": [0.116504, 2.683743, 2.683743]},
+  "HM_Terminal_Box": {"mass_kg": 15.3212, "com_m": [0.425, 0.0, 0.2949], "I_origin_kgm2": [1.446766, 4.247239, 2.936412]},
+  "HM_Eyebolt": {"mass_kg": 0.3184, "com_m": [0.26, 0.0, 0.24176], "I_origin_kgm2": [0.018783, 0.040425, 0.021654]},
+  "HM_Bearing_DE": {"mass_kg": 3.1282, "com_m": [0.1365, 0.0, 0.0], "I_origin_kgm2": [0.009316, 0.063227, 0.063227]},
+  "HM_Bearing_NDE": {"mass_kg": 2.0338, "com_m": [0.7155, 0.0, 0.0], "I_origin_kgm2": [0.00443, 1.043543, 1.043543]},
+  "HM_Mount_Interface": {"mass_kg": 26.4005, "com_m": [0.3955, 0.0, -0.21], "I_origin_kgm2": [1.547628, 5.65386, 4.871206]},
+  "_groups": {
+    "rotor_assy": {"parts": ["HM_Shaft", "HM_Rotor_Core", "HM_Fan"], "mass_kg": 92.9493, "Ixx_kgm2": 0.468093, "com_x_m": 0.4254},
+    "frame_assy_cad": {"parts": ["HM_Frame", "HM_Endshield_DE", "HM_Endshield_NDE", "HM_Fan_Cover", "HM_Terminal_Box", "HM_Eyebolt", "HM_Bearing_DE", "HM_Bearing_NDE"], "mass_kg": 169.4983, "note": "Mount_Interface(참조 지오메트리 26.4 kg) 제외"}
+  }
+}

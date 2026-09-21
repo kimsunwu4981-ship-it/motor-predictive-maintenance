@@ -1,0 +1,64 @@
+# motor.yaml — 권상 모터 시뮬레이션 파라미터 (출처 태그: MFR 도면·명판 / CALC 계산 / CAD 물성 / EST 미확인(추정))
+meta:
+  project: "10t 천장크레인 권상 모터 Isaac Sim 구동 시뮬레이션"
+  drawing: "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01"
+  version: "v01"
+  seed: 20260828
+
+motor:
+  rated_power_kW:   { value: 22.0,   source: MFR,  note: "HTO SPEC / BOM#1 22KWx6P" }
+  poles:            { value: 6,      source: MFR }
+  supply_Hz:        { value: 60.0,   source: MFR,  note: "GA SPEC AC 3φ 380V 60Hz" }
+  sync_rpm:         { value: 1200.0, source: CALC, note: "120*60/6" }
+  rated_rpm:        { value: 1170.0, source: MFR,  note: "HTO 'ACTUAL SPEED 1170×0.459π×1/2×1/104.5' 식" }
+  slip:             { value: 0.025,  source: CALC, note: "(1200-1170)/1200" }
+  rated_torque_Nm:  { value: 179.6,  source: CALC, note: "9550*22/1170" }
+  rated_omega_rads: { value: 122.52, source: CALC, note: "1170*2π/60" }
+  nameplate_mass_kg: { value: 285.0,  source: MFR,  note: "HTO BOM#1 TOTAL" }
+  starting_torque_ratio: { value: 2.5, source: EST, note: "미확인(추정: 크레인용 6P 유도전동기 기동토크비 2.0~2.8 문헌 범위)" }
+
+bearings:
+  DE:  { designation: "6313", Z: 8, Bd_mm: 23.8125, Pd_mm: 102.5, contact_deg: 0, source: EST, note: "미확인(추정: IEC 200L 표준 조합; 기하는 SKF 6313 카탈로그값)" }
+  NDE: { designation: "6311", Z: 8, Bd_mm: 20.6375, Pd_mm: 87.5,  contact_deg: 0, source: EST, note: "미확인(추정: SKF 6311 카탈로그값)" }
+
+physics:
+  analysis_band_Hz: { value: 1000.0, source: CALC, note: "결함 주파수 최대(BPFI 고조파 5차 ≈ 600 Hz) 대비 여유" }
+  physics_hz:       { value: 2560,   source: CALC, note: "analysis_band × 2.56 (Nyquist 여유)" }
+  physics_dt:       { value: 0.000390625, source: CALC, note: "1/2560" }
+  gpu_dynamics: false
+  solver: TGS
+  broadphase: MBP
+
+drive:
+  mode: velocity
+  stiffness: 0.0
+  damping_Nms_per_rad: { value: 57.2, source: CALC, note: "유도전동기 토크-슬립 선형구간 기울기 T_rated/(ω_sync−ω_rated) = 179.6/(125.66−122.52). 초기값 7.33(5×T/ω)은 정격부하에서 −20% 강하로 기각(S4 1차 검증)" }
+  target_rpm: 1200.0            # 동기속도 지령: damping 이 토크-슬립 특성을 표현하므로 정격부하에서 1170 rpm(명판 정격점)이 자연히 형성됨
+  expected_rpm: { noload: 1200.0, rated: 1170.0 }   # 검증 기준 (정격부하 = 정격 rpm ±1%)
+  max_force_Nm: { value: 449.0, source: CALC, note: "T_rated × starting_torque_ratio(2.5, EST)" }
+
+# ---------------- v2.0 (토크 제어 루프) ----------------
+torque_control:
+  mode: "linear_clip"    # T = T_rated·s/s_rated, |T| ≤ T_max (기동 = 토크 제한 직입 근사). Kloss 는 s_max 미확인이라 미채택
+  mech_damping_Nms_per_rad: { value: 0.015, source: EST, note: "미확인(추정: 베어링·풍손 ≈ 정격출력 1% ≈ 220 W @ 122.5 rad/s → 1.8 N·m)" }
+  drive_stiffness: 0.0
+  drive_damping: 0.0     # PhysX 드라이브 비활성 (기계 감쇠는 루프에서 −b·ω 로 인가)
+  load_fractions: { half: 0.5, rated: 1.0 }
+  expected_rpm_tol_pct: 1.0
+
+current:
+  rated_current_A: { value: 43.7, source: CALC, note: "22 kW /(√3·380 V·η0.9·pf0.85) — η·pf 미확인(추정: 22 kW 6P 전형값)" }
+  harmonics_db: { value: -40.0, source: EST, note: "5·7차 고조파, 미확인(추정: 상용전원 직입 전형값)" }
+  noise_floor_db: { value: -60.0, source: EST, note: "센서 노이즈 플로어 가정" }
+
+e_run:
+  hold_s: 10.0          # 정속 유지(분석) 구간 → Δf = 0.1 Hz (2sf = 3 Hz 측대파 분리 여유 30 bin)
+  settle_s: 2.0         # 기동+정착
+  stop_tail_s: 1.0
+  physics_hz: 2560      # 분석 대역 1 kHz × 2.56 (v1 확정 유지)
+
+baseline:
+  ramp_hold_s: 6.0      # 정속 유지 구간
+  stop_at_s: 8.0        # 정지 지령 시각
+  total_s: 10.0
+  load_torque_Nm: { noload: 0.0, rated: 179.6 }

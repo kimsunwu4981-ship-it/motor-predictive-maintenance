@@ -1,0 +1,194 @@
+# prim_map.yaml — 부품 ↔ USD prim 경로 매핑 (Phase 0)
+#
+# status 값:
+#   confirmed          실제 스테이지에서 경로를 직접 확인함
+#   pending_rebuild    부품 단위 prim 이 없어 재구성 필요 (사용자 승인 대기)
+#   absent             3D 모델에 부품 자체가 없음 → 절차적 생성 필요
+#
+# 출처: motor_dt_viz/tools/dump_prims.py 로 실제 스테이지를 순회해 확인 (추측 없음)
+
+meta:
+  viz_stage: "motor_dt_viz/assets/motor_physics.usd"   # Phase 2 이후 시각화는 이 스테이지를 쓴다
+  viz_parts_stage: "motor_dt_viz/assets/motor_parts.usd"
+  source_stage: "sim/usd/hoist_motor_physics_v01.usd"
+  visual_source_stage: "sim/usd/hoist_motor_v01.usd"
+  part_meshes_dir: "export/mesh"          # HM_*.obj 12개 (Fusion 내보내기, 월드좌표, 단위 cm)
+  part_step_dir: "export/step_parts"      # HM_*_v01.step 12개
+  up_axis: Z
+  meters_per_unit: 1.0
+  motor_axis: X                            # 모터 축선 = +X, 원점 = DE 축단 끝면 중심
+  inventory_doc: "motor_dt_viz/docs/prim_inventory.md"
+
+# ---------------------------------------------------------------------------
+# 1. 현재 스테이지에 실제로 존재하는 prim (as-is, 확인 완료)
+# ---------------------------------------------------------------------------
+stage_actual:
+  articulation_root:
+    path: "/World/HoistMotor/HoistMotor"
+    status: confirmed
+  link_static:
+    path: "/World/HoistMotor/HoistMotor/HM_Frame_Assy"
+    status: confirmed
+    mass_kg: 192.05
+    note: "고정부 링크. JT_World_Frame_Fixed 로 월드 고정"
+  link_rotating:
+    path: "/World/HoistMotor/HoistMotor/HM_Rotor_Assy"
+    status: confirmed
+    mass_kg: 92.95
+    inertia_xx_kgm2: 0.468
+  joint_revolute:
+    path: "/World/HoistMotor/HoistMotor/JT_Frame_Rotor_Rev"
+    status: confirmed
+    axis: X
+    local_pos_m: [0.425, 0.0, 0.0]
+  mesh_static:
+    path: "/World/HoistMotor/HoistMotor/HM_Frame_Assy/visual_frame/visual_frame_mesh_001"
+    status: confirmed
+    points: 9214
+    merged_parts: [frame, endshield_de, endshield_nde, fan_cover, terminal_box, eyebolt, bearing_de, bearing_nde, mount_interface]
+  mesh_rotating:
+    path: "/World/HoistMotor/HoistMotor/HM_Rotor_Assy/visual_rotor/visual_rotor_mesh_001"
+    status: confirmed
+    points: 3202
+    merged_parts: [shaft, rotor_core, fan]
+  # GeomSubset 은 재질 단위 면 그룹이며 부품 단위가 아님 (DE/NDE 베어링이 한 subset 에 함께 있음)
+  geom_subsets_static:
+    - "/World/HoistMotor/HoistMotor/HM_Frame_Assy/visual_frame/visual_frame_mesh_001/Paint_PhotoGrayBlue"
+    - "/World/HoistMotor/HoistMotor/HM_Frame_Assy/visual_frame/visual_frame_mesh_001/Paint_PhotoCover"
+    - "/World/HoistMotor/HoistMotor/HM_Frame_Assy/visual_frame/visual_frame_mesh_001/Bearing_Steel"
+    - "/World/HoistMotor/HoistMotor/HM_Frame_Assy/visual_frame/visual_frame_mesh_001/Mount_Yellow"
+  geom_subsets_rotating:
+    - "/World/HoistMotor/HoistMotor/HM_Rotor_Assy/visual_rotor/visual_rotor_mesh_001/Shaft_RustyDark"
+    - "/World/HoistMotor/HoistMotor/HM_Rotor_Assy/visual_rotor/visual_rotor_mesh_001/Rotor_Iron"
+    - "/World/HoistMotor/HoistMotor/HM_Rotor_Assy/visual_rotor/visual_rotor_mesh_001/Fan_Alu"
+  materials_shared:                        # Hard Rule 3: 직접 수정 금지, prim 전용 머티리얼을 새로 만들어 바인딩
+    - "/World/HoistMotor/_materials/Paint_PhotoGrayBlue"
+    - "/World/HoistMotor/_materials/Paint_PhotoCover"
+    - "/World/HoistMotor/_materials/Bearing_Steel"
+    - "/World/HoistMotor/_materials/Mount_Yellow"
+    - "/World/HoistMotor/_materials/Shaft_RustyDark"
+    - "/World/HoistMotor/_materials/Rotor_Iron"
+    - "/World/HoistMotor/_materials/Fan_Alu"
+
+# ---------------------------------------------------------------------------
+# 2. 부품 단위 prim (Phase 2 재구성 완료 — 머티리얼은 mesh_path 에 바인딩한다)
+#    재구성 완료 (Phase 2): motor_dt_viz/assets/motor_parts.usd → motor_physics.usd
+#    생성 도구: tools/build_parts_usd.py (Blender) + tools/build_physics_usd.py (Isaac)
+#    원본 USD/f3d 는 읽기 전용 유지 (Hard Rule 2).
+# ---------------------------------------------------------------------------
+parts:
+  rotor:
+    target_path: "/World/Motor/Rotating/HM_Rotor_Core"
+    source_mesh: "export/mesh/HM_Rotor_Core.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Rotating/HM_Rotor_Core/HM_Rotor_Core_mesh"
+    thermal: true
+    group: rotating
+  shaft:
+    target_path: "/World/Motor/Rotating/HM_Shaft"
+    source_mesh: "export/mesh/HM_Shaft.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Rotating/HM_Shaft/HM_Shaft_mesh"
+    thermal: true
+    group: rotating
+  fan:
+    target_path: "/World/Motor/Rotating/HM_Fan"
+    source_mesh: "export/mesh/HM_Fan.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Rotating/HM_Fan/HM_Fan_mesh"
+    thermal: false                          # 냉각팬: 발열원 아님, 고장 시 하우징 R_i 증가로 표현
+    group: rotating
+  bearing_de:
+    target_path: "/World/Motor/Static/HM_Bearing_DE"
+    source_mesh: "export/mesh/HM_Bearing_DE.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Bearing_DE/HM_Bearing_DE_mesh"
+    thermal: true
+    group: static
+    note: "모듈 A 핵심 시연 부품 (베어링 결함 → 발열)"
+  bearing_nde:
+    target_path: "/World/Motor/Static/HM_Bearing_NDE"
+    source_mesh: "export/mesh/HM_Bearing_NDE.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Bearing_NDE/HM_Bearing_NDE_mesh"
+    thermal: true
+    group: static
+  housing_frame:
+    target_path: "/World/Motor/Static/HM_Frame"
+    source_mesh: "export/mesh/HM_Frame.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Frame/HM_Frame_mesh"
+    thermal: true
+    group: static
+    note: "내부 부품에서 전도로 전달되는 2차 발열"
+  endshield_de:
+    target_path: "/World/Motor/Static/HM_Endshield_DE"
+    source_mesh: "export/mesh/HM_Endshield_DE.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Endshield_DE/HM_Endshield_DE_mesh"
+    thermal: true
+    group: static
+    note: "DE 베어링 하우징 — 베어링 발열의 인접 전도 대상"
+  endshield_nde:
+    target_path: "/World/Motor/Static/HM_Endshield_NDE"
+    source_mesh: "export/mesh/HM_Endshield_NDE.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Endshield_NDE/HM_Endshield_NDE_mesh"
+    thermal: true
+    group: static
+  fan_cover:
+    target_path: "/World/Motor/Static/HM_Fan_Cover"
+    source_mesh: "export/mesh/HM_Fan_Cover.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Fan_Cover/HM_Fan_Cover_mesh"
+    thermal: false
+    group: static
+  terminal_box:
+    target_path: "/World/Motor/Static/HM_Terminal_Box"
+    source_mesh: "export/mesh/HM_Terminal_Box.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Terminal_Box/HM_Terminal_Box_mesh"
+    thermal: false
+    group: static
+    note: "모듈 B 공급 케이블의 진입점"
+  eyebolt:
+    target_path: "/World/Motor/Static/HM_Eyebolt"
+    source_mesh: "export/mesh/HM_Eyebolt.obj"
+    status: confirmed
+    mesh_path: "/World/Motor/Static/HM_Eyebolt/HM_Eyebolt_mesh"
+    thermal: false
+    group: static
+  mount_interface:
+    target_path: "/World/Motor/Static/HM_Mount_Interface"
+    source_mesh: "export/mesh/HM_Mount_Interface.obj"
+    status: excluded
+    thermal: false
+    group: static
+    note: "모터 부품이 아닌 마운팅 참조 지오메트리 — 렌더 제외 검토"
+
+# ---------------------------------------------------------------------------
+# 3. 3D 모델에 존재하지 않는 부품 → 절차적 생성 필요
+# ---------------------------------------------------------------------------
+absent_parts:
+  stator_core:
+    status: absent
+    plan: "프레임 내부 미모델링. 발열 표현은 housing_frame 으로 대체하거나 원통 프록시 생성"
+  stator_winding:
+    status: absent
+    plan: "모듈 B: 고정자 슬롯 위치를 따라 상 A/B/C 코일 경로를 BasisCurves 로 절차 생성 (120° 간격)"
+    geometry_hint:
+      bore_radius_m: 0.170                  # 프레임 내경 추정 (spigot 340 mm / 2) — 미확인
+      axial_span_m: [0.295, 0.555]          # 로터 코어 축방향 범위와 정렬
+  power_cable:
+    status: absent
+    plan: "모듈 B: 전원 → 단자함 3상 라인을 BasisCurves 로 생성"
+    entry_point_m: [0.425, 0.0, 0.350]      # 단자함 상면 중심 (확인된 bbox 기준)
+  brake:
+    status: absent
+    plan: "Blender 렌더 씬에만 프록시 존재. 필요 시 DE 축단(x<0) 에 프록시 생성"
+  coupling:
+    status: absent
+    plan: "동상. DE 축단 커플링 허브 프록시"
+  gearbox_input:
+    status: absent
+    plan: "모델 범위 밖 (모터만 모델링됨)"

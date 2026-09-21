@@ -1,0 +1,98 @@
+# electrical.yaml — 모듈 B(전류 흐름) 파라미터
+#
+# 데이터 소스 결정(Phase 0 사용자 승인): Maxwell npz 가 저장소에 없으므로
+#   1순위 npz 경로는 비활성, **해석식 3상 모델**을 기본 소스로 사용한다.
+#   기존 Isaac 데이터셋(sim/output/dataset_v03)도 선택적으로 재생 가능하다.
+# ⚠️ 정직성: 두 소스 모두 FEM/실측이 아닌 해석식 생성이다. HUD 에 항상 표시한다.
+
+source:
+  mode: analytic                 # analytic | npz
+  npz_dir: "sim/output/dataset_v03"
+  npz_available: false           # Maxwell 72 케이스 부재 (docs/npz_schema.md)
+  honesty_label: "시뮬레이션 기반 추정값 (Simulation-based)"
+  honesty_sub: "정격 기준: 22 kW 6극 크레인 권상 모터 도면값 · 전류는 해석식 생성"
+
+# 기준 전류는 config/motor.yaml 에서 읽는다 (Δ결선: 케이블=선전류, 권선=상전류)
+reference:
+  cable_basis: rated_line_A      # 공급 케이블 경로 판정 기준
+  winding_basis: rated_phase_A   # 고정자 권선 오버레이 판정 기준
+
+# 상태 판정 임계값 (r = I_rms / I_rated)
+thresholds:
+  over_caution: 1.10
+  over_danger: 1.25
+  normal_low: 0.85
+  under_caution: 0.85
+  under_danger: 0.50             # 결상 의심
+
+# RMS 계산
+rms:
+  window_cycles: 1.0             # 최소 1주기
+  update_hz: 15.0                # 시각화 갱신 스로틀 (CLAUDE.md 10~20 Hz)
+
+# 시각화 시간축
+slowmo:
+  factor: 0.016667               # 1/60 → 1초에 1주기
+  label: "슬로모션 ×1/60"
+
+particles:
+  count_per_path: 24
+  size_m: 0.012
+  speed_gain: 0.9                # 이동 속도 ∝ 순시 전류 (정규화 후 배율)
+
+# 시나리오별 전류 생성 규칙
+# ITSC: 고장상(A상) 크기 불평형으로 목표 I₂/I₁ 을 역산해 부여한다.
+#   크기 불평형만 있을 때 I₂/I₁ = (k−1)/(k+2)  →  k = (1+2·ratio)/(1−ratio)
+#   ⚠️ 단순화 가정: 실제 ITSC 는 단락 루프 순환전류가 지배하고 선전류 불평형은 더 작다.
+#      본 MVP 는 화면에 목표 I₂/I₁ 을 재현하기 위해 크기 불평형으로 등가 표현한다.
+cases:
+  healthy:
+    label: "정상 운전"
+    phase_scale: [1.0181, 1.0, 1.0]     # → I₂/I₁ ≈ 0.006
+    phase_shift_deg: [0.0, 0.0, 0.0]
+    target_i2i1: 0.006
+    load: 1.0
+  itsc_4turn:
+    label: "턴간 단락 4턴 (초기)"
+    phase_scale: [1.3482, 1.0, 1.0]     # → I₂/I₁ ≈ 0.104
+    phase_shift_deg: [-6.0, 0.0, 0.0]
+    target_i2i1: 0.104
+    load: 1.0
+    short_loop: { turns: 4, current_pu: 3.5, pulse_hz: 1.2 }
+  itsc_12turn:
+    label: "턴간 단락 12턴 (진행)"
+    phase_scale: [2.1040, 1.0, 1.0]     # → I₂/I₁ ≈ 0.269
+    phase_shift_deg: [-14.0, 0.0, 0.0]
+    target_i2i1: 0.269
+    load: 1.0
+    short_loop: { turns: 12, current_pu: 7.0, pulse_hz: 1.8 }
+  overload:
+    label: "과부하 135 %"
+    phase_scale: [1.35, 1.35, 1.35]
+    phase_shift_deg: [0.0, 0.0, 0.0]
+    target_i2i1: null
+    load: 1.35
+  voltage_unbalance:
+    label: "공급전압 불평형"
+    phase_scale: [1.08, 0.94, 0.98]
+    phase_shift_deg: [2.0, -3.0, 1.0]
+    target_i2i1: null
+    load: 1.0
+  single_phasing:
+    label: "결상 (A상 상실)"
+    phase_scale: [0.04, 1.42, 1.42]
+    phase_shift_deg: [0.0, 0.0, 0.0]
+    target_i2i1: null
+    load: 0.9
+  no_load:
+    label: "무부하"
+    phase_scale: [0.33, 0.33, 0.33]
+    phase_shift_deg: [0.0, 0.0, 0.0]
+    target_i2i1: null
+    load: 0.0
+
+# 모듈 A 연동: 상별 I_rms → 권선 동손 P_cu ∝ I²
+coupling_to_thermal:
+  enabled: true
+  node: winding
+  p_cu_rated_W: 855.0            # thermal.yaml winding.loss_W_rated 와 일치

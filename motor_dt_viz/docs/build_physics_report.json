@@ -1,0 +1,21 @@
+{
+  "out": "c:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\assets\\motor_physics.usd",
+  "mesh_prims": [
+    "/World/Motor/Static/HM_Terminal_Box/HM_Terminal_Box_mesh",
+    "/World/Motor/Static/HM_Bearing_NDE/HM_Bearing_NDE_mesh",
+    "/World/Motor/Static/HM_Endshield_DE/HM_Endshield_DE_mesh",
+    "/World/Motor/Static/HM_Bearing_DE/HM_Bearing_DE_mesh",
+    "/World/Motor/Static/HM_Endshield_NDE/HM_Endshield_NDE_mesh",
+    "/World/Motor/Static/HM_Frame/HM_Frame_mesh",
+    "/World/Motor/Static/HM_Eyebolt/HM_Eyebolt_mesh",
+    "/World/Motor/Static/HM_Fan_Cover/HM_Fan_Cover_mesh",
+    "/World/Motor/Rotating/HM_Fan/HM_Fan_mesh",
+    "/World/Motor/Rotating/HM_Shaft/HM_Shaft_mesh",
+    "/World/Motor/Rotating/HM_Rotor_Core/HM_Rotor_Core_mesh"
+  ],
+  "mesh_count": 11,
+  "static_mass": 192.05,
+  "rotor_mass": 92.95,
+  "rotor_ixx": 0.468,
+  "joint": "/World/Motor/JT_Static_Rotating_Rev"
+}

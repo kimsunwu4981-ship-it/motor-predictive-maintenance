@@ -1,0 +1,51 @@
+# motor.yaml — 대상 모터 정격 및 상수
+#
+# 기준 결정(사용자 승인, Phase 0): CLAUDE.md §1.1 의 2.2 kW 테스트 리그가 아니라
+# **이 저장소의 3D 모델·물리 시뮬레이션이 대상으로 하는 22 kW 크레인 권상 모터**를 기준으로 한다.
+#
+# source 태그: MFR 도면/명판 · CALC 계산 · EST 미확인(추정) · REP 대표값
+
+meta:
+  target: "10t 천장크레인 권상 모터"
+  drawing: "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01"
+  basis_note: "CLAUDE.md §1.1 의 2.2kW/4극 대신 도면 기반 22kW/6극 채택 (Phase 0 사용자 승인)"
+
+rating:
+  power_kW:        { value: 22.0,   source: MFR,  note: "HTO SPEC / BOM#1 'HOISTING MOTOR 22KWx6P'" }
+  poles:           { value: 6,      source: MFR }
+  voltage_LL_V:    { value: 380.0,  source: MFR,  note: "GA SPEC AC 3φ 380V 60Hz" }
+  frequency_Hz:    { value: 60.0,   source: MFR }
+  connection:      { value: "delta", source: EST, note: "미확인(추정: 380V 22kW 급 관행). 명판 확인 시 교체" }
+  sync_rpm:        { value: 1200.0, source: CALC, note: "120*60/6" }
+  rated_rpm:       { value: 1170.0, source: MFR,  note: "HTO 'ACTUAL SPEED 1170×0.459π×1/2×1/104.5 = 8.0 M/MIN'" }
+  slip:            { value: 0.025,  source: CALC, note: "(1200-1170)/1200" }
+  torque_Nm:       { value: 179.6,  source: CALC, note: "9550*22/1170" }
+  mass_kg:         { value: 285.0,  source: MFR,  note: "HTO BOM#1 TOTAL" }
+
+# 정격 전류 — Δ결선 주의: 케이블(선전류) / 권선(상전류) 기준을 섞지 말 것 (CLAUDE.md §1.1)
+current:
+  efficiency:      { value: 0.90,  source: REP, note: "22kW 6P 급 대표값 (명판 미확인)" }
+  power_factor:    { value: 0.85,  source: REP, note: "동급 6극 대표값" }
+  rated_line_A:    { value: 43.7,  source: CALC, note: "P/(√3·V·η·cosφ) = 22000/(1.732·380·0.90·0.85)" }
+  rated_phase_A:   { value: 25.2,  source: CALC, note: "Δ결선: I_line/√3 = 43.7/1.732" }
+  source: "representative (nameplate unknown)"
+
+# 베어링 — CLAUDE.md §1.1 지정값 채택 (기준 회전수 1,180 rpm 은 22kW 6극 정격 1,170 rpm 과 정합)
+bearing:
+  designation:     { value: "NTN 22220 EAW33", source: MFR, note: "CLAUDE.md §1.1 지정" }
+  bpfo_mult:       { value: 7.608,  source: MFR, note: "BPFO = 7.608 × fr" }
+  bpfi_mult:       { value: 10.392, source: MFR, note: "BPFI = 10.392 × fr" }
+  reference_rpm:   { value: 1180.0, source: MFR }
+  note: "이전 파이프라인(sim/config/motor.yaml)의 6313/6311 은 추정값이었으며 본 값으로 대체"
+
+# 진동 판정 — ISO 20816-3 Group 2 (15~300 kW, 강성지지)
+vibration_iso20816_3:
+  watch_mms: { value: 1.4, source: MFR }
+  plan_mms:  { value: 2.8, source: MFR }
+  act_mms:   { value: 4.5, source: MFR }
+
+# 회전부 관성 (Isaac 물리 모델에서 확정)
+mechanics:
+  rotor_inertia_kgm2: { value: 0.468, source: CALC, note: "CAD 물성: 샤프트 0.018 + 로터 0.444 + 팬 0.006" }
+  rotor_mass_kg:      { value: 92.95, source: CALC }
+  static_mass_kg:     { value: 192.05, source: CALC, note: "명판 285 − 회전부 92.95" }
