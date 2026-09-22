@@ -33,6 +33,7 @@ C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical
 C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical
 ```
 
+장면별 해설과 발표 멘트, 예상 질문은 [`docs/animation_guide.md`](docs/animation_guide.md) 에 있다.
 제어 패널의 MODE 버튼으로 실행 중에도 바꿀 수 있다. 전환하면 이전 모드의 발열 색·입자·HUD 가
 전부 리셋된다(잔상 없음, 실측 검증). 모드별 녹화와 장면 클립, 바탕화면 정리는 아래 "녹화" 절,
 설명 대시보드는 [`../dashboard/README.md`](../dashboard/README.md) 를 본다.
