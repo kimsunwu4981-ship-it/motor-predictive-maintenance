@@ -68,14 +68,14 @@ export function CircuitSchematic({ data, focus }: { data: ElecData; focus: Phase
   return (
     <div className="panel circuit">
       <div className="panel-h">회로 안내 <span className="dim">전원 → 케이블 → Δ권선 · 색은 영상과 같은 상태색</span>
-        <span className="grow" /><span className="dim">주목 {focus.length ? focus.join("·") + "상" : "균형 지표"}</span></div>
+        <span className="grow" /><span className="dim">주목 {focus.length ? focus.map((p) => el.phase_labels[p]).join("·") + "상" : "균형 지표"}</span></div>
       <div className="circ-body">
         <svg viewBox="0 0 460 250" className="circ-svg" onMouseLeave={() => setHover(null)}>
           {/* 전원 */}
           <g className="src">
             <rect x={6} y={40} width={30} height={140} rx={6} />
             <text x={21} y={30} className="lbl">전원 3상</text>
-            {PHASES.map((p) => <text key={p} x={21} y={Y[p] + 4} className="lbl phase" fill={`rgb(${el.phase_colors[p].map((c) => Math.round(c * 255)).join(",")})`}>{p}</text>)}
+            {PHASES.map((p) => <text key={p} x={21} y={Y[p] + 4} className="lbl phase" fill={`rgb(${el.phase_colors[p].map((c) => Math.round(c * 255)).join(",")})`}>{el.phase_labels[p]}</text>)}
             {circ.voltage_note && <text x={21} y={196} className="lbl note">{circ.voltage_note.split(" (")[0]}</text>}
             {circ.voltage_note && <text x={21} y={208} className="lbl note dim">(원인 · 모델 입력 아님)</text>}
           </g>
@@ -89,7 +89,7 @@ export function CircuitSchematic({ data, focus }: { data: ElecData; focus: Phase
                 <g className="open"><line x1={TB_X - 70} y1={Y[p]} x2={TB_X - 40} y2={Y[p] - 16} /><circle cx={TB_X - 70} cy={Y[p]} r={3} /><circle cx={TB_X - 36} cy={Y[p]} r={3} />
                   <text x={TB_X - 54} y={Y[p] + 18} className="lbl warn">끊김</text></g>
               )}
-              <text x={140} y={Y[p] - 7} className="lbl cur" fill={col(p)}>{p}상 {ts.current_rms_A[p][i].toFixed(1)} A</text>
+              <text x={140} y={Y[p] - 7} className="lbl cur" fill={col(p)}>{el.phase_labels[p]}상 {ts.current_rms_A[p][i].toFixed(1)} A</text>
             </g>
           ))}
           {/* 단자함 */}
@@ -106,7 +106,7 @@ export function CircuitSchematic({ data, focus }: { data: ElecData; focus: Phase
               <path d={sidePath(s)} className="dots" stroke={col(s.key)} ref={(e) => { refs.current["w" + s.key] = e; }} />
             </g>
           ))}
-          {PHASES.map((p) => <g key={"v" + p}><circle cx={TRI[p][0]} cy={TRI[p][1]} r={4} className="node" /><text x={TRI[p][0] + (p === "C" ? -10 : p === "B" ? 10 : 0)} y={TRI[p][1] + (p === "A" ? -9 : 14)} className="lbl">{p}</text></g>)}
+          {PHASES.map((p) => <g key={"v" + p}><circle cx={TRI[p][0]} cy={TRI[p][1]} r={4} className="node" /><text x={TRI[p][0] + (p === "C" ? -10 : p === "B" ? 10 : 0)} y={TRI[p][1] + (p === "A" ? -9 : 14)} className="lbl">{el.phase_labels[p]}</text></g>)}
           <text x={318} y={128} className="lbl small mid">권선 {ts.phase_rms_A.A[i].toFixed(1)} / {ts.phase_rms_A.B[i].toFixed(1)} / {ts.phase_rms_A.C[i].toFixed(1)} A</text>
           {/* 단락 루프 (시각적 표시) */}
           {circ.short_loop && (() => { const s = SIDES.find((x) => x.key === circ.short_loop)!; const a = TRI[s.from], b = TRI[s.to]; const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
@@ -115,7 +115,7 @@ export function CircuitSchematic({ data, focus }: { data: ElecData; focus: Phase
           <text x={40} y={236} className="lbl small">케이블 = 선전류(정격 {el.rated_line_A} A) · 권선 = 상전류(정격 {el.rated_phase_A} A) · 입자는 {el.slowmo_x}배 느린 교류</text>
         </svg>
         <div className="circ-info">
-          {info ? <><b>{info.p}상</b> · 케이블 {info.line.toFixed(1)} A → 권선 {info.ph.toFixed(1)} A · 정격의 {info.pct} % · <span style={{ color: col(info.p) }}>{info.st}</span></>
+          {info ? <><b>{el.phase_labels[info.p]}상</b> · 케이블 {info.line.toFixed(1)} A → 권선 {info.ph.toFixed(1)} A · 정격의 {info.pct} % · <span style={{ color: col(info.p) }}>{info.st}</span></>
             : <span className="dim">{el.model_note}</span>}
         </div>
       </div>

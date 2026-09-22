@@ -9,6 +9,12 @@
 """
 from __future__ import annotations
 
+try:
+    from engine.config_loader import load as _load_cfg
+    PHASE_LABEL = dict(_load_cfg("electrical").get("phase_labels") or {})
+except Exception:   # config 를 못 읽어도 HUD 는 떠야 한다
+    PHASE_LABEL = {}
+
 import os
 import sys
 
@@ -84,7 +90,7 @@ class MotorHUD:
                     with ui.VStack(spacing=2):
                         for ph in ("A", "B", "C"):
                             with ui.HStack(height=20):
-                                ui.Label(f"Ph {ph}", width=40, style=_style(14))
+                                ui.Label(f"Ph {PHASE_LABEL.get(ph, ph)}", width=40, style=_style(14))   # 표시 이름은 config phase_labels (R/S/T)
                                 self._labels[f"i_{ph}"] = ui.Label("-", width=140, style=_style(14))
                                 self._labels[f"st_{ph}"] = ui.Label("-", width=150, style=_style(13))
                     with ui.HStack(height=26):

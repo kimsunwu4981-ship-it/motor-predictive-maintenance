@@ -115,7 +115,7 @@ CASES = [("healthy", _D), ("itsc_4turn", _D), ("itsc_12turn", _D),
 # HUD 는 영문 표기 (omni.ui 한글 미지원)
 CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
            "itsc_12turn": "Inter-turn short (12 turns)", "overload": "Overload 135%",
-           "single_phasing": "Single phasing (phase A lost)", "no_load": "No load",
+           "single_phasing": "Single phasing (phase R lost)", "no_load": "No load",
            "voltage_unbalance": "Supply voltage unbalance"}
 SHOTS = {"healthy": "p3_01_healthy", "itsc_4turn": "p3_02_itsc4", "itsc_12turn": "p3_03_itsc12",
          "overload": "p3_04_overload", "single_phasing": "p3_05_single_phasing"}

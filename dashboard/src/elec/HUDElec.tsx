@@ -17,7 +17,7 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
   // 뱃지: 주목 상 중 가장 심한 상태 (주목 상이 없으면 세 상). 장면 5 처럼 I₂/I₁ 만 주목하면 "색은 정상" 을 그대로 보여준다.
   const keys = scene?.focus_phases?.length ? scene.focus_phases : PHASES;
   const worst = keys.reduce((w, p) => (ELEC_SEVERITY[ts.current_status[p][i]] > ELEC_SEVERITY[w] ? ts.current_status[p][i] : w), ts.current_status[keys[0]][i]);
-  const badgeTitle = `주목 상(${keys.join("·")})의 현재 상태 — 정격 대비 전류로 판정`;
+  const badgeTitle = `주목 상(${keys.map((p) => el.phase_labels[p]).join("·")})의 현재 상태 — 정격 대비 전류로 판정`;
 
   // 장면이 바뀌면 슬로모션 표시를 짧게 강조 (기계의 배속 강조와 같은 자리)
   const [flash, setFlash] = useState(false);

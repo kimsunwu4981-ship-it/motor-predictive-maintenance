@@ -46,7 +46,7 @@ export function CurrentBars({ data, basis, focus }: { data: ElecData; basis: Bas
                   <span>{Math.round(r * 100)} %</span>
                 </div>
                 <div className="bar" style={{ height: y(r), background: el.status_colors[s] }} />
-                <div className="bar-name" style={{ borderColor: `rgb(${el.phase_colors[p].map((c) => Math.round(c * 255)).join(",")})` }}>{p}상</div>
+                <div className="bar-name" style={{ borderColor: `rgb(${el.phase_colors[p].map((c) => Math.round(c * 255)).join(",")})` }}>{el.phase_labels[p]}상</div>
               </div>
             );
           })}

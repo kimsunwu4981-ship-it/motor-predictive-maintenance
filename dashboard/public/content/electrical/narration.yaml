@@ -8,10 +8,11 @@
 # 공통 (config): rated_line_A, rated_phase_A, line_over_danger_A, line_over_caution_A, line_under_caution_A, line_under_danger_A,
 #   phase_over_danger_A, phase_over_caution_A, phase_under_caution_A, phase_under_danger_A, over_danger_pct, over_caution_pct,
 #   under_caution_pct, under_danger_pct, i2i1_normal, i2i1_4turn, i2i1_12turn, slowmo_x, lead_s, lead_alarm_t, lead_danger_t, line_phase_factor
+# 상 표시 이름: ph_a / ph_b / ph_c (config phase_labels → R·S·T). "A상" 이라고 직접 쓰지 말 것.
 # 실시간 (화면이 재생 시각의 로그 값으로 채운다): {a|b|c}_rms_now / _pct_now / _status_now / _phase_rms_now, i2i1_now, i2i1_x_normal_now
 #
 # focus_phases / focus_i2i1: 장면의 "지금 주목할 것" (사건 우선순위·강조에 쓴다). matrix_label: 판별 매트릭스의 영역 이름.
-# circuit: 회로도 표시 (short_loop: A상 권선 단락 루프, open_phase: 끊어진 상, voltage_note: 전원 쪽 정성 표기)
+# circuit: 회로도 표시 (short_loop: A(내부 키)상 권선 단락 루프, open_phase: 끊어진 상, voltage_note: 전원 쪽 정성 표기)
 # data_source_note: 그 장면에 짧게 표기할 데이터 출처 (규칙 5). presenter_line 은 발표자 화면에만.
 
 scenes:
@@ -24,7 +25,7 @@ scenes:
     circuit: {}
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "세 상 전압이 고르고 권선이 온전하면 세 전류의 크기가 같고 위상이 120° 씩 벌어져, 역상분(I₂, 세 줄이 서로 어긋난 정도)이 거의 0 입니다."
-    visible: "세 케이블 모두 초록 입자가 같은 속도로 흐릅니다. A {a_rms_now} / B {b_rms_now} / C {c_rms_now} A (정격 {rated_line_A} A), I₂/I₁ {i2i1_now}."
+    visible: "세 케이블 모두 초록 입자가 같은 속도로 흐릅니다. {ph_a} {a_rms_now} / {ph_b} {b_rms_now} / {ph_c} {c_rms_now} A (정격 {rated_line_A} A), I₂/I₁ {i2i1_now}."
     result: "초록이 세 줄, 균형 지표는 {i2i1_end}. 이것이 이후 변화를 판단하는 기준입니다."
     presenter_line: "초록이 세 줄, 균형 지표는 {i2i1_end}. 이게 기준입니다."
     data_source_note: "해석식 3상 모델 (FEM·실측 아님)"
@@ -43,14 +44,14 @@ scenes:
     circuit: { short_loop: A }
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "코일 {short_turns}턴의 절연이 깨져 붙으면(ITSC, 권선 층간단락) 그 상의 임피던스가 낮아져 전류가 늘고 균형이 깨집니다."
-    visible: "A상 케이블과 권선 오버레이가 빨강이 되고 권선 안에 빨간 단락 루프가 나타납니다. A {a_rms_now} A (정격의 {a_pct_now} %, {a_status_now}), B·C 는 {b_rms_now} A 그대로. I₂/I₁ {i2i1_now}."
+    visible: "{ph_a}상 케이블과 권선 오버레이가 빨강이 되고 권선 안에 빨간 단락 루프가 나타납니다. {ph_a} {a_rms_now} A (정격의 {a_pct_now} %, {a_status_now}), {ph_b}·{ph_c} 는 {b_rms_now} A 그대로. I₂/I₁ {i2i1_now}."
     result: "코일 몇 턴이 붙었을 뿐인데 균형 지표가 정상의 {i2i1_x_normal_end}배가 됩니다. 크기보다 균형이 먼저 말합니다."
     presenter_line: "코일 몇 턴이 붙었을 뿐인데 균형 지표가 {i2i1_x_normal_end}배 뜁니다. 크기보다 균형이 먼저 말합니다."
-    data_source_note: "해석식 등가 표현 — 목표 I₂/I₁ {i2i1_4turn} 을 A상 크기 불평형으로 재현. 단락 루프 순환전류는 모델에 없고, 빨간 루프는 위치를 알려주는 시각적 표시"
+    data_source_note: "해석식 등가 표현 — 목표 I₂/I₁ {i2i1_4turn} 을 {ph_a}상 크기 불평형으로 재현. 단락 루프 순환전류는 모델에 없고, 빨간 루프는 위치를 알려주는 시각적 표시"
     cause_chain:
       cause: "코일 {short_turns}턴 절연 파괴 (ITSC)"
-      mechanism: "고장 상 임피던스 감소 → A상 전류 증가, 위상 어긋남"
-      effect: "A상만 {a_status_end} ({a_rms_end} A), I₂/I₁ {i2i1_end} (정상의 {i2i1_x_normal_end}배)"
+      mechanism: "고장 상 임피던스 감소 → {ph_a}상 전류 증가, 위상 어긋남"
+      effect: "{ph_a}상만 {a_status_end} ({a_rms_end} A), I₂/I₁ {i2i1_end} (정상의 {i2i1_x_normal_end}배)"
       action: "권선 절연 진단(서지·절연저항), 조기 재권선 계획"
 
   itsc_12turn:
@@ -62,14 +63,14 @@ scenes:
     circuit: { short_loop: A }
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "단락 턴이 늘수록 그 상의 전류와 단락 루프의 순환 전류가 커지고, 그 열이 권선을 국부적으로 태웁니다."
-    visible: "A상이 더 진한 빨강이고 입자가 빨라집니다. A {a_rms_now} A (정격의 {a_pct_now} %), I₂/I₁ {i2i1_now}."
+    visible: "{ph_a}상이 더 진한 빨강이고 입자가 빨라집니다. {ph_a} {a_rms_now} A (정격의 {a_pct_now} %), I₂/I₁ {i2i1_now}."
     result: "여기까지 오면 예방이 아니라 수리입니다. 목표는 앞 장면(4턴)에서 알리는 것입니다."
     presenter_line: "여기까지 오면 예방이 아니라 수리입니다. 우리 목표는 앞 장면에서 알리는 겁니다."
     data_source_note: "해석식 등가 표현 — 목표 I₂/I₁ {i2i1_12turn} 재현. 단락 루프는 시각적 표시"
     cause_chain:
       cause: "단락 범위 확대 ({short_turns}턴)"
-      mechanism: "A상 전류·루프 순환 전류 증가, 국부 발열"
-      effect: "A상 {a_rms_end} A ({a_pct_end} %), I₂/I₁ {i2i1_end}"
+      mechanism: "{ph_a}상 전류·루프 순환 전류 증가, 국부 발열"
+      effect: "{ph_a}상 {a_rms_end} A ({a_pct_end} %), I₂/I₁ {i2i1_end}"
       action: "정지 후 재권선 — 예방 시점을 놓친 상태"
 
   overload:
@@ -81,7 +82,7 @@ scenes:
     circuit: {}
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "무거운 짐을 들면 세 상이 똑같이 더 많은 전류를 끌어옵니다. 균형은 유지되므로 역상분이 없습니다."
-    visible: "세 케이블이 함께 빨강, 입자가 모두 빨라집니다. A·B·C 모두 {a_rms_now} A (정격의 {a_pct_now} %). 그런데 I₂/I₁ 은 {i2i1_now}."
+    visible: "세 케이블이 함께 빨강, 입자가 모두 빨라집니다. {ph_a}·{ph_b}·{ph_c} 모두 {a_rms_now} A (정격의 {a_pct_now} %). 그런데 I₂/I₁ 은 {i2i1_now}."
     result: "크기는 문제, 균형은 정상 — 과부하와 권선 단락을 구분하는 단서입니다. 세 줄이 같이 붉으면 과부하, 한 줄만 붉으면 단락."
     presenter_line: "세 줄이 같이 붉으면 과부하, 한 줄만 붉으면 단락입니다. 균형 지표가 그걸 갈라 줍니다."
     data_source_note: "해석식 3상 모델 — 부하 {load_pct} % 시나리오에서 모델 전류는 정격의 {a_pct_end} % (config 값 그대로)"
@@ -100,7 +101,7 @@ scenes:
     circuit: { voltage_note: "공급전압 불평형 (원인 · 모델 입력 아님)" }
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "공급 전압이 상마다 몇 % 만 달라도 전류 불평형은 그보다 훨씬 크게 나타납니다. 크기 기준으로는 아직 정상이지만 균형은 이미 무너졌습니다."
-    visible: "케이블 색은 세 상 모두 초록(A {a_rms_now} / B {b_rms_now} / C {c_rms_now} A, 전부 정상 범위)인데 I₂/I₁ 만 {i2i1_now} 으로 정상값의 {i2i1_x_normal_now}배입니다."
+    visible: "케이블 색은 세 상 모두 초록({ph_a} {a_rms_now} / {ph_b} {b_rms_now} / {ph_c} {c_rms_now} A, 전부 정상 범위)인데 I₂/I₁ 만 {i2i1_now} 으로 정상값의 {i2i1_x_normal_now}배입니다."
     result: "색은 아직 다 초록인데 숫자는 {i2i1_x_normal_end}배 올랐습니다. 색만 보면 놓치고, 숫자를 보면 잡습니다."
     presenter_line: "색은 아직 다 초록입니다. 그런데 숫자는 열 배가 올랐습니다. 색만 보면 놓치고, 숫자를 보면 잡습니다."
     data_source_note: "해석식 3상 모델 — 이 모델은 전압을 입력으로 쓰지 않아, 전압 불평형이 만드는 전류 불평형(크기·위상)을 직접 넣었다. 전압 숫자는 없다"
@@ -111,7 +112,7 @@ scenes:
       action: "전원 측 전압 불평형 점검 (변압기·접속부), 균형 지표로 감시"
 
   single_phasing:
-    title: "결상 (A상 끊김)"
+    title: "결상 (R상 끊김)"
     fingerprint: "한 줄 파랑, 두 줄 빨강"
     focus_phases: [A, B, C]
     focus_i2i1: true
@@ -119,14 +120,14 @@ scenes:
     circuit: { open_phase: A }
     reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
     why: "한 상이 끊기면 남은 두 상만으로 같은 힘을 내려고 하므로 그 두 상에 전류가 몰립니다."
-    visible: "A상 케이블은 파랑(입자가 거의 멈춤, {a_rms_now} A), B·C 는 빨강({b_rms_now} A, 정격의 {b_pct_now} %). I₂/I₁ {i2i1_now}."
+    visible: "{ph_a}상 케이블은 파랑(입자가 거의 멈춤, {a_rms_now} A), {ph_b}·{ph_c} 는 빨강({b_rms_now} A, 정격의 {b_pct_now} %). I₂/I₁ {i2i1_now}."
     result: "한 줄이 파랗고 두 줄이 붉으면 결상입니다. 가장 급하게 세워야 하는 상태입니다."
     presenter_line: "한 줄이 파랗고 두 줄이 붉으면 결상입니다. 가장 급하게 세워야 하는 상태입니다."
     data_source_note: "해석식 3상 모델"
     cause_chain:
-      cause: "A상 케이블 단선·퓨즈 용단·접촉 불량"
+      cause: "{ph_a}상 케이블 단선·퓨즈 용단·접촉 불량"
       mechanism: "남은 두 상이 부하를 떠안아 과전류, 역상분 급증"
-      effect: "A {a_rms_end} A ({a_status_end}), B·C {bc_rms_end} A ({bc_pct_end} %), I₂/I₁ {i2i1_end}"
+      effect: "{ph_a} {a_rms_end} A ({a_status_end}), {ph_b}·{ph_c} {bc_rms_end} A ({bc_pct_end} %), I₂/I₁ {i2i1_end}"
       action: "즉시 정지, 단선 위치 수리 — 결상 보호 계전기 확인"
 
   no_load:

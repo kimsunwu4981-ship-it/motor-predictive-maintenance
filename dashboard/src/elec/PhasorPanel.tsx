@@ -35,7 +35,7 @@ export function PhasorPanel({ data, basis, focus, big, onToggleBig }: { data: El
             return (
               <g key={p} className={"ph-arrow" + (isF ? " focus" : " dim")}>
                 <line x1={c} y1={c} x2={x} y2={y} stroke={el.status_colors[s]} strokeWidth={isF ? 4 : 2.5} markerEnd={`url(#ph-${p})`} />
-                <text x={lx} y={ly} className="ph-name" fill={el.status_colors[s]} textAnchor="middle" dominantBaseline="middle">{p} {ampere(data, r, basis).toFixed(1)} A</text>
+                <text x={lx} y={ly} className="ph-name" fill={el.status_colors[s]} textAnchor="middle" dominantBaseline="middle">{el.phase_labels[p]} {ampere(data, r, basis).toFixed(1)} A</text>
               </g>
             );
           })}

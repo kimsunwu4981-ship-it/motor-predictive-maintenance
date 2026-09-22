@@ -175,7 +175,7 @@ if args.gui:
 
 CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
            "itsc_12turn": "Inter-turn short (12 turns)", "overload": "Overload 135%",
-           "single_phasing": "Single phasing (phase A lost)", "no_load": "No load",
+           "single_phasing": "Single phasing (phase R lost)", "no_load": "No load",
            "voltage_unbalance": "Supply voltage unbalance"}
 STEP_EN_BY_MODE = {
     "integrated": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
@@ -189,7 +189,7 @@ STEP_EN_BY_MODE = {
     "electrical": {"healthy": "1. Healthy (balanced)", "itsc_4turn": "2. Inter-turn short (4T)",
                    "itsc_12turn": "3. Inter-turn short (12T)", "overload": "4. Overload",
                    "voltage_unbalance": "5. Supply voltage unbalance",
-                   "single_phasing": "6. Single phasing (phase A lost)", "no_load": "7. No load"},
+                   "single_phasing": "6. Single phasing (phase R lost)", "no_load": "7. No load"},
 }
 
 # ------------------------------------------------------------------ 로깅

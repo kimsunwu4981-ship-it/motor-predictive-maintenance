@@ -27,7 +27,7 @@ export interface ElecScene extends LiveScene {
 export interface MatrixPoint { scene: number; id: string; label: string; x_i2i1: number; y_ratio_max: number; y_ratio_mean: number; y_ratio_min: number }
 export type ElecThresholds = Thresholds & {
   electrical: Thresholds["electrical"] & {
-    slowmo_x: number; slowmo_label: string; phase_colors: Record<Phase, number[]>; status_rgb: Record<ElecStatus, number[]>;
+    slowmo_x: number; slowmo_label: string; phase_labels: Record<Phase, string>; phase_colors: Record<Phase, number[]>; status_rgb: Record<ElecStatus, number[]>;
     short_loop: { rgb: number[]; pulse_hz: number }; model_note: string; matrix: MatrixPoint[];
   };
 };

@@ -12,6 +12,10 @@ source:
   honesty_label: "시뮬레이션 기반 추정값 (Simulation-based)"
   honesty_sub: "정격 기준: 22 kW 6극 크레인 권상 모터 도면값 · 전류는 해석식 생성"
 
+# 상(phase) 표시 이름 — 내부 키(A/B/C: 로그 컬럼 Ia/Ib/Ic, phase_scale 순서, 엔진 변수)는 그대로 두고
+# 화면·자막·HUD·문서에 보이는 이름만 여기서 정한다. 국내 현장 관례(전원 R·S·T)에 맞춘다 (2026-09-22 결정).
+phase_labels: { A: "R", B: "S", C: "T" }
+
 # 기준 전류는 config/motor.yaml 에서 읽는다 (Δ결선: 케이블=선전류, 권선=상전류)
 reference:
   cable_basis: rated_line_A      # 공급 케이블 경로 판정 기준
@@ -79,7 +83,7 @@ cases:
     target_i2i1: null
     load: 1.0
   single_phasing:
-    label: "결상 (A상 상실)"
+    label: "결상 (R상 상실)"
     phase_scale: [0.04, 1.42, 1.42]
     phase_shift_deg: [0.0, 0.0, 0.0]
     target_i2i1: null

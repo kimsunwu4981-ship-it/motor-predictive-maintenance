@@ -32,7 +32,8 @@ from engine.config_loader import load  # noqa: E402
 from engine.current_model import CurrentModel, phasors_from_waveform, symmetrical_components  # noqa: E402
 
 PH = ("A", "B", "C")
-PH_KO = {"A": "A상", "B": "B상", "C": "C상", "ABC": "세 상"}
+_LAB = dict(load("electrical").get("phase_labels") or {"A": "A", "B": "B", "C": "C"})   # 표시 이름 (R/S/T) — 내부 키는 A/B/C
+PH_KO = {p: f"{_LAB[p]}상" for p in PH} | {"ABC": "세 상"}
 STATUS = ("under_danger", "under_caution", "normal", "over_caution", "over_danger")
 STATUS_KO = {"over_danger": "위험 과전류", "over_caution": "주의 과전류", "normal": "정상",
              "under_caution": "주의 저전류", "under_danger": "위험 저전류(결상 의심)"}
@@ -196,7 +197,7 @@ def extract_events(ts: dict, th: dict, sc: dict, tab: CaseTable, focus: dict) ->
                   "from": frm, "to": to, "from_ko": STATUS_KO[frm], "to_ko": STATUS_KO[to],
                   "rms_A": rms[p0], "pct": pct[p0], "threshold_A": _boundary_A(frm, to, eth, i_line),
                   "rms_range": rng(rms), "pct_range": rng(pct),
-                  "others": "·".join(others), "others_rms_A": rms[others[0]] if others else None,
+                  "others": "·".join(_LAB[q] for q in others), "others_rms_A": rms[others[0]] if others else None,
                   "others_pct": pct[others[0]] if others else None,
                   "is_focus": phase in (focus.get(sn["id"], {}).get("focus_phases") or []) or phase == "ABC",
                   "priority": prio(sn, phase, False), "tpl": tpl}
@@ -282,6 +283,7 @@ def narration_values(ts: dict, th: dict, sc: dict, tab: CaseTable) -> dict:
         "i2i1_normal": marks.get("healthy"), "i2i1_4turn": marks.get("itsc_4turn"), "i2i1_12turn": marks.get("itsc_12turn"),
         "slowmo_x": el["slowmo_x"], "lead_s": lt.get("lead_s"), "lead_alarm_t": lt.get("alarm_t"), "lead_danger_t": lt.get("danger_t"),
         "line_phase_factor": round(i_line / i_phase, 3),
+        "ph_a": _LAB["A"], "ph_b": _LAB["B"], "ph_c": _LAB["C"],
     }
     for s in sc["steps"]:
         i_end, i_start = idx_at(s["t_end"] - 0.3), idx_at(s["t_start"] + 0.05)
@@ -330,6 +332,7 @@ def matrix_points(ts: dict, sc: dict, th: dict, cfg: dict) -> list[dict]:
 def apply_extras(th: dict, ts: dict, sc: dict, faults: dict) -> tuple[list[dict], dict, dict]:
     elec, colors = load("electrical"), load("colors")
     tab = CaseTable()
+    th["electrical"]["phase_labels"] = _LAB
     th["electrical"]["slowmo_x"] = int(round(1.0 / float(elec["slowmo"]["factor"])))
     th["electrical"]["slowmo_label"] = elec["slowmo"]["label"]
     th["electrical"]["phase_colors"] = {k: [float(x) for x in (v["color"] if isinstance(v, dict) else v)] for k, v in (colors.get("phases") or {}).items()}
