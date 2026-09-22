@@ -1,4 +1,4 @@
-# build_guide_pdf.ps1 — docs/animation_guide.md 를 PDF 로 만든다 (Markdown → HTML → Edge 헤드리스 인쇄).
+﻿# build_guide_pdf.ps1 — docs/animation_guide.md 를 PDF 로 만든다 (Markdown → HTML → Edge 헤드리스 인쇄).
 #
 #   powershell -ExecutionPolicy Bypass -File tools\build_guide_pdf.ps1          # docs/animation_guide.pdf 갱신
 #   powershell -ExecutionPolicy Bypass -File tools\build_guide_pdf.ps1 -Publish # + 프로젝트 산출물 폴더(모터결함_애니메이션)에 복사

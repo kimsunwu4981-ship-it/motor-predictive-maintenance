@@ -371,3 +371,77 @@ dashboard/
 - 스크린샷: `dashboard/docs/screenshots/m2_*`, `m3_*`, `m4_*`, `m5_*`
 - 한계: 헤드리스로는 영상 프레임 동기를 못 본다(실제 창에서 `?t=27.5` 로 눈 확인, `docs/sync_check.md`). 발표자 화면은 같은 브라우저
   프로필 창끼리만 동기. 전기 적용 메모는 `docs/electrical_apply_notes.md`.
+
+
+## 12. 전기적 결함 실시간 해설 대시보드 (2026-09-22 밤, E0~E5 완료) + 상 표기 R·S·T 통일
+
+`#/electrical` 을 기계(11장)와 같은 실시간 해설 화면으로 확장했다. 지시서 `TASK_전기실시간해설` 의 E0~E5 를 단계마다 보고하며 진행했고,
+기계 작업의 공통 부분을 `src/live/` 로 빼내 두 대시보드가 같은 코드를 쓴다. 커밋: E1 `3f5fd68`, E2 `91e6b64`, E3 `d8034db`, E4 `c835d5c`,
+R·S·T `58c7249`, 마무리 (아래).
+
+### 12.1 구조
+
+```
+dashboard/
+├── src/live/                  # 공통 (기계·전기)
+│   ├── types.ts     LiveData(mode, scenarios, events, values, content, live(t), timeNote(t)), fill/fillParts
+│   ├── load.ts      JSON/YAML 로더 (문구는 런타임에 읽음)
+│   ├── captions.ts  사건 묶음(1 s, 우선순위)·자막 유지·reveal_timing·이력 목록 — 전기 사건은 export 가 붙인 tpl 키를 그대로 씀
+│   ├── CaptionBar / LiveNarration / QaDrawer(+용어 풀이) / broadcast.ts(채널 vigent-<mode>)
+├── src/elec/                  # 전기 전용
+│   ├── data.ts        ElecData(ratio·phase_rms·phasor_deg·case·matrix·waveforms·phase_labels), liveValues({a|b|c}_rms_now…), ampere(basis)
+│   ├── HUDElec        주목 상 뱃지 · 슬로모션 60배 표시 · 선/상전류 토글(L)
+│   ├── CurrentBars + CurrentTrend   상별 막대(config 5구간 배경, 상태색, ▲▲/●/▼▼) + 추세(미래 숨김, 리드 타임 0 s 표시)
+│   ├── I2I1Panel      게이지(정상/4턴/12턴 눈금) + 추세(눈금 통과·균형만 무너짐 마커)
+│   ├── PhasorPanel    페이저도 SVG (정격 원, 120° 기준선, 상태색 화살표), P 확대
+│   ├── CircuitSchematic  Δ결선 회로도 SVG — 케이블(선전류)·권선(상전류), 교류 진동 입자(1 Hz = 60 Hz/60), 단락 루프·끊김·전압 정성 표기
+│   └── Panels.tsx     인과 카드 + 결함 판별 매트릭스(세로 크기 × 가로 균형 √눈금, 7장면 점 + 실시간 ◉, 판별 규칙 줄)
+├── src/pages/ElectricalLive.tsx · PresenterView.tsx(mode 매개변수) · App.tsx(#/electrical/presenter, #/electrical/classic)
+├── tools/export_electrical_extras.py   엔진 재계산(비율·상전류·위상), 사건 추출, 해설 변수, 매트릭스 좌표, 파형, phase_labels
+├── public/content/electrical/ narration.yaml · event_templates.yaml · qa.yaml · glossary.yaml
+├── tests/test_electrical_extras.py     16건 (재계산=로그, 로그 RMS+위상→I₂/I₁, 페이저 기하, 임계 암페어=config, 사건=로그, 리드 0 s,
+│                                        균형만 무너짐, 템플릿 변수, 해설 변수, 매트릭스, PDF 3장 8줄·1장 암페어 5개, qa/glossary 변수)
+└── docs/narration_review_electrical.md · first_viewer_check_electrical.md · sync_check.md(전기 절)
+```
+
+### 12.2 숫자 출처
+
+- 로그(`logs/electrical/demo_*.csv`)에는 상별 선전류 RMS 와 I₂/I₁ 만 있다. 정격 대비 비율·상전류(비율 × 25.2 A)·기본파 위상은
+  **엔진(`engine/current_model.py`)으로 재계산**했다 — 해석식·결정론적이라 재계산값이 정확값이고, 로그와 최대 0.05 A 차이.
+  로그 RMS + config 위상으로 대칭좌표를 다시 계산하면 기록된 I₂/I₁ 과 0.0004 안에서 같다.
+- 전압은 모델 입력이 아니다. 장면 5(공급전압 불평형)는 전류 불평형(크기 1.08/0.94/0.98, 위상 +2/−3/+1°)을 직접 넣은 것. 화면에 전압 숫자는 없고
+  회로도 전원 쪽에 "원인 · 모델 입력 아님"으로 정성 표기.
+- 사건 23건: 상별 상태 변화(세 상이 같은 상태가 되면 하나로 묶음), I₂/I₁ 눈금(4턴·12턴) 통과(한 스텝에 여럿이면 가장 높은/낮은 눈금만),
+  "균형만 무너짐"(세 상 정상인데 I₂/I₁ > 정상 목표값 × 5 — 장면 5 는 9.9배), 단락 루프 표시 on/off, 장면 전환. 케이스 전환이 장면 경계보다
+  한 로그 스텝 먼저 찍히므로(119.918 vs 120.0 s) 사건의 장면은 행의 step 으로 정한다.
+- 리드 타임 0 s(I₂/I₁ 4턴 도달 = R상 위험 과전류, 같은 행) 를 그대로 표시. 균형 지표의 가치는 장면 5로 말한다.
+- 과부하 장면은 config 가 `phase_scale 1.35 × load 1.35` 를 곱해 **정격의 182 %**(79.6 A)다. 로그·영상·PDF 는 그 값으로 일치하지만 물리적으로
+  과장이라 해설 출처 줄과 Q 서랍에 명시했다. 수정 여부는 미결(재녹화·PDF 수정 필요).
+
+### 12.3 상 표기 R·S·T (2026-09-22 결정)
+
+사용자가 "A·B·C 대신 R·S·T" 를 택했다(현장 관례). `config/electrical.yaml` 의 `phase_labels: {A: R, B: S, C: T}` 하나가 출처이고
+Isaac HUD("Ph R")·데모 라벨·시나리오 자막·export(`phase_label`, `{ph_a}` 변수)·대시보드·해설 원문·PDF 가 모두 그것을 따른다.
+**내부 키(로그 `Ia_rms`, config 순서, 엔진 변수)는 A/B/C 그대로** — 문구에 "A상"을 직접 쓰지 말고 `{ph_a}상` 을 쓴다.
+
+### 12.4 조작
+
+기계와 같음 + `L` 선/상전류 전환, `P` 페이저 확대. `#/electrical?t=30`, `&qa=1`, `#/electrical/presenter`. 이전 탭형 화면은 `#/electrical/classic`.
+
+### 12.5 겪은 문제와 해결
+
+- **numpy bool 이 JSON 에 안 들어감** → `bool()` 로 감싼다. **시나리오 끝의 `manual` 행** → 마지막 케이스를 이어 쓴다.
+- **한 스텝에 I₂/I₁ 눈금 두 개 통과(0.269→0)** → 오를 때 최고, 내릴 때 최저 눈금만 사건으로.
+- **ECharts 세로 markLine 라벨이 회전** → `position: "end", align: "left"` (기계 차트와 같은 방식).
+- **막대 배경 띠 opacity 가 글자까지 흐리게** → rgba 배경으로.
+- **화면 녹화가 다른 창을 찍음(3회)** — 브라우저(YouTube)·VS Code·bat 이 연 브라우저가 앞에 있었다. gdigrab 은 화면을 찍으므로 녹화 15분 동안
+  화면을 비워야 한다. 사용자에게 알리고 "시작" 신호 뒤에 체인(Isaac → export → 빌드 → 대시보드 2건)으로 한 번에 돌렸다.
+  `run_dashboard_*.bat` 를 검증 목적으로 돌리면 사용자 브라우저가 앞으로 나오므로 녹화 전에 하지 않는다.
+- **PDF 재생성 절차가 스크립트로 없었음** → `motor_dt_viz/tools/build_guide_pdf.ps1` (-Publish 로 산출물 폴더 복사).
+
+### 12.6 산출물
+
+- 영상: `모터결함_애니메이션/2_전기적결함/*.mp4` (R·S·T HUD, 타임코드 없음, 오프셋 2.007 s, 23:02 재녹화), `09_전기_실시간해설_대시보드_1920x1080.mp4`,
+  `08_기계_실시간해설_대시보드_1920x1080.mp4`(회귀 재녹화). 이전 타임코드 판은 `dashboard/public/media/electrical_backup_timecode/`.
+- 스크린샷: `dashboard/docs/screenshots/e2_*`, `e3_*`, `e4_*`.
+- 오프라인·bat: 번들에 외부 URL 없음, DNS 차단 브라우저로 스크린샷, 두 bat 모두 실행 확인.
