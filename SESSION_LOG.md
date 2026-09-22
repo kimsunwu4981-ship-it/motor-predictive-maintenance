@@ -365,7 +365,9 @@ dashboard/
 
 ### 11.6 산출물
 
-- 녹화: `모터결함_애니메이션/08_기계_실시간해설_대시보드_1920x1080.mp4` (7장면 자동 해설 192 s, git 제외)
+- 녹화: `모터결함_애니메이션/08_기계_실시간해설_대시보드_1920x1080.mp4` (7장면 자동 해설 192 s, git 제외; 타임코드가 있던 영상 기준)
+- 발표용 재녹화(-NoTimecode, 09-22 17:45): 로그 `logs/mechanical/demo_20260922_174529.csv`, 오프셋 2.008 s, 재export 후 33건 통과
+  (PDF 숫자 모두 0.15 °C 이내), 리드 타임 1.55 s. 타임코드 판은 `public/media/mechanical_backup_timecode/` 에 보관.
 - 스크린샷: `dashboard/docs/screenshots/m2_*`, `m3_*`, `m4_*`, `m5_*`
 - 한계: 헤드리스로는 영상 프레임 동기를 못 본다(실제 창에서 `?t=27.5` 로 눈 확인, `docs/sync_check.md`). 발표자 화면은 같은 브라우저
   프로필 창끼리만 동기. 전기 적용 메모는 `docs/electrical_apply_notes.md`.
