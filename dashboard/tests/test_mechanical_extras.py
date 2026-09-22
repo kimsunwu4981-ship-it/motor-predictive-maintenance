@@ -135,17 +135,59 @@ def test_narration_values_match_log_scene_end():
         assert v["time_scale"] == s["time_scale"]
 
 
+# 화면이 재생 시각의 로그 값으로 채우는 실시간 변수 (src/mech/data.ts liveValues 와 같은 목록)
+LIVE_VARS = {"vib_now", "iso_now_ko", "sim_elapsed_now", "time_scale_now"}
+
+
+def _is_live_var(var: str, part_keys: set[str]) -> bool:
+    if var in LIVE_VARS:
+        return True
+    for suffix in ("_stage_now", "_now"):
+        if var.endswith(suffix) and var[: -len(suffix)] in part_keys:
+            return True
+    return False
+
+
 def test_narration_yaml_variables_all_resolvable():
-    """문구의 {변수} 가 전부 narration_values 에 존재해야 한다 (오타·미정의 변수 방지)."""
+    """문구의 {변수} 가 전부 narration_values 에 존재하거나 실시간 변수 목록에 있어야 한다 (오타·미정의 변수 방지)."""
     cfg = yaml.safe_load(open(os.path.join(CONTENT, "narration.yaml"), encoding="utf-8"))
     vals = _j("narration_values")["scenes"]
+    part_keys = {p["key"] for p in _j("thresholds")["thermal"]["parts"]}
     for sid, sc in cfg["scenes"].items():
         assert sid in vals, sid
         texts = [sc.get(k, "") for k in ("why", "visible", "result", "presenter_line")] + list(sc.get("cause_chain", {}).values())
         for txt in texts:
             for var in re.findall(r"\{([a-zA-Z0-9_]+)\}", txt):
-                assert var in vals[sid], f"{sid}: {{{var}}} 미정의"
+                assert var in vals[sid] or _is_live_var(var, part_keys), f"{sid}: {{{var}}} 미정의"
         assert sc["focus_component"] in vals[sid].get("scene_label", "") or f"{sc['focus_component']}_end" in vals[sid]
+        rt = sc["reveal_timing"]
+        assert 0.0 <= rt["why"] <= rt["visible"] <= rt["result"] <= 1.0, f"{sid}: reveal_timing 순서"
+
+
+def test_qa_yaml_variables_resolvable():
+    cfg = yaml.safe_load(open(os.path.join(CONTENT, "qa.yaml"), encoding="utf-8"))
+    vals = _j("narration_values")["scenes"]
+    for item in cfg["items"]:
+        v = vals[item.get("scene", "normal")]
+        for var in re.findall(r"\{([a-zA-Z0-9_]+)\}", item["q"] + item["a"]):
+            assert var in v, f"qa: {{{var}}} 미정의"
+
+
+def test_event_templates_cover_all_events():
+    """events.json 의 모든 사건에 자막 템플릿이 있고, 템플릿의 {변수} 가 사건 필드에 전부 있어야 한다 (자막에 빈 변수 금지)."""
+    tpl = yaml.safe_load(open(os.path.join(CONTENT, "event_templates.yaml"), encoding="utf-8"))
+    for e in _j("events")["events"]:
+        g = tpl.get(e["type"])
+        assert g, f"{e['type']} 템플릿 없음"
+        if e["type"] == "stage_up":
+            key = "early_warning" if e.get("note") == "early_warning" else ("danger" if e["to"] == "danger" else "default")
+        elif e["type"] == "vib_zone":
+            key = "up" if e["up"] else "down"
+        else:
+            key = "default"
+        text = g.get(key) or g["default"]
+        for var in re.findall(r"\{([a-zA-Z0-9_]+)\}", text):
+            assert e.get(var) is not None, f"사건 {e['id']} ({e['type']}/{key}): {{{var}}} 값 없음"
 
 
 def test_narration_scene_ids_match_scenario():

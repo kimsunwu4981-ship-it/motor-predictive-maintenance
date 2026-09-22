@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
 import { fmtT, type ModeData } from "../data";
 import { usePlayback } from "../state/playback";
 
 // 영상이 단일 시간 소스. 아래 챕터 타임라인을 누르면 그 시각으로 이동한다(양방향 동기화).
-export function VideoPanel({ data }: { data: ModeData }) {
+// overlay: 영상 위에 겹쳐 그릴 요소 (기계 대시보드의 자막 바). 전기 대시보드는 넘기지 않는다.
+export function VideoPanel({ data, overlay }: { data: ModeData; overlay?: ReactNode }) {
   const { videoRef, t, playing, toggle, seek, stepIndex, duration } = usePlayback();
   const sc = data.scenarios;
   return (
@@ -14,6 +16,7 @@ export function VideoPanel({ data }: { data: ModeData }) {
       </div>
       <div className="video-box">
         <video ref={videoRef} src={sc.video} preload="auto" playsInline onClick={toggle} />
+        {overlay}
       </div>
       <div className="controls">
         <button className="primary" onClick={toggle}>{playing ? "❚❚ 정지" : "▶ 재생"}</button>

@@ -21,4 +21,4 @@ xray_on:
 xray_off:
   default: "엔드실드가 다시 불투명해집니다"
 scene:
-  default: "장면 {scene}. {label} — 화면 1초 = 시뮬레이션 {time_scale}초"
+  default: "장면 {label} — 화면 1초 = 시뮬레이션 {time_scale}초"   # label 에 번호가 들어 있다 (예: 2. DE 베어링 열화)

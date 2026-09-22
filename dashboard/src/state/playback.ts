@@ -60,14 +60,22 @@ export function usePlaybackController(sc: Scenarios): Playback {
   // URL 의 ?t=초 로 시작 위치를 지정할 수 있다 (스크린샷·동기 검증·특정 장면 바로 열기)
   //   예) #/mechanical?t=40
   useEffect(() => {
+  //   ?autoplay=1 을 더하면 로드 즉시 재생한다 (화면 녹화용; 자동재생 정책 때문에 음소거로 튼다 — 영상에 소리는 없다)
+  //   &delay=5 를 더하면 그만큼 기다렸다 재생한다 (녹화 프로그램이 창을 잡을 시간)
     const q = window.location.hash.split("?")[1];
-    const t0 = q ? Number(new URLSearchParams(q).get("t")) : NaN;
+    const params = new URLSearchParams(q ?? "");
+    const auto = params.get("autoplay") === "1";
+    const delay = Math.max(0, Number(params.get("delay") ?? 0) || 0);
+    const t0 = q ? Number(params.get("t") ?? (auto ? 0 : NaN)) : NaN;
     const v = videoRef.current;
     if (!v || !Number.isFinite(t0)) return;
     const tr = Math.max(0, Math.min(t0, duration));
     setT(tr);                                   // 차트·설명은 영상 로드와 무관하게 즉시 그 시각으로
     pending.current = { t: tr, at: performance.now() };
-    const apply = () => { pending.current = { t: tr, at: performance.now() }; v.currentTime = tr + off; };
+    const apply = () => {
+      pending.current = { t: tr, at: performance.now() }; v.currentTime = tr + off;
+      if (auto) { v.muted = true; setTimeout(() => v.play().then(() => setPlaying(true)).catch(() => undefined), delay * 1000); }
+    };
     if (v.readyState >= 1) apply(); else v.addEventListener("loadedmetadata", apply, { once: true });
   }, [off, duration]);
 

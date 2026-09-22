@@ -9,6 +9,8 @@ import { LiveNarration } from "../mech/LiveNarration";
 import { MotorSchematic } from "../mech/MotorSchematic";
 import { CausePanel } from "../mech/CausePanel";
 import { VibChart } from "../mech/VibChart";
+import { CaptionBar } from "../mech/CaptionBar";
+import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../mech/captions";
 import "../mech/schematic.css";
 
 // 기계적 결함 실시간 해설 대시보드 (TASK_기계실시간해설). 전기 대시보드(ModeDashboard)는 그대로 둔다.
@@ -27,7 +29,8 @@ export function MechanicalLive() {
 function Inner({ data }: { data: MechData }) {
   const pb = usePlaybackController(data.scenarios);
   const [present, setPresent] = useState(false);
-  const [autoMode, setAutoMode] = useState(true);       // 자동 해설 / 발표자 모드 (TASK 7.1) — 동작은 M4
+  const [autoMode, setAutoMode] = useState(true);       // 자동 해설 / 발표자 모드 (TASK 7.1)
+  const [captions, setCaptions] = useState(true);       // C 키: 자막 켜기/끄기
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; }
   });
@@ -36,13 +39,26 @@ function Inner({ data }: { data: MechData }) {
   // 주목 부품: 장면 config(narration.yaml focus_component). 사용자가 칩을 눌러 잠시 다른 부품을 볼 수도 있지만
   // 장면이 바뀌면 다시 config 값으로 돌아온다.
   const step = data.scenarios.steps[pb.stepIndex];
-  const cfgFocus = data.content.scenes[step.id]?.focus_component ?? "bearing_de";
+  const scene = data.content.scenes[step.id];
+  const cfgFocus = scene?.focus_component ?? "bearing_de";
   const [override, setOverride] = useState<{ scene: string; key: string } | null>(null);
   const focus = override && override.scene === step.id ? override.key : cfgFocus;
   const [shown, setShown] = useState<Set<string>>(() => new Set(TEMP_DEFAULT_ON));
   const toggle = (k: string) => setShown((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n; });
   const setFocus = (k: string) => setOverride({ scene: step.id, key: k });
   const chartToggle = useMemo(() => (k: string) => (shown.has(k) ? setFocus(k) : toggle(k)), [shown, step.id]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 해설 단계 공개 (TASK 5.2 / 7.1): 자동 해설 모드는 reveal_timing, 발표자 모드는 N 키. 장면이 바뀌면 수동 단계는 0 으로.
+  const [manual, setManual] = useState<{ scene: string; level: number }>({ scene: step.id, level: 0 });
+  const manualLevel = manual.scene === step.id ? manual.level : 0;
+  const level = autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;
+  const nextLevel = () => setManual({ scene: step.id, level: Math.min(3, manualLevel + 1) });
+
+  // 이벤트 자막 · 이력 (events.json + event_templates.yaml)
+  const clusters = useMemo(() => buildClusters(data.events), [data.events]);
+  const history = useMemo(() => buildHistory(data, clusters), [data, clusters]);
+  const cap = useMemo(() => captionAt(clusters, pb.t), [clusters, pb.t]);
+  const sceneCap = useMemo(() => sceneCaptionAt(data.events, pb.t, data.content.templates), [data.events, data.content.templates, pb.t]);
 
   const togglePresent = () => setPresent((p) => {
     const next = !p;
@@ -57,6 +73,8 @@ function Inner({ data }: { data: MechData }) {
       else if (e.key === "ArrowRight") { e.preventDefault(); pb.gotoStep(pb.stepIndex + 2); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
       else if (e.key === "f" || e.key === "F") togglePresent();
+      else if (e.key === "c" || e.key === "C") setCaptions((c) => !c);
+      else if (e.key === "n" || e.key === "N") { if (!autoMode) nextLevel(); }
       else if (e.key === "Escape" && present) setPresent(false);
       else if (e.key >= "1" && e.key <= "9") pb.gotoStep(Number(e.key));
     };
@@ -73,18 +91,19 @@ function Inner({ data }: { data: MechData }) {
     <PlaybackContext.Provider value={pb}>
       <div className={"dash live" + (present ? " present" : "")}>
         <HUDLive data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
-                 present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)} />
+                 present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
+                 captions={captions} onCaptions={() => setCaptions((c) => !c)} />
         <div className="live-main">
-          <VideoPanel data={data} />
+          <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
           <div className="live-side">
-            <LiveNarration data={data} />
+            <LiveNarration data={data} level={level} history={history} />
             <MotorSchematic data={data} focus={focus} />
           </div>
         </div>
         <div className="live-bottom">
           <TempChart data={data} focus={focus} shown={shown} onToggle={chartToggle} />
           <VibChart data={data} />
-          <CausePanel data={data} />
+          <CausePanel data={data} focus={focus} />
         </div>
       </div>
     </PlaybackContext.Provider>

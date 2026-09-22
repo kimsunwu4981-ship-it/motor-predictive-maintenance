@@ -39,6 +39,8 @@
 
 직접 확인: `#/mechanical?t=27.5` 를 연다 → 영상 타임코드 `t 27.5x s`, 차트 커서가 "■ 위험 도달" 빨간 선 위,
 단면도의 DE 베어링이 빨강 발광(위험), 상단 뱃지 "위험". 네 곳이 같은 순간을 가리키면 정상이다.
+이벤트 자막(영상 아래)과 이력 목록의 시각도 같은 `t` 에서 나오며, 사건 시각은 export 가 로그에서 뽑은
+`events.json` 값이다 — 자막이 뜨는 순간과 차트 마커·단면도 색 변화가 같은 프레임이어야 한다.
 단면도 색이 영상 속 부품 색과 같은지는 `dashboard/tests/test_mechanical_extras.py::test_colormap_exported_equals_colors_yaml`
 이 컬러맵 원본(`config/colors.yaml`)과 대조한다.
 

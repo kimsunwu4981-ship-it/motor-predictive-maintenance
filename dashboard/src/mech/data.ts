@@ -82,7 +82,7 @@ export function fill(text: string, v: SceneValues | undefined): string {
     return typeof x === "number" ? fmtNum(x) : String(x);
   });
 }
-function fmtNum(x: number): string {
+export function fmtNum(x: number): string {
   return Number.isInteger(x) ? String(x) : String(Math.round(x * 10) / 10);
 }
 export function fmtSim(sec: number): string {
@@ -90,3 +90,42 @@ export function fmtSim(sec: number): string {
   return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분 ${s.toString().padStart(2, "0")}초`;
 }
 export const STAGE_ORDER: Stage[] = ["normal", "caution", "warning", "danger"];
+
+// ---- 실시간 치환 변수 (M4) ----
+// 장면 문구의 {부품}_now / {부품}_stage_now / vib_now / iso_now_ko / sim_elapsed_now / time_scale_now 는
+// export 가 아니라 화면이 재생 시각 t 의 로그 값으로 채운다. 값의 출처는 여전히 timeseries.json(로그)뿐이다.
+// 장면 종료 값({부품}_end 등)은 narration_values.json 그대로 쓴다. 테스트(test_mechanical_extras.py)가 이 목록을 안다.
+export const LIVE_VAR_SUFFIXES = ["_now", "_stage_now"] as const;
+export const LIVE_VAR_NAMES = ["vib_now", "iso_now_ko", "sim_elapsed_now", "time_scale_now"] as const;
+export function liveValues(data: MechData, t: number): SceneValues {
+  const ts = data.timeseries, th = data.thresholds;
+  const a = ts.t_real_s;
+  let lo = 0, hi = a.length - 1;
+  if (t <= a[0]) hi = 0; else if (t >= a[hi]) lo = hi; else { while (hi - lo > 1) { const m = (lo + hi) >> 1; if (a[m] <= t) lo = m; else hi = m; } hi = lo; }
+  const i = hi;
+  const v: SceneValues = {
+    vib_now: ts.vibration_mms[i], iso_now_ko: th.vibration_iso.zone_labels[ts.iso_zone[i]] ?? ts.iso_zone[i],
+    sim_elapsed_now: fmtSim(ts.sim_elapsed_s[i]), time_scale_now: ts.time_scale[i],
+  };
+  for (const p of th.thermal.parts) {
+    v[`${p.key}_now`] = ts.temperature_C[p.key][i];
+    v[`${p.key}_stage_now`] = th.thermal.stage_labels[ts.stage[p.key][i]];
+  }
+  return v;
+}
+// fill 과 같지만 치환된 값을 구분해 돌려준다 (화면에서 수치를 굵게 보여주기 위해)
+export function fillParts(text: string, v: SceneValues | undefined): { s: string; v: boolean }[] {
+  const out: { s: string; v: boolean }[] = [];
+  let last = 0;
+  const re = /\{([a-zA-Z0-9_]+)\}/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push({ s: text.slice(last, m.index), v: false });
+    const x = v?.[m[1]];
+    if (x === undefined || x === null) out.push({ s: m[0], v: false });
+    else out.push({ s: typeof x === "number" ? fmtNum(x) : String(x), v: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ s: text.slice(last), v: false });
+  return out;
+}

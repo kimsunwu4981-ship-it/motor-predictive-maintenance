@@ -5,9 +5,9 @@ import { STAGE_ICON } from "../components/Legend";
 import { fmtSim, type MechData } from "./data";
 
 // 상단 바: 모드 · 장면 n/7 제목 · 상태 뱃지 · 시간 압축 · 정직성 라벨 (dashboard/CLAUDE.md 규칙 4·5, TASK 5.4)
-export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode }: {
+export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode, captions, onCaptions }: {
   data: MechData; theme: "dark" | "light"; onTheme: () => void; present: boolean; onPresent: () => void;
-  autoMode: boolean; onAutoMode: () => void;
+  autoMode: boolean; onAutoMode: () => void; captions: boolean; onCaptions: () => void;
 }) {
   const { t, stepIndex } = usePlayback();
   const th = data.thresholds, ts = data.timeseries;
@@ -43,8 +43,9 @@ export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, on
         <span className="tc-elapsed">시뮬레이션 경과 <b>{fmtSim(ts.sim_elapsed_s[i])}</b></span>
       </span>
       <span className="grow" />
-      {!present && <button onClick={onAutoMode} title="N 키로 해설 단계를 넘기는 발표자 모드 / 자동 해설 모드">{autoMode ? "자동 해설" : "발표자 모드"}</button>}
-      {!present && <button onClick={onTheme} title="테마">{theme === "dark" ? "☀ 라이트" : "☾ 다크"}</button>}
+      {!present && <button onClick={onAutoMode} title="자동 해설: 해설 단계가 시간에 따라 저절로 공개 / 발표자 모드: N 키를 눌러야 다음 단계">{autoMode ? "자동 해설" : "발표자 모드"}</button>}
+      {!present && <button className="b-cap" onClick={onCaptions} title="C 키: 영상 아래 자막 켜기/끄기">{captions ? "☑ 자막 (C)" : "☐ 자막 (C)"}</button>}
+      {!present && <button className="b-theme" onClick={onTheme} title="테마">{theme === "dark" ? "☀ 라이트" : "☾ 다크"}</button>}
       <button onClick={onPresent} title="F 키">{present ? "발표 모드 종료 (Esc)" : "발표 모드 (F)"}</button>
       <span className="honesty">
         <b>{th.honesty.label}</b>

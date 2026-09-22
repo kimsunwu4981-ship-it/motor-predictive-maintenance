@@ -123,3 +123,20 @@ export function MotorSchematic({ data, focus }: { data: MechData; focus: string 
     </div>
   );
 }
+
+// 결함 지문 미니맵용 작은 단면도 (CausePanel). 색은 큰 단면도와 같은 컬러맵, 맥동은 없다(정지 그림).
+export function MiniMotor({ data, i }: { data: MechData; i: number }) {
+  const th = data.thresholds, ts = data.timeseries, cm = th.thermal.colormap;
+  const parts = Object.fromEntries(th.thermal.parts.map((p) => [p.key, p]));
+  return (
+    <svg viewBox="30 30 410 150" className="mini-svg" aria-hidden>
+      {SHAPES.map((s, n) => {
+        const p = parts[s.key];
+        const col = p ? hex(sample(cm, ts.temperature_C[s.key][i], s.key, p, ts.stage[s.key][i], 0).diffuse) : "#777";
+        return s.kind === "circle"
+          ? <circle key={n} cx={s.x} cy={s.y} r={s.w / 2} fill={col} />
+          : <rect key={n} x={s.x} y={s.y} width={s.w} height={s.h} rx={s.rx ?? 2} fill={col} />;
+      })}
+    </svg>
+  );
+}

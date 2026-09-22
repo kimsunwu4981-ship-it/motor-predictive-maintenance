@@ -35,3 +35,73 @@
   .schem-svg .lbl { font-size: 11px; }
   .chain-card { font-size: .82em; padding: 6px 8px; }
 }
+
+/* ---------- M4: 자막 바 (영상 하단) ---------- */
+/* 영상 상자를 세로 배치로 바꿔 자막 바를 영상 바로 아래에 둔다 (겹치지 않음). 자막 바 높이는 고정(68px). */
+.dash.live .video-box { flex-direction: column; justify-content: center; gap: 6px; }
+.dash.live .video-wrap video { max-height: min(calc(100% - 74px), 46vh); }
+.capbar { flex: 0 0 68px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; padding: 0 12px; box-sizing: border-box; }
+.cap-scene { font-size: .9em; font-weight: 700; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; animation: capin .35s ease; }
+.cap-main { font-size: 1.25em; font-weight: 800; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-left: 6px solid #66ddff; border-radius: 6px; padding: 5px 14px; max-width: 100%; text-align: center; animation: capin .35s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cap-main .ic { margin-right: 8px; }
+.cap-main.alarm { border-color: #ffaa33; } .cap-main.up { border-color: #ff7a1a; } .cap-main.danger { border-color: #ff2e0a; }
+.cap-main.vib { border-color: #ffd166; } .cap-main.ok { border-color: #26f259; }
+.cap-main .more { margin-left: 10px; font-size: .68em; font-weight: 600; color: var(--fg3); }
+@keyframes capin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.dash.present .cap-main { font-size: 1.5em; }
+
+/* ---------- M4: 해설 단계별 공개 · 이력 목록 ---------- */
+.narr .q.reveal { display: block; }
+.narr .rv { display: grid; grid-template-columns: 7.5em 1fr; gap: 4px 12px; align-items: start; padding: 4px 0; opacity: .45; transition: opacity .4s; }
+.narr .rv.on { opacity: 1; animation: rvin .6s ease; }
+@keyframes rvin { 0% { background: color-mix(in srgb, var(--accent) 22%, transparent); } 100% { background: transparent; } }
+.narr .rv b.v { color: var(--accent2); font-variant-numeric: tabular-nums; }
+.narr .q.emph .rv:last-child b.v { font-size: 1.12em; }
+.hist { flex: 1; min-height: 70px; overflow: auto; margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 6px; font-size: .84em; }
+.hist-item { display: grid; grid-template-columns: 3.4em 3em 1fr; gap: 6px; padding: 2px 4px; border-radius: 4px; cursor: pointer; line-height: 1.3; }
+.hist-item:hover { background: var(--panel2); }
+.hist-item .t { color: var(--fg3); font-variant-numeric: tabular-nums; }
+.hist-item .k { color: var(--accent); font-weight: 700; }
+.hist-item.k-scene .k { color: var(--accent2); }
+.hist-item.k-narr .x { color: var(--fg2); }
+.hist-item.sec { opacity: .6; } .hist-item.sec .k { color: var(--fg3); font-weight: 500; }
+.hist-item .x { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+/* 이력의 한 줄 문구(nowrap)가 그리드 열을 넓히지 않게 — 안 그러면 영상 열이 눌린다 (실측) */
+.dash.live .live-main { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+.dash.live .live-side, .dash.live .narr, .dash.live .narr .panel-b, .hist { min-width: 0; }
+
+/* ---------- M4: 원인 패널 — 손실 막대 · 지문 미니맵 ---------- */
+.cause .panel-b { display: flex; flex-direction: column; gap: 6px; }
+.cause-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-height: 0; }   /* 손실 막대 위, 지문 미니맵 아래 (아이콘 7개가 읽히려면 폭이 필요) */
+.sub-h { font-weight: 700; color: var(--accent); font-size: .82em; margin-bottom: 3px; }
+.loss-row { display: grid; grid-template-columns: 5.6em 1fr 7.4em; gap: 6px; align-items: center; font-size: .78em; padding: 0 3px; line-height: 1.35; border-radius: 4px; }
+.loss-row.focus { background: color-mix(in srgb, var(--accent) 14%, transparent); font-weight: 700; }
+.loss-row .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.loss-bar { display: block; height: 9px; background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.loss-bar i { display: block; height: 100%; transition: width .2s linear; }
+.loss-row .w { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--fg2); }
+.loss-row .w b.hot { color: var(--accent2); }
+.fmap { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.fmap .fm { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; padding: 3px 2px 2px; text-align: center; cursor: pointer; background: var(--panel2); }
+.fmap .fm:hover { border-color: var(--accent); }
+.fmap .fm.cur { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.fmap .fm-l { font-size: .7em; line-height: 1.15; color: var(--fg2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fmap .fm.cur .fm-l { color: var(--fg); font-weight: 700; }
+.mini-svg { width: 100%; display: block; }
+.fm-note { font-size: .74em; margin-top: 3px; }
+@media (max-width: 1400px) {
+  /* 1366: 상단 바가 두 줄로 접히지 않게 버튼을 줄이고 테마 버튼은 숨긴다 (발표 중 쓸 일이 없다) */
+  .live .hud button { padding: 4px 8px; font-size: .86em; }
+  .live .hud .b-theme { display: none; }
+  .live .hud { gap: 8px; }
+  .live .hud .scene-title .dim { display: none; }   /* 지문은 해설 패널 머리에도 있다 */
+  .live .hud .honesty { font-size: .66em; }
+  .cause-grid { grid-template-columns: 1fr; }
+  .cap-main { font-size: 1.05em; }
+  .capbar { flex-basis: 60px; }
+  /* 1366 은 오른쪽 열(해설+단면도)이 세로로 길어 영상 상자에 여유가 생긴다 → 영상을 더 크게 (폭이 먼저 제한된다) */
+  .dash.live .video-wrap video { max-height: min(calc(100% - 66px), 60vh); }
+  .dash.live .video-box { justify-content: flex-start; }   /* 남는 공간은 아래로 — 영상·자막이 머리 바로 밑에 */
+  /* 1366 은 세로 스크롤 레이아웃이라 이력 목록이 페이지를 무한정 늘린다 → 높이를 고정하고 안에서 스크롤 */
+  .hist { min-height: 60px; max-height: 170px; }
+}
