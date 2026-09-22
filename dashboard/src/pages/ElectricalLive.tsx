@@ -5,7 +5,10 @@ import { VideoPanel } from "../components/VideoPanel";
 import { loadElecData, type Basis, type ElecData, type Phase } from "../elec/data";
 import { HUDElec } from "../elec/HUDElec";
 import { CurrentBars } from "../elec/CurrentBars";
-import { CauseElec, CircuitSchematic, I2I1Panel, PhasorPanel } from "../elec/Panels";
+import { CauseElec } from "../elec/Panels";
+import { I2I1Panel } from "../elec/I2I1Panel";
+import { PhasorPanel } from "../elec/PhasorPanel";
+import { CircuitSchematic } from "../elec/CircuitSchematic";
 import { LiveNarration } from "../live/LiveNarration";
 import { CaptionBar } from "../live/CaptionBar";
 import { QaDrawer } from "../live/QaDrawer";
@@ -136,8 +139,8 @@ function Inner({ data }: { data: ElecData }) {
         </div>
         <div className="live-bottom">
           <CurrentBars data={data} basis={basis} focus={focus} />
-          <I2I1Panel data={data} />
-          <PhasorPanel data={data} basis={basis} />
+          <I2I1Panel data={data} focus={!!scene?.focus_i2i1} />
+          <PhasorPanel data={data} basis={basis} focus={focus} />
           <CauseElec data={data} />
         </div>
         <QaDrawer data={data} open={qa} onClose={() => setQa(false)} />

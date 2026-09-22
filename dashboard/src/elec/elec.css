@@ -10,10 +10,12 @@
 
 /* 상별 전류 막대 */
 .cbars { display: flex; flex-direction: column; min-height: 0; }
-.cbars-body { flex: 1; min-height: 0; padding: 26px 14px 30px; display: flex; }
-.cbars-plot { position: relative; flex: 1; min-height: 170px; display: flex; justify-content: space-around; align-items: flex-end; padding-right: 150px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.cbars-plot .band { position: absolute; left: 0; right: 0; opacity: .14; pointer-events: auto; }
-.cbars-plot .band .band-l { position: absolute; right: 6px; top: 2px; font-size: .72em; color: var(--fg); opacity: 1; white-space: nowrap; text-align: right; }
+.cbars-body { flex: 1; min-height: 0; padding: 6px 10px 6px; display: flex; flex-direction: column; }
+.cbars-plot-wrap { flex: 0 0 auto; display: flex; padding: 22px 4px 26px; }
+.chart.trend { height: 120px; }
+.cbars-plot { position: relative; flex: 1; height: 118px; min-height: 0; display: flex; justify-content: space-around; align-items: flex-end; padding-right: 150px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.cbars-plot .band { position: absolute; left: 0; right: 0; pointer-events: auto; }
+.cbars-plot .band .band-l { position: absolute; right: 6px; top: 2px; font-size: .72em; color: var(--fg2); white-space: nowrap; text-align: right; }
 .cbars-plot .rated { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--accent); }
 .cbars-plot .rated span { position: absolute; right: 4px; top: -1.3em; font-size: .72em; color: var(--accent); background: var(--panel); padding: 0 3px; }
 .bar-col { position: relative; width: 22%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: opacity .3s; }
@@ -23,7 +25,7 @@
 .bar-val { position: absolute; left: 0; right: 0; text-align: center; transform: translateY(-100%); padding-bottom: 4px; line-height: 1.15; pointer-events: none; }
 .bar-val b { display: block; font-size: 1.05em; white-space: nowrap; }
 .bar-val span { font-size: .8em; color: var(--fg2); }
-.bar-name { position: absolute; bottom: -22px; font-weight: 800; border-bottom: 3px solid; padding: 0 6px; }
+.bar-name { position: absolute; bottom: -24px; font-size: .9em; font-weight: 800; border-bottom: 3px solid; padding: 0 6px; }
 
 /* 골격 패널 */
 .i2i1 .big { font-size: 2.2em; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
@@ -35,3 +37,63 @@
   .dash.live.elec .live-bottom { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .cbars-plot { min-height: 170px; }
 }
+
+/* I₂/I₁ 게이지 + 추세 */
+.i2i1.focus { box-shadow: 0 0 0 2px var(--accent2) inset; }
+.i2i1 .panel-b { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px; }
+.gauge-row { display: flex; gap: 8px; align-items: center; }
+.gauge { width: 52%; }
+.g-arc { fill: none; stroke: var(--line); stroke-width: 10; }
+.g-mark line { stroke: var(--accent2); stroke-width: 2; } .g-mark.n line { stroke: var(--ok); }
+.g-mark text { font-size: 9px; fill: var(--fg2); }
+.g-needle { stroke: var(--fg); stroke-width: 3; stroke-linecap: round; transition: all .2s linear; } .g-needle.hot { stroke: var(--accent2); }
+.g-pin { fill: var(--fg); }
+.g-val { font-size: 22px; font-weight: 800; fill: var(--fg); font-variant-numeric: tabular-nums; } .g-val.hot { fill: var(--accent2); }
+.g-sub { font-size: 9px; fill: var(--fg2); }
+.g-legend { font-size: .76em; color: var(--fg2); line-height: 1.4; }
+.g-big { font-size: 2.1em; font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums; line-height: 1.1; } .g-big.hot { color: var(--accent2); }
+.g-x { color: var(--fg); margin-bottom: 4px; }
+.g-legend b { color: var(--fg); } .g-legend .hit { color: var(--accent2); }
+.chart.i2i1-trend { flex: 1; min-height: 90px; }
+
+/* 페이저도 */
+.phasor .panel-b { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; }
+.ph-svg { width: 100%; max-height: 220px; }
+.ph-rated { fill: none; stroke: var(--accent); stroke-dasharray: 4 4; stroke-width: 1; }
+.ph-thr { fill: none; stroke: var(--line); stroke-width: 1; }
+.ph-ref { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.ph-lbl { font-size: 9px; fill: var(--accent); }
+.ph-name { font-size: 11px; font-weight: 800; paint-order: stroke; stroke: var(--panel); stroke-width: 3px; }
+.ph-arrow.dim { opacity: .45; }
+.ph-arrow line { transition: all .2s linear; }
+.ph-note { font-size: .8em; text-align: center; line-height: 1.35; }
+.phasor.big { position: fixed; inset: 6vh 12vw; z-index: 60; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.phasor.big .ph-svg { max-height: 68vh; }
+
+/* 회로도 */
+.circuit { display: flex; flex-direction: column; min-height: 0; }
+.circ-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 4px 10px 6px; }
+.circ-svg { width: 100%; flex: 1; min-height: 200px; }
+.circ-svg .lbl { font-size: 10px; fill: var(--fg2); text-anchor: middle; }
+.circ-svg .lbl.phase { font-weight: 800; font-size: 11px; }
+.circ-svg .lbl.cur { text-anchor: start; font-weight: 700; font-size: 10px; }
+.circ-svg .lbl.small { font-size: 8.5px; text-anchor: start; }
+.circ-svg .lbl.small.mid { text-anchor: middle; }
+.circ-svg .lbl.note { font-size: 8.5px; fill: var(--accent2); }
+.circ-svg .lbl.warn { fill: #ff2e0a; font-weight: 800; font-size: 9px; }
+.circ-svg .src rect, .circ-svg .tbox, .circ-svg .motor { fill: var(--panel2); stroke: var(--line); }
+.circ-svg .motor { fill: transparent; stroke-width: 1.5; }
+.circ-svg .node { fill: var(--fg2); }
+.circ-svg .wire-base { fill: none; stroke: var(--line); stroke-width: 6; }
+.circ-svg .wire { fill: none; stroke-width: 4; transition: stroke .25s; }
+.circ-svg .wire.coil { stroke-width: 5; }
+.circ-svg .tie { stroke-width: 2; opacity: .7; fill: none; }
+.circ-svg .dots { fill: none; stroke-width: 4; stroke-dasharray: 2 9; stroke-linecap: round; opacity: .95; filter: brightness(1.6); }
+.circ-svg .cable.dim, .circ-svg .wind.dim { opacity: .5; }
+.circ-svg .cable.focus .wire, .circ-svg .wind.focus .wire { filter: drop-shadow(0 0 4px currentColor); }
+.circ-svg .intro .wire { animation: cintro .55s ease-in-out 4; }
+@keyframes cintro { 0%, 100% { stroke-width: 4; } 50% { stroke-width: 9; } }
+.circ-svg .open line { stroke: #4099ff; stroke-width: 3; } .circ-svg .open circle { fill: #4099ff; }
+.circ-svg .short ellipse { fill: none; stroke: #ff0d0d; stroke-width: 3; animation: shortpulse 1s ease-in-out infinite; filter: drop-shadow(0 0 5px #ff0d0d); }
+@keyframes shortpulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.circ-info { font-size: .82em; min-height: 2.4em; padding-top: 4px; border-top: 1px dashed var(--line); }

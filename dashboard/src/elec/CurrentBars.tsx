@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { usePlayback } from "../state/playback";
 import { ELEC_ICON } from "../components/Legend";
 import { ampere, idxAt, PHASES, type Basis, type ElecData, type Phase } from "./data";
+import { CurrentTrend } from "./CurrentTrend";
 
 // ③ 상별 전류 막대 (TASK 5.1 주 표시): A·B·C 세 막대가 정격 대비 %로 실시간으로 오르내린다.
 // 배경 띠 = config 의 다섯 구간(저전류 위험/주의, 정상, 과전류 주의/위험), 막대 색 = 영상과 같은 상태색,
@@ -26,9 +27,10 @@ export function CurrentBars({ data, basis, focus }: { data: ElecData; basis: Bas
       <div className="panel-h">상별 전류 <span className="dim">정격 대비 % · {basis === "line" ? `선전류(케이블, 정격 ${el.rated_line_A} A)` : `상전류(권선, 정격 ${el.rated_phase_A} A)`}</span>
         <span className="grow" /><span className="dim">I₂/I₁ {ts.i2_over_i1[i].toFixed(3)}</span></div>
       <div className="cbars-body">
+        <div className="cbars-plot-wrap">
         <div className="cbars-plot">
           {bands.map((b) => (
-            <div key={b.s} className="band" style={{ bottom: y(b.from), height: `calc(${y(b.to)} - ${y(b.from)})`, background: el.status_colors[b.s] }}
+            <div key={b.s} className="band" style={{ bottom: y(b.from), height: `calc(${y(b.to)} - ${y(b.from)})`, background: `rgba(${el.status_rgb[b.s].map((c) => Math.round(c * 255)).join(",")},0.16)` }}
                  title={`${el.status_labels[b.s]}: ${A(b.from)}~${b.to >= maxR ? "" : A(b.to)} A`}>
               <span className="band-l">{ELEC_ICON[b.s]} {el.status_labels[b.s].replace("(결상 의심)", "")} {b.s === "normal" ? `${A(b.from)}~${A(b.to)} A` : b.s.startsWith("over") ? `> ${A(b.from)} A` : `< ${A(b.to)} A`}</span>
             </div>
@@ -49,6 +51,8 @@ export function CurrentBars({ data, basis, focus }: { data: ElecData; basis: Bas
             );
           })}
         </div>
+        </div>
+        <CurrentTrend data={data} basis={basis} focus={focus} />
       </div>
     </div>
   );
