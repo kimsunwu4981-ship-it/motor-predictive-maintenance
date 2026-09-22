@@ -343,6 +343,16 @@ def export(mode: str) -> dict:
         rc = ts["replay_check"]
         print(f"[{mode}] 재실행 검증: 경계 밖 최대 {max(rc['max_err_inner_C'].values()):.2f} °C "
               f"(허용 {rc['method'].split('tolerance_C=')[1]}) → {'PASS' if rc['pass'] else 'FAIL'}, 이벤트 {len(events)}개")
+    else:
+        # 전기 실시간 해설 대시보드용 확장 (재계산 비율·위상·이벤트·변수·매트릭스·파형). 기계 모드는 그대로.
+        sys.path.insert(0, HERE)
+        from export_electrical_extras import apply_extras as apply_elec
+        events, values, waves = apply_elec(th, ts, sc, fa)
+        files += [("events", {"mode": mode, "n": len(events), "events": events}),
+                  ("narration_values", {"mode": mode, "scenes": values}), ("waveforms", waves)]
+        rc = ts["recompute_check"]
+        print(f"[{mode}] 엔진 재계산 검증: RMS 최대 {rc['max_rms_diff_A']} A, I₂/I₁ 최대 {rc['max_i2i1_diff']} "
+              f"(로그 RMS 로 계산 {rc['max_i2i1_diff_from_log_rms']}) → {'PASS' if rc['pass'] else 'FAIL'}, 이벤트 {len(events)}개")
     for name, obj in files:
         with open(os.path.join(out_dir, f"{name}.json"), "w", encoding="utf-8") as f:
             json.dump(obj, f, ensure_ascii=False, indent=1)

@@ -1,0 +1,33 @@
+# event_templates.yaml — 로그에서 자동 추출한 사건(events.json, 전기)을 자막으로 바꾸는 문구 템플릿.
+#
+# 사건의 시각·수치는 export 가 로그에서 만든다. 사람이 시간을 손으로 넣지 않는다. 어느 템플릿을 쓸지는 사건의 tpl 필드가 정한다.
+# 변수 — status: {phase_label} {rms_A} {pct} {threshold_A} {from_ko} {to_ko} {others} {others_rms_A} {others_pct}
+#        status(세 상): {rms_range} {pct_range}
+#        i2i1: {level} {value} {prev} {x_normal} {mark_label}   balance_only: {value} {x_normal} {normal_level}
+#        short_loop_on: {turns} {phase_label}   scene: {label} {slowmo_x}
+# priority 가 낮을수록 먼저 크게 표시된다 (주목 신호 1 > 다른 상 2 > 기타 3). 같은 순간에 몰리면 가장 낮은 것만 자막, 나머지는 목록.
+
+status:
+  default: "{phase_label} {rms_A} A — 정격의 {pct} %, {to_ko}"
+  over_danger: "{phase_label} {rms_A} A — 정격의 {pct} %, 위험 과전류 ({threshold_A} A 초과)"
+  over_caution: "{phase_label} {rms_A} A — 정격의 {pct} %, 주의 과전류 ({threshold_A} A 초과)"
+  under_caution: "{phase_label} {rms_A} A — 정격의 {pct} %, 주의 저전류 ({threshold_A} A 미만)"
+  under_danger: "{phase_label} {rms_A} A — 정격의 {pct} %, 위험 저전류 ({threshold_A} A 미만)"
+  phase_loss: "{phase_label} {rms_A} A — 끊긴 상, 나머지 두 상({others})에 전류가 몰림 ({others_rms_A} A, {others_pct} %)"
+  normal_return: "{phase_label} {rms_A} A — 정상 범위 복귀 (정격의 {pct} %)"
+  all_over_danger: "세 상 모두 {rms_range} A — 정격의 {pct_range} %, 위험 과전류. 세 줄이 같이 붉다"
+  all_over_caution: "세 상 모두 {rms_range} A — 정격의 {pct_range} %, 주의 과전류"
+  all_normal: "세 상 모두 정상 범위 — {rms_range} A (정격의 {pct_range} %)"
+  all_under_caution: "세 상 모두 {rms_range} A — 정격의 {pct_range} %, 주의 저전류"
+  all_under_danger: "세 상 모두 {rms_range} A — 정격의 {pct_range} %, 위험 저전류. 세 줄이 같이 파랗다 (결상과 다름)"
+i2i1:
+  up: "I₂/I₁ {prev} → {value} — {mark_label} 수준({level}) 도달, 정상의 {x_normal}배"
+  down: "I₂/I₁ {prev} → {value} — {mark_label} 수준({level}) 아래로"
+balance_only:
+  default: "세 상 모두 정상 범위 — 그러나 I₂/I₁ {value}, 정상({normal_level})의 {x_normal}배. 색은 정상, 숫자는 이상"
+short_loop_on:
+  default: "빨간 단락 루프 표시 — {phase_label} 코일 {turns}턴의 절연이 깨진 위치 (시각적 표시, 순환전류는 모델에 없음)"
+short_loop_off:
+  default: "단락 루프 표시 사라짐 — 권선 정상"
+scene:
+  default: "장면 {label} — 입자 흐름 {slowmo_x}배 느리게 (실제 60 Hz)"
