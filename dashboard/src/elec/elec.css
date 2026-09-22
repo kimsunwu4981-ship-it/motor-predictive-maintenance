@@ -67,7 +67,8 @@
 .ph-arrow.dim { opacity: .45; }
 .ph-arrow line { transition: all .2s linear; }
 .ph-note { font-size: .8em; text-align: center; line-height: 1.35; }
-.phasor.big { position: fixed; inset: 6vh 12vw; z-index: 60; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.phasor.big { position: fixed; inset: 6vh 14vw; z-index: 60; box-shadow: 0 10px 40px rgba(0,0,0,.6); font-size: 1.4em; }
+.ph-big-btn { padding: 2px 8px; font-size: .8em; }
 .phasor.big .ph-svg { max-height: 68vh; }
 
 /* 회로도 */
@@ -96,4 +97,23 @@
 .circ-svg .open line { stroke: #4099ff; stroke-width: 3; } .circ-svg .open circle { fill: #4099ff; }
 .circ-svg .short ellipse { fill: none; stroke: #ff0d0d; stroke-width: 3; animation: shortpulse 1s ease-in-out infinite; filter: drop-shadow(0 0 5px #ff0d0d); }
 @keyframes shortpulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+/* 판별 매트릭스 */
+.elec-cause .panel-b { display: flex; flex-direction: column; gap: 4px; }
+.elec-cause .chain-card { font-size: .84em; padding: 6px 8px; }
+.matrix { width: 100%; max-height: 210px; }
+.m-band { font-size: 8.5px; fill: var(--fg3); }
+.m-rated { stroke: var(--accent); stroke-dasharray: 4 4; stroke-width: 1; }
+.m-grid { stroke: var(--line); stroke-dasharray: 2 3; }
+.m-tick { font-size: 8.5px; fill: var(--fg2); }
+.m-axis { font-size: 9px; fill: var(--accent); font-weight: 700; }
+.m-pt circle { fill: var(--fg2); stroke: var(--panel); stroke-width: 1.5; cursor: pointer; }
+.m-pt text { font-size: 9.5px; fill: var(--fg2); cursor: pointer; }
+.m-pt.cur circle { fill: var(--accent2); } .m-pt.cur text { fill: var(--accent2); font-weight: 800; font-size: 10.5px; }
+.m-live circle:first-child { fill: none; stroke: var(--accent); stroke-width: 2; animation: partpulse 1.2s ease-in-out infinite; }
+.m-live circle:last-child { fill: var(--accent); }
+.m-rules { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .76em; color: var(--fg2); }
+.m-rules b.r { color: #ff140d; } .m-rules b.b { color: #4099ff; } .m-rules b.g { color: #26f259; }
+.qa-gloss { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 8px; }
+.qa-gk { color: var(--accent); font-weight: 800; margin-bottom: 6px; }
+.qa-g { font-size: .9em; line-height: 1.45; margin-bottom: 6px; } .qa-g b { color: var(--fg); }
 .circ-info { font-size: .82em; min-height: 2.4em; padding-top: 4px; border-top: 1px dashed var(--line); }

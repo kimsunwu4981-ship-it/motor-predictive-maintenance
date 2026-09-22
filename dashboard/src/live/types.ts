@@ -17,7 +17,8 @@ export interface LiveScene {
 }
 export type Templates = Record<string, Record<string, string>>;
 export interface QaItem { q: string; a: string; scene?: string }
-export interface LiveContent<S extends LiveScene = LiveScene> { scenes: Record<string, S>; templates: Templates; qa: QaItem[] }
+export interface GlossaryItem { term: string; text: string; scene?: string }
+export interface LiveContent<S extends LiveScene = LiveScene> { scenes: Record<string, S>; templates: Templates; qa: QaItem[]; glossary?: GlossaryItem[] }
 export interface TimeNote { label: string; value: string }
 export interface LiveData<S extends LiveScene = LiveScene> {
   mode: Mode;

@@ -37,6 +37,7 @@ function Inner({ data }: { data: ElecData }) {
   const [captions, setCaptions] = useState(true);
   const [qa, setQa] = useState(() => new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("qa") === "1");
   const [basis, setBasis] = useState<Basis>("line");       // 선전류(케이블) / 상전류(권선) — TASK 5.1 토글
+  const [phasorBig, setPhasorBig] = useState(false);       // P 키: 페이저도 확대 보기 (TASK 7)
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; }
   });
@@ -111,6 +112,8 @@ function Inner({ data }: { data: ElecData }) {
       else if (e.key === "q" || e.key === "Q") setQa((q) => !q);
       else if (e.key === "n" || e.key === "N") nextLevel();
       else if (e.key === "l" || e.key === "L") setBasis((b) => (b === "line" ? "phase" : "line"));
+      else if (e.key === "p" || e.key === "P") setPhasorBig((b) => !b);
+      else if (e.key === "Escape" && phasorBig) setPhasorBig(false);
       else if (e.key === "Escape" && present) setPresent(false);
       else if (e.key >= "1" && e.key <= "9") pb.gotoStep(Number(e.key));
     };
@@ -140,7 +143,7 @@ function Inner({ data }: { data: ElecData }) {
         <div className="live-bottom">
           <CurrentBars data={data} basis={basis} focus={focus} />
           <I2I1Panel data={data} focus={!!scene?.focus_i2i1} />
-          <PhasorPanel data={data} basis={basis} focus={focus} />
+          <PhasorPanel data={data} basis={basis} focus={focus} big={phasorBig} onToggleBig={() => setPhasorBig((b) => !b)} />
           <CauseElec data={data} />
         </div>
         <QaDrawer data={data} open={qa} onClose={() => setQa(false)} />

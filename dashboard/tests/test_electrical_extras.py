@@ -227,3 +227,16 @@ def test_guide_pdf_threshold_amperes_match_config():
                      ("12.6 A 미만", rows["under_danger"]["phase_A"])):
         assert txt in md
         assert float(txt.split()[0]) == pytest.approx(val, abs=0.06)
+
+
+def test_qa_and_glossary_variables_resolvable():
+    vals = _j("narration_values")["scenes"]
+    first = next(iter(vals))
+    for name, key in (("qa.yaml", "items"), ("glossary.yaml", "items")):
+        cfg = yaml.safe_load(open(os.path.join(CONTENT, name), encoding="utf-8"))
+        for item in cfg[key]:
+            v = vals[item.get("scene", first)]
+            txt = item.get("q", "") + item.get("a", "") + item.get("text", "")
+            for var in re.findall(r"\{([a-zA-Z0-9_]+)\}", txt):
+                assert (var in v and v[var] is not None) or var in LIVE_VARS, f"{name}: {{{var}}} 미정의"
+

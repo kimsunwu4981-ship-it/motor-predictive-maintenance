@@ -37,6 +37,15 @@ export function QaDrawer({ data, open, onClose }: { data: LiveData; open: boolea
             </div>
           );
         })}
+        {(data.content.glossary?.length ?? 0) > 0 && (
+          <div className="qa-gloss">
+            <div className="qa-gk">용어 풀이 <span className="dim">정성적 설명 · 출처 없는 배율 수치 없음</span></div>
+            {data.content.glossary!.map((g, n) => {
+              const v = { ...data.values[g.scene ?? data.scenarios.steps[0].id], ...live };
+              return <div key={n} className="qa-g"><b>{g.term}</b> — {fill(g.text, v)}</div>;
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

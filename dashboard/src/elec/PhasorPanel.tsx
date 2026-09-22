@@ -4,7 +4,7 @@ import { ampere, idxAt, PHASES, type Basis, type ElecData, type Phase } from "./
 // 페이저도 (TASK 5.1): 세 상 전류를 화살표 3개로. 길이 = 크기(정격 대비), 각도 = 기본파 위상(엔진 재계산, config 위상).
 // 정상이면 균형 잡힌 별 모양, 단락·결상·불평형에서 일그러진다 — "균형"을 처음 보는 사람에게 가장 직관적으로 설명하는 도구.
 // 점선 원 = 정격(100 %), 옅은 방사선 = 균형일 때의 120° 기준 방향. 화살표 색 = 영상과 같은 상태색.
-export function PhasorPanel({ data, basis, focus, big }: { data: ElecData; basis: Basis; focus: Phase[]; big?: boolean }) {
+export function PhasorPanel({ data, basis, focus, big, onToggleBig }: { data: ElecData; basis: Basis; focus: Phase[]; big?: boolean; onToggleBig?: () => void }) {
   const { t } = usePlayback();
   const ts = data.timeseries, el = data.thresholds.electrical;
   const i = idxAt(ts, t);
@@ -19,7 +19,8 @@ export function PhasorPanel({ data, basis, focus, big }: { data: ElecData; basis
   const angErr = Math.max(...gaps.map((g) => Math.abs(g - 120)));
   return (
     <div className={"panel phasor" + (big ? " big" : "")}>
-      <div className="panel-h">페이저도 <span className="dim">길이 = 크기 · 각도 = 위상</span><span className="grow" /><span className="dim">I₂/I₁ {ts.i2_over_i1[i].toFixed(3)}</span></div>
+      <div className="panel-h">페이저도 <span className="dim">길이 = 크기 · 각도 = 위상</span><span className="grow" />
+        {onToggleBig && <button className="ph-big-btn" onClick={onToggleBig} title="P 키">{big ? "닫기 (P)" : "크게 (P)"}</button>}</div>
       <div className="panel-b">
         <svg viewBox={`0 0 ${S} ${S}`} className="ph-svg">
           <defs>{PHASES.map((p) => <marker key={p} id={`ph-${p}`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill={el.status_colors[ts.current_status[p][i]]} /></marker>)}</defs>

@@ -33,6 +33,10 @@ export function CurrentTrend({ data, basis, focus }: { data: ElecData; basis: Ba
       series: [
         ...PHASES.map((p) => ({ id: p, name: `${p}상`, type: "line" as const, showSymbol: false, step: "end" as const, lineStyle: { width: focus.includes(p) || !focus.length ? 2.5 : 1.2, color: pc(p) }, itemStyle: { color: pc(p) }, data: [] as number[][], markArea: p === "A" ? { silent: true, data: bands } : undefined })),
         { id: "rated", type: "line", data: [], silent: true, markLine: { symbol: "none", animation: false, data: [{ yAxis: A(1) }], lineStyle: { color: "#66ddff", type: "dashed", width: 1 }, label: { show: true, formatter: `정격 ${A(1).toFixed(1)} A`, color: "#66ddff", fontSize: 10, position: "insideEndTop" } } },
+        { id: "lead", type: "line", data: [], silent: true, markLine: { symbol: "none", animation: false, data: [
+            { xAxis: sc.lead_time.alarm_t ?? 0, lineStyle: { color: "#ffaa33", type: "dashed", width: 2 }, label: { show: true, formatter: `▲ I₂/I₁ 4턴 수준(${sc.lead_time.alarm_level_i2i1}) 도달 = ■ A상 위험 과전류 — 같은 순간, 리드 타임 ${sc.lead_time.lead_s} s (등가 표현 한계)`, color: "#ffaa33", fontSize: 10, fontWeight: "bold", position: "end", align: "left", offset: [4, -2] } },
+            { xAxis: sc.lead_time.danger_t ?? 0, lineStyle: { color: "#ff2e0a", type: "solid", width: 1.5 }, label: { show: false } },
+          ] } },
         { id: "mk", type: "scatter", z: 6, symbolSize: 9, itemStyle: { color: "#fff", borderColor: "#ffaa33", borderWidth: 2 }, label: { show: false }, data: [] as { value: number[] }[] },
         { id: "cursor", type: "line", data: [], silent: true, markLine: { symbol: "none", animation: false, data: [{ xAxis: 0 }], lineStyle: { color: "#66ddff", width: 2 }, label: { show: false } } },
       ],

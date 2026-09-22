@@ -2,7 +2,7 @@
 // 공통 ModeData(data.ts) 와 공통 LiveData(live/types.ts) 위에 얹는다. 기계 대시보드는 이 파일을 쓰지 않는다.
 import type { ElecStatus, ModeData, Thresholds, Timeseries } from "../data";
 import { getJson, getYaml, getYamlOptional } from "../live/load";
-import type { LiveData, LiveEvent, LiveScene, QaItem, SceneValues, Templates } from "../live/types";
+import type { GlossaryItem, LiveData, LiveEvent, LiveScene, QaItem, SceneValues, Templates } from "../live/types";
 
 export type Phase = "A" | "B" | "C";
 export const PHASES: Phase[] = ["A", "B", "C"];
@@ -24,7 +24,6 @@ export interface ElecScene extends LiveScene {
   focus_phases: Phase[]; focus_i2i1: boolean; matrix_label: string;
   circuit: { short_loop?: Phase; open_phase?: Phase; voltage_note?: string };
 }
-export interface GlossaryItem { term: string; text: string; scene?: string }
 export interface MatrixPoint { scene: number; id: string; label: string; x_i2i1: number; y_ratio_max: number; y_ratio_mean: number; y_ratio_min: number }
 export type ElecThresholds = Thresholds & {
   electrical: Thresholds["electrical"] & {
