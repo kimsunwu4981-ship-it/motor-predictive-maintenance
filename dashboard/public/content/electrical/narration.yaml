@@ -85,7 +85,7 @@ scenes:
     visible: "세 케이블이 함께 빨강, 입자가 모두 빨라집니다. {ph_a}·{ph_b}·{ph_c} 모두 {a_rms_now} A (정격의 {a_pct_now} %). 그런데 I₂/I₁ 은 {i2i1_now}."
     result: "크기는 문제, 균형은 정상 — 과부하와 권선 단락을 구분하는 단서입니다. 세 줄이 같이 붉으면 과부하, 한 줄만 붉으면 단락."
     presenter_line: "세 줄이 같이 붉으면 과부하, 한 줄만 붉으면 단락입니다. 균형 지표가 그걸 갈라 줍니다."
-    data_source_note: "해석식 3상 모델 — 부하 {load_pct} % 시나리오에서 모델 전류는 정격의 {a_pct_end} % (config 값 그대로)"
+    data_source_note: "해석식 3상 모델 — 전류가 부하에 비례한다고 단순화, 부하 {load_pct} % → 정격의 {a_pct_end} %"
     cause_chain:
       cause: "정격 초과 하중 (부하 {load_pct} %)"
       mechanism: "세 상 전류가 같은 비율로 증가, 위상 간격 유지"

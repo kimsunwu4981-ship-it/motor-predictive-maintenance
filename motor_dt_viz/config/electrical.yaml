@@ -72,7 +72,8 @@ cases:
     short_loop: { turns: 12, current_pu: 7.0, pulse_hz: 1.8 }
   overload:
     label: "과부하 135 %"
-    phase_scale: [1.35, 1.35, 1.35]
+    # 전류 배율은 load(1.35) 가 이미 만든다. 예전엔 여기에도 1.35 를 넣어 1.35² = 182 % 가 되었다 (2026-09-22 수정, 사용자 승인).
+    phase_scale: [1.0, 1.0, 1.0]
     phase_shift_deg: [0.0, 0.0, 0.0]
     target_i2i1: null
     load: 1.35
