@@ -33,7 +33,9 @@ html = f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>모�
 html = html.replace("<h2>1. 색을 읽는 법</h2>", '<h2 style="page-break-before:auto">1. 색을 읽는 법</h2>', 1)
 io.open(r"C:\Temp\guidepdf\guide.html", "w", encoding="utf-8").write(html); print("HTML OK")
 '@
-$script | & $PY - (Join-Path $VIZ "docs")
+# 파이프로 넘기면 PowerShell 5.1 의 $OutputEncoding(ASCII) 때문에 한글이 ? 로 깨진다 → 파일로 써서 실행
+[System.IO.File]::WriteAllText("$work\build_guide.py", $script, [System.Text.UTF8Encoding]::new($false))
+& $PY "$work\build_guide.py" (Join-Path $VIZ "docs")
 $pdfTmp = "$work\guide.pdf"; if (Test-Path $pdfTmp) { [System.IO.File]::Delete($pdfTmp) }
 $edge = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 $proc = Start-Process -FilePath $edge -ArgumentList @("--headless=new", "--disable-gpu", "--no-first-run", "--user-data-dir=C:\Temp\dashshot_profile", "--no-pdf-header-footer", "--print-to-pdf=$pdfTmp", "--virtual-time-budget=8000", "file:///C:/Temp/guidepdf/guide.html") -PassThru -WindowStyle Hidden
