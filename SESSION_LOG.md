@@ -289,4 +289,6 @@ warning) → 냉각(권선 94.2). 결함마다 **다른 부품**이 달아오른
 
 - `electrical.yaml` 과부하 이중 적용(182 %) — 확인 대기. 화면에는 비율 숫자를 쓰지 않았다.
 - 발표용 최종 영상은 `record_mode.ps1 -NoTimecode` 로 다시 뜰 수 있다(오프셋은 확정값 사용).
-- GitHub 푸시: `gh auth login` 후 `gh repo create 모터-예지보전 --private --source . --push`.
+- GitHub: https://github.com/kimsunwu4981-ship-it/motor-predictive-maintenance (비공개, 설명 "모터 예지보전").
+  한글 리포명은 GitHub 이 `---` 로 깎아 버리므로 영문 이름을 쓰고 한글은 설명에 둔다.
+  실수로 생긴 빈 리포 `zz-empty-delete-me` 는 토큰에 delete_repo 범위가 없어 삭제하지 못했다 — GitHub 설정에서 지울 것.
