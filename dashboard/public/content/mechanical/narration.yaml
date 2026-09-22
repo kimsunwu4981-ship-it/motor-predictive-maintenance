@@ -1,0 +1,127 @@
+# narration.yaml — 기계적 결함 대시보드 장면별 해설 (원문: 모터결함_애니메이션/애니메이션_해설.pdf 2장)
+#
+# 이 파일은 빌드 없이 새로고침만으로 반영된다 (public/ 에서 런타임에 읽는다).
+# 숫자는 절대 직접 쓰지 않는다. {bearing_de_end} 같은 변수는 export 가 로그에서 채운
+# public/data/mechanical/narration_values.json 의 값으로 화면에서 치환된다.
+#
+# 사용 가능한 변수 (장면마다): {부품}_end / {부품}_start / {부품}_stage_end / {부품}_normal / {부품}_caution / {부품}_warning
+#   / {부품}_note / {부품}_loss_end_W  (부품 = bearing_de, bearing_nde, winding, rotor, shaft, stator_core,
+#   endshield_de, endshield_nde, frame),  vib_end, iso_end_ko, time_scale, sim_minutes, sim_elapsed_min_end,
+#   loss_multiplier, r_amb_multiplier, extra_loss_W, load_pct, lead_s, lead_sim_min
+#
+# reveal_timing: 장면 안에서 해설 단계가 공개되는 시점 (장면 진행률 0~1). 자동 해설 모드에서 쓴다.
+#   why 는 장면 시작에, visible 은 결과 수치가 어느 정도 올라온 뒤에, result 는 장면 후반에.
+# presenter_line 은 발표자 화면·발표자 모드에만 나온다. 심사위원 화면에는 절대 나오지 않는다.
+
+scenes:
+  normal:
+    title: "정상 운전"
+    fingerprint: "모든 부품 제 색 — 기준선"
+    focus_component: winding
+    heat_path: []
+    reveal_timing: { why: 0.0, visible: 0.35, result: 0.75 }
+    why: "정격 부하에서도 권선에는 동손(전류 때문에 생기는 열), 코어에는 철손, 베어링에는 마찰열이 생기지만, 냉각팬이 그만큼을 밖으로 내보내 온도가 일정하게 유지됩니다."
+    visible: "모든 부품이 원래 재질 색 그대로입니다. 권선 {winding_end} °C, 구동측 베어링 {bearing_de_end} °C — 각각 허용 상한(권선 {winding_normal} °C, 베어링 {bearing_de_normal} °C) 아래입니다."
+    result: "이 상태의 온도가 '기준선'입니다. VIGENT 는 이 기준선에서 벗어나는 순간을 잡아냅니다."
+    presenter_line: "지금은 정상입니다. 모든 부품이 제 색이고, 이 상태가 이후 변화를 판단하는 기준선이 됩니다."
+    cause_chain:
+      cause: "정격 부하 운전"
+      mechanism: "동손·철손·마찰열 발생, 냉각팬이 같은 양을 방열"
+      effect: "모든 부품이 허용 범위 안에서 일정"
+      action: "기준선 온도 기록"
+
+  bearing_fault:
+    title: "DE 베어링 열화"
+    fingerprint: "한 점만 붉어진다"
+    focus_component: bearing_de
+    heat_path: [bearing_de, endshield_de]
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.8 }
+    why: "윤활이 부족하거나 구름면이 닳으면 마찰 손실이 커집니다. 이 시나리오는 베어링 손실을 {loss_multiplier}배로 두었고, 열이 그 자리에서 나므로 베어링 자리만 붉어집니다."
+    visible: "구동측(DE) 베어링만 주황에서 빨강으로 변합니다. 지금 {bearing_de_end} °C — {bearing_de_stage_end} 단계 (주의 {bearing_de_normal} / 경고 {bearing_de_caution} / 위험 {bearing_de_warning} °C 초과). 진동 {vib_end} mm/s ({iso_end_ko}). 다른 부품은 아직 정상입니다."
+    result: "베어링이 주의 단계에 든 순간 VIGENT 가 경보를 보냅니다. 위험까지의 여유는 화면 {lead_s}초 = 시뮬레이션 약 {lead_sim_min}분입니다."
+    presenter_line: "베어링 하나만 붉어졌습니다. 나머지는 아직 정상이죠. 지금이 베어링만 갈면 되는 시점입니다. 이 장면에서 VIGENT 의 경보가 먼저 울립니다 — 뒤에서 다시 말씀드리겠습니다."
+    cause_chain:
+      cause: "윤활 부족 · 구름면 마모"
+      mechanism: "마찰 손실 {loss_multiplier}배, 전도 경로 악화로 국부 발열"
+      effect: "DE 베어링만 발열 ({bearing_de_end} °C), 진동 {vib_end} mm/s"
+      action: "재윤활 또는 베어링 교체 — 아직 베어링만 바꾸면 되는 단계"
+
+  misalignment:
+    title: "축 정렬 불량"
+    fingerprint: "축을 따라 퍼진다, 진동이 먼저"
+    focus_component: shaft
+    heat_path: [shaft, bearing_de, bearing_nde]
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.8 }
+    why: "커플링 정렬이 틀어지면 축이 회전할 때마다 휘어 양쪽 베어링에 하중이 걸립니다. 이 시나리오는 베어링 손실 {loss_multiplier}배에 축 발열을 더했습니다."
+    visible: "베어링 열은 {bearing_de_end} °C 로 식어 가고, 대신 축(샤프트)이 {shaft_end} °C (허용 {shaft_normal} °C)로 따뜻해집니다. 진동 {vib_end} mm/s ({iso_end_ko})."
+    result: "열이 한 점이 아니라 축을 따라 퍼지는 것이 이 결함의 지문입니다. 정렬 불량은 온도보다 진동에서 먼저 드러납니다."
+    presenter_line: "이번엔 축 전체가 따뜻해집니다. 정렬 불량은 온도보다 진동에서 먼저 잡히는 결함입니다."
+    cause_chain:
+      cause: "커플링 정렬 틀어짐 (설치 오차·기초 침하·열팽창)"
+      mechanism: "회전마다 축이 휘어 양쪽 베어링 하중 증가, 손실 {loss_multiplier}배"
+      effect: "축과 양쪽 베어링이 함께 따뜻해짐, 진동 {vib_end} mm/s"
+      action: "레이저 정렬로 커플링 재정렬"
+
+  fan_failure:
+    title: "냉각팬 고장"
+    fingerprint: "모터 전체가 고르게 오른다"
+    focus_component: frame
+    heat_path: [frame, stator_core, winding]
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.8 }
+    why: "냉각팬이 서면 바람으로 식히던 것이 자연 대류로 바뀌어 열이 빠져나가는 통로가 좁아집니다. 이 시나리오는 외부 방열 저항을 {r_amb_multiplier}배로 두었습니다. 열원은 그대로인데 출구가 막힌 셈입니다."
+    visible: "특정 부품이 아니라 하우징({frame_end} °C, 허용 {frame_normal} °C)부터 권선({winding_end} °C, {winding_stage_end})까지 전체가 고르게 올라갑니다."
+    result: "어느 한 곳이 아니라 전부 주황빛이면 부품이 아니라 냉각을 의심합니다."
+    presenter_line: "어느 한 곳이 아니라 모터 전체가 주황빛이 됩니다. 이런 패턴이면 부품이 아니라 냉각을 의심합니다."
+    cause_chain:
+      cause: "팬 날개 파손 · 커버 막힘"
+      mechanism: "강제 대류 → 자연 대류, 방열 저항 {r_amb_multiplier}배"
+      effect: "하우징부터 권선까지 전체 상승 (하우징 {frame_end} °C)"
+      action: "팬·커버 청소 또는 교체, 그 전까지 부하 저감"
+
+  brake_drag:
+    title: "브레이크 끌림"
+    fingerprint: "축이 먼저 붉어진다"
+    focus_component: shaft
+    heat_path: [shaft, rotor]
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.8 }
+    why: "브레이크가 완전히 떨어지지 않으면 제동면이 계속 스치며 마찰열을 냅니다. 이 시나리오는 {extra_loss_W} W 의 열이 축으로 들어오는 것으로 두었습니다."
+    visible: "축이 먼저 붉어지고({shaft_end} °C, {shaft_stage_end}) 로터({rotor_end} °C)로 열이 번집니다."
+    result: "축 온도가 다른 부품보다 먼저 오르는 것이 이 결함의 지문입니다. 크레인에서는 열 문제이기 전에 안전 문제입니다."
+    presenter_line: "크레인에서 브레이크 끌림은 열 문제이기 전에 안전 문제입니다. 축이 먼저 붉어지는 것이 이 결함의 지문입니다."
+    cause_chain:
+      cause: "브레이크 간극(에어갭) 불량 · 라이닝 마모"
+      mechanism: "제동면 마찰열 {extra_loss_W} W 가 축으로 유입"
+      effect: "축이 먼저 발열 ({shaft_end} °C) → 로터로 전도"
+      action: "에어갭 조정, 라이닝·스프링 점검"
+
+  overload:
+    title: "과부하 운전 (열 관점)"
+    fingerprint: "권선이 가장 먼저 한계에 닿는다"
+    focus_component: winding
+    heat_path: [winding, stator_core, frame]
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.8 }
+    why: "부하가 정격의 {load_pct} % 가 되면 전류가 늘고, 권선의 동손은 전류의 제곱에 비례해 커집니다. 그래서 다른 부품보다 권선이 먼저 한계에 닿습니다."
+    visible: "고정자 권선이 가장 먼저 경고 단계에 닿습니다. 지금 권선 {winding_end} °C — {winding_stage_end} (경고 {winding_caution} / 위험 {winding_warning} °C 초과). 축 {shaft_end} °C, 로터 {rotor_end} °C."
+    result: "권선 절연은 온도 한계를 넘기면 수명이 급격히 줄어듭니다 ({winding_note})."
+    presenter_line: "무거운 짐을 계속 들면 권선이 먼저 뜨거워집니다. 권선 절연은 온도 한계를 넘기면 수명이 급격히 줄어듭니다."
+    cause_chain:
+      cause: "정격 초과 하중 ({load_pct} %)"
+      mechanism: "전류 증가 → 동손 ∝ 전류² ({winding_loss_end_W} W)"
+      effect: "권선이 먼저 경고 ({winding_end} °C)"
+      action: "부하를 정격 이하로 제한, 권선 온도 추세 관리"
+
+  cooldown:
+    title: "결함 해제 후 냉각"
+    fingerprint: "오를 때보다 천천히 내려온다"
+    focus_component: winding
+    heat_path: []
+    reveal_timing: { why: 0.0, visible: 0.4, result: 0.75 }
+    why: "열원이 사라지고 냉각만 남았기 때문입니다. 온도는 올라갈 때보다 천천히 내려오므로, 결함을 늦게 잡을수록 회복에도 시간이 듭니다."
+    visible: "결함을 제거하자 모든 부품이 서서히 식습니다. 지금 권선 {winding_end} °C ({winding_stage_end}), 베어링 {bearing_de_end} °C."
+    result: "VIGENT 는 '주의' 단계에 들어서는 순간 경보를 보냅니다. 주의 → 위험까지의 여유(리드 타임)는 시뮬레이션 약 {lead_sim_min}분이며, 그 안에 정비하면 정지 손실을 막을 수 있습니다."
+    presenter_line: "정비하면 돌아옵니다. 문제는 언제 아느냐입니다."
+    cause_chain:
+      cause: "정비로 결함 제거"
+      mechanism: "열원 소멸, 냉각만 진행"
+      effect: "전 부품 서서히 정상 복귀"
+      action: "주의 단계 경보에서 정비하면 여기까지 오지 않는다"

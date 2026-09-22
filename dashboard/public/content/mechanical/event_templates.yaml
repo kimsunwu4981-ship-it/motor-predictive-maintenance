@@ -1,0 +1,24 @@
+# event_templates.yaml — 로그에서 자동 추출한 사건(events.json)을 자막으로 바꾸는 문구 템플릿.
+#
+# 사건의 시각·수치는 export 가 로그에서 만든다. 사람이 시간을 손으로 넣지 않는다.
+# 변수: {part_label} {threshold_C} {temp_C} {from_ko} {to_ko} {threshold_mms} {value_mms} {scene} {label} {time_scale}
+# priority 가 낮을수록 먼저 크게 표시된다 (주목 부품 1 > 진동 2 > 기타 3). 같은 순간에 몰리면 가장 낮은 것만 자막,
+# 나머지는 목록에 쌓인다.
+
+stage_up:
+  default: "{part_label} {threshold_C} °C 돌파 — {to_ko} 단계"
+  early_warning: "{part_label} {threshold_C} °C 돌파 — 주의 단계 (VIGENT 조기 경보 시점)"
+  danger: "{part_label} {threshold_C} °C 초과 — 위험 단계, 빨강 발광"
+stage_down:
+  default: "{part_label} {threshold_C} °C 아래로 — {to_ko} 단계로 내려옴"
+recovered:
+  default: "{part_label} 정상 범위 복귀 ({threshold_C} °C 아래)"
+vib_zone:
+  up: "진동 {threshold_mms} mm/s 초과 — ISO 20816-3 {to_ko} 등급"
+  down: "진동 {threshold_mms} mm/s 아래로 — ISO 20816-3 {to_ko} 등급"
+xray_on:
+  default: "엔드실드가 반투명해집니다 — 안쪽 베어링이 보입니다"
+xray_off:
+  default: "엔드실드가 다시 불투명해집니다"
+scene:
+  default: "장면 {scene}. {label} — 화면 1초 = 시뮬레이션 {time_scale}초"

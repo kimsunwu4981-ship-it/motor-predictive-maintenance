@@ -332,7 +332,18 @@ def export(mode: str) -> dict:
     ts = build_timeseries(mode, latest_csv(mode), th)
     sc = build_scenarios(mode, ts, th)
     fa = build_faults(mode)
-    for name, obj in (("thresholds", th), ("timeseries", ts), ("scenarios", sc), ("faults", fa)):
+    files = [("thresholds", th), ("timeseries", ts), ("scenarios", sc), ("faults", fa)]
+    if mode == "mechanical":
+        # 실시간 해설 대시보드용 확장 (손실열·이벤트·해설 치환 변수). 전기 모드는 그대로.
+        sys.path.insert(0, HERE)
+        from export_mechanical_extras import apply_extras
+        events, values = apply_extras(th, ts, sc, fa)
+        files += [("events", {"mode": mode, "n": len(events), "events": events}),
+                  ("narration_values", {"mode": mode, "scenes": values})]
+        rc = ts["replay_check"]
+        print(f"[{mode}] 재실행 검증: 경계 밖 최대 {max(rc['max_err_inner_C'].values()):.2f} °C "
+              f"(허용 {rc['method'].split('tolerance_C=')[1]}) → {'PASS' if rc['pass'] else 'FAIL'}, 이벤트 {len(events)}개")
+    for name, obj in files:
         with open(os.path.join(out_dir, f"{name}.json"), "w", encoding="utf-8") as f:
             json.dump(obj, f, ensure_ascii=False, indent=1)
     lt = sc["lead_time"]
