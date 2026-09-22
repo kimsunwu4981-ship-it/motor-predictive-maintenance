@@ -103,7 +103,7 @@ export function SyncedCharts({ mode, data }: { mode: Mode; data: ModeData }) {
       ],
       series: [
         ...(["A", "B", "C"] as const).map((p, k) => ({
-          id: "ph" + p, name: `${p}상 RMS`, type: "line" as const, showSymbol: false, xAxisIndex: 0, yAxisIndex: 0,
+          id: "ph" + p, name: `${th.electrical.phase_labels?.[p] ?? p}상 RMS`, type: "line" as const, showSymbol: false, xAxisIndex: 0, yAxisIndex: 0,
           lineStyle: { width: 2, color: phaseColor[p] }, itemStyle: { color: phaseColor[p] },
           data: ts.t_real_s.map((x, i) => [x, ts.current_rms_A[p][i]]),
           ...(k === 0 ? { markArea: { silent: true, data: [...bandsA, ...chapterAreas] }, markLine: { silent: true, symbol: "none", data: [...leadMarks(), ...thrLines] } } : {}),

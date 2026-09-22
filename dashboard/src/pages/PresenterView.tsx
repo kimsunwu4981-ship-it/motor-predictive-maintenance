@@ -59,7 +59,7 @@ function Inner({ data }: { data: LiveData }) {
   const lt = sc.lead_time;
   const leadText = mode === "mechanical"
     ? <>주의 진입 {fmtT(lt.alarm_t ?? 0)} → 위험 {fmtT(lt.danger_t ?? 0)} : 화면 <b>{lt.lead_s}</b> s = 시뮬레이션 약 <b>{Math.round(((lt.lead_sim_s ?? 0) / 60) * 10) / 10}</b> 분</>
-    : <>I₂/I₁ 4턴 수준 도달 {fmtT(lt.alarm_t ?? 0)} = A상 위험 과전류 {fmtT(lt.danger_t ?? 0)} : <b>{lt.lead_s} s</b> — 이 모델은 단락을 크기 불평형으로 등가 표현하므로 같다. 균형 지표의 가치는 장면 5로 말한다.</>;
+    : <>I₂/I₁ 4턴 수준 도달 {fmtT(lt.alarm_t ?? 0)} = {String(data.values[step.id]?.ph_a ?? "R")}상 위험 과전류 {fmtT(lt.danger_t ?? 0)} : <b>{lt.lead_s} s</b> — 이 모델은 단락을 크기 불평형으로 등가 표현하므로 같다. 균형 지표의 가치는 장면 5로 말한다.</>;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

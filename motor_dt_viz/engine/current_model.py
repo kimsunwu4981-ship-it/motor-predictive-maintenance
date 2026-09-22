@@ -64,7 +64,7 @@ def phasors_from_waveform(sig: np.ndarray, fs: float, f0: float) -> complex:
 
 
 def unbalance_scale_for_ratio(ratio: float, phase_deg: float = 0.0) -> float:
-    """목표 I₂/I₁ 을 만드는 고장상(A상) 크기 배율 k 를 역산한다.
+    """목표 I₂/I₁ 을 만드는 고장상(내부 키 A, 화면 표시 R상) 크기 배율 k 를 역산한다.
 
     Ia = k·I·e^(jφ), Ib = I∠−120°, Ic = I∠+120° 일 때
         I₁ = I(k·e^(jφ) + 2)/3,  I₂ = I(k·e^(jφ) − 1)/3

@@ -35,6 +35,7 @@ export interface Thresholds {
     ratio_thresholds: { over_danger: number; over_caution: number; under_caution: number; under_danger: number };
     rows: ElecRow[]; status_colors: Record<ElecStatus, string>; status_labels: Record<ElecStatus, string>;
     short_loop_color: string; i2i1_marks: { case: string; label: string; value: number }[]; slowmo_factor: number;
+    phase_labels?: Record<"A" | "B" | "C", string>;   // 표시 이름 (config electrical.yaml phase_labels → R·S·T), 내부 키는 A/B/C
   };
 }
 
