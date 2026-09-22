@@ -5,9 +5,9 @@ import { STAGE_ICON } from "../components/Legend";
 import { fmtSim, type MechData } from "./data";
 
 // 상단 바: 모드 · 장면 n/7 제목 · 상태 뱃지 · 시간 압축 · 정직성 라벨 (dashboard/CLAUDE.md 규칙 4·5, TASK 5.4)
-export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode, captions, onCaptions }: {
+export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode, captions, onCaptions, qa, onQa, onPresenter }: {
   data: MechData; theme: "dark" | "light"; onTheme: () => void; present: boolean; onPresent: () => void;
-  autoMode: boolean; onAutoMode: () => void; captions: boolean; onCaptions: () => void;
+  autoMode: boolean; onAutoMode: () => void; captions: boolean; onCaptions: () => void; qa: boolean; onQa: () => void; onPresenter: () => void;
 }) {
   const { t, stepIndex } = usePlayback();
   const th = data.thresholds, ts = data.timeseries;
@@ -43,10 +43,12 @@ export function HUDLive({ data, theme, onTheme, present, onPresent, autoMode, on
         <span className="tc-elapsed">시뮬레이션 경과 <b>{fmtSim(ts.sim_elapsed_s[i])}</b></span>
       </span>
       <span className="grow" />
-      {!present && <button onClick={onAutoMode} title="자동 해설: 해설 단계가 시간에 따라 저절로 공개 / 발표자 모드: N 키를 눌러야 다음 단계">{autoMode ? "자동 해설" : "발표자 모드"}</button>}
-      {!present && <button className="b-cap" onClick={onCaptions} title="C 키: 영상 아래 자막 켜기/끄기">{captions ? "☑ 자막 (C)" : "☐ 자막 (C)"}</button>}
-      {!present && <button className="b-theme" onClick={onTheme} title="테마">{theme === "dark" ? "☀ 라이트" : "☾ 다크"}</button>}
-      <button onClick={onPresent} title="F 키">{present ? "발표 모드 종료 (Esc)" : "발표 모드 (F)"}</button>
+      {!present && <button onClick={onAutoMode} title="자동 해설: 해설 단계가 시간에 따라 저절로 공개 / 발표자 모드: N 키를 눌러야 다음 단계">{autoMode ? "자동 해설" : "발표자 모드 · N"}</button>}
+      {!present && <button className="b-qa" onClick={onQa} title="Q 키: 예상 질문과 답 서랍">{qa ? "☑ 질문 Q" : "☐ 질문 Q"}</button>}
+      {!present && <button className="b-pres" onClick={onPresenter} title="발표자 노트북용 화면을 새 창으로 연다 (멘트는 그 창에만)">발표자 ↗</button>}
+      {!present && <button className="b-cap" onClick={onCaptions} title="C 키: 영상 아래 자막 켜기/끄기">{captions ? "☑ 자막 C" : "☐ 자막 C"}</button>}
+      {!present && <button className="b-theme" onClick={onTheme} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
+      <button onClick={onPresent} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
       <span className="honesty">
         <b>{th.honesty.label}</b>
         <span>{th.honesty.rating_basis}</span>

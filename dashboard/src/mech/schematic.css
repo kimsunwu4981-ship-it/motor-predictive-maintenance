@@ -105,3 +105,20 @@
   /* 1366 은 세로 스크롤 레이아웃이라 이력 목록이 페이지를 무한정 늘린다 → 높이를 고정하고 안에서 스크롤 */
   .hist { min-height: 60px; max-height: 170px; }
 }
+
+/* 상단 바 버튼이 6개라 1920 에서도 한 줄에 들어가게 촘촘히 */
+.dash.live .hud button { padding: 5px 9px; white-space: nowrap; }
+.dash.live .hud { gap: 10px; }
+
+/* ---------- M5: Q 서랍 (예상 질문과 답) ---------- */
+.qa-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 46vw); background: var(--panel); border-left: 1px solid var(--line); box-shadow: -8px 0 30px rgba(0,0,0,.45); z-index: 50; display: flex; flex-direction: column; animation: qain .25s ease; }
+@keyframes qain { from { transform: translateX(30px); } to { transform: none; } }
+.qa-h { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.qa-h b { color: var(--accent); font-size: 1.1em; }
+.qa-b { flex: 1; overflow: auto; padding: 10px 16px 20px; }
+.qa-item { padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel2); }
+.qa-item.here { border-color: var(--accent); }
+.qa-q { font-weight: 800; margin-bottom: 6px; }
+.qa-q .tag { font-size: .72em; font-weight: 700; color: #06202a; background: var(--accent); border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: middle; }
+.qa-a { color: var(--fg); line-height: 1.5; }
+.dash.present .qa-drawer { font-size: 1.1em; }

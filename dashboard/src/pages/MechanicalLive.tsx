@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadModeData, type ModeData } from "../data";
 import { PlaybackContext, usePlaybackController } from "../state/playback";
 import { VideoPanel } from "../components/VideoPanel";
@@ -10,7 +10,9 @@ import { MotorSchematic } from "../mech/MotorSchematic";
 import { CausePanel } from "../mech/CausePanel";
 import { VibChart } from "../mech/VibChart";
 import { CaptionBar } from "../mech/CaptionBar";
+import { QaDrawer } from "../mech/QaDrawer";
 import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../mech/captions";
+import { openChannel, type MainState, type Msg } from "../mech/broadcast";
 import "../mech/schematic.css";
 
 // 기계적 결함 실시간 해설 대시보드 (TASK_기계실시간해설). 전기 대시보드(ModeDashboard)는 그대로 둔다.
@@ -31,6 +33,7 @@ function Inner({ data }: { data: MechData }) {
   const [present, setPresent] = useState(false);
   const [autoMode, setAutoMode] = useState(true);       // 자동 해설 / 발표자 모드 (TASK 7.1)
   const [captions, setCaptions] = useState(true);       // C 키: 자막 켜기/끄기
+  const [qa, setQa] = useState(() => new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("qa") === "1");   // Q 키: 예상 질문 서랍 (?qa=1 로 열린 채 시작)
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; }
   });
@@ -52,13 +55,51 @@ function Inner({ data }: { data: MechData }) {
   const [manual, setManual] = useState<{ scene: string; level: number }>({ scene: step.id, level: 0 });
   const manualLevel = manual.scene === step.id ? manual.level : 0;
   const level = autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;
-  const nextLevel = () => setManual({ scene: step.id, level: Math.min(3, manualLevel + 1) });
+  const nextLevel = useCallback(() => { if (!autoMode) setManual({ scene: step.id, level: Math.min(3, manualLevel + 1) }); }, [autoMode, step.id, manualLevel]);
 
   // 이벤트 자막 · 이력 (events.json + event_templates.yaml)
   const clusters = useMemo(() => buildClusters(data.events), [data.events]);
   const history = useMemo(() => buildHistory(data, clusters), [data, clusters]);
   const cap = useMemo(() => captionAt(clusters, pb.t), [clusters, pb.t]);
   const sceneCap = useMemo(() => sceneCaptionAt(data.events, pb.t, data.content.templates), [data.events, data.content.templates, pb.t]);
+
+  // 발표자 화면과 상태 공유 (TASK 7.2): 상태는 5 Hz 로 보내고, 발표자 화면의 명령을 받는다. 멘트는 여기서 보내지 않는다.
+  const chan = useMemo(() => openChannel(), []);
+  const stateRef = useRef<MainState | null>(null);
+  stateRef.current = { kind: "state", t: pb.t, playing: pb.playing, stepIndex: pb.stepIndex, level, autoMode, captions, at: Date.now() };
+  const lastPost = useRef(0);
+  useEffect(() => {
+    if (!chan) return;
+    const now = performance.now();
+    if (pb.playing && now - lastPost.current < 200) return;
+    lastPost.current = now;
+    chan.postMessage(stateRef.current);
+  }, [chan, pb.t, pb.playing, pb.stepIndex, level, autoMode, captions]);
+  useEffect(() => {
+    if (!chan) return;
+    const on = (e: MessageEvent<Msg>) => {
+      const m = e.data;
+      if (m?.kind === "hello") chan.postMessage({ ...stateRef.current, at: Date.now() });
+      else if (m?.kind === "cmd") {
+        if (m.cmd === "toggle") pb.toggle();
+        else if (m.cmd === "goto" && m.n) pb.gotoStep(m.n);
+        else if (m.cmd === "seek" && typeof m.t === "number") pb.seek(m.t);
+        else if (m.cmd === "nextStep") pb.gotoStep(pb.stepIndex + 2);
+        else if (m.cmd === "prevStep") pb.gotoStep(pb.stepIndex);
+        else if (m.cmd === "nextLevel") nextLevel();
+      }
+    };
+    chan.addEventListener("message", on);
+    return () => chan.removeEventListener("message", on);
+  }, [chan, pb, nextLevel]);
+  // 정지 중에도 발표자 화면이 "연결됨" 을 알 수 있게 1 초마다 심장박동
+  useEffect(() => {
+    if (!chan) return;
+    const h = setInterval(() => { if (stateRef.current) chan.postMessage({ ...stateRef.current, at: Date.now() }); }, 1000);
+    return () => clearInterval(h);
+  }, [chan]);
+  useEffect(() => () => chan?.close(), [chan]);
+  const openPresenter = () => window.open(window.location.href.split("#")[0] + "#/mechanical/presenter", "vigent-presenter");
 
   const togglePresent = () => setPresent((p) => {
     const next = !p;
@@ -74,7 +115,8 @@ function Inner({ data }: { data: MechData }) {
       else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
       else if (e.key === "f" || e.key === "F") togglePresent();
       else if (e.key === "c" || e.key === "C") setCaptions((c) => !c);
-      else if (e.key === "n" || e.key === "N") { if (!autoMode) nextLevel(); }
+      else if (e.key === "q" || e.key === "Q") setQa((q) => !q);
+      else if (e.key === "n" || e.key === "N") nextLevel();
       else if (e.key === "Escape" && present) setPresent(false);
       else if (e.key >= "1" && e.key <= "9") pb.gotoStep(Number(e.key));
     };
@@ -92,7 +134,7 @@ function Inner({ data }: { data: MechData }) {
       <div className={"dash live" + (present ? " present" : "")}>
         <HUDLive data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
                  present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
-                 captions={captions} onCaptions={() => setCaptions((c) => !c)} />
+                 captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter} />
         <div className="live-main">
           <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
           <div className="live-side">
@@ -105,6 +147,7 @@ function Inner({ data }: { data: MechData }) {
           <VibChart data={data} />
           <CausePanel data={data} focus={focus} />
         </div>
+        <QaDrawer data={data} open={qa} onClose={() => setQa(false)} />
       </div>
     </PlaybackContext.Provider>
   );
