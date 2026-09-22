@@ -48,6 +48,7 @@ ap.add_argument("--record", metavar="MP4",
                 help="ffmpeg 로 Isaac Sim 창을 녹화하고 영상↔로그 오프셋을 기록한다")
 ap.add_argument("--no_timecode", action="store_true",
                 help="HUD 타임코드를 숨긴다 (오프셋 확정 후 발표용 녹화에 쓴다)")
+ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: mechanical)")
 ap.add_argument("--switch_seq", metavar="mode:sec,...",
                 help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
 args = ap.parse_args()
@@ -192,7 +193,9 @@ STEP_EN_BY_MODE = {
 }
 
 # ------------------------------------------------------------------ 로깅
-csv_path = os.path.join(LOG_DIR, f"demo_{time.strftime('%Y%m%d_%H%M%S')}.csv")
+RUN_LOG_DIR = os.path.join(LOG_DIR, args.log_subdir) if args.log_subdir else LOG_DIR
+os.makedirs(RUN_LOG_DIR, exist_ok=True)
+csv_path = os.path.join(RUN_LOG_DIR, f"demo_{time.strftime('%Y%m%d_%H%M%S')}.csv")
 csv_file = open(csv_path, "w", newline="", encoding="utf-8")
 writer = csv.writer(csv_file)
 writer.writerow(["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
@@ -242,10 +245,13 @@ _prof = _Prof if args.profile else (lambda key: _NOPROF)
 # scenario.yaml 의 duration_s 는 '실제 발표 시간'이므로 시나리오와 열 적분은
 # 벽시계 dt 로 진행해야 한다. 영상↔로그 동기화도 실제 시간축이라야 성립한다.
 t_wall = 0.0          # 렌더 프레임 기준 (기존 CSV 호환용)
-t_real = 0.0          # 실제 경과 시간 — 시나리오·열·영상 동기화의 기준
+t_real = 0.0          # 실제 경과 시간 — 시나리오·열·영상 동기화의 기준 (모드 전환·재생 시 0 으로)
+t_session = 0.0       # 기동 후 누적 시간 — 절대 리셋하지 않는다. --max_s / --switch_seq 의 기준
 _t0 = time.time()
 _prev_wall = _t0
 _fps_hist: list[float] = []
+_last_log_t = -1.0
+LOG_PERIOD_S = 0.25      # CSV·status 기록 주기 (실제 시간)
 status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
 
 # ------------------------------------------------------------------ 녹화
@@ -347,15 +353,17 @@ while simulation_app.is_running():
     _prev_wall = _now
     dt_real = min(max(dt_real, 1e-4), 0.1)     # 첫 프레임·끊김 구간의 스파이크를 막는다
     t_real += dt_real
+    t_session += dt_real
 
     # ---------- 예약된 모드 전환 (검증용) ----------
-    while switch_plan and t_real >= switch_plan[0][0]:
+    while switch_plan and t_session >= switch_plan[0][0]:
         _, _m = switch_plan.pop(0)
-        state.mode = _m
-        state.request_mode_reset = True
         if panel:
-            panel._refresh_mode_buttons()
-        print(f"[demo] 모드 전환 → {_m} (t_real={t_real:.1f}s)", flush=True)
+            panel._set_mode(_m)          # 버튼 클릭과 같은 경로 (무관한 결함 해제 포함)
+        else:
+            state.mode = _m
+            state.request_mode_reset = True
+        print(f"[demo] 모드 전환 → {_m} (t_session={t_session:.1f}s)", flush=True)
 
     # ---------- 모드 전환: 이전 모드의 잔상을 모두 지운다 ----------
     if state.request_mode_reset:
@@ -514,7 +522,9 @@ while simulation_app.is_running():
     t_wall += 1 / 60
 
     # ---------- 로깅 ----------
-    if int(t_real * 60) % 15 == 0:
+    # 기록 주기는 t_session 기준 — t_real 은 모드 전환·재생 시 0 으로 돌아가 기록이 멈춘다(실측)
+    if t_session - _last_log_t >= LOG_PERIOD_S:
+        _last_log_t = t_session
         wall = time.time() - _t0
         fps = t_wall / wall * 60.0 if wall > 0.5 else 0.0
         _fps_hist.append(fps)
@@ -525,7 +535,8 @@ while simulation_app.is_running():
                          *[round(v, 1) for v in st_line.rms_A], round(st_line.i2_over_i1, 4),
                          round(vib, 2), zone, round(fps, 1)])
         with open(status_path, "w", encoding="utf-8") as f:
-            json.dump({"t": round(t_wall, 2), "t_real": round(t_real, 2), "mode": mode, "case": case,
+            json.dump({"t": round(t_wall, 2), "t_real": round(t_real, 2), "t_session": round(t_session, 2),
+                       "mode": mode, "case": case,
                        "step": frame.step_id if frame else "manual",
                        "scenario": state.playing_scenario,
                        "i2i1": round(st_line.i2_over_i1, 4),
@@ -534,7 +545,7 @@ while simulation_app.is_running():
                        "stage_bearing": th.stage["bearing_de"], "stage_winding": th.stage["winding"],
                        "fps": round(fps, 1)}, f, ensure_ascii=False)
 
-    if args.max_s and t_real >= args.max_s:
+    if args.max_s and t_session >= args.max_s:
         break
 
 if recorder is not None:
@@ -544,7 +555,7 @@ if recorder is not None:
     rec_meta["log_csv"] = csv_path
     rec_meta["timecode_burned_in"] = not args.no_timecode
     rec_name = os.path.splitext(os.path.basename(args.record))[0]
-    with open(os.path.join(LOG_DIR, f"recording_{rec_name}.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(RUN_LOG_DIR, f"recording_{rec_name}.json"), "w", encoding="utf-8") as f:
         json.dump(rec_meta, f, ensure_ascii=False, indent=2)
 
 csv_file.close()
@@ -558,7 +569,7 @@ if args.profile and _prof_n:
                                                              key=lambda kv: -kv[1])}
     summary["profile_ms_per_frame"] = {**per_frame, "_measured": round(sum(per_frame.values()), 3),
                                        "_frames": _prof_n}
-with open(os.path.join(LOG_DIR, "demo_integrated.json"), "w", encoding="utf-8") as f:
+with open(os.path.join(RUN_LOG_DIR, "demo_integrated.json"), "w", encoding="utf-8") as f:
     json.dump(summary, f, ensure_ascii=False, indent=2)
 print("[demo] DONE", csv_path, flush=True)
 simulation_app.close()

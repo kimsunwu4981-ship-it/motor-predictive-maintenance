@@ -8,12 +8,16 @@
 #   powershell -ExecutionPolicy Bypass -File tools\capture_demo.ps1 -Prefix p5 -MaxS 200
 # -Low  : 저사양 프리셋(--low)으로 데모를 띄운다
 # -Mode : mechanical | electrical | integrated — 모드마다 시나리오 단계가 다르다
+# -SwitchSeq : 데모의 --switch_seq 로 넘긴다. 예) "electrical:62,mechanical:80,integrated:98"
+# -ShotAt    : 단계 대신 t_real(초) 목록에서 찍는다. 예) 55,72,90,108  (전환 잔상 검증용)
 param(
     [string]$Prefix = "p4",
     [double]$MaxS = 175,
     [switch]$Low,
     [ValidateSet("mechanical", "electrical", "integrated")]
-    [string]$Mode = "integrated"
+    [string]$Mode = "integrated",
+    [string]$SwitchSeq = "",
+    [string]$ShotAt = ""        # "56,72,92,110" — -File 호출에서는 배열 인자가 깨져 문자열로 받는다
 )
 
 $ErrorActionPreference = "Stop"
@@ -100,21 +104,40 @@ $stdout = Join-Path $VIZ "logs\capture_stdout.txt"
 $stderr = Join-Path $VIZ "logs\capture_stderr.txt"
 $demoArgs = @("app\demo_integrated.py", "--gui", "--autoplay", "--max_s", $MaxS, "--mode", $Mode)
 if ($Low) { $demoArgs += "--low" }
+if ($SwitchSeq) { $demoArgs += @("--switch_seq", $SwitchSeq) }
 $demo = Start-Process -FilePath $ISAAC -ArgumentList $demoArgs `
     -WorkingDirectory $VIZ -PassThru -WindowStyle Normal `
     -RedirectStandardOutput $stdout -RedirectStandardError $stderr
 
-# 단계별로 '해당 단계에 들어간 뒤 중반쯤'에서 한 장씩 찍는다.
 $done = @{}
 $deadline = (Get-Date).AddSeconds($MaxS + 240)     # Isaac Sim 기동 시간 포함
-while ((Get-Date) -lt $deadline -and $done.Count -lt $STEPS.Count) {
-    Start-Sleep -Milliseconds 700
+$shotList = @()
+if ($ShotAt) { $shotList = @($ShotAt -split "," | ForEach-Object { [double]$_.Trim() }) }
+$byTime = $shotList.Count -gt 0
+$total = if ($byTime) { $shotList.Count } else { $STEPS.Count }
+
+while ((Get-Date) -lt $deadline -and $done.Count -lt $total) {
+    Start-Sleep -Milliseconds 400
     if ($demo.HasExited -and -not (Test-Path $STATUS)) {
         Write-Host "[capture] 데모가 기동하지 못하고 종료했다 — logs\capture_stderr.txt 확인"
         break
     }
     if (-not (Test-Path $STATUS)) { continue }
     try { $s = Get-Content $STATUS -Raw | ConvertFrom-Json } catch { continue }
+
+    if ($byTime) {
+        # 시각 기반: t_real 이 목표를 넘는 첫 순간에 찍는다 (모드 전환 잔상 검증)
+        $hit = $shotList | Where-Object { -not $done.ContainsKey([string]$_) -and $s.t_session -ge $_ } | Select-Object -First 1
+        if ($null -eq $hit) { continue }
+        $file = Join-Path $OUT ("{0}_t{1:000}_{2}.png" -f $Prefix, [int]$hit, $s.mode)
+        if (-not (Save-Screen $file)) { break }
+        $done[[string]$hit] = $true
+        Write-Host ("[capture] t={0}s  mode={1}  brg={2}C({3})  wdg={4}C({5})  I2/I1={6}" -f `
+            $s.t_session, $s.mode, $s.bearing_de, $s.stage_bearing, $s.winding, $s.stage_winding, $s.i2i1)
+        continue
+    }
+
+    # 단계 기반: '해당 단계에 들어간 뒤 중반쯤'에서 한 장씩 찍는다
     $step = $s.step
     if (-not $step -or $done.ContainsKey($step) -or -not $STEPS.Contains($step)) { continue }
     # 단계 진입 직후는 색/온도가 아직 안 올라오므로 조금 기다렸다 찍는다
@@ -128,4 +151,4 @@ while ((Get-Date) -lt $deadline -and $done.Count -lt $STEPS.Count) {
 
 if (-not $demo.HasExited) { $demo.WaitForExit(120000) | Out-Null }
 if (-not $demo.HasExited) { $demo.Kill() }
-Write-Host ("[capture] 완료 — {0}/{1} 단계 캡처, 출력 {2}" -f $done.Count, $STEPS.Count, $OUT)
+Write-Host ("[capture] 완료 — {0}/{1} 장 캡처, 출력 {2}" -f $done.Count, $total, $OUT)
