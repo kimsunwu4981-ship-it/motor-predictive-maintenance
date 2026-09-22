@@ -12,7 +12,8 @@ param(
     [ValidateSet("mechanical", "electrical")]
     [string]$Mode,
     [double]$MaxS = 0,
-    [switch]$NoTimecode
+    [switch]$NoTimecode,
+    [switch]$SkipRecord      # 이미 녹화된 영상으로 검증·클립만 다시 한다
 )
 $ErrorActionPreference = "Stop"
 
@@ -40,6 +41,7 @@ New-Item -ItemType Directory -Force -Path $mediaDir, $logDir | Out-Null
 $statusFile = Join-Path $VIZ "logs\demo_integrated_status.json"
 if (Test-Path $statusFile) { [System.IO.File]::Delete($statusFile) }
 
+if (-not $SkipRecord) {
 Write-Host "[record] $Mode 녹화 시작 (max ${MaxS}s)"
 $demoArgs = @("app\demo_integrated.py", "--gui", "--autoplay", "--mode", $Mode, "--max_s", $MaxS,
               "--record", $relVideo, "--log_subdir", $Mode)
@@ -51,9 +53,11 @@ $p.WaitForExit([int](($MaxS + 300) * 1000)) | Out-Null
 if (-not $p.HasExited) { $p.Kill(); throw "데모가 제한 시간 안에 끝나지 않았다" }
 $errFile = Join-Path $VIZ "logs\demo_integrated_error.txt"
 if (Test-Path $errFile) { Write-Host "=== 데모 오류 ==="; Get-Content $errFile -Tail 12; throw "데모 오류" }
+}
 
 # ---- 결과 확인 ----
-$meta = Get-Content (Join-Path $logDir "recording_${Mode}_full.json") -Raw | ConvertFrom-Json
+# PS 5.1 은 -Encoding 을 주지 않으면 UTF-8 을 ANSI 로 읽어 한글 경로가 깨진다(실측: JSON 파싱 오류)
+$meta = Get-Content (Join-Path $logDir "recording_${Mode}_full.json") -Raw -Encoding UTF8 | ConvertFrom-Json
 $video = Join-Path $mediaDir "${Mode}_full.mp4"
 $csv = $meta.log_csv
 $last = Get-Content $csv -Tail 1
