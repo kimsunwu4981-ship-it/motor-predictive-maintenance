@@ -217,6 +217,16 @@ def apply_extras(th: dict, ts: dict, sc: dict, faults: dict) -> tuple[list[dict]
                            "act_mms": th["vibration_iso"]["act"], "zone_labels": ZONE_KO,
                            "basis": "ISO 20816-3 Group 2 (15~300 kW, 강성 지지)"}
     th["thermal"]["couplings"] = [{"a": a, "b": b, "R_K_per_W": float(r)} for a, b, r in thermal["couplings"]]
+    # 단면도가 영상과 같은 색을 내도록 컬러맵 원본(colors.yaml thermal) 을 그대로 넘긴다
+    colors = load("colors")
+    th["thermal"]["colormap"] = {
+        "stops": [{"pos": float(x["pos"]), "color": list(map(float, x["color"])), "blend": float(x["blend"]),
+                   "emissive": list(map(float, x["emissive"])), "intensity": float(x["intensity"])} for x in colors["thermal"]["stops"]],
+        "normalize": {k: float(v) for k, v in colors["thermal"]["normalize"].items()},
+        "pulse": {"enabled": bool(colors["thermal"]["pulse"]["enabled"]), "start_stage": colors["thermal"]["pulse"]["start_stage"],
+                  "hz": float(colors["thermal"]["pulse"]["hz"]), "depth": float(colors["thermal"]["pulse"]["depth"])},
+        "base_materials": {k: list(map(float, v["color"])) for k, v in colors["base_materials"].items()},
+    }
     tm = ThermalModel()
     th["thermal"]["loss_rated_W"] = {n.key: float(n.loss_rated_W) for n in tm.nodes}
     th["thermal"]["loss_model"] = {n.key: n.loss_model for n in tm.nodes}

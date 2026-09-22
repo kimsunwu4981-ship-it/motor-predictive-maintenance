@@ -1,0 +1,37 @@
+/* 모터 단면도 (MotorSchematic) */
+.schem-body { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 4px 10px 6px; }
+.schem-svg { width: 100%; flex: 1; min-height: 0; font-family: inherit; }
+.schem-svg .part { stroke: rgba(255,255,255,.18); stroke-width: 1; transition: fill .25s linear; cursor: pointer; }
+.schem-svg .part.focus { stroke: #66ddff; stroke-width: 2; }
+.schem-svg .part.hover { stroke: #fff; stroke-width: 2; }
+/* 위험 단계 맥동 — 영상과 같은 0.8 Hz (주기 1.25 s). 발광 강도는 인라인 drop-shadow, 맥동은 투명도로 */
+.schem-svg .part.pulsing { animation: partpulse 1.25s ease-in-out infinite; }
+@keyframes partpulse { 0%, 100% { opacity: 1; } 50% { opacity: .72; } }
+/* 장면 시작 강조: 영상의 해당 부위와 같은 순간에 2 초 깜빡임 */
+.schem-svg .part.intro { animation: intro .55s ease-in-out 4; }
+@keyframes intro { 0%, 100% { stroke: #66ddff; stroke-width: 2; } 50% { stroke: #ffffff; stroke-width: 5; } }
+.schem-svg .lbl { font-size: 10px; fill: var(--fg2); text-anchor: middle; pointer-events: none; }
+.schem-svg .lbl.focus { fill: #66ddff; font-weight: 700; }
+.schem-svg .focus-arrow line { stroke: #66ddff; stroke-width: 2; }
+.schem-svg .focus-lbl { font-size: 12px; font-weight: 800; fill: #66ddff; text-anchor: middle; paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+.schem-svg .heatpath { stroke: #ffaa33; stroke-width: 3; stroke-dasharray: 8 6; animation: flow 1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -28; } }
+.schem-svg .nonthermal text { font-size: 10px; fill: var(--fg2); text-anchor: middle; }
+.schem-svg .nonthermal.dead rect { fill: #3a3f46; }
+.schem-info { font-size: .86em; min-height: 2.6em; padding-top: 4px; border-top: 1px dashed var(--line); }
+.vib-now { font-weight: 800; font-size: 1.05em; }
+/* theme.css 의 .live-bottom(2열) 보다 우선해야 한다 — 우선순위가 같으면 번들 순서에 따라 2열로 남아
+   원인 패널이 다음 줄로 밀리고 오른쪽 열(해설·단면도)이 눌린다 (실측) */
+.dash.live .live-bottom { grid-template-columns: 3fr 1.5fr 2fr; }
+.schem-svg { min-height: 190px; }
+/* 오른쪽 열: 해설(스크롤) 위, 단면도 아래 — 단면도가 읽히려면 높이가 필요하다 */
+.live-side { grid-template-rows: minmax(150px, 1fr) minmax(230px, 1.25fr); }
+.live .charts .chart { height: 240px; }
+@media (max-width: 1400px) {
+  /* 1366×768: 한 화면에 다 넣으면 해설·단면도가 눌려 안 보인다 → 세로 스크롤을 허용하고 최소 높이를 보장 */
+  .dash.live { height: auto; min-height: 100%; grid-template-rows: auto minmax(360px, auto) auto; }
+  .live-side { grid-template-rows: minmax(150px, auto) minmax(210px, auto); }
+  .live .charts .chart { height: 180px; }
+  .schem-svg .lbl { font-size: 11px; }
+  .chain-card { font-size: .82em; padding: 6px 8px; }
+}

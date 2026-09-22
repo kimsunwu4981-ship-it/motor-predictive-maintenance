@@ -25,7 +25,11 @@ export interface Thresholds {
   thermal: {
     parts: PartThreshold[]; stage_colors: Record<Stage, string>; stage_labels: Record<Stage, string>;
     base_material: string; pulse_hz: number; pulse_from_stage: Stage;
+    // 기계 모드 export 확장 (export_mechanical_extras.py) — 전기 모드 JSON 에는 없다
+    colormap?: unknown; couplings?: { a: string; b: string; R_K_per_W: number }[];
+    loss_rated_W?: Record<string, number>; loss_model?: Record<string, string>;
   };
+  vibration_iso?: { watch_mms: number; plan_mms: number; act_mms: number; zone_labels: Record<string, string>; basis: string };
   electrical: {
     rated_line_A: number; rated_phase_A: number;
     ratio_thresholds: { over_danger: number; over_caution: number; under_caution: number; under_danger: number };

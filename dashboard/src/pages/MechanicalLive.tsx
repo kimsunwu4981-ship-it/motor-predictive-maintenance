@@ -8,6 +8,8 @@ import { TempChart, TEMP_DEFAULT_ON } from "../mech/TempChart";
 import { LiveNarration } from "../mech/LiveNarration";
 import { MotorSchematic } from "../mech/MotorSchematic";
 import { CausePanel } from "../mech/CausePanel";
+import { VibChart } from "../mech/VibChart";
+import "../mech/schematic.css";
 
 // 기계적 결함 실시간 해설 대시보드 (TASK_기계실시간해설). 전기 대시보드(ModeDashboard)는 그대로 둔다.
 // 재생 스토어·VideoPanel·테마·발표 모드·키보드는 기존 것을 재사용한다.
@@ -81,6 +83,7 @@ function Inner({ data }: { data: MechData }) {
         </div>
         <div className="live-bottom">
           <TempChart data={data} focus={focus} shown={shown} onToggle={chartToggle} />
+          <VibChart data={data} />
           <CausePanel data={data} />
         </div>
       </div>

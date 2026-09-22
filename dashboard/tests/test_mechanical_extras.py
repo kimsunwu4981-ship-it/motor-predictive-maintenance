@@ -179,3 +179,32 @@ def test_guide_pdf_numbers_match_log():
         if abs(pdfv - logv) > 0.15:
             bad.append((txt, pdfv, logv))
     assert not bad, f"PDF ↔ 로그 불일치: {bad}"
+
+
+# ---------------------------------------------------------------- 단면도 색 = 영상 색 (컬러맵 원본 일치)
+def test_colormap_exported_equals_colors_yaml():
+    """단면도(MotorSchematic)가 쓰는 컬러맵이 영상(viz/colormap.py)의 원본 colors.yaml 과 같다."""
+    th = _j("thresholds")["thermal"]["colormap"]
+    colors = load("colors")["thermal"]
+    assert len(th["stops"]) == len(colors["stops"])
+    for a, b in zip(th["stops"], colors["stops"]):
+        assert a["pos"] == pytest.approx(b["pos"]) and a["blend"] == pytest.approx(b["blend"])
+        assert a["intensity"] == pytest.approx(b["intensity"])
+        assert all(x == pytest.approx(y) for x, y in zip(a["color"], b["color"]))
+    for k in ("caution_pos", "warning_pos", "danger_span_C"):
+        assert th["normalize"][k] == pytest.approx(colors["normalize"][k])
+    assert th["pulse"]["hz"] == pytest.approx(colors["pulse"]["hz"]) and th["pulse"]["start_stage"] == colors["pulse"]["start_stage"]
+
+
+def test_colormap_position_matches_engine():
+    """TS 포팅(colormap.ts)과 같은 규칙을 파이썬 원본으로 검산: 부품별 임계값 정규화 위치."""
+    sys.path.insert(0, VIZ)
+    from viz.colormap import ThermalColormap
+    cm = ThermalColormap()
+    th = _j("thresholds")["thermal"]
+    parts = {p["key"]: p for p in th["parts"]}
+    b, w = parts["bearing_de"], parts["winding"]
+    thr = lambda p: {"normal": p["normal_max_C"], "caution": p["caution_max_C"], "warning": p["warning_max_C"]}  # noqa: E731
+    assert cm.position(80.0, thr(b)) > 0.0 and cm.position(80.0, thr(w)) == 0.0   # 같은 80 °C, 베어링만 색이 변한다
+    assert cm.position(b["caution_max_C"], thr(b)) == pytest.approx(th["colormap"]["normalize"]["caution_pos"])
+    assert cm.position(b["warning_max_C"], thr(b)) == pytest.approx(th["colormap"]["normalize"]["warning_pos"])

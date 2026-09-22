@@ -32,7 +32,13 @@ export interface MechContent {
   templates: Record<string, Record<string, string>>;
   qa: { q: string; a: string; scene?: string }[];
 }
+// 기계 export 확장이 들어간 thresholds — 진동 경계·컬러맵 원본은 필수
+export type MechThresholds = ModeData["thresholds"] & {
+  vibration_iso: { watch_mms: number; plan_mms: number; act_mms: number; zone_labels: Record<string, string>; basis: string };
+  thermal: ModeData["thresholds"]["thermal"] & { colormap: import("./colormap").ThermalColormap; couplings: { a: string; b: string; R_K_per_W: number }[]; loss_rated_W: Record<string, number> };
+};
 export interface MechData extends ModeData {
+  thresholds: MechThresholds;
   timeseries: MechTimeseries;
   events: MechEvent[];
   values: Record<string, SceneValues>;
@@ -61,7 +67,9 @@ export async function loadMechData(base: ModeData): Promise<MechData> {
   ]);
   const ts = base.timeseries as MechTimeseries;
   if (!ts.loss_W) throw new Error("timeseries.json 에 loss_W 가 없다 — export 를 다시 실행");
-  return { ...base, timeseries: ts, events: events.events, values: values.scenes,
+  const th = base.thresholds as MechThresholds;
+  if (!th.vibration_iso || !th.thermal.colormap) throw new Error("thresholds.json 에 기계 확장(vibration_iso/colormap)이 없다 — export 를 다시 실행");
+  return { ...base, thresholds: th, timeseries: ts, events: events.events, values: values.scenes,
            content: { scenes: scenes.scenes, templates, qa: qa.items } };
 }
 
