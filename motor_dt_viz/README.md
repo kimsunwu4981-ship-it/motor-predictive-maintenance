@@ -169,7 +169,7 @@ RTX 4060 기준 프레임당 실측값이다 (`--profile`).
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools\record_mode.ps1 -Mode mechanical   # 녹화 → 동기 검증 프레임 → 장면 클립
 powershell -ExecutionPolicy Bypass -File tools\record_mode.ps1 -Mode electrical
-powershell -ExecutionPolicy Bypass -File tools\publish_desktop.ps1                # 바탕화면 1_기계적결함/2_전기적결함/3_통합 + MD5
+powershell -ExecutionPolicy Bypass -File tools\publish_desktop.ps1                # 프로젝트 폴더\모터결함_애니메이션 (1_기계/2_전기/3_통합 + 해설 PDF) + MD5
 ```
 
 영상은 `../dashboard/public/media/<mode>/`, 로그는 `logs/<mode>/` 에 남는다. 이미 찍은 영상으로

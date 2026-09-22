@@ -7,16 +7,21 @@
 #
 # 복사만 한다. dashboard/public/media 의 원본은 그대로 둔다.
 # 바탕화면 경로는 추측하지 않고 OS 에서 조회한다 (OneDrive 리디렉션 대응).
-param([switch]$Verify)      # -Verify : 복사하지 않고 존재·MD5 만 다시 확인
+# 대상 폴더: 기본은 프로젝트 루트의 `모터결함_애니메이션` (사용자 지시 2026-09-22 — 바탕화면 루트가 아니라
+# 프로젝트 폴더에 둔다). 다른 곳에 두려면 -Dest 로 지정한다.
+param(
+    [switch]$Verify,        # -Verify : 복사하지 않고 존재·MD5 만 다시 확인
+    [string]$Dest = ""
+)
 
 $ErrorActionPreference = "Stop"
 $VIZ = Split-Path -Parent $PSScriptRoot
 $MEDIA = Join-Path $VIZ "..\dashboard\public\media"
-$desk = [Environment]::GetFolderPath('Desktop')
-$dst = Join-Path $desk "모터결함_애니메이션"
+$ROOT = (Resolve-Path (Join-Path $VIZ "..")).Path
+$dst = if ($Dest) { $Dest } else { Join-Path $ROOT "모터결함_애니메이션" }
 
-Write-Host "바탕화면 경로: $desk"
-Write-Host ("OneDrive 동기화 경로 안: {0}" -f ($desk -like "*OneDrive*"))
+Write-Host "대상 폴더: $dst"
+Write-Host ("OneDrive 동기화 경로 안: {0}" -f ($dst -like "*OneDrive*"))
 
 $plan = @()   # (원본, 대상)
 function Add-Plan([string]$src, [string]$dstPath) { $script:plan += [PSCustomObject]@{ Src = $src; Dst = $dstPath } }
@@ -35,6 +40,9 @@ foreach ($m in $modes) {
 }
 $integ = Join-Path $MEDIA "integrated_autoplay.mp4"
 if (Test-Path $integ) { Add-Plan $integ (Join-Path $dst "3_통합\07_통합_자동재생.mp4") }
+# 해설 PDF 도 영상과 같은 폴더에 둔다
+$guide = Join-Path $VIZ "docs\animation_guide.pdf"
+if (Test-Path $guide) { Add-Plan $guide (Join-Path $dst "애니메이션_해설.pdf") }
 
 if (-not $Verify) {
     foreach ($e in $plan) {
