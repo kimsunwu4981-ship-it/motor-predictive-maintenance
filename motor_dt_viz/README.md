@@ -18,6 +18,25 @@
 
 ## 빠르게 실행하기
 
+결과물은 **기계적 결함 / 전기적 결함 / 통합** 세 모드로 나뉜다. 심사위원에게는 한 번에 한 가지만
+보여주는 것이 원칙이라 기계·전기 전용 모드가 발표용이고, 통합 모드는 두 결함의 연쇄
+(ITSC → 과전류 → 권선 과열)를 설명할 때만 쓴다.
+
+| 모드 | 화면에 보이는 것 | 시나리오 |
+|---|---|---|
+| `--mode mechanical` | 부품 발열 색만 (전류 요소 없음) | 7단계 180초 — `config/scenario_mechanical.yaml` |
+| `--mode electrical` | 전류 흐름만 (부품 색은 원래 재질 고정) | 7단계 165초 — `config/scenario_electrical.yaml` |
+| `--mode integrated` (기본) | 둘 다, 전류가 권선 발열로 연결됨 | 5단계 165초 — `config/scenario.yaml` |
+
+```powershell
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical
+```
+
+제어 패널의 MODE 버튼으로 실행 중에도 바꿀 수 있다. 전환하면 이전 모드의 발열 색·입자·HUD 가
+전부 리셋된다(잔상 없음, 실측 검증). 모드별 녹화와 장면 클립, 바탕화면 정리는 아래 "녹화" 절,
+설명 대시보드는 [`../dashboard/README.md`](../dashboard/README.md) 를 본다.
+
 Isaac Sim 4.5 가 필요하다. 경로에 공백이 있어 `C:\issac sim\python.bat` 은 인자가 깨지므로
 8.3 형식을 쓴다.
 
@@ -36,6 +55,11 @@ C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay
 | `--low` | 저사양 PC 프리셋 — 해상도 1280×720, 입자 수·물리 서브스텝 절반 |
 | `--max_s N` | N초 뒤 자동 종료 (캡처·측정용) |
 | `--profile` | 구간별 소요 시간을 `logs/demo_integrated.json` 에 남긴다 |
+| `--mode M` | `mechanical` / `electrical` / `integrated` 시작 모드 |
+| `--record MP4` | ffmpeg 로 녹화하고 영상↔로그 오프셋을 기록한다 (경로는 상대 경로만) |
+| `--no_timecode` | HUD 타임코드를 숨긴다 (발표용 녹화) |
+| `--log_subdir D` | CSV·녹화 메타를 `logs/D/` 에 둔다 |
+| `--switch_seq` | 모드 전환 잔상 검증용 (예: `electrical:62,mechanical:80`) |
 
 Blender 가 떠 있으면 Isaac Sim 의 RTX 초기화가 실패한다. 한 번에 하나만 실행한다.
 
@@ -138,6 +162,18 @@ RTX 4060 기준 프레임당 실측값이다 (`--profile`).
 `--low` 의 이득이 이 GPU 에서는 1.5 ms 로 작은데, 렌더링이 해상도가 아니라 장면 복잡도에
 묶여 있기 때문이다. 내장 그래픽처럼 픽셀 처리량이 모자란 PC 에서는 해상도를 낮춘 만큼
 렌더링 시간이 줄어들므로 효과가 더 크다.
+
+## 녹화 (모드별)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\record_mode.ps1 -Mode mechanical   # 녹화 → 동기 검증 프레임 → 장면 클립
+powershell -ExecutionPolicy Bypass -File tools\record_mode.ps1 -Mode electrical
+powershell -ExecutionPolicy Bypass -File tools\publish_desktop.ps1                # 바탕화면 1_기계적결함/2_전기적결함/3_통합 + MD5
+```
+
+영상은 `../dashboard/public/media/<mode>/`, 로그는 `logs/<mode>/` 에 남는다. 이미 찍은 영상으로
+검증·클립만 다시 하려면 `-SkipRecord`. 녹화는 `gdigrab -i desktop` + 창 좌표 crop 만 동작한다
+(`-i title=` 은 Vulkan 창이라 첫 프레임만 반복됨 — SESSION_LOG 9장).
 
 ## 기록
 

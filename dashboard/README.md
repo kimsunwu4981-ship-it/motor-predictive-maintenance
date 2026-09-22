@@ -1,0 +1,75 @@
+# 모터 결함 설명 대시보드 (기계 / 전기 분리)
+
+Isaac Sim 녹화 영상과 시뮬레이션 로그를 **동기 재생**하며, 심사위원이 "무엇이 보이는가 → 기준이
+무엇인가 → 그래서 무엇이 좋은가"를 한 화면에서 이해하게 하는 발표용 대시보드다.
+기계적 결함과 전기적 결함은 **완전히 별개의 화면**이고, 첫 화면에서 하나를 고른다.
+
+- 완전 오프라인 (외부 폰트·CDN 없음, ECharts 는 번들에 포함)
+- 모든 숫자는 `motor_dt_viz/config/*.yaml` 과 `logs/<mode>/*.csv` 에서 export 한 JSON 만 읽는다
+- 화면에는 항상 `시뮬레이션 기반 추정값` 과 정격 기준(22 kW 6극, 도면 JW-01-HTO-00)이 표시된다
+
+## 실행 (발표장, 더블클릭)
+
+`run_dashboard_mechanical.bat` 또는 `run_dashboard_electrical.bat` 을 더블클릭한다.
+Node.js 만 있으면 되고 인터넷은 필요 없다. 로컬 서버(`serve.cjs`, 포트 4173)가 뜨고 브라우저가
+해당 화면으로 열린다. 창을 닫아도 서버 콘솔은 `Ctrl+C` 로 끝낸다.
+
+| 키 | 동작 |
+|---|---|
+| `F` | 발표 모드 (전체화면, 글자 확대, 하단 탭 숨김) / `Esc` 해제 |
+| `Space` | 재생 / 정지 |
+| `←` `→` | 이전 / 다음 챕터 |
+| `1`~`7` | 챕터 바로 이동 |
+
+주소로 특정 장면을 바로 열 수 있다: `#/mechanical?t=40`, `#/electrical?t=130&tab=faults`.
+
+## 화면 구성
+
+위에서부터 상태 바(모드 · 현재 상태 뱃지 · 정직성 라벨), 영상 + 챕터 타임라인 ‖ 설명 패널
+(무엇이 보이나 / 왜 그런가 / 현장에서는), 동기 차트, 하단 탭(색상 기준표 / 결함 도감 / 용어 풀이).
+
+| | 기계적 결함 | 전기적 결함 |
+|---|---|---|
+| 영상 | `media/mechanical/mechanical_full.mp4` (180 s) | `media/electrical/electrical_full.mp4` (165 s) |
+| 차트 | 부품별 온도 + 선택 부품의 임계 구간 배경색 | 상별 전류 RMS(임계 구간) + I₂/I₁ (케이스 눈금) |
+| 리드 타임 | 주의 진입(경보) → 위험 진입 | I₂/I₁ ≥ 4턴 수준(경보) → 위험 과전류 |
+| 결함 도감 | 베어링 · 오정렬 · 냉각팬 · 브레이크 · 과부하 | ITSC · 과부하 · 전압 불평형 · 결상 · 무부하 |
+| 용어 풀이 | 발열 원인, 열이 번지는 원리, 부품별 기준 | 전압과 전류의 관계(저전압→과전류 등), I₂/I₁ |
+
+영상 시각과 차트 커서는 `t_real = currentTime − video_offset_s` 로 묶여 있고, 차트를 클릭하면
+영상이 그 시각으로 간다. 오프셋 검증은 [`docs/sync_check.md`](docs/sync_check.md).
+
+## 데이터 갱신 (config 나 로그가 바뀌었을 때)
+
+```powershell
+cd dashboard
+& "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" tools\export_dashboard_data.py --mode all
+& "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" -m pytest tests -q   # JSON ↔ config·로그 일치 17건
+npm run build
+```
+
+export 는 `motor_dt_viz/engine` 을 그대로 재사용하며 계산 로직을 복제하지 않는다. 테스트가 하나라도
+실패하면 화면의 숫자와 애니메이션의 숫자가 다르다는 뜻이므로 발표에 쓰면 안 된다.
+
+## 설명 문구 고치기
+
+`src/content/mechanical.ts`, `src/content/electrical.ts` 에 챕터 문구·결함 카드·용어 풀이가 있다.
+문장 안의 숫자는 `d.thresholds...` 처럼 JSON 을 참조하므로 그대로 두고 문장만 바꾼다. 고친 뒤
+`npm run build`.
+
+## 개발
+
+```powershell
+npm install        # 최초 1회 (인터넷 필요)
+npm run dev        # http://localhost:5173
+npm run build      # dist/ 생성 → run_dashboard_*.bat 이 이것을 서빙
+```
+
+## 알려진 한계
+
+- 전기 모드의 리드 타임은 0 이다. 해석식 모델이 ITSC 를 크기 불평형으로 등가 표현하기 때문에 I₂/I₁ 과
+  전류 크기가 같은 순간에 변한다. 화면에도 그렇게 적어 두었다. 대신 전압 불평형 장면에서
+  "색은 정상인데 I₂/I₁ 만 열 배"가 되는 것이 균형 지표의 가치를 보여준다.
+- 헤드리스 브라우저 스크린샷에는 영상 프레임이 검게 나온다(브라우저 제약). 실제 화면에서는 재생된다.
+- 과부하 케이스는 `electrical.yaml` 의 `phase_scale` 과 `load` 가 둘 다 곱해져 실제 전류가 정격의
+  182 % 다. 확인 대기 중이라 화면에는 비율 숫자를 쓰지 않았다.

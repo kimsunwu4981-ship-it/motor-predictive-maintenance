@@ -1,0 +1,25 @@
+{
+  "name": "motor-fault-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "description": "크레인 권상 모터 결함 시각화 설명 대시보드 (기계 / 전기 분리)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "serve": "node serve.cjs"
+  },
+  "dependencies": {
+    "echarts": "5.6.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.6.3",
+    "vite": "5.4.11"
+  }
+}
