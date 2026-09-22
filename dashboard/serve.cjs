@@ -40,13 +40,14 @@ http.createServer((req, res) => {
     const m = /bytes=(\d*)-(\d*)/.exec(range);
     const start = m[1] ? Number(m[1]) : 0;
     const end = m[2] ? Number(m[2]) : stat.size - 1;
-    res.writeHead(206, {
+    // 브라우저 캐시 금지 — 재빌드·재export 뒤 새로고침만으로 최신이 보여야 한다 (실측: 예전 JSON·영상이 캐시에 남아 옛 화면이 나왔다)
+    res.writeHead(206, { "Cache-Control": "no-store",
       "Content-Type": type, "Accept-Ranges": "bytes",
       "Content-Range": `bytes ${start}-${end}/${stat.size}`, "Content-Length": end - start + 1,
     });
     fs.createReadStream(file, { start, end }).pipe(res);
   } else {
-    res.writeHead(200, { "Content-Type": type, "Content-Length": stat.size, "Accept-Ranges": "bytes" });
+    res.writeHead(200, { "Content-Type": type, "Content-Length": stat.size, "Accept-Ranges": "bytes", "Cache-Control": "no-store" });
     fs.createReadStream(file).pipe(res);
   }
 }).listen(PORT, () => {

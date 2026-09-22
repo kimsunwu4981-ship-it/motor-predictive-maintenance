@@ -76,7 +76,7 @@ export interface ModeData { thresholds: Thresholds; scenarios: Scenarios; timese
 export async function loadModeData(mode: Mode): Promise<ModeData> {
   const base = `data/${mode}/`;
   const get = async <T,>(n: string): Promise<T> => {
-    const r = await fetch(base + n + ".json");
+    const r = await fetch(base + n + ".json?v=" + Date.now());   // 캐시 무력화 — export 를 다시 하면 새로고침만으로 반영
     if (!r.ok) throw new Error(`${base}${n}.json 을 읽지 못했다 (${r.status}) — export_dashboard_data.py 를 먼저 실행`);
     return r.json();
   };

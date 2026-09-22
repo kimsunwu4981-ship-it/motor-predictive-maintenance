@@ -2,7 +2,7 @@
 import yaml from "js-yaml";
 
 export async function getJson<T>(path: string): Promise<T> {
-  const r = await fetch(path);
+  const r = await fetch(path + "?v=" + Date.now());   // 캐시 무력화
   if (!r.ok) throw new Error(`${path} (${r.status}) — export_dashboard_data.py 를 먼저 실행`);
   return r.json();
 }

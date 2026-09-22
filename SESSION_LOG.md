@@ -437,6 +437,8 @@ Isaac HUD("Ph R")·데모 라벨·시나리오 자막·export(`phase_label`, `{p
 - **화면 녹화가 다른 창을 찍음(3회)** — 브라우저(YouTube)·VS Code·bat 이 연 브라우저가 앞에 있었다. gdigrab 은 화면을 찍으므로 녹화 15분 동안
   화면을 비워야 한다. 사용자에게 알리고 "시작" 신호 뒤에 체인(Isaac → export → 빌드 → 대시보드 2건)으로 한 번에 돌렸다.
   `run_dashboard_*.bat` 를 검증 목적으로 돌리면 사용자 브라우저가 앞으로 나오므로 녹화 전에 하지 않는다.
+- **재빌드·재export 뒤에도 브라우저에 옛 화면(A상, 오프셋 2.008)이 남음** — serve.cjs 가 캐시 헤더를 안 보내고 JSON·영상 요청에 캐시 무력화가 없었다
+  → 서버 `Cache-Control: no-store`, JSON `?v=Date.now()`, 영상 `?v=<오프셋>`. 이미 캐시된 브라우저는 한 번 Ctrl+F5.
 - **PDF 재생성 절차가 스크립트로 없었음** → `motor_dt_viz/tools/build_guide_pdf.ps1` (-Publish 로 산출물 폴더 복사).
 
 ### 12.6 산출물
