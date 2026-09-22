@@ -57,7 +57,7 @@ Node.js 만 있으면 되고 인터넷은 필요 없다. 로컬 서버(`serve.cj
 ```powershell
 cd dashboard
 & "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" tools\export_dashboard_data.py --mode all
-& "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" -m pytest tests -q   # JSON ↔ config·로그 일치 17건
+& "C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe" -m pytest tests -q   # JSON ↔ config·로그 일치 33건 (기계 확장 16건 포함)
 npm run build
 ```
 
@@ -66,9 +66,21 @@ export 는 `motor_dt_viz/engine` 을 그대로 재사용하며 계산 로직을 
 
 ## 설명 문구 고치기
 
-`src/content/mechanical.ts`, `src/content/electrical.ts` 에 챕터 문구·결함 카드·용어 풀이가 있다.
-문장 안의 숫자는 `d.thresholds...` 처럼 JSON 을 참조하므로 그대로 두고 문장만 바꾼다. 고친 뒤
-`npm run build`.
+- **기계 실시간 해설**: `public/content/mechanical/narration.yaml`(장면 해설·멘트·인과 카드), `event_templates.yaml`(자막),
+  `qa.yaml`(예상 질문). 고치고 **새로고침만** 하면 된다(빌드 불필요). 숫자는 쓰지 말고 파일 머리의 `{변수}` 를 쓴다.
+  PDF 원문과의 대응은 [`docs/narration_review.md`](docs/narration_review.md), 검토 체크리스트는
+  [`docs/first_viewer_check.md`](docs/first_viewer_check.md), 전기 대시보드에 같은 구조를 적용하는 메모는
+  [`docs/electrical_apply_notes.md`](docs/electrical_apply_notes.md).
+- **전기 대시보드**: `src/content/electrical.ts` 에 챕터 문구·결함 카드·용어 풀이가 있다. 문장 안의 숫자는
+  `d.thresholds...` 처럼 JSON 을 참조하므로 그대로 두고 문장만 바꾼다. 고친 뒤 `npm run build`.
+
+## 대시보드 화면 녹화
+
+```powershell
+powershell -ExecutionPolicy Bypass -File toolsecord_dashboard.ps1            # 1920×1080, 7장면 자동 해설 192초
+```
+Edge 앱 창을 띄워 페이지가 스스로 재생하게 하고 그 영역만 ffmpeg 로 잡는다. 3분 동안 화면을 가리지 않는다.
+결과는 프로젝트의 `모터결함_애니메이션/08_기계_실시간해설_대시보드_1920x1080.mp4`.
 
 ## 개발
 

@@ -1,4 +1,4 @@
-# SESSION_LOG.md — 권상 모터 디지털 트윈 작업 이력 및 산출물 색인 (2026-08-28 ~ 09-21)
+# SESSION_LOG.md — 권상 모터 디지털 트윈 작업 이력 및 산출물 색인 (2026-08-28 ~ 09-22)
 
 프로젝트 루트: `디지털 트윈/크레인 퀀선 모터 모델링/`
 대상: 정원크레인 10 t × 19 m 천장크레인 권상 모터 (JW-01-HTO-00, 22 kW × 6P, 1170 rpm, 285 kg)
@@ -292,3 +292,80 @@ warning) → 냉각(권선 94.2). 결함마다 **다른 부품**이 달아오른
 - GitHub: https://github.com/kimsunwu4981-ship-it/motor-predictive-maintenance (비공개, 설명 "모터 예지보전").
   한글 리포명은 GitHub 이 `---` 로 깎아 버리므로 영문 이름을 쓰고 한글은 설명에 둔다.
   실수로 생긴 빈 리포 `zz-empty-delete-me` 는 토큰에 delete_repo 범위가 없어 삭제하지 못했다 — GitHub 설정에서 지울 것.
+
+
+## 11. 기계적 결함 실시간 해설 대시보드 (2026-09-22, M0~M5 완료)
+
+`#/mechanical` 을 "영상 + 표"에서 **영상과 같은 순간에 해설·자막·그래프·단면도가 함께 움직이는 화면**으로 확장했다.
+전기 대시보드(`#/electrical`)는 손대지 않았다. 지시서 `TASK_기계실시간해설` 의 M0~M5 를 단계마다 보고·승인하며 진행했다.
+커밋: M1 `e0ee627`, M2 `c1dcf0c`, M3 `22b6469`, M4 `c8340d6`, M5 `dc301a2`.
+
+### 11.1 구조
+
+```
+dashboard/
+├── tools/export_mechanical_extras.py    # 엔진 재실행(손실열·배속·시뮬 경과) + 이벤트 자동 추출 + 해설 치환 변수
+├── public/content/mechanical/           # 문구 (런타임에 읽음 — 새로고침만으로 반영)
+│   ├── narration.yaml                   #   장면별 제목·지문·주목 부품·열 경로·reveal_timing·왜/보이나/그래서·멘트·인과 카드
+│   ├── event_templates.yaml             #   사건 → 자막 문장 템플릿
+│   └── qa.yaml                          #   예상 질문과 답 (Q 서랍)
+├── public/data/mechanical/              # export 산출 (git 제외): thresholds/scenarios/timeseries/faults + events.json + narration_values.json
+├── src/mech/                            # 기계 전용 화면 요소
+│   ├── data.ts        (MechData 타입, YAML 로더, fill/fillParts, liveValues = {부품}_now 실시간 변수)
+│   ├── captions.ts    (사건 묶음·우선순위·자막 유지·reveal 시각·이력 목록)
+│   ├── colormap.ts    (viz/colormap.py 포팅 — 단면도 색 = 영상 색)
+│   ├── HUDLive / LiveNarration / CaptionBar / MotorSchematic(+MiniMotor) / TempChart / VibChart / CausePanel / QaDrawer
+│   ├── broadcast.ts   (메인 ↔ 발표자 화면 BroadcastChannel)
+│   └── schematic.css, presenter.css
+├── src/pages/MechanicalLive.tsx         # 조립·키보드·모드·채널
+├── src/pages/PresenterView.tsx          # #/mechanical/presenter
+├── tools/record_dashboard.ps1           # 대시보드 자동 재생 화면 녹화 (Edge 앱 창 + gdigrab)
+├── tests/test_mechanical_extras.py      # 16건 (재실행 오차, 손실=config, 이벤트=로그, 변수 정의, PDF 18숫자=로그, 컬러맵 원본, 템플릿 변수)
+└── docs/narration_review.md · first_viewer_check.md · electrical_apply_notes.md · sync_check.md(확장)
+```
+
+화면(1920×1080): 상단 바(장면 n/7·지문·주목 부품 등급 뱃지·**시간 압축**·정직성 라벨) / 영상+자막 띠 ‖ 실시간 해설(단계별 공개 + 이력) ·
+모터 단면도 / 온도 차트 · 진동 차트 · 원인 패널(인과 카드 + 손실열 막대 + 결함 지문 미니맵). 1366×768 은 세로 스크롤.
+
+### 11.2 숫자 출처 (규칙 1)
+
+- 온도·진동·등급·시각: `logs/mechanical/demo_*.csv` (정본). 손실열은 로그에 없어 **엔진을 같은 시나리오로 재실행**해 얻었다.
+  손실은 결함·부하만의 함수(온도 무관)라 재실행값이 정확값이고, 재실행 온도는 검증에만 쓴다(장면 경계 ±1 s 제외 최대 2.28 °C, 허용 2.5).
+- 임계값·컬러맵·ISO 진동 경계·열 경로·정격 손실: `config/*.yaml` → `thresholds.json`.
+- 사건(등급 변화·진동 등급·투시·장면 전환·정상 복귀) 49건: export 가 로그에서 뽑는다. 사람이 시각을 넣지 않는다.
+- 해설의 `{변수}`: `narration_values.json`(장면 종료 값) + 화면이 채우는 `_now`(재생 시각 값).
+- 해설 PDF 의 숫자 18개는 `test_guide_pdf_numbers_match_log` 가 로그와 대조한다(허용 0.15 °C). **재녹화하면 이 테스트를 먼저 본다.**
+
+### 11.3 문구 수정 방법
+
+`public/content/mechanical/*.yaml` 을 고치고 브라우저 새로고침. 빌드 불필요. 숫자는 쓰지 말고 파일 머리의 변수 목록을 쓴다.
+멘트(`presenter_line`)는 발표자 화면에만 나간다. 변수 오타·미정의는 `pytest tests` 가 잡는다. PDF↔화면 대응표는 `docs/narration_review.md`.
+
+### 11.4 조작
+
+`F` 발표 모드 · `Space` · `←/→` · `1~7` · `C` 자막 · `N` 다음 해설 단계(발표자 모드) · `Q` 예상 질문. 상단 버튼: 자동 해설/발표자 모드, 발표자 ↗(새 창).
+주소: `#/mechanical?t=27`(장면 바로 열기), `&qa=1`, `&autoplay=1&delay=6`(녹화용), `#/mechanical/presenter?t=40`(발표자 화면 연습).
+
+### 11.5 겪은 문제와 해결
+
+- **결함 누적으로 483 °C** → 장면마다 결함 하나만 켠다(시나리오 재구성, PDF 도 그 기준).
+- **재실행 온도가 장면 경계에서 5.4 °C 어긋남** → 프레임 정렬 차이. 경계 ±1 s 를 검증에서 제외하고 안쪽 2.5 °C 허용(사용자 승인).
+- **`narration.yaml` 을 빌드에 넣으면 문구 수정마다 빌드** → `public/` 에 두고 런타임 fetch(캐시 무력화 쿼리).
+- **한 줄 자막(nowrap)이 CSS 그리드 열을 넓혀 영상 열이 눌림** → `minmax(0, …)` 과 `min-width: 0`.
+- **이력 항목 class 가 `narr` 로 패널 class 와 충돌**(flex column 이 되어 3줄로 깨짐) → `k-narr` 로 접두.
+- **자막을 영상 위에 겹치면 Isaac Sim HUD 글자와 겹쳐 둘 다 안 읽힘** → 영상 바로 아래 고정 높이 띠.
+- **헤드리스 스크린샷은 CSS 전환·애니메이션이 멈춘 채 찍힘** → 손실 막대 길이·페이드가 실제와 다를 수 있다. 실제 모습은 녹화 프레임.
+- **헤드리스 `--screenshot` 에 한글·공백 경로를 주면 종료 코드 13** → `C:\Temp` 에 찍고 복사.
+- **Bash 도구의 긴 heredoc(≈8 KB 이상)은 잘려 "unexpected EOF"** → 큰 파일은 Write 도구, 작은 수정은 python 치환.
+- **화면 녹화: 첫 시도는 Space 키 주입이 다른 창(VS Code)에 들어갈 뻔했고 그 창이 앞을 가림** → 키 주입 제거, `?autoplay=1&delay=6` 으로
+  페이지가 스스로 재생, 창은 topmost, Edge 앱 창의 제목줄 31 px 만큼 아래에서 crop, `-draw_mouse 0`.
+- **HUD 버튼이 6개가 되자 1920 에서 두 줄** → 버튼 문구 축약·패딩 축소, 1366 은 테마 버튼·지문 숨김.
+- **발표자 화면이 정지 중 "연결 없음"** → 메인이 1 s 심장박동을 보낸다.
+- **`run_dashboard_mechanical.bat` 를 cmd /c 로 돌리면 못 찾음** → Start-Process 로 배치 파일을 직접 실행(더블클릭과 같음).
+
+### 11.6 산출물
+
+- 녹화: `모터결함_애니메이션/08_기계_실시간해설_대시보드_1920x1080.mp4` (7장면 자동 해설 192 s, git 제외)
+- 스크린샷: `dashboard/docs/screenshots/m2_*`, `m3_*`, `m4_*`, `m5_*`
+- 한계: 헤드리스로는 영상 프레임 동기를 못 본다(실제 창에서 `?t=27.5` 로 눈 확인, `docs/sync_check.md`). 발표자 화면은 같은 브라우저
+  프로필 창끼리만 동기. 전기 적용 메모는 `docs/electrical_apply_notes.md`.
