@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import { Landing } from "./pages/Landing";
 import { ModeDashboard } from "./pages/ModeDashboard";
 import { MechanicalLive } from "./pages/MechanicalLive";
+import { ElectricalLive } from "./pages/ElectricalLive";
 import { PresenterView } from "./pages/PresenterView";
-import type { Mode } from "./data";
 
-// 해시 라우팅: #/mechanical, #/electrical, #/mechanical/presenter(발표자 화면). 정적 서버·file:// 어디서든 동작한다.
-// 한 화면에는 한 가지 결함 유형만 나온다 — 두 대시보드는 데이터·콘텐츠만 다르고 컴포넌트는 공유한다.
-type Route = Mode | "presenter";
+// 해시 라우팅 — 정적 서버·file:// 어디서든 동작한다.
+//   #/mechanical            기계 실시간 해설 대시보드      #/mechanical/presenter  발표자 화면
+//   #/electrical            전기 실시간 해설 대시보드      #/electrical/presenter  발표자 화면
+//   #/electrical/classic    이전 전기 대시보드 (기준표·결함 도감·용어 풀이 탭) — 참고용으로 남긴다
+// 한 화면에는 한 가지 결함 유형만 나온다.
+type Route = "mechanical" | "electrical" | "mechanical/presenter" | "electrical/presenter" | "electrical/classic";
+const ROUTES: Route[] = ["mechanical", "electrical", "mechanical/presenter", "electrical/presenter", "electrical/classic"];
 function readRoute(): Route | null {
   const h = window.location.hash.replace(/^#\/?/, "").split("?")[0];
-  if (h === "mechanical/presenter") return "presenter";
-  return h === "mechanical" || h === "electrical" ? h : null;
+  return (ROUTES as string[]).includes(h) ? (h as Route) : null;
 }
 
 export function App() {
@@ -22,8 +25,10 @@ export function App() {
     return () => window.removeEventListener("hashchange", on);
   }, []);
   if (!route) return <Landing />;
-  // 기계는 실시간 해설 대시보드, 전기는 기존 대시보드. key 로 모드 전환 시 상태를 완전히 새로 만든다.
-  if (route === "presenter") return <PresenterView key={route} />;
+  // key 로 모드 전환 시 상태를 완전히 새로 만든다.
+  if (route === "mechanical/presenter") return <PresenterView key={route} mode="mechanical" />;
+  if (route === "electrical/presenter") return <PresenterView key={route} mode="electrical" />;
+  if (route === "electrical/classic") return <ModeDashboard key={route} mode="electrical" />;
   if (route === "mechanical") return <MechanicalLive key={route} />;
-  return <ModeDashboard key={route} mode={route} />;
+  return <ElectricalLive key={route} />;
 }

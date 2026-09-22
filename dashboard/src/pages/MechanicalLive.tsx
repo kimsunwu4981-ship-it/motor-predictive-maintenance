@@ -5,14 +5,14 @@ import { VideoPanel } from "../components/VideoPanel";
 import { loadMechData, type MechData } from "../mech/data";
 import { HUDLive } from "../mech/HUDLive";
 import { TempChart, TEMP_DEFAULT_ON } from "../mech/TempChart";
-import { LiveNarration } from "../mech/LiveNarration";
+import { LiveNarration } from "../live/LiveNarration";
 import { MotorSchematic } from "../mech/MotorSchematic";
 import { CausePanel } from "../mech/CausePanel";
 import { VibChart } from "../mech/VibChart";
-import { CaptionBar } from "../mech/CaptionBar";
-import { QaDrawer } from "../mech/QaDrawer";
-import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../mech/captions";
-import { openChannel, type MainState, type Msg } from "../mech/broadcast";
+import { CaptionBar } from "../live/CaptionBar";
+import { QaDrawer } from "../live/QaDrawer";
+import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../live/captions";
+import { openChannel, type MainState, type Msg } from "../live/broadcast";
 import "../mech/schematic.css";
 
 // 기계적 결함 실시간 해설 대시보드 (TASK_기계실시간해설). 전기 대시보드(ModeDashboard)는 그대로 둔다.
@@ -64,7 +64,7 @@ function Inner({ data }: { data: MechData }) {
   const sceneCap = useMemo(() => sceneCaptionAt(data.events, pb.t, data.content.templates), [data.events, data.content.templates, pb.t]);
 
   // 발표자 화면과 상태 공유 (TASK 7.2): 상태는 5 Hz 로 보내고, 발표자 화면의 명령을 받는다. 멘트는 여기서 보내지 않는다.
-  const chan = useMemo(() => openChannel(), []);
+  const chan = useMemo(() => openChannel("mechanical"), []);
   const stateRef = useRef<MainState | null>(null);
   stateRef.current = { kind: "state", t: pb.t, playing: pb.playing, stepIndex: pb.stepIndex, level, autoMode, captions, at: Date.now() };
   const lastPost = useRef(0);

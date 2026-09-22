@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef } from "react";
 import { fmtT } from "../data";
 import { usePlayback } from "../state/playback";
-import { fillParts, liveValues, type MechData } from "./data";
+import { fillParts, type LiveData } from "./types";
 import { REVEAL_KEYS, REVEAL_LABEL, revealTimes, type HistoryItem } from "./captions";
 
-// ① 실시간 해설 (TASK 5.2). 두 층: (1) 장면 해설 — 왜 / 무엇이 보이나 / 그래서 를 reveal_timing 에 따라 단계별로 공개,
-// 수치는 {부품}_now 실시간 변수로 재생 시각의 로그 값을 보여준다. (2) 이력 목록 — 지나간 장면 전환·해설·사건을
+// ① 실시간 해설 (TASK 5.2, 공용). 두 층: (1) 장면 해설 — 왜 / 무엇이 보이나 / 그래서 를 reveal_timing 에 따라 단계별로 공개,
+// 수치는 {…}_now 실시간 변수(data.live)로 재생 시각의 로그 값을 보여준다. (2) 이력 목록 — 지나간 장면 전환·해설·사건을
 // 시간순으로 쌓고, 누르면 그 시점으로 이동한다.
-// level: 공개된 단계 수(0~3). 자동 해설 모드는 시간이, 발표자 모드는 N 키가 올린다 (MechanicalLive).
-export function LiveNarration({ data, level, history }: { data: MechData; level: number; history: HistoryItem[] }) {
+// level: 공개된 단계 수(0~3). 자동 해설 모드는 시간이, 발표자 모드는 N 키가 올린다.
+// note: 장면 아래 작게 붙일 데이터 출처 표기 (전기의 data_source_note — 규칙 5).
+export function LiveNarration({ data, level, history }: { data: LiveData; level: number; history: HistoryItem[] }) {
   const { t, stepIndex, seek } = usePlayback();
   const step = data.scenarios.steps[stepIndex];
   const scene = data.content.scenes[step.id];
-  const v = useMemo(() => ({ ...data.values[step.id], ...liveValues(data, t) }), [data, step.id, t]);
+  const v = useMemo(() => ({ ...data.values[step.id], ...data.live(t) }), [data, step.id, t]);
 
-  // 지나간 항목만 (t 기준). 항목 수가 바뀔 때만 다시 계산한다.
   const nPast = useMemo(() => { let n = 0; while (n < history.length && history[n].t <= t + 1e-6) n++; return n; }, [history, t]);
   const past = useMemo(() => history.slice(0, nPast), [history, nPast]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -22,7 +22,7 @@ export function LiveNarration({ data, level, history }: { data: MechData; level:
 
   if (!scene) return <div className="panel narr"><div className="panel-h">실시간 해설</div><div className="panel-b muted">narration.yaml 에 {step.id} 장면이 없습니다</div></div>;
   const rt = revealTimes(scene, step);
-  const emphasize = level >= 3;   // 장면 후반: 결과 수치 강조
+  const emphasize = level >= 3;
   return (
     <div className="panel narr">
       <div className="panel-h">실시간 해설 <span className="dim">장면 {step.n} · {scene.fingerprint}</span>
@@ -41,6 +41,7 @@ export function LiveNarration({ data, level, history }: { data: MechData; level:
             );
           })}
         </dl>
+        {scene.data_source_note && <div className="src-note">출처: {fillParts(scene.data_source_note, v).map((p) => p.s).join("")}</div>}
         <div className="hist" ref={listRef}>
           {past.length === 0 && <div className="dim">지나간 사건이 여기에 쌓입니다</div>}
           {past.map((h) => (

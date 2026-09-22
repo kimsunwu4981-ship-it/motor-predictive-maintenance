@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { fmtT, indexAt, loadModeData, type ModeData } from "../data";
-import { fill, fmtSim, liveValues, loadMechData, type MechData } from "../mech/data";
-import { buildClusters, captionText, REVEAL_KEYS, REVEAL_LABEL, revealTimes } from "../mech/captions";
-import { openChannel, type Cmd, type MainState, type Msg } from "../mech/broadcast";
+import { fmtT, loadModeData, type ModeData } from "../data";
+import { loadMechData } from "../mech/data";
+import { loadElecData } from "../elec/data";
+import { fill, type LiveData, type Mode } from "../live/types";
+import { buildClusters, captionText, REVEAL_KEYS, REVEAL_LABEL, revealTimes } from "../live/captions";
+import { openChannel, type Cmd, type MainState, type Msg } from "../live/broadcast";
 import "../mech/presenter.css";
 
-// 발표자 전용 화면 (TASK 7.2): #/mechanical/presenter — 발표자 노트북용.
+// 발표자 전용 화면 (TASK 7.2, 공용): #/mechanical/presenter, #/electrical/presenter — 발표자 노트북용.
 // 메인(심사위원) 화면과 같은 브라우저에서 열면 BroadcastChannel 로 재생 상태를 받아 같은 시각을 보여준다.
 // 여기에만 나오는 것: 멘트(presenter_line). 메인 화면에는 절대 나오지 않는다.
 // 키(Space, ←/→, 1~7, N)는 메인 화면으로 보낸다. 메인이 없으면 주소의 ?t= 로 혼자 연습할 수 있다.
-export function PresenterView() {
-  const [data, setData] = useState<MechData | null>(null);
+export function PresenterView({ mode }: { mode: Mode }) {
+  const [data, setData] = useState<LiveData | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
-    loadModeData("mechanical").then((base: ModeData) => loadMechData(base)).then(setData).catch((e) => setErr(String(e)));
-  }, []);
+    const load = mode === "mechanical"
+      ? loadModeData("mechanical").then((b: ModeData) => loadMechData(b))
+      : loadModeData("electrical").then((b: ModeData) => loadElecData(b));
+    load.then((d) => setData(d as LiveData)).catch((e) => setErr(String(e)));
+  }, [mode]);
   if (err) return <div style={{ padding: 30 }}>데이터를 읽지 못했습니다.<br /><code>{err}</code></div>;
   if (!data) return <div style={{ padding: 30 }} className="muted">불러오는 중…</div>;
   return <Inner data={data} />;
@@ -22,8 +27,9 @@ export function PresenterView() {
 
 const STALE_MS = 3000;
 
-function Inner({ data }: { data: MechData }) {
-  const chan = useMemo(() => openChannel(), []);
+function Inner({ data }: { data: LiveData }) {
+  const mode = data.mode;
+  const chan = useMemo(() => openChannel(mode), [mode]);
   const [st, setSt] = useState<MainState | null>(null);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -36,22 +42,24 @@ function Inner({ data }: { data: MechData }) {
   }, [chan]);
   const send = (cmd: Cmd["cmd"], extra: Partial<Cmd> = {}) => chan?.postMessage({ kind: "cmd", cmd, ...extra } as Cmd);
 
-  // 메인 화면이 없으면 ?t= (연습용)
   const connected = !!st && now - st.at < STALE_MS;
   const t0 = useMemo(() => { const q = window.location.hash.split("?")[1]; const v = q ? Number(new URLSearchParams(q).get("t")) : NaN; return Number.isFinite(v) ? v : 0; }, []);
   const t = st ? st.t : t0;
-  const sc = data.scenarios, ts = data.timeseries;
+  const sc = data.scenarios;
   const stepIndex = st ? st.stepIndex : Math.max(0, sc.steps.findIndex((s) => t < s.t_end));
   const step = sc.steps[stepIndex], next = sc.steps[stepIndex + 1];
   const scene = data.content.scenes[step.id], nextScene = next ? data.content.scenes[next.id] : null;
-  const i = indexAt(ts, t);
-  const v = { ...data.values[step.id], ...liveValues(data, t) };
+  const v = { ...data.values[step.id], ...data.live(t) };
   const level = st ? st.level : 3;
   const rt = scene ? revealTimes(scene, step) : null;
-
-  // 다음 사건 예고 (events.json)
   const clusters = useMemo(() => buildClusters(data.events), [data.events]);
   const nextEv = clusters.find((c) => c.t > t + 0.05);
+  const notes = data.timeNote(t);
+  const mainRoute = `#/${mode}`;
+  const lt = sc.lead_time;
+  const leadText = mode === "mechanical"
+    ? <>주의 진입 {fmtT(lt.alarm_t ?? 0)} → 위험 {fmtT(lt.danger_t ?? 0)} : 화면 <b>{lt.lead_s}</b> s = 시뮬레이션 약 <b>{Math.round(((lt.lead_sim_s ?? 0) / 60) * 10) / 10}</b> 분</>
+    : <>I₂/I₁ 4턴 수준 도달 {fmtT(lt.alarm_t ?? 0)} = A상 위험 과전류 {fmtT(lt.danger_t ?? 0)} : <b>{lt.lead_s} s</b> — 이 모델은 단락을 크기 불평형으로 등가 표현하므로 같다. 균형 지표의 가치는 장면 5로 말한다.</>;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -68,11 +76,11 @@ function Inner({ data }: { data: MechData }) {
   return (
     <div className="presenter">
       <div className="pr-top">
-        <span className="brand">VIGENT 발표자 화면</span>
-        <span className={"conn" + (connected ? " on" : "")}>{connected ? "메인 화면 연결됨" : "메인 화면 연결 없음 — 같은 브라우저에서 #/mechanical 을 열어 두세요"}</span>
+        <span className="brand">VIGENT 발표자 화면 · {mode === "mechanical" ? "기계" : "전기"}</span>
+        <span className={"conn" + (connected ? " on" : "")}>{connected ? "메인 화면 연결됨" : `메인 화면 연결 없음 — 같은 브라우저에서 ${mainRoute} 을 열어 두세요`}</span>
         <span className="grow" />
         <span className="clock">{st?.playing ? "▶" : "❚❚"} <b>{fmtT(t)}</b> / {fmtT(sc.total_duration_s)}</span>
-        <span className="sim">시뮬레이션 경과 <b>{fmtSim(ts.sim_elapsed_s[i])}</b> · 화면 1초 = <b>{ts.time_scale[i]}</b>초</span>
+        <span className="sim">{notes.map((n, k) => <span key={k}>{k > 0 && " · "}{n.label} <b>{n.value}</b></span>)}</span>
       </div>
       <div className="pr-main">
         <div className="pr-now">
@@ -89,6 +97,7 @@ function Inner({ data }: { data: MechData }) {
               </div>
             ))}
           </dl>
+          {scene?.data_source_note && <div className="dim">출처 표기: {fill(scene.data_source_note, v)}</div>}
         </div>
         <div className="pr-side">
           <div className="pr-card">
@@ -100,14 +109,13 @@ function Inner({ data }: { data: MechData }) {
             {next ? (
               <>
                 <div className="pr-next-t">장면 {next.n} <b>{nextScene?.title ?? next.label}</b> <span className="dim">— {nextScene?.fingerprint}</span></div>
-                <div className="pr-next-l">{nextScene ? fill(nextScene.presenter_line, { ...data.values[next.id], ...liveValues(data, next.t_start) }) : ""}</div>
-                <div className="dim">화면 1초 = 시뮬레이션 {next.time_scale}초</div>
+                <div className="pr-next-l">{nextScene ? fill(nextScene.presenter_line, { ...data.values[next.id], ...data.live(next.t_start + 0.5) }) : ""}</div>
               </>
             ) : <div className="dim">마지막 장면입니다</div>}
           </div>
           <div className="pr-card">
-            <div className="pr-k">리드 타임 (장면 2)</div>
-            <div>주의 진입 {fmtT(sc.lead_time.alarm_t ?? 0)} → 위험 {fmtT(sc.lead_time.danger_t ?? 0)} : 화면 <b>{sc.lead_time.lead_s}</b> s = 시뮬레이션 약 <b>{Math.round(((sc.lead_time.lead_sim_s ?? 0) / 60) * 10) / 10}</b> 분</div>
+            <div className="pr-k">리드 타임 {mode === "mechanical" ? "(장면 2)" : "(장면 2 · 정직하게 0 s)"}</div>
+            <div>{leadText}</div>
           </div>
           <div className="pr-card keys">
             <div className="pr-k">조작 (메인 화면으로 전달)</div>

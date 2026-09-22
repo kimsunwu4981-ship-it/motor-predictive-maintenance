@@ -1,0 +1,37 @@
+/* 전기 실시간 해설 대시보드 전용 스타일. 공통 레이아웃(.dash.live, 자막 띠, 해설, Q 서랍)은 mech/schematic.css 를 함께 읽는다. */
+.dash.live.elec .live-bottom { grid-template-columns: minmax(0, 3fr) minmax(0, 1.6fr) minmax(0, 1.8fr) minmax(0, 3fr); }
+.dash.live.elec .live-side { grid-template-rows: minmax(150px, 1fr) minmax(230px, 1.2fr); }
+/* 상단 바가 1920 에서 한 줄에 들어가게: 지문은 해설 패널 머리에 있으므로 숨기고, 정직성 라벨을 조금 줄인다 */
+.dash.live.elec .hud .scene-title .fp { display: none; }
+.dash.live.elec .hud .honesty { font-size: .76em; }
+.dash.live.elec .hud { gap: 8px; }
+.hud .b-basis { border-color: var(--accent2); color: var(--accent2); font-weight: 700; }
+.hud .b-basis.on { background: color-mix(in srgb, var(--accent2) 22%, var(--panel2)); }
+
+/* 상별 전류 막대 */
+.cbars { display: flex; flex-direction: column; min-height: 0; }
+.cbars-body { flex: 1; min-height: 0; padding: 26px 14px 30px; display: flex; }
+.cbars-plot { position: relative; flex: 1; min-height: 170px; display: flex; justify-content: space-around; align-items: flex-end; padding-right: 150px; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.cbars-plot .band { position: absolute; left: 0; right: 0; opacity: .14; pointer-events: auto; }
+.cbars-plot .band .band-l { position: absolute; right: 6px; top: 2px; font-size: .72em; color: var(--fg); opacity: 1; white-space: nowrap; text-align: right; }
+.cbars-plot .rated { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--accent); }
+.cbars-plot .rated span { position: absolute; right: 4px; top: -1.3em; font-size: .72em; color: var(--accent); background: var(--panel); padding: 0 3px; }
+.bar-col { position: relative; width: 22%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: opacity .3s; }
+.bar-col.dim { opacity: .45; }
+.bar-col.focus .bar { box-shadow: 0 0 0 2px var(--accent), 0 0 14px var(--accent); }
+.bar { width: 60%; border-radius: 4px 4px 0 0; transition: height .2s linear, background .2s; min-height: 2px; }
+.bar-val { position: absolute; left: 0; right: 0; text-align: center; transform: translateY(-100%); padding-bottom: 4px; line-height: 1.15; pointer-events: none; }
+.bar-val b { display: block; font-size: 1.05em; white-space: nowrap; }
+.bar-val span { font-size: .8em; color: var(--fg2); }
+.bar-name { position: absolute; bottom: -22px; font-weight: 800; border-bottom: 3px solid; padding: 0 6px; }
+
+/* 골격 패널 */
+.i2i1 .big { font-size: 2.2em; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
+.i2i1 .marks { display: flex; flex-direction: column; gap: 2px; font-size: .82em; color: var(--fg2); margin-top: 6px; }
+.i2i1 .marks .hit { color: var(--accent2); font-weight: 700; }
+.src-note { font-size: .8em; color: var(--fg3); margin-top: 4px; padding: 3px 8px; border-left: 3px solid var(--line); }
+
+@media (max-width: 1400px) {
+  .dash.live.elec .live-bottom { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cbars-plot { min-height: 170px; }
+}

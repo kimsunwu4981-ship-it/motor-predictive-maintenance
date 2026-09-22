@@ -45,7 +45,7 @@
 .cap-main { font-size: 1.25em; font-weight: 800; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-left: 6px solid #66ddff; border-radius: 6px; padding: 5px 14px; max-width: 100%; text-align: center; animation: capin .35s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cap-main .ic { margin-right: 8px; }
 .cap-main.alarm { border-color: #ffaa33; } .cap-main.up { border-color: #ff7a1a; } .cap-main.danger { border-color: #ff2e0a; }
-.cap-main.vib { border-color: #ffd166; } .cap-main.ok { border-color: #26f259; }
+.cap-main.vib { border-color: #ffd166; } .cap-main.ok { border-color: #26f259; } .cap-main.cold { border-color: #4099ff; }
 .cap-main .more { margin-left: 10px; font-size: .68em; font-weight: 600; color: var(--fg3); }
 @keyframes capin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .dash.present .cap-main { font-size: 1.5em; }
