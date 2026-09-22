@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Landing } from "./pages/Landing";
 import { ModeDashboard } from "./pages/ModeDashboard";
+import { MechanicalLive } from "./pages/MechanicalLive";
 import type { Mode } from "./data";
 
 // 해시 라우팅: #/mechanical, #/electrical. 정적 서버·file:// 어디서든 동작한다.
@@ -18,6 +19,7 @@ export function App() {
     return () => window.removeEventListener("hashchange", on);
   }, []);
   if (!route) return <Landing />;
-  // key 로 모드 전환 시 컴포넌트를 완전히 새로 만든다 (다른 모드의 상태가 남지 않게)
+  // 기계는 실시간 해설 대시보드, 전기는 기존 대시보드. key 로 모드 전환 시 상태를 완전히 새로 만든다.
+  if (route === "mechanical") return <MechanicalLive key={route} />;
   return <ModeDashboard key={route} mode={route} />;
 }

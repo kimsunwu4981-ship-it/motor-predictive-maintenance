@@ -37,8 +37,8 @@ steps:
     label: "2. DE 베어링 열화"
     subtitle: "구동측 베어링 마찰 증가 → 온도 상승, 진동 4.8 mm/s (ISO 20816-3 Act 초과)"
     subtitle_en: "DE bearing friction rises -> temperature climbs, vibration 4.8 mm/s (above ISO 20816-3 Act)"
-    source: "베어링 손실 2배 + 전도 저항 악화 모델"
-    source_en: "Bearing loss x2 + degraded conduction model"
+    source: "베어링 손실 배율 + 전도 저항 악화 모델"
+    source_en: "Bearing loss multiplier + degraded conduction model"
     duration_s: 35
     time_scale: 120
     mode: mechanical

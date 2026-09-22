@@ -100,6 +100,48 @@ table.grid th { color: var(--fg2); font-weight: 700; }
 .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; font-size: .88em; }
 .gauge { display: flex; align-items: center; gap: 10px; }
 
+/* ---------- 기계 실시간 해설 레이아웃 (TASK 4절) ---------- */
+.dash.live { grid-template-rows: auto 1fr auto; }
+.dash.live.present { grid-template-rows: auto 1fr auto; }
+.live-main { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; min-height: 0; }
+.live-side { display: grid; grid-template-rows: 3fr 2fr; gap: 10px; min-height: 0; }
+.live-bottom { display: grid; grid-template-columns: 3fr 2fr; gap: 10px; min-height: 0; }
+.live .charts .chart { height: 270px; }
+.live.present .charts .chart { height: 300px; }
+.hud .scene-title { font-size: 1.05em; }
+.hud .scene-title b { font-weight: 800; }
+.tc { display: inline-flex; flex-direction: column; line-height: 1.2; font-size: .86em; color: var(--fg2); padding: 3px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); cursor: help; }
+.tc b { color: var(--accent2); font-size: 1.15em; }
+.tc.flash { animation: tcflash 1.8s ease; }
+@keyframes tcflash { 0% { box-shadow: 0 0 0 0 var(--accent2); background: color-mix(in srgb, var(--accent2) 35%, var(--panel2)); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.narr { display: flex; flex-direction: column; min-height: 0; }
+.narr .panel-b { flex: 1; display: flex; flex-direction: column; overflow: auto; }
+.live .charts .panel-h { flex-wrap: wrap; row-gap: 4px; }
+.live .charts .panel-h > .h-title { white-space: nowrap; }
+.narr-title { font-size: 1.3em; font-weight: 800; margin-bottom: 8px; }
+.narr .q { display: grid; grid-template-columns: 7.5em 1fr; gap: 8px 12px; align-items: start; }
+.narr .q dt { color: var(--accent); font-weight: 700; }
+.narr .q dd { margin: 0; }
+.narr .src { margin-top: auto; padding-top: 8px; font-size: .82em; color: var(--fg3); border-top: 1px dashed var(--line); }
+.dash.present .narr-title { font-size: 1.6em; } .dash.present .narr .q { font-size: 1.12em; }
+.schem { display: flex; flex-direction: column; min-height: 0; }
+.schem-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+.schem-placeholder { text-align: center; }
+.schem-focus { font-size: 1.25em; font-weight: 800; margin: 6px 0; }
+.cause { display: flex; flex-direction: column; min-height: 0; }
+.chain { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.chain-card { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .9em; position: relative; }
+.chain-card + .chain-card::before { content: "▶"; position: absolute; left: -9px; top: 10px; color: var(--accent); font-size: .8em; }
+.chain-k { color: var(--accent); font-weight: 800; font-size: .82em; margin-bottom: 3px; letter-spacing: .04em; }
+.chain-card.c2 { border-color: var(--accent2); }
+.chip.shown { color: var(--fg); }
+.chip .sw { margin-right: 5px; }
+@media (max-width: 1400px) {
+  .live .charts .chart { height: 200px; }
+  .live-side { grid-template-rows: 1fr 1fr; }
+  .tc { font-size: .78em; }
+}
+
 /* ---------- 랜딩 ---------- */
 .landing { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; }
 .landing h1 { font-size: 2em; }
