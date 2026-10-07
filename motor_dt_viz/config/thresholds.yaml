@@ -1,0 +1,57 @@
+# thresholds.yaml — VIGENT 상태 판정 임계값 (TASK_다중모터 §5). 규칙은 engine/thresholds.py 에만, 숫자는 여기에만.
+#
+# 세 단계: SAFE(안전, 초록) / WARN(경고, 주황) / DANGER(위험, 빨강).
+# 기존 4단계(normal/caution/warning/danger)와의 대응: normal→SAFE, caution+warning→WARN, danger→DANGER.
+# 값의 뜻: safe_below 미만이면 SAFE, danger_from 이상이면 DANGER, 그 사이는 WARN.
+
+levels: [SAFE, WARN, DANGER]
+labels_ko: { SAFE: "안전", WARN: "경고", DANGER: "위험" }
+icons:     { SAFE: "●",  WARN: "▲",  DANGER: "■" }      # 색각 이상 대비 병기
+colors:    { SAFE: "#26f259", WARN: "#ff731a", DANGER: "#ff140d" }   # colors.yaml 전기 normal/over_caution/over_danger 와 같은 톤
+
+# ── 온도 [°C] — 모터 공통 (thermal.yaml stages 와 같은 수치)
+temperature:
+  bearing: { safe_below: 70.0, danger_from: 95.0,  basis: "그리스 수명" }
+  winding: { safe_below: 95.0, danger_from: 140.0, basis: "F종 절연 (허용 155 °C)" }
+  rotor:   { safe_below: 90.0, danger_from: 130.0, basis: "농형 로터는 권선보다 고온이 정상" }
+  default: { safe_below: 70.0, danger_from: 110.0, basis: "축·코어·엔드실드·하우징 기본값" }
+  component_class:            # 열 노드 키 → 위 분류 (없는 키는 default)
+    bearing_de: bearing
+    bearing_nde: bearing
+    winding: winding
+    rotor: rotor
+
+# ── 전류 크기 r = I / I_rated (I_rated 는 모터별, 선전류·상전류 각자 기준)
+current_ratio:
+  safe_low: 0.85              # 0.85 ≤ r ≤ 1.10 안전
+  safe_high: 1.10
+  danger_over: 1.25           # r > 1.25 위험 과전류   (1.10 < r ≤ 1.25 경고)
+  danger_under: 0.50          # r < 0.50 위험 저전류(결상 의심) (0.50 ≤ r < 0.85 경고)
+
+# ── I₂/I₁ (역상분 비율, 전압 불평형 보정 전 값). 4턴 ITSC(0.104)가 위험 경계에 걸리도록
+i2i1:
+  safe_below: 0.03
+  danger_from: 0.10
+
+# ── 진동 속도 RMS [mm/s] — 모터 출력에 따라 규격이 다르다 (규칙 4). 경계는 config/motors/<id>.yaml 의 vibration 블록에서 온다.
+#    안전 < watch, 경고 watch~act (20816-3 의 plan 2.8 은 경고 안의 "정비 계획" 세부 라벨), 위험 ≥ act
+vibration:
+  source: motor_library       # watch_mms / plan_mms / act_mms
+  fallback: { watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5, standard: "ISO 20816-3 Group 2 (모터 미지정 시)" }
+
+# ── 베어링 결함 지표 (포락선 BPFO 피크 / 정상 대비). 시뮬레이션에서는 결함 손실 배율로 대체, 실측 후 교체
+bearing_index:
+  safe_below: 2.0
+  danger_from: 5.0
+
+# ── 깜빡임·돌입전류 방지
+hysteresis:
+  fraction: 0.05              # 등급 하향은 임계값의 5 % 를 넘어 안전 쪽으로 들어와야 (위험 95 → 90.25 아래에서 경고로)
+persistence_s:                # 등급 상향은 이 시간 이상 지속될 때만 (기동 돌입전류 6~8배·1 s 이내 무시). 온도는 0 (느린 신호)
+  current_ratio: 3.0
+  i2i1: 3.0
+  vibration: 3.0
+  bearing_index: 3.0
+  temperature: 0.0
+
+mapping_4to3: { normal: SAFE, caution: WARN, warning: WARN, danger: DANGER }
