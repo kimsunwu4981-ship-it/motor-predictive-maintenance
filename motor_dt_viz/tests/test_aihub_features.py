@@ -72,7 +72,8 @@ def test_feature_ranges():
     assert (~c["running"]).sum() > 0 and c[~c["running"]]["load_ratio"].lt(0.1).all()     # 정지 파일이 표시된다
     run = c[c["running"]]
     assert set(run["phase_sequence"]) <= {"abc", "acb"} and run["fund_hz"].between(40, 65).all()   # 55 kW 는 인버터 구동 (49.6~57.5 Hz)
-    assert run[run["power_kw"] == 2.2]["fund_hz"].between(59.9, 60.1).all()
+    low = run[run["power_kw"] == 2.2]["fund_hz"]
+    assert low.median() == pytest.approx(60.0, abs=0.1) and low.between(59.0, 61.0).all()   # 상용 전원. 과도 상태 파일 1건이 59.4 Hz
 
 
 @pytest.mark.skipif(not L3.exists(), reason="L3 없음")
