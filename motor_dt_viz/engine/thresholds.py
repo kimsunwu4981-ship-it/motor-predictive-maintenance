@@ -193,6 +193,9 @@ class Judge:
             return Verdict(t=t, status="SAFE", cause_signal="-", cause_component="-", value=0.0, threshold="-", signals=[],
                            **self._deco("SAFE"))
         worst = max(out, key=lambda s: (RANK[s.level], s.exceed))
+        if worst.level == "SAFE":                      # 모두 안전: 원인 없음 (가장 임계에 가까운 신호는 signals 에서 고른다)
+            return Verdict(t=t, status="SAFE", cause_signal="-", cause_component="-", value=0.0, threshold="-",
+                           signals=out, **self._deco("SAFE"))
         return Verdict(t=t, status=worst.level, cause_signal=worst.kind, cause_component=worst.component,
                        value=worst.value, threshold=worst.threshold, signals=out, **self._deco(worst.level))
 
