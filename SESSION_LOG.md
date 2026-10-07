@@ -447,3 +447,70 @@ Isaac HUD("Ph R")·데모 라벨·시나리오 자막·export(`phase_label`, `{p
   `08_기계_실시간해설_대시보드_1920x1080.mp4`(회귀 재녹화). 이전 타임코드 판은 `dashboard/public/media/electrical_backup_timecode/`.
 - 스크린샷: `dashboard/docs/screenshots/e2_*`, `e3_*`, `e4_*`.
 - 오프라인·bat: 번들에 외부 URL 없음, DNS 차단 브라우저로 스크린샷, 두 bat 모두 실행 확인.
+
+## 13. 보편 크레인 권상 모터 5종 — 다중 모터 디지털 트윈 상태 대시보드 (2026-10-07, P0~P4 완료)
+
+지시서 `TASK_다중모터`(VIGENT MVP). 모터 고유값을 라이브러리로 빼고, 판정 엔진을 만들고, 5종을 엔진만으로 배치 실행해 상태 보드(`#/status`)에 올렸다.
+사용자 지시 "진행하고 앞으로 허가 없이 진행 계속해"(P3부터) 에 따라 단계 보고는 남기되 승인 대기 없이 이어서 진행했다.
+커밋: P1 `21fa3d3`, P2 `2255975`, P3 `95af80d`, P4 (아래).
+
+### 13.1 P0 현황 (보고만)
+
+- 모터 고유값이 `motor.yaml`·`thermal.yaml`(노드 질량·손실)·`electrical.yaml`(honesty_sub)·시나리오 자막·`hud.py` 문자열·`qa.yaml` 에 흩어져 있었다.
+- 엔진(`ThermalModel`, `CurrentModel`, `FaultInjector`)은 cfg 주입을 받으므로 라이브러리로 바꿔 끼울 수 있다. Isaac 은 headless 가능하지만 배치는 엔진만으로(결정적·정확).
+- 사양 의문점(M5 1170 vs 1180 rpm, η/cosφ, geometry_scale 기준, 22220 치수, M4 15 kW 경계)은 보고했고 답이 없어 기본값으로 진행했다.
+
+### 13.2 P1 모터 라이브러리 (`motor_dt_viz/config/motors/M1..M5.yaml`, `engine/motor_library.py`)
+
+- 스키마 검증·파생값(슬립, BPFO/BPFI Hz, 토크, 손실)·`motor_spec()`·`electrical_cfg()`·`thermal_cfg()`.
+- 열회로 스케일(M5 기준): 손실 ∝ P(1−η)/η, 대류 저항 ∝ 1/s², 열용량 ∝ s³ (s = 프레임 비례 geometry_scale). M5 는 원본과 동일(회귀).
+- 진동 규격: 15 kW 미만 ISO 10816-1 Class I (1.8/4.5), 이상 ISO 20816-3 Group 2 (1.4/2.8/4.5). `docs/thermal_scaling.md` 에 5종 수렴 온도표.
+
+### 13.3 P2 판정 엔진 (`engine/thresholds.py`, `config/thresholds.yaml`)
+
+- SAFE/WARN/DANGER, 종합 = 최악 등급 + 원인 신호(초과 비율 최대), 히스테리시스 5 %, 지속 3 s(전류·진동·I₂/I₁·베어링 지표; 온도 0), 첫 호출 즉시, 4→3 대응.
+- 규칙 모듈에 임계값 숫자가 없음을 테스트가 확인한다. 모두 SAFE 면 원인 "-" (P3 에서 추가).
+
+### 13.4 P3 배치 (`tools/run_fleet.py`, `tools/fleet_summary.py`, `docs/fleet_summary.md`)
+
+- 5종 × 기계·전기를 엔진만으로 1/60 s 적분, 4 Hz 로그 → `logs/fleet/<id>/<mode>/demo_fleet.csv`(데모 컬럼 동일) + `status_fleet.csv`(판정) + `meta.json`. 7 s.
+- M5 회귀: 엔진 ↔ Isaac 로그 장면 끝 최대 차 0.1 °C / 0.0 A.
+- 결과: 정상 수렴 권선 57.1/64.2/73.7/79.0/87.6 °C. 베어링 장면 온도만으로 위험 도달 M5 2.5 s, M4 3.5 s, M3 4.0 s, M2 25.5 s, M1 미도달(위험 판정은 진동 4.8 이 만든다).
+  냉각 속도 M1 > … > M5 (물리 검사 이상 없음). 전기는 비율 기준이라 5종 등급 동일(암페어만 다름).
+- 판정은 로그에 적힌 반올림 값으로 하도록 고쳐 로그만으로 재판정해도 행 단위로 같다 (대시보드 테스트 근거).
+
+### 13.5 P4 상태 보드 (`dashboard/#/status`)
+
+```
+dashboard/
+├── tools/export_status_data.py      logs/fleet + config → public/data/fleet/index.json, <id>_<mode>.json (판정 포함, 장면 변수 모터별 덮어쓰기)
+├── src/status/data.ts               타입·로더·게이지 구간(모터별 진동 규격·정격 전류)·원인 한 줄
+│   ├── Gauge.tsx                    구간 띠 + 마커(상별 3개) + 현재값 등급 + 판정 등급 태그
+│   └── TrendChart.tsx               신호별 추세 (임계 띠·장면 띠·커서·클릭 이동)
+├── src/pages/StatusBoard.tsx        카드 5 → 상세(사양·게이지 8) | 원인과 조치(머리글·cause_chain·해설 이동) → 재생 바(상태 색 띠)·추세 → 탭 3
+├── src/state/playback.ts            useClockPlayback (영상 없는 시계 모드, 같은 Playback 인터페이스)
+├── public/content/status/glossary.yaml · run_dashboard_status.bat · tests/test_status_export.py (10)
+motor_dt_viz/config/status_demo.yaml 데모 위치 (M1 기계 15 s 안전 · M2 전기 110 s 경고 · M3 기계 27.5 s 경고 · M4 기계 10 s 안전 · M5 전기 60 s 위험)
+```
+
+- 정직성: 상단 상시 "대표 사양 기반 시뮬레이션 추정값" + 네 줄(대표 사양(명판 아님) · 외형은 프레임 비례 스케일 · 열회로 계수는 M5 기준 스케일 · ITSC는 해석식 등가 표현), 사양표 탭에도.
+- 확인: `dashboard/docs/status_board_check.md`, 스크린샷 `s4_*`. 테스트 대시보드 63 · 엔진 100 통과.
+
+### 13.6 겪은 문제와 해결
+
+- **판정 재실행이 1행 어긋남** — run_fleet 가 풀 정밀도 온도로 판정하고 로그는 소수 1자리였다 → 로그에 적는 반올림 값으로 판정.
+- **헤드리스 Edge 를 for 루프로 여러 번 부르면 스크린샷이 안 남음** — 한 명령씩 따로, `--user-data-dir` 분리.
+- **`python` 별칭 없음** — Blender 파이썬 + `PYTHONPATH=C:\Temp\pymods` (yaml).
+- **게이지가 1080p 에서 잘림** — 탭 19vh, 차트 150 px, 1366 에서는 게이지 3열.
+
+### 13.7 해설 PDF "2.2 kW" 문구 제안 (적용 전, 사용자 확인용)
+
+현재(`animation_guide.md` §Q&A, `content/*/qa.yaml`): "이 프로젝트의 3D 모델·시뮬레이션은 도면(JW-01-HTO-00)의 22 kW 6극 크레인 권상 모터를 기준으로 합니다."
+제안: **"이 프로젝트의 3D 모델·애니메이션·해설 대시보드는 모터 라이브러리 M1~M5(1톤 2.2 kW ~ 15~20톤 22 kW) 중 M5(22 kW 6극, 도면 JW-01-HTO-00)를 기준으로
+만든 것입니다. 2.2 kW 급은 M1(1톤 호이스트)로 라이브러리에 있고, 상태 보드에서 같은 시나리오·같은 판정 기준으로 볼 수 있습니다. 정격 선전류 43.7 A·상전류 25.2 A 는 M5,
+M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·전기 qa.yaml)을 바꾸고 PDF 를 재생성한다.
+
+### 13.8 남은 결정·선택 과제
+
+- M1 결함 배율(온도 위험 미도달) 별도 설정 여부, 사양 의문점 5건(13.1).
+- P5(지시 시): 5종 애니메이션 재녹화, 상태 보드 라이브 입력(데이터 소스 추상화), 명판 입력 폼.

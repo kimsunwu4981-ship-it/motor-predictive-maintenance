@@ -1,0 +1,322 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Mode } from "../data";
+import { fmtT } from "../data";
+import { PlaybackContext, useClockPlayback } from "../state/playback";
+import { fill } from "../live/types";
+import { Gauge } from "../status/Gauge";
+import { TrendChart, type TrendSel } from "../status/TrendChart";
+import {
+  causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadFleetIndex, loadSeries, loadStatusContent,
+  simElapsed, stepAt, worse, KINDS, PHASES,
+  type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent,
+} from "../status/data";
+import "../status/status.css";
+
+// VIGENT 모터 상태 보드 (TASK_다중모터 §7): 5종 모터 카드 → 선택 모터 상세(게이지 8) → 원인과 조치 → 재생 바·추세 → 기준표 탭.
+// 숫자는 전부 public/data/fleet/*.json (export_status_data.py). 판정은 엔진이 로그에 써 둔 status/cause 를 그대로 쓴다.
+//   #/status?m=M3&t=27.5   특정 모터·시각으로 열기 (스크린샷·확인용)
+const TEMP_GAUGES = ["winding", "bearing_de", "rotor", "shaft"];
+
+export function StatusBoard() {
+  const [index, setIndex] = useState<FleetIndex | null>(null);
+  const [content, setContent] = useState<StatusContent | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    Promise.all([loadFleetIndex(), loadStatusContent()]).then(([i, c]) => { setIndex(i); setContent(c); }).catch((e) => setErr(String(e)));
+  }, []);
+  if (err) return <div style={{ padding: 30 }}>데이터를 읽지 못했습니다.<br /><code>{err}</code><div className="dim">dashboard/tools/export_status_data.py 를 먼저 실행하세요.</div></div>;
+  if (!index || !content) return <div style={{ padding: 30 }} className="muted">불러오는 중…</div>;
+  return <Board index={index} content={content} />;
+}
+
+function Board({ index, content }: { index: FleetIndex; content: StatusContent }) {
+  const params = useMemo(() => new URLSearchParams(window.location.hash.split("?")[1] ?? ""), []);
+  const ids = index.motors.map((m) => m.id);
+  const [sel, setSel] = useState<string>(() => (ids.includes(params.get("m") ?? "") ? (params.get("m") as string) : ids[0]));
+  // 모터별 모드·시각 (데모 위치에서 시작, 재생하면 그 모터의 시각만 움직인다)
+  const [modes, setModes] = useState<Record<string, Mode>>(() => Object.fromEntries(index.motors.map((m) => [m.id, m.demo.mode])));
+  const [pos, setPos] = useState<Record<string, number>>(() => {
+    const p = Object.fromEntries(index.motors.map((m) => [m.id, m.demo.t_s]));
+    const t0 = Number(params.get("t")); if (Number.isFinite(t0) && params.get("t") !== null) p[sel] = t0;
+    return p;
+  });
+  const [series, setSeries] = useState<Record<string, MotorSeries>>({});
+  useEffect(() => {   // 모든 모터의 (현재 모드) 시계열을 읽는다 — 카드 상태 계산용
+    for (const m of index.motors) {
+      const key = `${m.id}/${modes[m.id]}`;
+      if (series[key]) continue;
+      loadSeries(index, m.id, modes[m.id]).then((s) => setSeries((prev) => ({ ...prev, [key]: s })));
+    }
+  }, [index, modes, series]);
+
+  const motor = index.motors.find((m) => m.id === sel)!;
+  const mode = modes[sel];
+  const sc = index.scenarios[mode];
+  const pb = useClockPlayback(sc, pos[sel]);
+  // 선택이 바뀌면 그 모터의 저장 시각으로, 재생 중이면 선택 모터의 시각을 저장한다
+  const selRef = useRef(sel);
+  useEffect(() => { if (selRef.current !== sel) { selRef.current = sel; pb.pause(); pb.seek(pos[sel] ?? 0); } }, [sel]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPos((p) => (Math.abs((p[sel] ?? 0) - pb.t) < 1e-3 ? p : { ...p, [sel]: pb.t })); }, [pb.t, sel]);
+  const toggleMode = useCallback(() => {
+    const nm: Mode = mode === "mechanical" ? "electrical" : "mechanical";
+    setModes((m) => ({ ...m, [sel]: nm })); pb.pause(); pb.seek(0); setPos((p) => ({ ...p, [sel]: 0 }));
+  }, [mode, sel, pb]);
+
+  const [present, setPresent] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() => { try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; } });
+  useEffect(() => { document.documentElement.setAttribute("data-theme", theme); try { localStorage.setItem("vigent-theme", theme); } catch { /* */ } }, [theme]);
+  const [tab, setTab] = useState<"thr" | "spec" | "gloss">("thr");
+  const [trend, setTrend] = useState<TrendSel | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+      if (e.key === " ") { e.preventDefault(); pb.toggle(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); pb.gotoStep(pb.stepIndex + 2); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
+      else if (e.key === "f" || e.key === "F") setPresent((p) => !p);
+      else if (e.key === "m" || e.key === "M") toggleMode();
+      else if (e.key === "Escape") setPresent(false);
+      else if (e.key >= "1" && e.key <= "9") { const id = ids[Number(e.key) - 1]; if (id) setSel(id); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pb, ids, toggleMode]);
+
+  const cur = series[`${sel}/${mode}`];
+  const i = cur ? idxAt(cur.t, pb.t) : 0;
+  const step = stepAt(sc, pb.t);
+  const scene = content.narration[mode][step.id];
+  const cl = cur ? causeLine(index, cur, i) : null;
+  // 추세 차트 기본 선택: 원인 신호 (없으면 DE 베어링 온도)
+  const trendSel: TrendSel = trend ?? (cur && cur.status[i] !== "SAFE" ? { kind: cur.cause_signal[i] as Kind, component: cur.cause_component[i] } : { kind: "temperature", component: "bearing_de" });
+  const trendSpec = useMemo(() => specFor(index, motor, trendSel), [index, motor, trendSel]);
+
+  return (
+    <PlaybackContext.Provider value={pb}>
+      <div className={"dash st" + (present ? " present" : "")}>
+        <div className="panel hud">
+          <span className="brand">VIGENT</span>
+          <span className="mode">디지털 트윈 · 모터 상태 보드</span>
+          <span className="st-legend">{(["SAFE", "WARN", "DANGER"] as Level[]).map((l) => <span key={l}><i style={{ background: index.colors[l] }} />{index.icons[l]} {index.labels_ko[l]}</span>)}</span>
+          <span className="grow" />
+          {!present && <a className="btn" href="#/mechanical" title="기계적 결함 실시간 해설 대시보드 (M5 애니메이션)">기계 해설 ↗</a>}
+          {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (M5 애니메이션)">전기 해설 ↗</a>}
+          {!present && <button className="b-theme" onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
+          <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
+          <span className="honesty st-honesty" title={index.honesty.itsc_note}>
+            <b>{index.honesty.label}</b>
+            <span>{index.honesty.lines.join(" · ")}</span>
+          </span>
+        </div>
+
+        <div className="st-cards">
+          {index.motors.map((m, n) => {
+            const s = series[`${m.id}/${modes[m.id]}`];
+            const t = pos[m.id] ?? m.demo.t_s;
+            const k = s ? idxAt(s.t, t) : 0;
+            const lv: Level = s ? s.status[k] : "SAFE";
+            const c = s ? causeLine(index, s, k) : null;
+            const st = stepAt(index.scenarios[modes[m.id]], t);
+            return (
+              <div key={m.id} className={"st-card" + (m.id === sel ? " sel" : "")} onClick={() => setSel(m.id)} style={{ borderColor: m.id === sel ? index.colors[lv] : undefined }}>
+                <div className="st-card-h"><span className="kbd">{n + 1}</span><b>{m.id}</b> <span className="muted">{m.tags.hoist_ton ?? ""} · {m.spec.rated_power_kw} kW {m.spec.poles}극</span></div>
+                <div className="st-badge" style={{ background: index.colors[lv] }}>{index.icons[lv]} {index.labels_ko[lv]}</div>
+                <div className="st-cause">{c ? c.head : "불러오는 중…"}</div>
+                <div className="dim st-foot">{modes[m.id] === "mechanical" ? "기계" : "전기"} 시나리오 · {st.label} · {fmtT(t)}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="st-main">
+          <div className="panel st-detail">
+            <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name}</span><span className="grow" />
+              <span className="dim">{motor.spec.source === "nameplate" ? "명판값" : "대표 사양 (명판 아님)"}</span></div>
+            <div className="panel-b">
+              <div className="st-spec">
+                <span><i>용도</i>{motor.tags.hoist_ton ?? "-"} 호이스트{motor.tags.hoist_speed ? ` · 권상 ${motor.tags.hoist_speed}` : ""}</span>
+                <span><i>정격</i>{motor.spec.rated_power_kw} kW · {motor.spec.poles}극 · {motor.spec.rated_rpm} rpm (동기 {motor.spec.sync_rpm})</span>
+                <span><i>전원</i>{motor.spec.voltage_v} V {motor.spec.frequency_hz} Hz · {motor.spec.connection === "delta" ? "Δ결선" : motor.spec.connection}</span>
+                <span><i>정격 전류</i>선 <b>{motor.spec.rated_line_current_a} A</b> · 상 {motor.spec.rated_phase_current_a} A</span>
+                <span><i>프레임·베어링</i>{motor.spec.frame} · DE {motor.spec.bearing_de} / NDE {motor.spec.bearing_nde}</span>
+                <span><i>진동 규격</i><b>{motor.vibration.standard.split(" (")[0]}</b> · 경고 {motor.vibration.watch_mms} / 위험 {motor.vibration.act_mms} mm/s</span>
+              </div>
+              {cur ? <Gauges index={index} motor={motor} s={cur} i={i} onPick={setTrend} picked={trendSel} /> : <div className="muted">시계열 불러오는 중…</div>}
+            </div>
+          </div>
+
+          <div className="panel st-cause-p">
+            <div className="panel-h">③ 원인과 조치 <span className="grow" /><span className="dim">판정: engine/thresholds.py (히스테리시스 {Math.round(index.thresholds.hysteresis_fraction * 100)} % · 지속 {index.thresholds.persistence_s.current_ratio} s)</span></div>
+            <div className="panel-b">
+              {cl && cur && (
+                <div className="st-head" style={{ borderColor: index.colors[cl.level], background: `color-mix(in srgb, ${index.colors[cl.level]} 18%, var(--panel2))` }}>
+                  <div className="st-head-l"><span className="st-badge" style={{ background: index.colors[cl.level] }}>{index.icons[cl.level]} {index.labels_ko[cl.level]}</span><b>{cl.head}</b></div>
+                  <div className="dim">{cl.detail}</div>
+                  <div className="st-sig">{KINDS.map((k) => <span key={k} style={{ borderColor: index.colors[cur.levels[k][i]] }}><i style={{ background: index.colors[cur.levels[k][i]] }} />{index.signals[k].label.split(" (")[0]}</span>)}</div>
+                </div>
+              )}
+              <div className="st-scene"><span className="dim">장면 {step.n}/{sc.steps.length}</span> <b>{scene?.title ?? step.label}</b> <span className="dim">— {step.subtitle}</span></div>
+              {scene?.cause_chain ? (
+                <div className="chain fade" key={`${sel}-${step.id}`}>
+                  {(["cause", "mechanism", "effect", "action"] as const).map((k, n) => (
+                    <div key={k} className={"chain-card c" + n}>
+                      <div className="chain-k">{["원인", "메커니즘", "결과", "조치"][n]}</div>
+                      <div>{fill(scene.cause_chain![k], cur?.scene_values[step.id])}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : <div className="muted">이 장면의 cause_chain 없음 (narration.yaml)</div>}
+              <div className="st-nav">
+                <a className="btn primary" href={`#/${mode}?t=${pb.t.toFixed(1)}`}>{mode === "mechanical" ? "기계" : "전기"} 해설 대시보드에서 이 장면 보기 ↗</a>
+                <span className="dim">해설 영상·설명은 M5(22 kW, 현 애니메이션 기준) 로 만든 것이다{sel !== "M5" ? ` — ${sel} 의 수치는 이 보드에서 확인` : ""}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel st-bottom">
+          <div className="st-bar">
+            <button onClick={pb.toggle} title="Space">{pb.playing ? "⏸ 일시정지" : "▶ 재생"}</button>
+            <button onClick={toggleMode} title="M 키: 기계 ↔ 전기 시나리오">{mode === "mechanical" ? "기계 시나리오" : "전기 시나리오"} ⇄</button>
+            <span className="time">{fmtT(pb.t)} / {fmtT(sc.total_duration_s)}</span>
+            {mode === "mechanical" && <span className="tc"><span className="tc-scale">배속 ×<b>{step.time_scale}</b></span><span className="tc-elapsed">시뮬 경과 <b>{fmtSim(simElapsed(sc, pb.t))}</b></span></span>}
+            <div className="st-strip" onClick={(e) => { const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect(); pb.seek(((e.clientX - r.left) / r.width) * sc.total_duration_s); }} title="클릭: 이동 · 색: 판정 상태">
+              {cur && <StatusStrip index={index} s={cur} total={sc.total_duration_s} />}
+              {sc.steps.map((s) => <span key={s.id} className={"st-ch" + (s.id === step.id ? " cur" : "")} style={{ left: `${(s.t_start / sc.total_duration_s) * 100}%`, width: `${((s.t_end - s.t_start) / sc.total_duration_s) * 100}%` }} title={s.label}>{s.n}</span>)}
+              <i className="st-cur" style={{ left: `${(pb.t / sc.total_duration_s) * 100}%` }} />
+            </div>
+            <span className="chips">
+              {KINDS.map((k) => <span key={k} className={"chip" + (trendSel.kind === k ? " on" : "")} onClick={() => setTrend({ kind: k, component: k === "temperature" ? (trendSel.kind === "temperature" ? trendSel.component : "bearing_de") : undefined })}>{index.signals[k].label.split(" (")[0]}</span>)}
+              {trendSel.kind === "temperature" && TEMP_GAUGES.map((n) => <span key={n} className={"chip" + (trendSel.component === n ? " on" : "")} onClick={() => setTrend({ kind: "temperature", component: n })}>{index.node_labels[n]}</span>)}
+            </span>
+          </div>
+          {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} />}
+        </div>
+
+        {!present && (
+          <div className="panel tabs">
+            <div className="tabbar">
+              <button className={tab === "thr" ? "on" : ""} onClick={() => setTab("thr")}>임계값 기준표</button>
+              <button className={tab === "spec" ? "on" : ""} onClick={() => setTab("spec")}>모터 사양표</button>
+              <button className={tab === "gloss" ? "on" : ""} onClick={() => setTab("gloss")}>용어 풀이</button>
+              <span className="grow" /><span className="dim">키: 1~5 모터 · Space 재생 · ←→ 장면 · M 모드 · F 발표</span>
+            </div>
+            <div className="tabbody">
+              {tab === "thr" && <ThresholdTab index={index} />}
+              {tab === "spec" && <SpecTab index={index} />}
+              {tab === "gloss" && <dl className="gloss">{content.glossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>}
+            </div>
+          </div>
+        )}
+      </div>
+    </PlaybackContext.Provider>
+  );
+}
+
+function specFor(index: FleetIndex, motor: MotorInfo, sel: TrendSel) {
+  if (sel.kind === "temperature") return gaugeTemp(index, sel.component ?? "bearing_de");
+  if (sel.kind === "current_ratio") return gaugeCurrent(index);
+  if (sel.kind === "i2i1") return gaugeLoHi(index.thresholds.i2i1, 0.3, "");
+  if (sel.kind === "vibration") return gaugeVib(motor.vibration);
+  return gaugeLoHi(index.thresholds.bearing_index, 8, "배");
+}
+
+// 신호별 게이지 8개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 지표. 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.
+function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; motor: MotorInfo; s: MotorSeries; i: number; onPick: (t: TrendSel) => void; picked: TrendSel }) {
+  const cur = gaugeCurrent(index);
+  const ratios = PHASES.map((p) => ({ key: index.phase_labels[p], value: s.current_ratio[p][i], p }));
+  const worstPhase = ratios.reduce((a, b) => (Math.abs(b.value - 1) > Math.abs(a.value - 1) ? b : a));
+  const item = (key: string, sel: TrendSel, node: React.ReactNode) => (
+    <div key={key} className={"g-wrap" + (picked.kind === sel.kind && (sel.kind !== "temperature" || picked.component === sel.component) ? " on" : "")} onClick={() => onPick(sel)}>{node}</div>
+  );
+  return (
+    <div className="st-gauges">
+      {TEMP_GAUGES.map((n) => item(n, { kind: "temperature", component: n },
+        <Gauge index={index} title={`${index.node_labels[n] ?? n} 온도`} unit="°C" spec={gaugeTemp(index, n)} value={s.temperature_C[n][i]} />))}
+      {item("cur", { kind: "current_ratio" },
+        <Gauge index={index} title={`전류 / 정격 (${motor.spec.rated_line_current_a} A)`} unit="×" spec={cur} value={worstPhase.value}
+          markers={ratios.map((r) => ({ key: r.key, value: r.value }))} judged={s.levels.current_ratio[i]}
+          note={ratios.map((r) => `${r.key} ${s.current_rms_A[r.p][i].toFixed(1)} A`).join(" · ")} />)}
+      {item("i2i1", { kind: "i2i1" },
+        <Gauge index={index} title="I₂/I₁ 역상 전류비" unit="" spec={gaugeLoHi(index.thresholds.i2i1, 0.3, "")} value={s.i2i1[i]} judged={s.levels.i2i1[i]} />)}
+      {item("vib", { kind: "vibration" },
+        <Gauge index={index} title="진동 속도 RMS" unit="mm/s" spec={gaugeVib(motor.vibration)} value={s.vibration_mms[i]} judged={s.levels.vibration[i]} note={motor.vibration.standard.split(" (")[0] + (motor.vibration.plan_mms < motor.vibration.act_mms ? ` · ${motor.vibration.plan_mms} 부터 정비 계획` : "")} />)}
+      {item("brg", { kind: "bearing_index" },
+        <Gauge index={index} title="베어링 결함 지표 (정상 대비)" unit="배" spec={gaugeLoHi(index.thresholds.bearing_index, 8, "배")} value={s.bearing_index[i]} judged={s.levels.bearing_index[i]} note="시뮬레이션: 결함 손실 배율로 대체" />)}
+    </div>
+  );
+}
+
+// 재생 바 배경: 시각별 판정 상태 색 (구간 병합)
+function StatusStrip({ index, s, total }: { index: FleetIndex; s: MotorSeries; total: number }) {
+  const segs = useMemo(() => {
+    const out: { from: number; to: number; lv: Level }[] = [];
+    for (let k = 0; k < s.t.length; k++) {
+      const lv = s.status[k];
+      const last = out[out.length - 1];
+      if (last && last.lv === lv) last.to = s.t[k]; else out.push({ from: s.t[k], to: s.t[k], lv });
+    }
+    return out;
+  }, [s]);
+  return <>{segs.map((g, n) => <i key={n} className="st-seg" style={{ left: `${(g.from / total) * 100}%`, width: `${Math.max(0.2, ((g.to - g.from) / total) * 100)}%`, background: index.colors[g.lv] }} />)}</>;
+}
+
+function ThresholdTab({ index }: { index: FleetIndex }) {
+  const th = index.thresholds;
+  const t = th.temperature, r = th.current_ratio;
+  const groups = new Map<string, string[]>();
+  for (const m of index.motors) { const k = `${m.vibration.watch_mms}|${m.vibration.act_mms}|${m.vibration.standard}`; groups.set(k, [...(groups.get(k) ?? []), m.id]); }
+  return (
+    <div>
+      <p className="muted" style={{ marginTop: 0 }}>세 단계 <b>안전 / 경고 / 위험</b>. 모터 전체 상태는 모든 신호 중 가장 나쁜 등급이고, 원인 신호를 항상 함께 표시합니다.
+        등급 하향은 임계값의 {Math.round(th.hysteresis_fraction * 100)} % 안쪽으로 들어와야 바뀌고(히스테리시스), 전류·진동·I₂/I₁·베어링 지표는 {th.persistence_s.current_ratio} s 이상 지속돼야 상향됩니다(돌입전류 무시).</p>
+      <table className="grid">
+        <thead><tr><th>신호</th><th><span className="sw" style={{ background: index.colors.SAFE }} />{index.icons.SAFE} 안전</th><th><span className="sw" style={{ background: index.colors.WARN }} />{index.icons.WARN} 경고</th><th><span className="sw" style={{ background: index.colors.DANGER }} />{index.icons.DANGER} 위험</th><th>근거 · 적용</th></tr></thead>
+        <tbody>
+          <tr><td>베어링 온도</td><td>&lt; {t.bearing.safe_below} °C</td><td>{t.bearing.safe_below}~{t.bearing.danger_from}</td><td>≥ {t.bearing.danger_from}</td><td>{t.bearing.note ?? "그리스 수명"} · 모터 공통</td></tr>
+          <tr><td>권선 온도</td><td>&lt; {t.winding.safe_below}</td><td>{t.winding.safe_below}~{t.winding.danger_from}</td><td>≥ {t.winding.danger_from}</td><td>{t.winding.note ?? "F종 절연"} · 모터 공통</td></tr>
+          <tr><td>로터 온도</td><td>&lt; {t.rotor.safe_below}</td><td>{t.rotor.safe_below}~{t.rotor.danger_from}</td><td>≥ {t.rotor.danger_from}</td><td>{t.rotor.note ?? ""} 모터 공통</td></tr>
+          <tr><td>축·하우징 온도</td><td>&lt; {t.default.safe_below}</td><td>{t.default.safe_below}~{t.default.danger_from}</td><td>≥ {t.default.danger_from}</td><td>{t.default.note ?? ""} 모터 공통</td></tr>
+          <tr><td>전류 비율 r = I / I정격</td><td>{r.safe_low} ≤ r ≤ {r.safe_high}</td><td>{r.safe_high} &lt; r ≤ {r.danger_over} 또는 {r.danger_under} ≤ r &lt; {r.safe_low}</td><td>r &gt; {r.danger_over} 또는 r &lt; {r.danger_under}</td><td>I정격은 모터별 ({index.motors.map((m) => `${m.id} ${m.spec.rated_line_current_a} A`).join(", ")}) · 저전류는 결상 의심</td></tr>
+          <tr><td>I₂/I₁</td><td>&lt; {th.i2i1.safe_below}</td><td>{th.i2i1.safe_below}~{th.i2i1.danger_from}</td><td>≥ {th.i2i1.danger_from}</td><td>{index.honesty.itsc_note}</td></tr>
+          {[...groups.entries()].map(([k, ids]) => { const v = index.motors.find((m) => m.id === ids[0])!.vibration; return (
+            <tr key={k}><td>진동 속도 RMS<div className="dim">{v.standard}</div></td><td>&lt; {v.watch_mms} mm/s</td><td>{v.watch_mms}~{v.act_mms}{v.plan_mms < v.act_mms ? ` (${v.plan_mms} 부터 "정비 계획")` : ""}</td><td>≥ {v.act_mms}</td><td>{ids.join(" · ")}{v.note ? ` — ${v.note}` : ""}</td></tr>); })}
+          <tr><td>베어링 결함 지표</td><td>&lt; {th.bearing_index.safe_below}배</td><td>{th.bearing_index.safe_below}~{th.bearing_index.danger_from}배</td><td>≥ {th.bearing_index.danger_from}배</td><td>실측: 포락선 BPFO 피크 / 정상. 시뮬레이션: 결함 손실 배율</td></tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SpecTab({ index }: { index: FleetIndex }) {
+  const ms = index.motors;
+  const row = (label: string, f: (m: MotorInfo) => React.ReactNode) => <tr><td><b>{label}</b></td>{ms.map((m) => <td key={m.id}>{f(m)}</td>)}</tr>;
+  return (
+    <div>
+      <div className="st-honesty-lines">{index.honesty.lines.map((l) => <span key={l}>• {l}</span>)}<span className="dim">{index.honesty.itsc_note}</span></div>
+      <table className="grid">
+        <thead><tr><th>항목</th>{ms.map((m) => <th key={m.id}>{m.id}</th>)}</tr></thead>
+        <tbody>
+          {row("용도", (m) => `${m.tags.hoist_ton ?? "-"} 호이스트${m.tags.hoist_speed ? ` · ${m.tags.hoist_speed}` : ""}`)}
+          {row("정격 출력", (m) => `${m.spec.rated_power_kw} kW`)}
+          {row("극수 / 동기속도", (m) => `${m.spec.poles}극 / ${m.spec.sync_rpm} rpm`)}
+          {row("정격 회전수", (m) => `${m.spec.rated_rpm} rpm (슬립 ${(m.derived.slip * 100).toFixed(1)} %)`)}
+          {row("전압 · 결선", (m) => `${m.spec.voltage_v} V ${m.spec.frequency_hz} Hz · ${m.spec.connection === "delta" ? "Δ" : m.spec.connection}`)}
+          {row("정격 선전류 / 상전류", (m) => `${m.spec.rated_line_current_a} A / ${m.spec.rated_phase_current_a} A`)}
+          {row("효율 / 역률 (대표)", (m) => `${m.spec.efficiency} / ${m.spec.power_factor}`)}
+          {row("프레임 · 외형 스케일", (m) => `${m.spec.frame} · ×${m.spec.geometry_scale}`)}
+          {row("베어링 DE / NDE", (m) => `${m.spec.bearing_de} / ${m.spec.bearing_nde}`)}
+          {row("BPFO / BPFI (정격 rpm)", (m) => `${m.derived.bpfo_hz} / ${m.derived.bpfi_hz} Hz`)}
+          {row("절연 / 듀티", (m) => `${m.spec.insulation_class}종 / ${m.spec.duty}`)}
+          {row("진동 규격", (m) => `${m.vibration.standard.split(" (")[0]} (${m.vibration.watch_mms}/${m.vibration.act_mms})`)}
+          {row("정상 수렴 권선 온도 (연속)", (m) => `${m.steady_C.winding} °C`)}
+          {row("출처", (m) => m.spec.source === "nameplate" ? "명판값" : "대표값 (representative)")}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// 사용하지 않는 import 경고 방지용 (levelOf·worse 는 Gauge/data 내부에서 쓰인다)
+void levelOf; void worse;

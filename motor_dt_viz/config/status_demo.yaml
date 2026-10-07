@@ -1,0 +1,12 @@
+# status_demo.yaml — 상태 보드(#/status) 데모 위치 (TASK_다중모터 §7.2)
+#
+# 첫 화면에서 5종 모터의 안전·경고·위험이 섞여 보이도록, 모터마다 "어느 모드 시나리오의 몇 초를 보고 있는지" 를 정한다.
+# 시각은 재생 시간(s, logs/fleet/<id>/<mode>/status_fleet.csv 의 t_real_s). 상태는 판정 엔진 결과를 그대로 읽는다 — 여기서 상태를 정하지 않는다.
+# 바꾸고 나면 dashboard/tools/export_status_data.py 를 다시 실행한다 (테스트가 기대 상태와 실제 판정을 대조한다).
+note: "데모 위치는 발표 첫 화면용이다. 실측 연결(P5) 전까지는 모든 상태가 시뮬레이션 로그에서 온다."
+positions:
+  M1: { mode: mechanical, t_s: 15.0,  expect: SAFE,   why: "정상 운전 장면 — 전 신호 안전" }
+  M2: { mode: electrical, t_s: 110.0, expect: WARN,   why: "공급전압 불평형 — I₂/I₁ 0.0595 (경고 0.03~0.10)" }
+  M3: { mode: mechanical, t_s: 27.5,  expect: WARN,   why: "DE 베어링 열화 초기 — 베어링 온도 경고(70~95 °C), 진동 4.8 은 지속 3 s 전" }
+  M4: { mode: mechanical, t_s: 10.0,  expect: SAFE,   why: "정상 운전 장면" }
+  M5: { mode: electrical, t_s: 60.0,  expect: DANGER, why: "턴간 단락 진행(12턴) — I₂/I₁ 0.269 (위험 ≥0.10)" }

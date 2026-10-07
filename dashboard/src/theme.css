@@ -145,7 +145,7 @@ table.grid th { color: var(--fg2); font-weight: 700; }
 /* ---------- 랜딩 ---------- */
 .landing { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 24px; }
 .landing h1 { font-size: 2em; }
-.landing .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: min(980px, 100%); }
+.landing .pick { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; width: min(1320px, 100%); }
 .pick a { display: block; text-decoration: none; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 26px 26px 22px; box-shadow: var(--shadow); }
 .pick a:hover { border-color: var(--accent); }
 .pick h2 { font-size: 1.5em; margin-bottom: 8px; }

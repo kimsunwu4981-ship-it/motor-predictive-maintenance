@@ -35,7 +35,7 @@
 | 1. 정상 운전 | M5 | 없음 | 없음 | - | 없음 | SAFE (-) | - |
 | | | | | | | | |
 | 2. DE 베어링 열화 | M1 | 2.2 s (4.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 없음 | DANGER (vibration 4.8) | 2.00 s |
-| 2. DE 베어링 열화 | M2 | 1.8 s (3.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 25.5 s (51.0 분) | DANGER (vibration 4.8) | 1.50 s |
+| 2. DE 베어링 열화 | M2 | 1.8 s (3.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 25.2 s (50.5 분) | DANGER (vibration 4.8) | 1.50 s |
 | 2. DE 베어링 열화 | M3 | 1.0 s (2.0 분) | 3.2 s (6.5 분) | vibration 4.8 | 4.0 s (8.0 분) | DANGER (temperature/bearing_de 114.9) | 0.75 s |
 | 2. DE 베어링 열화 | M4 | 1.2 s (2.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 3.5 s (7.0 분) | DANGER (temperature/bearing_de 122.2) | 1.00 s |
 | 2. DE 베어링 열화 | M5 | 1.0 s (2.0 분) | 2.5 s (5.0 분) | temperature/bearing_de 95.4 | 2.5 s (5.0 분) | DANGER (temperature/bearing_de 135.7) | 0.75 s |
@@ -83,7 +83,7 @@
 | 4. 과부하 운전 | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) |
 | 5. 공급전압 불평형 | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) |
 | 6. 결상 (R상 끊김) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) |
-| 7. 무부하 (저전류) | DANGER (current_ratio/B 0.3) | DANGER (current_ratio/B 0.3) | DANGER (current_ratio/B 0.3) | DANGER (current_ratio/B 0.3) | DANGER (current_ratio/B 0.3) |
+| 7. 무부하 (저전류) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) |
 
 전기 결과가 5종에서 같은 등급으로 나오는 것은 정상이다: 전류 모델은 정격 대비 비율(케이스 배율)로 정의되고 판정도 비율 기준이라 모터가 바뀌면 암페어만 바뀐다.
 I₂/I₁ 목표값(0.006/0.104/0.269)은 M5 기준 해석식 등가값을 전 모터에 적용한 것이다 (§4.3).

@@ -176,6 +176,46 @@ powershell -ExecutionPolicy Bypass -File tools\publish_desktop.ps1              
 검증·클립만 다시 하려면 `-SkipRecord`. 녹화는 `gdigrab -i desktop` + 창 좌표 crop 만 동작한다
 (`-i title=` 은 Vulkan 창이라 첫 프레임만 반복됨 — SESSION_LOG 9장).
 
+## 모터 라이브러리 — 모터 추가는 YAML 한 장
+
+`config/motors/<id>.yaml` 을 한 장 더 만들면 라이브러리·배치·상태 보드가 그 모터를 자동으로 포함한다 (스키마는 `M3.yaml` 을 복사해 수정).
+
+```yaml
+id: M6
+name: "30톤 호이스트 권상 모터 (37 kW 6극)"
+source: representative            # nameplate | representative  — 상태 보드 출처 라벨이 바뀐다
+rated_power_kw: 37
+poles: 6
+sync_rpm: 1200
+rated_rpm: 1180
+voltage_v: 380
+frequency_hz: 60
+connection: delta
+efficiency: 0.90
+power_factor: 0.83
+rated_line_current_a: 75.0        # I = P / (√3·V·η·cosφ)
+rated_phase_current_a: 43.3
+frame: 225S
+insulation_class: F
+duty: "S3 40% ED"
+bearing_de: "6313"
+bearing_nde: "6313"
+bearing_fault_multipliers: { bpfo: 3.6, bpfi: 5.4, source: estimated }
+geometry_scale: 1.25              # M5(180L) = 1.0 기준 프레임(축 높이) 비례
+thermal: { scale_rule: power_ratio }
+vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5 }
+```
+
+- 검증: `python -m pytest tests/test_motor_library.py -q` (필수 키·범위·파생값).
+- 배치·비교표·대시보드 갱신: `python tools/run_fleet.py` → `python tools/fleet_summary.py` → `python ../dashboard/tools/export_status_data.py` → `cd ../dashboard && npm run build`.
+- 데모 첫 화면 위치: `config/status_demo.yaml` 에 그 모터의 `{mode, t_s, expect}` 를 추가한다 (테스트가 기대 상태와 판정을 대조).
+- 열회로 계수는 M5 보정값을 출력비·프레임 비례로 스케일한다 (`docs/thermal_scaling.md`). 판정 임계값은 `config/thresholds.yaml` (모터 공통) + 모터 YAML 의 진동 규격.
+
+## 상태 보드 (모터 5종)
+
+`dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 키 1~5 모터, Space 재생, ←→ 장면, M 기계/전기, F 발표.
+데이터는 `logs/fleet`(엔진 배치) 와 config 에서만 온다. 자세한 것은 `dashboard/README.md`, 결과 비교표는 `docs/fleet_summary.md`.
+
 ## 기록
 
 실행하면 `logs/demo_<날짜>.csv` 에 매 프레임이 남는다 — 온도 9노드, 3상 RMS, I₂/I₁, 진동,

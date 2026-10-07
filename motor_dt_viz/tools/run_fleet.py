@@ -79,24 +79,26 @@ def run_one(motor: ml.Motor, mode: str, out_dir: str) -> dict:
         else:
             st = tm.step(0.0, load, [], use_duty_cycle=False)
         if t + 1e-9 >= next_log:
+            tl = round(t, 3)                                   # 로그·판정 공통 시각 (재실행 검증 행 단위 일치)
             cs = cases[case]
             vib = st.vibration_mms
             rpm = motor.sync_rpm - (motor.sync_rpm - motor.rated_rpm) * (load if mode == "electrical" else 1.0)
             T = st.temperature_C
-            rows.append([round(t, 2), round(t, 3), mode, step_id, case, ";".join(faults), load, round(rpm, 1)]
+            rows.append([round(t, 2), tl, mode, step_id, case, ";".join(faults), load, round(rpm, 1)]
                         + [round(T[k], 1) for k in ("winding", "stator_core", "rotor", "shaft", "bearing_de", "bearing_nde", "endshield_de", "endshield_nde", "frame")]
                         + [round(x, 1) for x in cs.rms_A] + [round(cs.i2_over_i1, 4), round(vib, 1), inj.iso_zone(vib), 60.0])
-            v = judge.update(t, {
-                "temperature": {k: T[k] for k in T},
-                "current_ratio": {p: cs.rms_A[k] / i_line for k, p in enumerate("ABC")},
-                "i2i1": cs.i2_over_i1, "vibration": vib,
+            # 판정은 로그에 적힌 반올림 값으로 한다 — 로그만 보고 다시 판정해도 같은 결과가 나오도록 (대시보드 export 테스트)
+            v = judge.update(tl, {
+                "temperature": {k: round(T[k], 1) for k in T},
+                "current_ratio": {p: round(cs.rms_A[k], 1) / i_line for k, p in enumerate("ABC")},
+                "i2i1": round(cs.i2_over_i1, 4), "vibration": round(vib, 1),
                 "bearing_index": bearing_index(th_cfg, faults),
             })
             worst = {k: "SAFE" for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_index")}
             for s in v.signals:
                 if ("SAFE", "WARN", "DANGER").index(s.level) > ("SAFE", "WARN", "DANGER").index(worst[s.kind]):
                     worst[s.kind] = s.level
-            srows.append([round(t, 3), v.status, v.label_ko, v.cause_signal, v.cause_component, round(v.value, 4), v.threshold]
+            srows.append([tl, v.status, v.label_ko, v.cause_signal, v.cause_component, round(v.value, 4), v.threshold]
                          + [worst[k] for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_index")])
             next_log += 1.0 / RATE_HZ
         t += H

@@ -102,3 +102,47 @@ export function usePlaybackController(sc: Scenarios): Playback {
   return useMemo(() => ({ t, playing, duration, videoRef, seek, toggle, play, pause, gotoStep, stepIndex }),
     [t, playing, duration, seek, toggle, play, pause, gotoStep, stepIndex]);
 }
+
+// ---------------------------------------------------------------------------------------------
+// 시계 모드 재생 (상태 보드 #/status, TASK_다중모터 §7.2): 영상이 없는 모터(M1~M4)도 같은 Playback 인터페이스로 재생한다.
+// 시간 소스는 requestAnimationFrame 의 벽시계(1배속). seek/gotoStep/stepIndex 의 의미는 영상 모드와 같다.
+export interface ClockScenario { total_duration_s: number; steps: { t_start: number; t_end: number }[] }
+export function useClockPlayback(sc: ClockScenario, initialT = 0): Playback {
+  const videoRef = useRef<HTMLVideoElement>(null);          // 사용하지 않는다 (인터페이스 호환)
+  const [t, setT] = useState(initialT);
+  const [playing, setPlaying] = useState(false);
+  const tRef = useRef(initialT);
+  const duration = sc.total_duration_s;
+
+  useEffect(() => {
+    if (!playing) return;
+    let raf = 0, last = performance.now(), acc = 0;
+    const tick = (now: number) => {
+      const dt = (now - last) / 1000; last = now; acc += dt;
+      tRef.current = Math.min(duration, tRef.current + dt);
+      if (acc >= 1 / UPDATE_HZ) { acc = 0; setT(tRef.current); }
+      if (tRef.current >= duration) { setPlaying(false); setT(duration); return; }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, duration]);
+
+  const seek = useCallback((tReal: number) => {
+    const tr = Math.max(0, Math.min(tReal, duration));
+    tRef.current = tr; setT(tr);
+  }, [duration]);
+  const play = useCallback(() => { if (tRef.current >= duration) { tRef.current = 0; setT(0); } setPlaying(true); }, [duration]);
+  const pause = useCallback(() => setPlaying(false), []);
+  const toggle = useCallback(() => setPlaying((p) => { if (!p && tRef.current >= duration) { tRef.current = 0; setT(0); } return !p; }), [duration]);
+  const stepIndex = useMemo(() => {
+    const i = sc.steps.findIndex((s) => t < s.t_end);
+    return i < 0 ? sc.steps.length - 1 : i;
+  }, [sc.steps, t]);
+  const gotoStep = useCallback((n: number) => {
+    const s = sc.steps[Math.max(0, Math.min(n - 1, sc.steps.length - 1))];
+    seek(s.t_start + 0.05);
+  }, [sc.steps, seek]);
+  return useMemo(() => ({ t, playing, duration, videoRef, seek, toggle, play, pause, gotoStep, stepIndex }),
+    [t, playing, duration, seek, toggle, play, pause, gotoStep, stepIndex]);
+}
