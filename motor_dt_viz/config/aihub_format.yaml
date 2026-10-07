@@ -1,0 +1,25 @@
+# aihub_format.yaml — AI Hub 238 CSV 파일 형식 (S0 조사로 확정, docs/aihub_structure.md §2·§4). 파서(tools/aihub/convert_parquet.py)는 여기만 본다.
+encoding: utf-8                 # BOM 없음. 혹시 BOM 이 있으면 utf-8-sig 로 재시도, 실패하면 cp949
+delimiter: ","
+header_lines: 9                 # 메타 9줄 뒤 바로 데이터 (열 이름 행 없음)
+trailing_delimiter: true        # 각 행 끝 빈 필드
+path_pattern: "<signal>/<kW>kW/<motor>/<label>/<file>.csv"
+signals: { vibration: "vibration", current: "current" }
+file_prefix: { vibration: "STFMK", current: "STFCB" }
+meta_keys:                      # 헤더 키 → 메타 열 (표기 변형 포함)
+  Date: date
+  Filename: source_dat
+  Data Label: label
+  Label_No: label_no
+  Label No: label_no
+  Motor Spec: motor_spec        # "모터명, rpm, 정격출력 kW, 정격전류 A" (공백 섞임 → strip)
+  Period: period                # "3SEC" / "1SEC"
+  Sample Rate: sample_rate      # Hz
+  RMS: rms_annot                # 채널별 (진동 1, 전류 3)
+  Data Length: n_samples_annot
+motor_spec_fields: [aihub_motor_name, rated_rpm, rated_power, rated_current]
+channels:                       # 설명서에 없음 — 샘플에서 확인한 수. 방향은 미상
+  vibration: { n: 1, names: [ch1], dir: ["unknown"], unit: "unknown (g 추정, docs/aihub_structure.md §2)" }
+  current:   { n: 3, names: [ch1, ch2, ch3], dir: ["phase1", "phase2", "phase3"], unit: "A" }
+bearing_in_annotation: false    # 베어링 번호 없음 → 포락선 BPFO/BPFI 배율은 NaN
+parquet: { compression: zstd, dtype: float32, layout: per_file }   # 파일당 1개 (§9 결정)

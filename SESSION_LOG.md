@@ -514,3 +514,40 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 
 - M1 결함 배율(온도 위험 미도달) 별도 설정 여부, 사양 의문점 5건(13.1).
 - P5(지시 시): 5종 애니메이션 재녹화, 상태 보드 라이브 입력(데이터 소스 추상화), 명판 입력 폼.
+
+## 14. AI Hub 「기계시설물 고장 예지 센서」 경량 샘플로 파이프라인 준비 (2026-10-07, S0~S3 완료)
+
+지시서 `TASK_AIHub_샘플`. 전체 데이터(약 500 GB) 도착 전에 샘플(4,674 CSV, 842 MB)로 구조를 확정하고 변환·특징 추출 코드를 검증했다.
+`config/thresholds.yaml`·`config/motors/`·대시보드·엔진은 건드리지 않았다 (git diff 로 확인). 설명서 PDF 는 로그인 다운로드라 받지 못했고,
+샘플 전수 스캔과 AI Hub 공개 페이지로 대신했다 — 받으면 `data/aihub/docs/` 에 넣고 "설명서에 없음" 항목을 보강한다.
+
+### 14.1 구조 확정 (`docs/aihub_structure.md`)
+
+- 경로 `<signal>/<kW>kW/<모터명>/<라벨>/STFMK|STFCB-<설치일>-<센서ID>_<측정일>_<시각>_004|002.csv`. UTF-8, CRLF, 후행 쉼표, 헤더 9줄 뒤 바로 데이터.
+- 진동 **1채널 4 kHz 3 s(12,000)**, 단위 설명서 없음(g 추정). 전류 **3채널(3상) 2 kHz 1 s(2,000)**, A. 두 신호는 다른 날 수집(동시 쌍 0).
+- 어노테이션: Date, Filename(.dat), Data Label, Label_No(전류는 `Label No`), Motor Spec(모터명, rpm, kW, 정격 A), Period, Sample Rate, RMS(채널별), Data Length. 베어링 번호·센서 방향·부하 없음.
+- 라벨 00 정상 / 01 베어링 / 02 불평형 / 03 축정렬 / 04 벨트. 샘플은 2.2 kW 4대(결함은 모터당 한 종류)·55 kW 2대뿐 — 5.5~22 kW 없음.
+- 추가 발견: 55 kW 는 인버터 구동(기본파 49.6~57.5 Hz)이고 전류가 ±82 A 센서 범위에서 포화; 전류 채널 순서가 모터마다 다름(acb 2대); L-EF-04 는 센서ID 에 따라 Motor Spec 이 둘.
+
+### 14.2 코드
+
+- `config/aihub_select.yaml`(선별·motor_map), `aihub_format.yaml`(파서 형식), `aihub_features.yaml`(대역·단위 가정).
+- `tools/aihub/convert_parquet.py`: 파일당 1 Parquet(float32·zstd) + `meta.parquet` + `convert_report.json`(검증·품질 목록). 6.9 ms/파일, 크기 ×0.40.
+- `tools/aihub/extract_features.py`: 파일·채널당 1행 — rms/peak/crest/kurtosis, `vel_rms_mm_s`(10~1,000 Hz 주파수 영역 적분, g 가정), fr/1×2×3×(+`fr_peak_hz`),
+  포락선(500~1,600 Hz, 베어링 번호 없어 배율 NaN), 대역 RMS, 클리핑·DC·NaN, 전류 I₂/I₁ 참고값(최소자승 페이저, 상순 자동). 그림 3장(제목에 "샘플 데이터, 참고용"), `docs/aihub_sample_summary.md`.
+- 테스트 10건 (`tests/test_aihub_convert.py` 5, `tests/test_aihub_features.py` 5 — 합성 신호로 적분·고조파·대칭좌표 검증 포함).
+
+### 14.3 겪은 문제와 해결
+
+- `python -I` 는 PYTHONPATH 를 무시 → 스크립트가 `VIGENT_PYMODS` 또는 `C:\Temp\pymods` 를 sys.path 끝에 덧붙인다. Blender 파이썬에 yaml·pyarrow·pandas·scipy·matplotlib 없음 → pymods 에 설치.
+- 텍스트 모드로 읽으면 CRLF 가 변환돼 `split("
+")` 이 실패 → `splitlines()`.
+- 클리핑 비율 정의(|x|≥0.995·max)는 사인파에서 6.4 % 가 자연값 → 의심 기준 10 %.
+- I₂/I₁ 이 12~480 으로 나옴 → 채널 순서 역상(acb) + 1 Hz 빈 누설. 피크 보간 + 최소자승 페이저, 큰 성분을 정상분으로.
+- 55 kW `fund_hz` 가 60 Hz 가 아니라 테스트 실패 → 인버터 구동 확인, 범위 40~65 Hz 로 두고 2.2 kW 만 60 Hz 를 요구.
+- 한글·공백 경로: `pathlib` + `PYTHONIOENCODING=utf-8`. 콘솔의 한글 깨짐은 표시 문제일 뿐 파일은 정상.
+
+### 14.4 전체 데이터 예상·남은 결정
+
+- 233만 파일 × 6.9 ms ≈ 4.5 시간(단일 프로세스), 선별본(1/5) ≈ 0.9 시간; Parquet 전체 ≈ 200 GB, 선별본 ≈ 40 GB. 디스크: 원본 500 GB 는 외장 필요(C: 여유 243 GB), 병합 없이 가상 연결 파일로 읽는 방식 제안.
+- 결정 필요: 진동 단위(설명서), 55 kW 인버터 여부·베어링 모델(설명서), 외장 드라이브 경로, 병합 없는 추출 방식 승인.

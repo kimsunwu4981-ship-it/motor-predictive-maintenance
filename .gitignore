@@ -55,3 +55,6 @@ desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# AI Hub 외부 데이터·변환본 (원본은 바탕화면 샘플 폴더, 산출물은 재생성 가능)
+motor_dt_viz/data/

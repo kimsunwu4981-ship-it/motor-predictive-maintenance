@@ -216,6 +216,14 @@ vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act
 `dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 키 1~5 모터, Space 재생, ←→ 장면, M 기계/전기, F 발표.
 데이터는 `logs/fleet`(엔진 배치) 와 config 에서만 온다. 자세한 것은 `dashboard/README.md`, 결과 비교표는 `docs/fleet_summary.md`.
 
+## AI Hub 실측 데이터 (전체 데이터 도착 후 실행 순서)
+
+1. 분할 원본은 외장 드라이브의 별도 폴더에 두고 설명서 PDF 2종을 `data/aihub/docs/` 에 넣는다 (`docs/aihub_structure.md` 의 "설명서에 없음" 보강).
+2. `TASK_AIHub_데이터선별` D0: 목록·패턴 (`config/aihub_select.yaml`) → 승인 → D1 선별 추출(용량·라벨 단위).
+3. 변환: `python -I tools/aihub/convert_parquet.py --src <L1 단위 폴더> --out data/aihub/L2 --verify 20` (6.9 ms/파일, CSV ×0.40).
+4. 특징: `python -I tools/aihub/extract_features.py --l2 data/aihub/L2 --l3 data/aihub/L3` → `docs/aihub_feature_summary.md` (5.4 ms/파일).
+5. 검증: `pytest tests/test_aihub_convert.py tests/test_aihub_features.py -q`. 임계값 보정은 별도 지시로 — 샘플 수치(`docs/aihub_sample_summary.md`)는 참고용.
+
 ## 기록
 
 실행하면 `logs/demo_<날짜>.csv` 에 매 프레임이 남는다 — 온도 9노드, 3상 RMS, I₂/I₁, 진동,
