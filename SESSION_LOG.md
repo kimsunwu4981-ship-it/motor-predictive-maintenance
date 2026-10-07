@@ -551,3 +551,16 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 
 - 233만 파일 × 6.9 ms ≈ 4.5 시간(단일 프로세스), 선별본(1/5) ≈ 0.9 시간; Parquet 전체 ≈ 200 GB, 선별본 ≈ 40 GB. 디스크: 원본 500 GB 는 외장 필요(C: 여유 243 GB), 병합 없이 가상 연결 파일로 읽는 방식 제안.
 - 결정 필요: 진동 단위(설명서), 55 kW 인버터 여부·베어링 모델(설명서), 외장 드라이브 경로, 병합 없는 추출 방식 승인.
+
+### 14.5 선별 파이프라인 D0~D3 를 샘플 zip 으로 실행 (`tools/aihub/run_pipeline.py`)
+
+사용자 결정: 전체 500 GB 대신 바탕화면 샘플 zip 을 데이터셋으로 쓴다. 지시서 `TASK_AIHub_데이터선별` 의 흐름을 샘플 zip 에 그대로 적용했다.
+
+- `SplitFile`: `*.zip.part1..N` 을 이어 붙인 것처럼 읽는 가상 파일 → 병합 zip 없이 `zipfile` 로 목록·부분 추출 (테스트: zip 을 3조각으로 쪼개 검증).
+- D0 `list`: 목록 4,674 → `data/aihub/filelist.txt`, 선별 패턴 3개(`select_patterns.txt`: vibration/2.2kW/*/{정상,베어링불량,축정렬불량}), 1,127 파일 293 MB (전체의 35 %), `docs/aihub_selection.md` 자동 생성(받은 것·버린 것·이유).
+- D1+D2 `extract`: 단위(용량·라벨)별 추출 → Parquet(L2/full) → 무작위 20개 원본 대조 → L1 단위 삭제. 3단위 22 s. manifest 1,127 행 = 목록 예상. L2/full 138 MB (CSV ×0.47).
+- D2 `sample`: 모터·라벨 조합당 상한 2,000 → 샘플은 전부 상한 이하라 1,127 그대로 L2/sampled.
+- D3 `features`: 1,127 파일 11 s → `data/aihub/L3/features.parquet`, `docs/aihub_feature_summary.md`(용량·라벨별 속도 RMS 평균·중앙값·95 %, 정상의 ISO 위치, 정상 vs 베어링 지표비), `docs/aihub_plots/label_box_vel_bandhi.png`. 포락선 BPFO 배율은 베어링 번호가 없어 NaN — 대신 고주파 대역 RMS·kurtosis 비교.
+- 디스크: 작업 전 348 MB(sample) → 후 632 MB (L2/full 142 + sampled 142 + L3 <1, L1 0). 피크 = 가장 큰 단위 L1 177 MB. Parquet 는 <L2>/waveforms/<signal>/ 구조로 바로 써서 extract_features 와 같은 배치(중복 복사 없음).
+- 테스트 `tests/test_aihub.py` 4건 (분할 zip, 메타 스키마·샘플 수, 선별 = config·manifest = 목록·샘플링 상한, 특징 범위). 전체 114건 통과.
+- 전체 데이터가 오면: `run_pipeline.py list --zip <part1>` → 패턴 확인 → `extract` → `sample` → `features`. 코드 변경 없이 같은 명령.
