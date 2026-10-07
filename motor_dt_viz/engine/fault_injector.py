@@ -24,9 +24,12 @@ class FaultState:
 class FaultInjector:
     """결함 토글·케이스 선택을 검증하고 상태로 보관한다."""
 
-    def __init__(self, thermal_cfg: dict | None = None, electrical_cfg: dict | None = None):
+    def __init__(self, thermal_cfg: dict | None = None, electrical_cfg: dict | None = None,
+                 vib_thresholds: dict | None = None):
+        """vib_thresholds: {watch_mms, plan_mms, act_mms} — 모터 라이브러리의 진동 규격. None 이면 motor.yaml(M5)."""
         self.thermal_cfg = thermal_cfg or load("thermal")
         self.electrical_cfg = electrical_cfg or load("electrical")
+        self.vib_thresholds = vib_thresholds
         self.available_thermal = list(self.thermal_cfg["faults"].keys())
         self.available_cases = list(self.electrical_cfg["cases"].keys())
         self.state = FaultState()
@@ -90,9 +93,12 @@ class FaultInjector:
         return v
 
     def iso_zone(self, vib_mms: float | None = None) -> str:
-        """ISO 20816-3 Group 2 판정: A/B(정상) → Watch → Plan → Act."""
+        """진동 등급 판정: Normal → Watch → Plan → Act. 경계는 모터 규격(10816-1 / 20816-3)에서 온다."""
         v = self.vibration_mms() if vib_mms is None else vib_mms
-        m = load("motor")["vibration_iso20816_3"]
+        if self.vib_thresholds:
+            m = {k: {"value": self.vib_thresholds[k]} for k in ("watch_mms", "plan_mms", "act_mms")}
+        else:
+            m = load("motor")["vibration_iso20816_3"]
         if v >= float(m["act_mms"]["value"]):
             return "Act"
         if v >= float(m["plan_mms"]["value"]):

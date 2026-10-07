@@ -5,6 +5,8 @@
 #
 # source 태그: MFR 도면/명판 · CALC 계산 · EST 미확인(추정) · REP 대표값
 
+library_default: M5   # 이 파일 = config/motors/M5.yaml 과 동일 (모터 라이브러리 기준). 다른 모터는 motor_library 로 고른다.
+
 meta:
   target: "10t 천장크레인 권상 모터"
   drawing: "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01"

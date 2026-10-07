@@ -1,0 +1,42 @@
+# M4.yaml — 10톤 호이스트 권상 모터 (15.0 kW 6극) · 대표 사양 (명판 아님)
+# source: representative — 국내 와이어로프 호이스트 표준 톤수의 권상 전동기를 동급 범용 3상 유도전동기 대표값으로 정리 (TASK_다중모터 §2).
+# 정격 전류 = P/(√3·V·η·cosφ) = 30.88 A (η·cosφ 대표값) → 표 값 31.0 A. 상전류 = 선전류/√3 (Δ).
+# 모터를 추가하려면 이 파일을 복사해 값만 바꾼다. 코드에는 모터 숫자가 없다.
+id: M4
+name: "10톤 호이스트 권상 모터 (15.0 kW 6극)"
+source: representative
+tags: { hoist_ton: "10톤", hoist_speed: "5.5 m/min" }
+rated_power_kw: 15.0
+poles: 6
+sync_rpm: 1200
+rated_rpm: 1165
+voltage_v: 380
+frequency_hz: 60
+connection: delta
+efficiency: 0.9                # representative
+power_factor: 0.82             # representative
+rated_line_current_a: 31.0
+rated_phase_current_a: 17.9
+frame: 160L
+insulation_class: F
+duty: "S3 40% ED"
+bearing_de: "6309"
+bearing_nde: "6209"
+# BPFO/BPFI = n/2·(1 ∓ d/D·cosα) × fr. 카탈로그 미확인 → 깊은홈 볼베어링 대표 기하(볼 수 8, d 17.46 mm, D 72.5 mm, α 0°)
+bearing_fault_multipliers:
+  bpfo: 3.037
+  bpfi: 4.963
+  source: estimated
+bearing_fault_multipliers_nde:
+  bpfo: 3.621
+  bpfi: 5.379
+  source: estimated
+geometry_scale: 0.889          # 프레임 축높이 비 160/180 (M5 180L = 1.0). 외형은 대표 형상 비례 스케일
+thermal:
+  scale_rule: power_ratio        # 열회로 계수는 M5 보정값을 손실비·geometry_scale 로 스케일 (docs/thermal_scaling.md)
+vibration:
+  standard: "ISO 20816-3 Group 2 (15~300 kW, 강성 지지)"
+  watch_mms: 1.4
+  plan_mms: 2.8
+  act_mms: 4.5
+  note: "Watch 1.4 / Plan 2.8 / Act 4.5"

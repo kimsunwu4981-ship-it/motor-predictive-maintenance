@@ -1,0 +1,44 @@
+# M5.yaml — 15~20톤 호이스트 권상 모터 (22 kW 6극) · 현 프로젝트 기준 모터 (도면 JW-01-HTO-00)
+# 값은 config/motor.yaml 과 완전히 같다 (회귀 테스트가 대조). 열회로 스케일의 기준(geometry_scale 1.0, 손실비 1.0).
+# 정격 회전수는 도면값 1,170 rpm 유지 (TASK 표의 1,180 은 베어링 기준 rpm 으로만 쓴다 — P0 보고 미결, 사용자 결정 전까지 도면값).
+# η·cosφ 는 0.90/0.85 (→ 43.7 A). TASK 표의 0.875/0.81 로는 47.1 A 가 되어 기존 애니메이션·PDF 와 어긋난다 (P0 보고).
+id: M5
+name: "15~20톤 호이스트 권상 모터 (22 kW 6극)"
+source: representative           # 정격·전압·회전수·질량·베어링은 도면(MFR), 전류 η·cosφ 는 대표값 → 전체는 representative
+drawing: "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01"
+tags: { hoist_ton: "15~20톤", hoist_speed: "5 m/min", note: "현 애니메이션·대시보드·PDF 의 기준 모터" }
+rated_power_kw: 22.0
+poles: 6
+sync_rpm: 1200
+rated_rpm: 1170
+voltage_v: 380
+frequency_hz: 60
+connection: delta
+efficiency: 0.90                 # representative (motor.yaml)
+power_factor: 0.85               # representative (motor.yaml)
+rated_line_current_a: 43.7
+rated_phase_current_a: 25.2
+mass_kg: 285.0                   # MFR (HTO BOM#1)
+rotor_inertia_kgm2: 0.468        # CALC (CAD 물성)
+frame: 180L
+insulation_class: F
+duty: "S3 40% ED"
+bearing_de: "NTN 22220 EAW33"    # CLAUDE.md §1.1 지정 (내경 100 mm — 180L 프레임치고 큼, P0 보고)
+bearing_nde: "6211"
+bearing_fault_multipliers:       # DE 22220: MFR 지정 배율
+  bpfo: 7.608
+  bpfi: 10.392
+  source: MFR
+bearing_fault_multipliers_nde:   # NDE 6211: 대표 기하(볼 10, d 14.29, D 77.5)로 추정
+  bpfo: 4.078
+  bpfi: 5.922
+  source: estimated
+geometry_scale: 1.0              # 기준 (180L)
+thermal:
+  scale_rule: power_ratio
+vibration:
+  standard: "ISO 20816-3 Group 2 (15~300 kW, 강성 지지)"
+  watch_mms: 1.4
+  plan_mms: 2.8
+  act_mms: 4.5
+  note: "motor.yaml vibration_iso20816_3 과 같다"
