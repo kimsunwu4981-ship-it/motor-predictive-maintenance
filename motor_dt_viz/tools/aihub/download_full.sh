@@ -12,7 +12,7 @@
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 if [ "$1" = "--list" ]; then bash "$HERE/aihubshell" -mode l -datasetkey 238; exit 0; fi
-DEST="${1:-$HERE/../../../aihub_full}"
+DEST="${1:-/c/vigent_data/aihub_full}"
 FILEKEYS="${AIHUB_FILEKEYS:-44890,44815}"
 [ -n "$AIHUB_API_KEY" ] || { echo "AIHUB_API_KEY 환경변수가 필요하다 (AI Hub 마이페이지 → API 키)"; exit 1; }
 mkdir -p "$DEST" && cd "$DEST"

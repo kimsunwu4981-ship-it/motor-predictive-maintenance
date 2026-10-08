@@ -20,7 +20,8 @@ for _p in (os.environ.get("VIGENT_PYMODS"), r"C:\Temp\pymods"):
 
 import yaml  # noqa: E402
 
-DATA = VIZ / "data" / "aihub"
+_EXT = Path(os.environ.get("VIGENT_AIHUB_DATA", r"C:\vigent_data\aihub"))
+DATA = _EXT if _EXT.exists() else VIZ / "data" / "aihub"          # run_pipeline.py 와 같은 규칙 (OneDrive 밖)
 SEL = yaml.safe_load(open(VIZ / "config" / "aihub_select.yaml", encoding="utf-8"))
 need = pytest.mark.skipif(not (DATA / "L2" / "meta.parquet").exists(), reason="data/aihub/L2 없음 — run_pipeline.py 먼저")
 

@@ -38,7 +38,10 @@ import yaml  # noqa: E402
 import convert_parquet as cp  # noqa: E402
 
 VIZ = Path(__file__).resolve().parents[2]
-DATA = VIZ / "data" / "aihub"
+# 전체 데이터 산출물은 OneDrive 동기화 밖에 둔다 (실측: 저장소(바탕 화면=OneDrive) 안에 5만 파일을 쓰니 OneDrive 가 CPU 2.3 GB 메모리로 동기화해 7 ms→38 ms/파일).
+#   우선순위: 환경변수 VIGENT_AIHUB_DATA → C:igent_dataihub (있으면) → 저장소 data/aihub
+_EXT = Path(os.environ.get("VIGENT_AIHUB_DATA", r"C:\vigent_data\aihub"))
+DATA = _EXT if _EXT.exists() else VIZ / "data" / "aihub"
 DOCS = VIZ / "docs"
 SEL = yaml.safe_load(open(VIZ / "config" / "aihub_select.yaml", encoding="utf-8"))
 FMT = yaml.safe_load(open(VIZ / "config" / "aihub_format.yaml", encoding="utf-8"))
@@ -89,8 +92,66 @@ class SplitFile(io.RawIOBase):
         super().close()
 
 
-def open_zip(path: str) -> zipfile.ZipFile:
-    return zipfile.ZipFile(io.BufferedReader(SplitFile(path), 8 * 2**20))
+class _Member:
+    def __init__(self, name, offset, csize, usize, method):
+        self.filename, self.offset, self.compress_size, self.file_size, self.method = name, offset, csize, usize, method
+    def is_dir(self): return self.filename.endswith("/")
+
+
+class ScanZip:
+    """잘린 zip(중앙 디렉터리 없음) 읽기 — 로컬 헤더를 순차 스캔해 색인을 만들고, 완전한 항목만 돌려준다 (data descriptor 없는 zip 한정).
+    색인은 <zip>.scanindex.json 에 캐시한다. 실측: 66.8 GiB 87만 항목 스캔 83 s. zipfile.ZipFile 과 같은 infolist()/open() 만 제공."""
+    def __init__(self, path: str):
+        self.path = path; self.size = os.path.getsize(path)
+        idx = path + ".scanindex.json"
+        if os.path.exists(idx) and os.path.getmtime(idx) >= os.path.getmtime(path):
+            d = json.load(open(idx, encoding="utf-8"))
+        else:
+            d = self._scan(); json.dump(d, open(idx, "w", encoding="utf-8"), ensure_ascii=False)
+        self.members = [_Member(*m) for m in d["members"]]; self.partial = d.get("partial"); self.truncated = d.get("truncated", True)
+
+    def _scan(self) -> dict:
+        import struct
+        members = []; pos = 0; partial = None
+        with open(self.path, "rb") as f:
+            while pos + 30 <= self.size:
+                f.seek(pos); h = f.read(30)
+                if h[:4] != b"PK": break
+                _, _, flag, method, _, _, _, csize, usize, nlen, elen = struct.unpack("<IHHHHHIIIHH", h)
+                rawname = f.read(nlen); f.seek(elen, 1)
+                # 로컬 헤더 이름 인코딩: utf-8 플래그(bit 11)면 utf-8, 아니면 cp949(실측: AI Hub zip 로컬 헤더는 cp949, 중앙 디렉터리는 utf-8)
+                try:
+                    name = rawname.decode("utf-8" if flag & 0x800 else "cp949")
+                except UnicodeDecodeError:
+                    name = rawname.decode("utf-8", "replace")
+                if flag & 8: raise RuntimeError("data descriptor 가 있는 zip 은 순차 스캔으로 읽을 수 없다")
+                data_off = pos + 30 + nlen + elen; end = data_off + csize
+                if end > self.size: partial = name; break
+                members.append((name, data_off, csize, usize, method)); pos = end
+        return {"members": members, "partial": partial, "truncated": pos < self.size}
+
+    def infolist(self): return self.members
+    def namelist(self): return [m.filename for m in self.members]
+    def open(self, name):
+        import zlib
+        m = next(x for x in self.members if x.filename == name)
+        with open(self.path, "rb") as f:
+            f.seek(m.offset); raw = f.read(m.compress_size)
+        data = raw if m.method == 0 else zlib.decompress(raw, -15)
+        if len(data) != m.file_size: raise ValueError(f"{name}: 크기 불일치 {len(data)} ≠ {m.file_size}")
+        return io.BytesIO(data)
+    def read(self, name): return self.open(name).read()
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+
+
+def open_zip(path: str):
+    """정상 zip 은 zipfile(분할 파일은 SplitFile 로 이어 붙임), 중앙 디렉터리가 없는 잘린 zip 은 ScanZip."""
+    try:
+        return zipfile.ZipFile(io.BufferedReader(SplitFile(path), 8 * 2**20))
+    except zipfile.BadZipFile:
+        print(f"[zip] 중앙 디렉터리 없음 → 순차 스캔으로 연다 (잘린 파일): {os.path.basename(path)}")
+        return ScanZip(path)
 
 
 # ------------------------------------------------------------------ D0 목록·패턴
@@ -120,6 +181,7 @@ def cmd_list(zpath: str):
     g_all = df.groupby(["signal", "power_kw", "label"]).agg(files=("size", "size"), MB=("size", lambda s: round(s.sum() / 2**20, 1))).reset_index()
     g_all["selected"] = g_all.apply(lambda r: r.power_kw in SEL["power_kw"] and r.label in SEL["labels"]["include"] and r.signal in SEL["signals"], axis=1)
     rep = {"zip": zpath, "entries": len(infos), "csv_rows": len(df), "selected_files": int(len(keep)), "selected_MB": round(keep["size"].sum() / 2**20, 1),
+           "truncated": bool(getattr(z, "truncated", False)), "partial_entry": getattr(z, "partial", None),
            "total_MB": round(df["size"].sum() / 2**20, 1), "patterns": pats, "elapsed_s": round(time.time() - t0, 1)}
     json.dump(rep, open(DATA / "list_report.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     write_selection_doc(g_all, rep)
@@ -174,8 +236,8 @@ def cmd_extract(zpath: str, only: list[str] | None, keep_l1: bool):
             udir = l1 / sig / fmt_kw(kw) / label
             t0 = time.time()
             for n in members:                                  # 추출 (경로는 signal 이후 부분만 유지)
-                f = entry_fields(n); rel = Path(*n.split("/")[-2:])   # motor/file.csv
-                dst = udir / rel; dst.mkdir(parents=True, exist_ok=True) if False else dst.parent.mkdir(parents=True, exist_ok=True)
+                parts = n.split("/"); rel = Path(parts[-3], parts[-1])   # <motor>/<file>.csv (경로 …/<kW>/<motor>/<label>/<file>)
+                dst = udir / rel; dst.parent.mkdir(parents=True, exist_ok=True)
                 with z.open(n) as src, open(dst, "wb") as out:
                     shutil.copyfileobj(src, out)
             got = sorted(udir.rglob("*.csv"))
