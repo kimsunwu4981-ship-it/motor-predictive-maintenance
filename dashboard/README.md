@@ -62,7 +62,8 @@ python ../dashboard/tools/export_status_data.py   # public/data/fleet/*.json
 cd ../dashboard && npm run build
 ```
 
-첫 화면 데모 위치는 `motor_dt_viz/config/status_demo.yaml`, 용어 풀이는 `public/content/status/glossary.yaml`(런타임에 읽음).
+"명판값 입력" 버튼으로 모터 명판값을 넣으면 그 모터의 출처가 명판값으로 바뀌고(이 브라우저에만 저장), YAML 조각을 복사해 `config/motors/<id>.yaml` 에 반영한 뒤 배치를 다시 돌리면 판정까지 바뀐다.
+실측 스트림은 `#/status?live=<url>` 로 붙인다 (`src/status/source.ts` 의 JSON·SSE 계약). 첫 화면 데모 위치는 `motor_dt_viz/config/status_demo.yaml`, 용어 풀이는 `public/content/status/glossary.yaml`(런타임에 읽음).
 검증: `pytest dashboard/tests/test_status_export.py -q` (JSON = config·로그, 판정 = thresholds.py 재실행). 확인 기록: `docs/status_board_check.md`.
 
 ## 화면 구성

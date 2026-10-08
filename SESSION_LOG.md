@@ -515,6 +515,16 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - M1 결함 배율(온도 위험 미도달) 별도 설정 여부, 사양 의문점 5건(13.1).
 - P5(지시 시): 5종 애니메이션 재녹화, 상태 보드 라이브 입력(데이터 소스 추상화), 명판 입력 폼.
 
+### 13.9 P5 선택 과제 중 소프트웨어 항목 (2026-10-08, "진행해")
+
+- **데이터 소스 추상화** `dashboard/src/status/source.ts`: `StatusSource{kind, label, loadIndex, loadSeries, subscribe?}`. `ReplaySource`(엔진 배치 JSON, 기본)와
+  `LiveSource`(`#/status?live=<url>` — 같은 JSON 계약 + SSE `<url>/events` 로 샘플 추가, `appendSample`). 보드는 인터페이스만 본다. 판정은 어느 소스든 서버(엔진) 몫.
+- **명판값 입력 폼** `dashboard/src/status/nameplate.ts` + `StatusBoard` 의 `NameplateForm`(② 패널 "명판값 입력" 버튼, `?np=1`): 10개 항목 입력 → localStorage 저장 →
+  그 모터 출처가 `nameplate`로 바뀌고 상단 정직성 줄·② 머리글·사양표 출처가 "명판값 (입력 YYYY-MM-DD)" 로 바뀐다. 전류 비율 게이지는 명판 정격으로 즉시 재계산,
+  판정은 "배치 재실행 전" 표시. YAML 조각 복사 버튼 → `config/motors/<id>.yaml` 반영 후 `run_fleet → export_status_data → build`. 스크린샷 `s5_nameplate_M3_1920.png`.
+- **임계값 보정 가능성 메모** `motor_dt_viz/docs/threshold_calibration_note.md`: 샘플(M1 한 용량, 베어링 번호 없음, 단위 미확정)로는 바꾸지 않는 근거와 조건. config 무변경.
+- 하지 않은 것: 5종 애니메이션 재녹화(USD 프레임 스케일 결정 + 긴 녹화), 통합 영상 재녹화(화면 비우기 필요 → "시작" 신호 대기).
+
 ## 14. AI Hub 「기계시설물 고장 예지 센서」 경량 샘플로 파이프라인 준비 (2026-10-07, S0~S3 완료)
 
 지시서 `TASK_AIHub_샘플`. 전체 데이터(약 500 GB) 도착 전에 샘플(4,674 CSV, 842 MB)로 구조를 확정하고 변환·특징 추출 코드를 검증했다.

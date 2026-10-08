@@ -6,10 +6,12 @@ import { fill } from "../live/types";
 import { Gauge } from "../status/Gauge";
 import { TrendChart, type TrendSel } from "../status/TrendChart";
 import {
-  causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadFleetIndex, loadSeries, loadStatusContent,
+  causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent,
   simElapsed, stepAt, worse, KINDS, PHASES,
   type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent,
 } from "../status/data";
+import { pickSource, appendSample, type StatusSource } from "../status/source";
+import { applyNameplates, loadNameplates, saveNameplates, parseField, yamlSnippet, NAMEPLATE_FIELDS, type Nameplates } from "../status/nameplate";
 import "../status/status.css";
 
 // VIGENT 모터 상태 보드 (TASK_다중모터 §7): 5종 모터 카드 → 선택 모터 상세(게이지 8) → 원인과 조치 → 재생 바·추세 → 기준표 탭.
@@ -18,19 +20,24 @@ import "../status/status.css";
 const TEMP_GAUGES = ["winding", "bearing_de", "rotor", "shaft"];
 
 export function StatusBoard() {
+  const source = useMemo(() => pickSource(new URLSearchParams(window.location.hash.split("?")[1] ?? "")), []);   // ?live=<url> → 실측 스트림
   const [index, setIndex] = useState<FleetIndex | null>(null);
   const [content, setContent] = useState<StatusContent | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
-    Promise.all([loadFleetIndex(), loadStatusContent()]).then(([i, c]) => { setIndex(i); setContent(c); }).catch((e) => setErr(String(e)));
-  }, []);
-  if (err) return <div style={{ padding: 30 }}>데이터를 읽지 못했습니다.<br /><code>{err}</code><div className="dim">dashboard/tools/export_status_data.py 를 먼저 실행하세요.</div></div>;
+    Promise.all([source.loadIndex(), loadStatusContent()]).then(([i, c]) => { setIndex(i); setContent(c); }).catch((e) => setErr(String(e)));
+  }, [source]);
+  if (err) return <div style={{ padding: 30 }}>데이터를 읽지 못했습니다.<br /><code>{err}</code><div className="dim">{source.kind === "live" ? "라이브 소스 URL 아래에 index.json 이 있어야 합니다." : "dashboard/tools/export_status_data.py 를 먼저 실행하세요."}</div></div>;
   if (!index || !content) return <div style={{ padding: 30 }} className="muted">불러오는 중…</div>;
-  return <Board index={index} content={content} />;
+  return <Board index0={index} content={content} source={source} />;
 }
 
-function Board({ index, content }: { index: FleetIndex; content: StatusContent }) {
+function Board({ index0, content, source }: { index0: FleetIndex; content: StatusContent; source: StatusSource }) {
   const params = useMemo(() => new URLSearchParams(window.location.hash.split("?")[1] ?? ""), []);
+  // 명판값 입력 (P5): localStorage 의 입력값을 index 에 덮어쓴다. 출처 라벨이 바뀐다.
+  const [nameplates, setNameplates] = useState<Nameplates>(() => loadNameplates());
+  const index = useMemo(() => applyNameplates(index0, nameplates), [index0, nameplates]);
+  const [npOpen, setNpOpen] = useState<boolean>(() => params.get("np") === "1");
   const ids = index.motors.map((m) => m.id);
   const [sel, setSel] = useState<string>(() => (ids.includes(params.get("m") ?? "") ? (params.get("m") as string) : ids[0]));
   // 모터별 모드·시각 (데모 위치에서 시작, 재생하면 그 모터의 시각만 움직인다)
@@ -45,9 +52,17 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
     for (const m of index.motors) {
       const key = `${m.id}/${modes[m.id]}`;
       if (series[key]) continue;
-      loadSeries(index, m.id, modes[m.id]).then((s) => setSeries((prev) => ({ ...prev, [key]: s })));
+      source.loadSeries(index, m.id, modes[m.id]).then((s) => setSeries((prev) => ({ ...prev, [key]: s })));
     }
-  }, [index, modes, series]);
+  }, [index, modes, series, source]);
+  // 라이브 소스: 스트림 샘플을 해당 모터 시계열 끝에 붙인다 (재생 모드에서는 아무 일도 없다)
+  useEffect(() => {
+    if (!source.subscribe) return;
+    return source.subscribe((x) => {
+      const m = index.motors.find((q) => q.id === x.motor); if (!m) return;
+      setSeries((prev) => { const k = `${x.motor}/${x.mode}`; return prev[k] ? { ...prev, [k]: appendSample(prev[k], x, m.spec.rated_line_current_a) } : prev; });
+    });
+  }, [source, index]);
 
   const motor = index.motors.find((m) => m.id === sel)!;
   const mode = modes[sel];
@@ -70,7 +85,8 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement)?.tagName ?? "")) return;
+      if (npOpen) { if (e.key === "Escape") setNpOpen(false); return; }
       if (e.key === " ") { e.preventDefault(); pb.toggle(); }
       else if (e.key === "ArrowRight") { e.preventDefault(); pb.gotoStep(pb.stepIndex + 2); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
@@ -81,7 +97,8 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pb, ids, toggleMode]);
+  }, [pb, ids, toggleMode, npOpen]);
+  const npCount = Object.keys(nameplates).length;
 
   const cur = series[`${sel}/${mode}`];
   const i = cur ? idxAt(cur.t, pb.t) : 0;
@@ -104,9 +121,9 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
           {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (M5 애니메이션)">전기 해설 ↗</a>}
           {!present && <button className="b-theme" onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
           <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
-          <span className="honesty st-honesty" title={index.honesty.itsc_note}>
-            <b>{index.honesty.label}</b>
-            <span>{index.honesty.lines.join(" · ")}</span>
+          <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
+            <b>{index.honesty.label}{source.kind === "live" ? " · 실측 스트림" : ""}</b>
+            <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 대표 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
           </span>
         </div>
 
@@ -132,7 +149,8 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
         <div className="st-main">
           <div className="panel st-detail">
             <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name}</span><span className="grow" />
-              <span className="dim">{motor.spec.source === "nameplate" ? "명판값" : "대표 사양 (명판 아님)"}</span></div>
+              <span className={"dim" + (motor.spec.source === "nameplate" ? " st-np-on" : "")}>{motor.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[sel]?.entered_at ?? ""})` : "대표 사양 (명판 아님)"}</span>
+              {!present && <button className="b-np" onClick={() => setNpOpen(true)} title="이 모터의 명판값을 입력하면 출처가 nameplate 로 바뀐다">명판값 입력</button>}</div>
             <div className="panel-b">
               <div className="st-spec">
                 <span><i>용도</i>{motor.tags.hoist_ton ?? "-"} 호이스트{motor.tags.hoist_speed ? ` · 권상 ${motor.tags.hoist_speed}` : ""}</span>
@@ -194,6 +212,8 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
           {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} />}
         </div>
 
+        {npOpen && <NameplateForm motor={index0.motors.find((m) => m.id === sel)!} current={nameplates[sel]} onClose={() => setNpOpen(false)}
+          onSave={(np) => { const n = { ...nameplates }; if (np) n[sel] = np; else delete n[sel]; setNameplates(n); saveNameplates(n); setNpOpen(false); }} />}
         {!present && (
           <div className="panel tabs">
             <div className="tabbar">
@@ -204,7 +224,7 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
             </div>
             <div className="tabbody">
               {tab === "thr" && <ThresholdTab index={index} />}
-              {tab === "spec" && <SpecTab index={index} />}
+              {tab === "spec" && <SpecTab index={index} nameplates={nameplates} />}
               {tab === "gloss" && <dl className="gloss">{content.glossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>}
             </div>
           </div>
@@ -225,7 +245,8 @@ function specFor(index: FleetIndex, motor: MotorInfo, sel: TrendSel) {
 // 신호별 게이지 8개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 지표. 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.
 function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; motor: MotorInfo; s: MotorSeries; i: number; onPick: (t: TrendSel) => void; picked: TrendSel }) {
   const cur = gaugeCurrent(index);
-  const ratios = PHASES.map((p) => ({ key: index.phase_labels[p], value: s.current_ratio[p][i], p }));
+  const rated = motor.spec.rated_line_current_a;                                       // 명판값을 넣으면 여기서 바로 바뀐다 (판정은 배치 재실행 후)
+  const ratios = PHASES.map((p) => ({ key: index.phase_labels[p], value: s.current_rms_A[p][i] / rated, p }));
   const worstPhase = ratios.reduce((a, b) => (Math.abs(b.value - 1) > Math.abs(a.value - 1) ? b : a));
   const item = (key: string, sel: TrendSel, node: React.ReactNode) => (
     <div key={key} className={"g-wrap" + (picked.kind === sel.kind && (sel.kind !== "temperature" || picked.component === sel.component) ? " on" : "")} onClick={() => onPick(sel)}>{node}</div>
@@ -237,7 +258,7 @@ function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; mot
       {item("cur", { kind: "current_ratio" },
         <Gauge index={index} title={`전류 / 정격 (${motor.spec.rated_line_current_a} A)`} unit="×" spec={cur} value={worstPhase.value}
           markers={ratios.map((r) => ({ key: r.key, value: r.value }))} judged={s.levels.current_ratio[i]}
-          note={ratios.map((r) => `${r.key} ${s.current_rms_A[r.p][i].toFixed(1)} A`).join(" · ")} />)}
+          note={ratios.map((r) => `${r.key} ${s.current_rms_A[r.p][i].toFixed(1)} A`).join(" · ") + (motor.spec.source === "nameplate" ? " · 명판 정격 기준 (판정은 배치 재실행 전)" : "")} />)}
       {item("i2i1", { kind: "i2i1" },
         <Gauge index={index} title="I₂/I₁ 역상 전류비" unit="" spec={gaugeLoHi(index.thresholds.i2i1, 0.3, "")} value={s.i2i1[i]} judged={s.levels.i2i1[i]} />)}
       {item("vib", { kind: "vibration" },
@@ -289,7 +310,7 @@ function ThresholdTab({ index }: { index: FleetIndex }) {
   );
 }
 
-function SpecTab({ index }: { index: FleetIndex }) {
+function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Nameplates }) {
   const ms = index.motors;
   const row = (label: string, f: (m: MotorInfo) => React.ReactNode) => <tr><td><b>{label}</b></td>{ms.map((m) => <td key={m.id}>{f(m)}</td>)}</tr>;
   return (
@@ -311,9 +332,45 @@ function SpecTab({ index }: { index: FleetIndex }) {
           {row("절연 / 듀티", (m) => `${m.spec.insulation_class}종 / ${m.spec.duty}`)}
           {row("진동 규격", (m) => `${m.vibration.standard.split(" (")[0]} (${m.vibration.watch_mms}/${m.vibration.act_mms})`)}
           {row("정상 수렴 권선 온도 (연속)", (m) => `${m.steady_C.winding} °C`)}
-          {row("출처", (m) => m.spec.source === "nameplate" ? "명판값" : "대표값 (representative)")}
+          {row("출처", (m) => m.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[m.id]?.entered_at ?? ""}, YAML 반영 전)` : "대표값 (representative)")}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+// 명판값 입력 폼 (P5): 값을 넣고 저장하면 이 브라우저에 남고, YAML 조각을 복사해 config/motors/<id>.yaml 에 반영한다.
+function NameplateForm({ motor, current, onClose, onSave }: { motor: MotorInfo; current?: Nameplates[string]; onClose: () => void; onSave: (np: Nameplates[string] | null) => void }) {
+  const [vals, setVals] = useState<Record<string, string>>(() => Object.fromEntries(NAMEPLATE_FIELDS.map((f) => [f.key, current?.values[f.key] !== undefined ? String(current.values[f.key]) : ""])));
+  const [note, setNote] = useState(current?.note ?? "");
+  const [copied, setCopied] = useState(false);
+  const values: Record<string, string | number> = {};
+  for (const f of NAMEPLATE_FIELDS) { const v = parseField(f.key, vals[f.key] ?? ""); if (v !== undefined && v !== motor.spec[f.key]) values[f.key] = v; }
+  const np: Nameplates[string] | null = Object.keys(values).length ? { values: values as Nameplates[string]["values"], entered_at: new Date().toISOString().slice(0, 10), note: note || undefined } : null;
+  const snippet = np ? yamlSnippet(motor.id, np) : "";
+  return (
+    <div className="st-modal" onClick={onClose}>
+      <div className="st-modal-b" onClick={(e) => e.stopPropagation()}>
+        <div className="panel-h">명판값 입력 — {motor.id} {motor.name} <span className="grow" /><button onClick={onClose}>닫기 Esc</button></div>
+        <div className="st-np-grid">
+          {NAMEPLATE_FIELDS.map((f) => (
+            <label key={f.key}><span>{f.label}{f.unit ? ` (${f.unit})` : ""}</span>
+              <input value={vals[f.key]} placeholder={String(motor.spec[f.key])} onChange={(e) => setVals((v) => ({ ...v, [f.key]: e.target.value }))} inputMode={f.step !== undefined ? "decimal" : "text"} />
+              <small className="dim">대표값 {String(motor.spec[f.key])}</small></label>
+          ))}
+          <label className="wide"><span>메모 (명판 사진·출처)</span><input value={note} onChange={(e) => setNote(e.target.value)} placeholder="예: 2026-10 현장 명판 촬영" /></label>
+        </div>
+        <div className="st-np-foot">
+          <div className="dim">저장하면 이 브라우저에서 사양 표시·정격 전류 기준 게이지가 즉시 바뀌고 출처가 <b>명판값</b>이 된다. 판정·수렴 온도까지 바꾸려면 아래 YAML 을
+            <code> config/motors/{motor.id}.yaml</code> 에 반영하고 <code>run_fleet.py → export_status_data.py → npm run build</code> 를 다시 돌린다.</div>
+          {snippet && <pre className="st-np-yaml">{snippet}</pre>}
+          <div className="st-np-btns">
+            <button className="btn primary" disabled={!np} onClick={() => onSave(np)}>저장</button>
+            <button disabled={!snippet} onClick={() => { navigator.clipboard?.writeText(snippet).then(() => setCopied(true)).catch(() => undefined); }}>{copied ? "YAML 복사됨" : "YAML 복사"}</button>
+            {current && <button onClick={() => onSave(null)}>대표 사양으로 되돌리기</button>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

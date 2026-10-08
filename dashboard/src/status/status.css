@@ -87,3 +87,17 @@
   .st-cause { min-height: 1.3em; }
   .st-cause-p .chain { grid-template-columns: 1fr; }
 }
+
+/* 명판값 입력 (P5) */
+.b-np { font-size: .82em; }
+.st-np-on { color: var(--accent2) !important; font-weight: 700; }
+.st-modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.st-modal-b { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: min(900px, 94vw); max-height: 90vh; overflow: auto; box-shadow: var(--shadow); }
+.st-np-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 14px; padding: 12px 14px; }
+.st-np-grid label { display: flex; flex-direction: column; gap: 2px; font-size: .9em; }
+.st-np-grid label span { color: var(--accent); font-weight: 700; }
+.st-np-grid label.wide { grid-column: 1 / -1; }
+.st-np-grid input { background: var(--panel2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: inherit; }
+.st-np-foot { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.st-np-yaml { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .82em; margin: 0; white-space: pre-wrap; }
+.st-np-btns { display: flex; gap: 8px; }
