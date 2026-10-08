@@ -37,4 +37,6 @@ motors:                         # AI Hub 모터명 → 부하측(DE)/반부하�
   R-SF-01:    { de: "6208", nde: "6208", fault_sim: "축정렬 / 벨트" }
   R-EF-01:    { de: "6206", nde: "6206", fault_sim: "축정렬" }
   R-SF-03:    { de: "6206", nde: "6206", fault_sim: "벨트" }
+  R-CAHU-03R: { de: "6208", nde: "6208", fault_sim: "벨트 (가이드라인 벨트느슨함 표)" }
+  R-CAHU-03S: { de: "6309", nde: "6307", fault_sim: "벨트 (가이드라인 벨트느슨함 표)" }
   L-SF-01:    { de: "6208", nde: "6208", fault_sim: "벨트" }

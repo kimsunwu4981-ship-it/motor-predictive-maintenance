@@ -321,13 +321,32 @@ def cmd_sample():
 
 
 # ------------------------------------------------------------------ D3 특징·요약
-def cmd_features():
+def _feat_chunk(args):
+    """워커: meta 행 묶음 → 특징 행 (Windows spawn 이라 모듈 수준 함수여야 한다)."""
+    rows_dicts, l2 = args
+    import extract_features as ef
+    out = []
+    for r in rows_dicts:
+        out.extend(ef.features_for_file(pd.Series(r), Path(l2)))
+    return out
+
+
+def cmd_features(workers: int = 1):
     import extract_features as ef
     meta = pd.read_parquet(DATA / "L2" / "meta.parquet")
     l2 = DATA / "L2" / "full"                                     # <L2>/waveforms/<signal>/ 구조 (extract_features 와 동일)
     t0 = time.time(); rows = []
-    for _, r in meta.iterrows():
-        rows.extend(ef.features_for_file(r, l2))
+    if workers > 1:                                               # 병렬: 실측 37.7만 파일 × 10 ms 를 4프로세스로
+        from concurrent.futures import ProcessPoolExecutor
+        recs = meta.to_dict("records"); n = max(200, len(recs) // (workers * 8))
+        chunks = [(recs[i:i + n], str(l2)) for i in range(0, len(recs), n)]
+        with ProcessPoolExecutor(max_workers=workers) as ex:
+            for k, part in enumerate(ex.map(_feat_chunk, chunks)):
+                rows.extend(part)
+                if (k + 1) % 8 == 0: print(f"[features] {min((k + 1) * n, len(recs))}/{len(recs)}  {time.time() - t0:.0f} s", flush=True)
+    else:
+        for _, r in meta.iterrows():
+            rows.extend(ef.features_for_file(r, l2))
     feat = pd.DataFrame(rows); dt = time.time() - t0
     l3 = DATA / "L3"; l3.mkdir(exist_ok=True)
     feat.to_parquet(l3 / "features.parquet", index=False, compression="zstd")
@@ -381,11 +400,12 @@ def main():
     ap.add_argument("--zip", help="zip 또는 첫 분할 파일(*.zip.part1)")
     ap.add_argument("--units", nargs="*", help="예: 2.2kW/정상")
     ap.add_argument("--keep-l1", action="store_true")
+    ap.add_argument("--workers", type=int, default=1, help="features 병렬 프로세스 수")
     a = ap.parse_args()
     if a.cmd in ("list", "all"): cmd_list(a.zip)
     if a.cmd in ("extract", "all"): cmd_extract(a.zip, a.units, a.keep_l1)
     if a.cmd in ("sample", "all"): cmd_sample()
-    if a.cmd in ("features", "all"): cmd_features()
+    if a.cmd in ("features", "all"): cmd_features(a.workers)
 
 
 if __name__ == "__main__":

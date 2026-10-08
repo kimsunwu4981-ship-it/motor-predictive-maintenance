@@ -634,4 +634,7 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **OneDrive 함정**: 저장소가 바탕 화면(OneDrive) 아래라 5만 파일을 쓰는 동안 OneDrive 가 동기화(2.3 GB 메모리) → 파일당 38 ms(샘플 때 7 ms). 산출물·zip 을 `C:igent_data\{aihub,aihub_full}` 로 옮기고
   `run_pipeline.py`/`tests/test_aihub.py` 가 `VIGENT_AIHUB_DATA`(기본 `C:\vigent_data\aihub`) 를 우선 보게 했다. 경로 문자열에 `\v`·`\a` 이스케이프가 들어가 한 번 실패 → chr(92) 로 재작성.
 - L1 단위 폴더가 모터명 대신 라벨명으로 생기던 경로 버그 수정(`parts[-3]/<file>`).
-- Training 추출 20:34 시작(32만 파일, 외부 디스크). 이후 `sample` → `features` → 요약.
+- ScanZip 의 `open()` 이 이름을 선형 탐색해 파일당 130 ms → 사전 색인 + 파일 핸들 재사용으로 0.8 ms. Training 추출 20:38~22:44 (10단위, 각 20/20 검증, L1 단위 삭제):
+  327,543 파일 83 GB CSV → Parquet, **L2/full 합계 377,321 파일 46.3 GB**(file_id 중복 0). 모터별: M1 정상 129,311·베어링 21,558·축정렬 18,583 / M2 57,599·19,750·18,001 /
+  M3 4,398·2,401·2,001(Validation 만) / M4 35,771·21,601(축정렬 없음) / M5 32,791·축정렬 13,556(베어링 없음).
+- `features --workers 4`(ProcessPoolExecutor, 샘플 검증 4.8 ms/파일) 추가. 22:45 `sample` → `features` 시작.

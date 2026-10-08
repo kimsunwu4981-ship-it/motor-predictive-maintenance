@@ -76,6 +76,12 @@ def test_feature_value_ranges():
     import pandas as pd
     f = pd.read_parquet(DATA / "L3" / "features.parquet")
     assert (f["rms"] >= 0).all() and (f["crest_factor"] >= 1).all() and (f["vel_rms_mm_s"] >= 0).all()
-    assert f["bearing_known"].all() and f["env_bpfo_ratio"].notna().all()      # 선별본(2.2 kW 4대)은 전부 가이드라인 표에 베어링이 있다
+    # 가이드라인 표에 베어링이 있는 모터만 배율이 있다 (정상만 있는 모터 — R-DEF-01·R-EF-03·L-DEF-01 등 — 는 NaN). 우리 M1~M5 값으로 대신하지 않는다
+    import yaml
+    brg = yaml.safe_load(open(VIZ / "config" / "aihub_bearings.yaml", encoding="utf-8"))["motors"]
+    known = f["aihub_motor_name"].isin(brg)
+    assert f.loc[known, "bearing_known"].all() and f.loc[known, "env_bpfo_ratio"].notna().all()
+    assert (~f.loc[~known, "bearing_known"]).all() and f.loc[~known, "env_bpfo_ratio"].isna().all()
+    assert known.mean() > 0.8                                                       # 선별본 대부분은 베어링을 안다
     assert f["nan_count"].eq(0).all() and set(f["motor_id"]) <= set(SEL["motor_map"].values())
     assert (VIZ / "docs" / "aihub_feature_summary.md").exists() and (VIZ / "docs" / "aihub_selection.md").exists()
