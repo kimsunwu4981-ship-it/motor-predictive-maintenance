@@ -1,0 +1,82 @@
+﻿[
+    {
+        "motor":  "M1",
+        "mode":  "mechanical",
+        "MB":  3.9,
+        "duration_s":  187.41,
+        "offset_s":  2.003,
+        "log_end_s":  184.687,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M1_mechanical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M1\\mechanical\\demo_20261008_101241.csv"
+    },
+    {
+        "motor":  "M1",
+        "mode":  "electrical",
+        "MB":  6.6,
+        "duration_s":  172.43,
+        "offset_s":  2.005,
+        "log_end_s":  169.913,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M1_electrical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M1\\electrical\\demo_20261008_101609.csv"
+    },
+    {
+        "motor":  "M2",
+        "mode":  "mechanical",
+        "MB":  4.7,
+        "duration_s":  187.41,
+        "offset_s":  2.005,
+        "log_end_s":  184.674,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M2_mechanical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M2\\mechanical\\demo_20261008_101921.csv"
+    },
+    {
+        "motor":  "M2",
+        "mode":  "electrical",
+        "MB":  9,
+        "duration_s":  172.45,
+        "offset_s":  2.007,
+        "log_end_s":  169.665,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M2_electrical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M2\\electrical\\demo_20261008_102248.csv"
+    },
+    {
+        "motor":  "M3",
+        "mode":  "mechanical",
+        "MB":  4.7,
+        "duration_s":  187.41,
+        "offset_s":  2.002,
+        "log_end_s":  184.842,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M3_mechanical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M3\\mechanical\\demo_20261008_102559.csv"
+    },
+    {
+        "motor":  "M3",
+        "mode":  "electrical",
+        "MB":  8.9,
+        "duration_s":  172.43,
+        "offset_s":  2.009,
+        "log_end_s":  169.814,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M3_electrical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M3\\electrical\\demo_20261008_102928.csv"
+    },
+    {
+        "motor":  "M4",
+        "mode":  "mechanical",
+        "MB":  5.5,
+        "duration_s":  187.42,
+        "offset_s":  2.002,
+        "log_end_s":  184.759,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M4_mechanical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M4\\mechanical\\demo_20261008_103241.csv"
+    },
+    {
+        "motor":  "M4",
+        "mode":  "electrical",
+        "MB":  11.2,
+        "duration_s":  172.42,
+        "offset_s":  2.009,
+        "log_end_s":  169.778,
+        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M4_electrical.mp4",
+        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M4\\electrical\\demo_20261008_103609.csv"
+    }
+]

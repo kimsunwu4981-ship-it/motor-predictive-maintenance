@@ -211,6 +211,11 @@ vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act
 - 데모 첫 화면 위치: `config/status_demo.yaml` 에 그 모터의 `{mode, t_s, expect}` 를 추가한다 (테스트가 기대 상태와 판정을 대조).
 - 열회로 계수는 M5 보정값을 출력비·프레임 비례로 스케일한다 (`docs/thermal_scaling.md`). 판정 임계값은 `config/thresholds.yaml` (모터 공통) + 모터 YAML 의 진동 규격.
 
+## 모터별 애니메이션 녹화 (M1~M5)
+
+`python app/demo_integrated.py --gui --autoplay --mode mechanical --motor M3` 처럼 `--motor` 를 주면 그 모터의 열회로·전류·진동 규격·HUD 로 돌고, 외형은 카메라 거리로 프레임 비례 크기가 된다.
+일괄 녹화: `powershell -ExecutionPolicy Bypass -File toolsecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/fleet/`, 산출물 `모터결함_애니메이션/4_모터별/`. 녹화 중 화면을 비워야 한다.
+
 ## 상태 보드 (모터 5종)
 
 `dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 키 1~5 모터, Space 재생, ←→ 장면, M 기계/전기, F 발표.

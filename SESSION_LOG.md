@@ -524,7 +524,12 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
   판정은 "배치 재실행 전" 표시. YAML 조각 복사 버튼 → `config/motors/<id>.yaml` 반영 후 `run_fleet → export_status_data → build`. 스크린샷 `s5_nameplate_M3_1920.png`.
 - **임계값 보정 가능성 메모** `motor_dt_viz/docs/threshold_calibration_note.md`: 샘플(M1 한 용량, 베어링 번호 없음, 단위 미확정)로는 바꾸지 않는 근거와 조건. config 무변경.
 - 통합 영상 재녹화 (2026-10-08 09:56, "진행해" 를 시작 신호로): `demo_integrated.py --mode integrated --record --no_timecode`, 172 s, 오프셋 2.004 s, HUD Ph R·S·T 확인(`s5_integrated_rst_110s.png`), `모터결함_애니메이션/3_통합/07_통합_자동재생.mp4` 교체. 이전 판은 `media/integrated_backup_phA/`.
-- 하지 않은 것: 5종 애니메이션 재녹화(USD 프레임 스케일 결정 + 30분 이상 녹화 — 지시 시).
+- **5종 애니메이션 재녹화 (2026-10-08 10:12~10:39, "우선 재녹화 진행해")**: `demo_integrated.py --motor <id>` 추가 — 열회로(`thermal_cfg`)·전류(`electrical_cfg`+`motor_spec`)·진동 규격·회전 구동값·HUD 문구를
+  라이브러리로 바꾸고, 외형은 **카메라 거리를 1/geometry_scale** 로 늘려 프레임 비례 크기로 보이게 했다 (USD·물리 바디를 스케일하면 관절·입자 경로가 깨지므로 원본 무수정).
+  HUD: "2.2 kW 4-pole hoist motor (M1, representative spec, frame x0.56 of M5)", 진동 규격 이름(10816-1 Class I / 20816-3 Group 2), 자막의 규격 이름 치환.
+  `tools/record_fleet.ps1` 로 M1~M4 × 기계·전기 8편 녹화(각 172/187 s, 오프셋 2.002~2.009 s, 평균 60 fps 이상) → `dashboard/public/media/fleet/<id>_<mode>.mp4`,
+  발행 `모터결함_애니메이션/4_모터별/<id>_<기계|전기>_전체시나리오.mp4`. Isaac 로그 ↔ 엔진 배치 장면 끝 최대 차 0.1~0.2 °C/A (`docs/fleet_recording_summary.json`).
+  확인 프레임 `s5_fleet_*.png`. 한계: 시나리오 자막(subtitle_en)의 숫자("88 A (201 %)")는 M5 기준 문장 그대로다 — HUD 전류 패널은 모터별 암페어로 맞다. M5 는 기존 영상 유지.
 
 ## 14. AI Hub 「기계시설물 고장 예지 센서」 경량 샘플로 파이프라인 준비 (2026-10-07, S0~S3 완료)
 
