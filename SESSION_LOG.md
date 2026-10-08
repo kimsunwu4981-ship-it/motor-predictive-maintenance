@@ -593,3 +593,26 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
   경계(2/5배)를 이 표본으로 옮기지는 않는다 — `docs/threshold_calibration_note.md` §2b.
 - L-EF-04 는 갑천역·대전역에 각각 있는 **동명이기** — Motor Spec 이 둘인 이유. `sensor_id` 로 구분. 일부 모터는 라벨링 기준상 "정상이 고장보다 RMS 가 높다"(라벨이 모터·시기별 경계).
 - 테스트 갱신(bearing_known·배율 양수·합성 충격열 검증) — 엔진 스위트 통과. 그림 `01_envelope_normal_vs_bearing.png` 에 BPFO/BPFI 선, `label_box_vel_bpfo.png`.
+
+## 15. 사용자 결정 일괄 적용 (2026-10-08)
+
+사용자 답: A-1~A-5 ① 유지(M5 1170 rpm, η/cosφ 0.90/0.85, 축 높이 비 스케일, 22220 베어링, M4 는 B-1 로 통일), B-1 ②, B-2 ①, B-3 ②, C-1 ②, C-2 ①, D-1 ②, D-2 대표 사양 유지.
+"B-1·D-1 둘 다 반영한 뒤 M1~M4 재녹화는 한 번만", "가이드라인이 유연 지지 4.5 를 썼다는 것은 docs 에 기록".
+
+### 15.1 B-1 ② 진동 규격 5종 통일
+- `config/motors/M1~M3.yaml` vibration → ISO 20816-3 Group 2 강성 지지 1.4/2.8/4.5 (M4·M5 와 동일). `motor_library` 규칙 4 를 `VIB_STANDARD_REQUIRED="ISO 20816-3"`, `VIB_STANDARD_SPLIT_KW=0` 으로.
+- `config/thresholds.yaml` 주석에 결정 근거와 **AI Hub 가이드라인의 유연 지지 B/C 4.5 mm/s(강성 2.8) 기준** 기록. 용어 풀이·AI Hub 요약 문구·테스트(엔진 3건, 대시보드 1건) 갱신.
+- 영향: 배치 재실행(M1~M3 진동 경고 1.4 부터), 상태 보드 게이지, 영상 HUD 규격 이름.
+
+### 15.2 B-3 ② 베어링 지표 정의 확정 (수치 유지)
+- `thresholds.yaml bearing_index` 주석에 실측 정의: 대역통과(500~1,600 Hz @4 kHz) → Hilbert 포락선 → BPFO ±3 % 피크 ÷ 주변 ±25 Hz 중앙값. 경고 2 / 위험 5배. 시뮬레이션은 손실 배율 대체.
+
+### 15.3 D-1 ② 자막 변수화
+- `scenario_electrical.yaml` 의 "43.7 A", "88 A (201 %)" → `{rated_line_A}`, `{a_rms_end}`, `{a_pct_end}`. `engine.scenario_player.fill_vars` 로 채운다:
+  데모 HUD(모터별 전류 모델 값), `export_dashboard_data`(M5 해설 변수), 상태 보드(원문 export → 보드가 모터별 `scene_values` 로 채움).
+- M1~M4 재녹화 1회 (B-1 과 함께): `tools/record_fleet.ps1`, 12:00 경 시작.
+
+### 15.4 C-1 ② 전체 데이터 다운로드
+- `tools/aihub/aihubshell`(AI Hub 공개 CLI v0.6) + `download_full.sh`. 파일 트리(키 없이 조회): Training vibration 78 GB · current 21 GB, Validation vibration 10 GB · current 3 GB.
+  가이드라인의 "약 50 GB" 와 사용자 추정 500 GB 사이의 실제 값은 **112 GB(진동만 88 GB)**. C: 여유 241 GB 로 진동만이면 충분.
+- **다운로드는 사용자의 AI Hub API 키가 있어야 시작된다** (`AIHUB_API_KEY=<키> bash tools/aihub/download_full.sh`). 키는 저장소에 두지 않는다. 받은 뒤 `run_pipeline.py list/extract/sample/features` 를 zip 두 개(Training·Validation)에 차례로 돌린다.

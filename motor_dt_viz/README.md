@@ -214,7 +214,8 @@ vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act
 ## 모터별 애니메이션 녹화 (M1~M5)
 
 `python app/demo_integrated.py --gui --autoplay --mode mechanical --motor M3` 처럼 `--motor` 를 주면 그 모터의 열회로·전류·진동 규격·HUD 로 돌고, 외형은 카메라 거리로 프레임 비례 크기가 된다.
-일괄 녹화: `powershell -ExecutionPolicy Bypass -File toolsecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/fleet/`, 산출물 `모터결함_애니메이션/4_모터별/`. 녹화 중 화면을 비워야 한다.
+일괄 녹화: `powershell -ExecutionPolicy Bypass -File tools
+ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/fleet/`, 산출물 `모터결함_애니메이션/4_모터별/`. 녹화 중 화면을 비워야 한다.
 
 ## 상태 보드 (모터 5종)
 
@@ -223,7 +224,7 @@ vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act
 
 ## AI Hub 실측 데이터 (전체 데이터 도착 후 실행 순서)
 
-1. 분할 원본은 외장 드라이브의 별도 폴더에 두고 설명서 PDF 2종을 `data/aihub/docs/` 에 넣는다 (`docs/aihub_structure.md` 의 "설명서에 없음" 보강).
+1. 다운로드: `AIHUB_API_KEY=<AI Hub 마이페이지 API 키> bash tools/aihub/download_full.sh` → 저장소 밖 `../aihub_full/` (진동 Training 78 GB + Validation 10 GB; 전류까지는 `AIHUB_FILEKEYS=44889,44890,44891,44815`). 파일 트리만 보려면 `--list`.
 2. D0: `python -I tools/aihub/run_pipeline.py list --zip <a.zip.part1>` — 병합 없이 목록·선별 패턴(`config/aihub_select.yaml`)·`docs/aihub_selection.md`. 패턴 확인 후
 3. D1+D2: `python -I tools/aihub/run_pipeline.py extract --zip <a.zip.part1>` — 단위별 추출 → Parquet(L2/full) → 검증 → L1 삭제 (6.9 ms/파일, CSV ×0.4~0.5). 이어서 `sample` (균형 샘플링).
 4. D3: `python -I tools/aihub/run_pipeline.py features` → `data/aihub/L3/features.parquet`, `docs/aihub_feature_summary.md`, `docs/aihub_plots/`.

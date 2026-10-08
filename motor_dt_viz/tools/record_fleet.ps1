@@ -13,6 +13,9 @@ param(
     [switch]$NoPublish
 )
 $ErrorActionPreference = "Stop"
+# powershell -File 로 부르면 -Motors M3,M4 가 문자열 하나로 들어온다 → 쉼표로 나눈다 (실측: "config/motors/M3,M4.yaml 이 없다")
+$Motors = @($Motors | ForEach-Object { $_ -split "," } | Where-Object { $_ })
+$Modes = @($Modes | ForEach-Object { $_ -split "," } | Where-Object { $_ })
 $VIZ = Split-Path -Parent $PSScriptRoot
 $ROOT = Split-Path -Parent $VIZ
 $ISAAC = "C:\ISSACS~1\python.bat"
