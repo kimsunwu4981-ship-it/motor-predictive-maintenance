@@ -143,11 +143,9 @@ def test_scaling_monotonic_and_rule():
 
 
 def test_vibration_standard_by_power():
-    assert ml.load_motor("M1").vib_thresholds["watch_mms"] == pytest.approx(1.8)
-    assert ml.load_motor("M3").vib_thresholds["standard"].startswith("ISO 20816-3")
-    assert ml.load_motor("M4").vib_thresholds["watch_mms"] == pytest.approx(1.4)
-    assert ml.load_motor("M5").vib_thresholds["standard"].startswith("ISO 20816-3")
-    # FaultInjector 가 모터 규격을 쓴다: 1.6 mm/s 는 M1 에선 정상, M5 에선 Watch
-    assert FaultInjector(vib_thresholds=ml.load_motor("M1").vib_thresholds).iso_zone(1.6) == "Normal"
-    assert FaultInjector(vib_thresholds=ml.load_motor("M5").vib_thresholds).iso_zone(1.6) == "Watch"
-    assert FaultInjector().iso_zone(1.6) == "Watch"      # 기본값(motor.yaml = M5) 유지
+    """5종 모두 ISO 20816-3 Group 2 강성 지지 (1.4/2.8/4.5) — 2026-10-08 결정 B-1 ② (이전: 15 kW 미만 10816-1 Class I 1.8/4.5)."""
+    for mid in ml.list_ids():
+        v = ml.load_motor(mid).vib_thresholds
+        assert v["standard"].startswith(ml.VIB_STANDARD_REQUIRED)
+        assert (v["watch_mms"], v["plan_mms"], v["act_mms"]) == (pytest.approx(1.4), pytest.approx(2.8), pytest.approx(4.5))
+    assert ml.VIB_STANDARD_SPLIT_KW <= 0          # 출력 경계 없음
