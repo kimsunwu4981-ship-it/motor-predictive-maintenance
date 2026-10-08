@@ -159,7 +159,7 @@ class MotorHUD:
         self._sec_thermal.visible = show_therm
         self._legend_elec.visible = show_elec
         self._legend_therm.visible = show_therm and not show_elec
-        basis = "22 kW 6-pole hoist motor (JW-01-HTO-00)"
+        basis = getattr(self, "basis_motor", "22 kW 6-pole hoist motor (JW-01-HTO-00)")   # 모터 라이브러리 선택 시 데모가 바꿔 넣는다
         if show_therm:
             basis += " / lumped thermal network"
         if show_elec:
@@ -213,5 +213,5 @@ class MotorHUD:
         col = {"Normal": [0.15, 0.95, 0.35], "Watch": [1.0, 0.75, 0.1],
                "Plan": [1.0, 0.45, 0.1], "Act": [1.0, 0.1, 0.05]}.get(zone, [1, 1, 1])
         lab = self._labels["vib"]
-        lab.text = f"{mms:.1f} mm/s   ISO 20816-3: {zone}"
+        lab.text = f"{mms:.1f} mm/s   {getattr(self, 'vib_standard', 'ISO 20816-3')}: {zone}"   # 규격 이름은 모터 라이브러리(10816-1 / 20816-3)
         lab.style = _style(14, _hex(col))

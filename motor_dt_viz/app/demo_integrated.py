@@ -49,6 +49,8 @@ ap.add_argument("--record", metavar="MP4",
 ap.add_argument("--no_timecode", action="store_true",
                 help="HUD 타임코드를 숨긴다 (오프셋 확정 후 발표용 녹화에 쓴다)")
 ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: mechanical)")
+ap.add_argument("--motor", default="", metavar="M1..M5",
+                help="모터 라이브러리 ID. 열회로·전류 모델·진동 규격·HUD 문구를 그 모터로 바꾸고 카메라 거리를 1/geometry_scale 로 (비우면 config/motor.yaml = M5)")
 ap.add_argument("--switch_seq", metavar="mode:sec,...",
                 help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
 args = ap.parse_args()
@@ -81,6 +83,16 @@ from engine.current_model import CurrentModel  # noqa: E402
 from engine.fault_injector import FaultInjector  # noqa: E402
 from engine.scenario_player import ScenarioPlayer  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
+from engine import motor_library as ml  # noqa: E402
+
+# ------------------------------------------------------------------ 모터 선택 (라이브러리)
+MOTOR = ml.load_motor(args.motor) if args.motor else None
+TH_CFG = ml.thermal_cfg(MOTOR) if MOTOR else None
+EL_CFG = ml.electrical_cfg(MOTOR) if MOTOR else None
+GEOM_SCALE = float(MOTOR.geometry_scale) if MOTOR else 1.0
+VIB_STD = str(MOTOR.vibration["standard"]).split(" (")[0] if MOTOR else "ISO 20816-3"
+if MOTOR:
+    print(f"[demo] motor library {MOTOR.id}: {MOTOR.name}, geometry x{GEOM_SCALE}, {VIB_STD}", flush=True)
 from viz.colormap import ElectricalColormap  # noqa: E402
 from viz.current_particles import CurrentParticles  # noqa: E402
 from viz.current_paths import CurrentPathBuilder  # noqa: E402
@@ -108,6 +120,12 @@ for L in (dome, keyl, filll):
 # 케이블은 화면 왼쪽 위로 뻗어나가며 일부만 보이면 충분하다.
 CAM_WIDE = ([-1.15, -1.55, 0.95], [0.15, -0.05, 0.22])    # 모터 중심 + 케이블 일부
 CAM_CLOSE = ([-0.62, -0.86, 0.42], [0.30, 0.0, 0.02])     # 모터 클로즈업(베어링·단락루프)
+# 모터 라이브러리: 외형은 프레임 비례(geometry_scale)로 보이게 카메라를 1/scale 만큼 멀리 둔다.
+# USD·물리 바디를 스케일하면 관절·입자 경로가 깨지므로 원본은 그대로 두고 보는 거리만 바꾼다 (정직성 라벨 "외형은 프레임 비례 스케일").
+def _scaled(cam):
+    eye, tgt = cam
+    return ([t + (e - t) / GEOM_SCALE for e, t in zip(eye, tgt)], list(tgt))
+CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE), _scaled(CAM_CLOSE)
 set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
 world.reset()
 
@@ -123,9 +141,9 @@ particles.attach(tracks)
 ecmap = ElectricalColormap()
 
 # ------------------------------------------------------------------ 엔진
-tm = ThermalModel()
-cm = CurrentModel()
-injector = FaultInjector()
+tm = ThermalModel(TH_CFG)
+cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR) if MOTOR else None)
+injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds if MOTOR else None)
 player = ScenarioPlayer.for_mode(args.mode)
 THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
 NODE_LABELS = {n.key: n.label for n in tm.nodes}
@@ -147,7 +165,7 @@ ctrl.set_gains(kps=np.array([0.0]), kds=np.array([0.0]))
 av.set_max_efforts(np.array([[1.0e4]]))
 av.set_joint_velocities(np.array([[0.0]]))
 
-mc = load("motor")
+mc = ml.motor_spec_cfg(MOTOR) if MOTOR else load("motor")
 V = lambda d: d["value"] if isinstance(d, dict) else d  # noqa: E731
 w_sync = float(V(mc["rating"]["sync_rpm"])) * 2 * math.pi / 60
 s_rated = float(V(mc["rating"]["slip"]))
@@ -169,6 +187,10 @@ if args.gui:
     try:
         from viz.hud import MotorHUD
         hud = MotorHUD()
+        if MOTOR:
+            hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id}, representative spec, "
+                               f"frame x{GEOM_SCALE:.2f} of M5)")
+            hud.vib_standard = VIB_STD
         hud.set_mode(args.mode)
     except Exception as e:
         print("[demo] HUD 생성 실패:", e, flush=True)
@@ -511,6 +533,8 @@ while simulation_app.is_running():
             title = _steps_en.get(frame.step_id, frame.label) if frame else CASE_EN.get(case, case)
             sub = (frame.subtitle_en if frame else
                    f"Mode: {mode} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
+            if MOTOR:
+                sub = sub.replace("ISO 20816-3", VIB_STD)      # 시나리오 자막의 규격 이름을 모터 규격으로
             hud.update_scenario(title, sub if not frame else f"[{CASE_EN.get(case, case)}]  {sub}",
                                 source=frame.source_en if frame else "")
             # 타임코드는 CSV 의 t_s 와 같은 값이다 (영상에서 오프셋을 눈으로 검증할 때 쓴다)
