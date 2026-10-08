@@ -75,6 +75,6 @@ def test_feature_value_ranges():
     import pandas as pd
     f = pd.read_parquet(DATA / "L3" / "features.parquet")
     assert (f["rms"] >= 0).all() and (f["crest_factor"] >= 1).all() and (f["vel_rms_mm_s"] >= 0).all()
-    assert f["bearing_known"].eq(False).all() and f["env_bpfo_ratio"].isna().all()
+    assert f["bearing_known"].all() and f["env_bpfo_ratio"].notna().all()      # 선별본(2.2 kW 4대)은 전부 가이드라인 표에 베어링이 있다
     assert f["nan_count"].eq(0).all() and set(f["motor_id"]) <= set(SEL["motor_map"].values())
     assert (VIZ / "docs" / "aihub_feature_summary.md").exists() and (VIZ / "docs" / "aihub_selection.md").exists()

@@ -1,5 +1,5 @@
 # aihub_features.yaml — 특징 추출 파라미터 (tools/aihub/extract_features.py). 샘플 주파수에 맞춰 조정 (진동 4 kHz, 전류 2 kHz).
-accel_unit: g                   # 설명서 미확인 추정 (docs/aihub_structure.md §2). 확정되면 여기만 바꾼다: g | m/s2 | mm/s(이미 속도)
+accel_unit: g                   # 가이드라인 v2.4 로 확정 (검수 기준 '진동 실효값 0.12 g 이하', 그래프 Amp(g)). g | m/s2 | mm/s(이미 속도)
 g_to_m_s2: 9.80665
 velocity_band_hz: [10, 1000]    # ISO 10816/20816 속도 RMS 대역 (가속도 → 대역통과 → 주파수 영역 적분)
 envelope_band_hz: [500, 1600]   # 포락선 대역통과. 상한은 샘플 주파수의 40 % 로 자동 제한 (지시서 기본 2~8 kHz 는 4 kHz 샘플에서 불가)
@@ -11,3 +11,7 @@ clipping_top_fraction: 0.995    # |x| ≥ 0.995·max|x| 인 샘플 비율 → cl
 peak_rms_warn: 10               # 품질 경고: crest factor 상한
 current_fundamental_hz: 60      # 전류 기본파 (I₂/I₁ 참고 계산)
 running_min_load_ratio: 0.10    # 전류 RMS / 정격 < 10 % 면 정지·극저부하로 보고 running=False (기본파·I₂/I₁ 신뢰 불가)
+envelope_peak_tolerance: 0.03   # BPFO/BPFI 피크 탐색 폭 (±3 %)
+envelope_noise_window_hz: 25    # 배율 분모 = 피크 주변 ±25 Hz(피크 영역 제외) 포락선 스펙트럼 중앙값
+guideline_normal_vib_g: 0.12    # 가이드라인 §2.5.2 정상 검수 기준: 가속도 RMS ≤ 0.12 g (overall), 전류 RMS 정격 ±2 %
+guideline_iso: "KS B ISO 10816-3 2군(15~300 kW), 유연 지지 B/C 4.5 mm/s (강성 2.8) — 가이드라인 검수 기준"

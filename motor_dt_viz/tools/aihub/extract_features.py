@@ -34,6 +34,31 @@ from scipy.stats import kurtosis  # noqa: E402
 VIZ = Path(__file__).resolve().parents[2]
 CFG = yaml.safe_load(open(VIZ / "config" / "aihub_features.yaml", encoding="utf-8"))
 FMT = yaml.safe_load(open(VIZ / "config" / "aihub_format.yaml", encoding="utf-8"))
+BRG = yaml.safe_load(open(VIZ / "config" / "aihub_bearings.yaml", encoding="utf-8")) if (VIZ / "config" / "aihub_bearings.yaml").exists() else {"geometry": {}, "motors": {}}
+
+
+def bearing_mults(motor_name: str, side: str = "de") -> tuple[float, float, str] | None:
+    """가이드라인 표의 모터별 베어링 → (BPFO/fr, BPFI/fr, 호칭). 없으면 None (우리 M1~M5 값으로 대신하지 않는다)."""
+    m = BRG["motors"].get(motor_name)
+    if not m:
+        return None
+    g = BRG["geometry"].get(str(m[side]))
+    if not g:
+        return None
+    import math
+    k = g["ball_d_mm"] / g["pitch_d_mm"] * math.cos(math.radians(g.get("contact_deg", 0)))
+    return g["n_balls"] / 2 * (1 - k), g["n_balls"] / 2 * (1 + k), str(m[side])
+
+
+def envelope_ratio(f: np.ndarray, amp: np.ndarray, f0: float) -> float:
+    """포락선 스펙트럼에서 f0 ±tol 피크 ÷ 주변(±noise_window, 피크 영역 제외) 중앙값."""
+    tol = CFG.get("envelope_peak_tolerance", 0.03); w = CFG.get("envelope_noise_window_hz", 25)
+    pk = (f >= f0 * (1 - tol)) & (f <= f0 * (1 + tol))
+    nb = (f >= f0 - w) & (f <= f0 + w) & ~pk
+    if not pk.any() or nb.sum() < 5:
+        return float("nan")
+    floor = float(np.median(amp[nb]))
+    return float(amp[pk].max() / floor) if floor > 0 else float("nan")
 
 
 # ------------------------------------------------------------------ 신호 처리
@@ -144,6 +169,18 @@ def features_for_file(r: pd.Series, l2: Path) -> list[dict]:
         if not np.isfinite(fr_use):
             lo, hi = CFG["fr_search_hz"]; m = (f >= lo) & (f <= hi); fr_use = float(f[m][np.argmax(amp[m])]); fr_source = "peak_search"
         tol = CFG["harmonic_tolerance"]
+        # 베어링 포락선 배율: 가이드라인 표의 베어링(DE·NDE)이 있을 때만. 진동 신호만 (전류는 NaN)
+        env_cols = {"env_bpfo_ratio": float("nan"), "env_bpfi_ratio": float("nan"), "env_bpfo_ratio_nde": float("nan"), "env_bpfi_ratio_nde": float("nan"),
+                    "bearing_known": False, "bearing_de": "", "bearing_nde": "", "bpfo_hz": float("nan"), "bpfi_hz": float("nan"), "bearing_source": ""}
+        bm = bearing_mults(str(r["aihub_motor_name"]), "de") if r["signal"] == "vibration" else None
+        if bm and np.isfinite(fr):
+            fe, ae = envelope_spectrum(x, fs)
+            env_cols.update({"env_bpfo_ratio": envelope_ratio(fe, ae, bm[0] * fr), "env_bpfi_ratio": envelope_ratio(fe, ae, bm[1] * fr),
+                             "bearing_known": True, "bearing_de": bm[2], "bpfo_hz": bm[0] * fr, "bpfi_hz": bm[1] * fr,
+                             "bearing_source": "guideline table + catalog geometry (estimated)"})
+            bn = bearing_mults(str(r["aihub_motor_name"]), "nde")
+            if bn:
+                env_cols.update({"env_bpfo_ratio_nde": envelope_ratio(fe, ae, bn[0] * fr), "env_bpfi_ratio_nde": envelope_ratio(fe, ae, bn[1] * fr), "bearing_nde": bn[2]})
         lo_s, hi_s = CFG["fr_search_hz"]; ms = (f >= lo_s) & (f <= hi_s)
         fr_peak = float(f[ms][np.argmax(amp[ms])]) if ms.any() else float("nan")   # 1× 피크 탐색값 — 어노테이션 rpm 과 다르면 인버터 구동 의심
         row = {
@@ -155,7 +192,7 @@ def features_for_file(r: pd.Series, l2: Path) -> list[dict]:
             "vel_unit_note": f"accel_unit={CFG['accel_unit']} (추정)" if r["signal"] == "vibration" else "",
             "fr_hz": fr_use, "fr_source": fr_source, "fr_peak_hz": fr_peak,
             "a_1x": peak_near(f, amp, fr_use, tol), "a_2x": peak_near(f, amp, 2 * fr_use, tol), "a_3x": peak_near(f, amp, 3 * fr_use, tol),
-            "env_bpfo_ratio": float("nan"), "env_bpfi_ratio": float("nan"), "bearing_known": False,
+            **env_cols,
             "band_lo": band_rms(x, fs, *CFG["bands_hz"]["lo"]), "band_mid": band_rms(x, fs, *CFG["bands_hz"]["mid"]), "band_hi": band_rms(x, fs, *CFG["bands_hz"]["hi"]),
             "clipping_ratio": float(np.mean(np.abs(x) >= CFG["clipping_top_fraction"] * np.abs(x).max())) if np.abs(x).max() > 0 else 0.0,
             "dc_offset": float(x.mean()), "nan_count": int(np.isnan(x).sum()),
@@ -199,7 +236,11 @@ def make_plots(feat: pd.DataFrame, meta: pd.DataFrame, l2: Path, plots: Path) ->
         fr = brg["rated_rpm"].iloc[0] / 60
         for k in (1, 2, 3): ax.axvline(k * fr, color="gray", ls=":", lw=.8)
         ax.set_xlim(0, 400); ax.set_xlabel("Hz"); ax.set_ylabel("포락선 진폭 (원 단위)"); ax.legend()
-        ax.set_title(f"① 포락선 스펙트럼 — {m} ({brg['power_kw'].iloc[0]} kW) 정상 vs 베어링불량 · 대역 {CFG['envelope_band_hz']} Hz · BPFO/BPFI 미상(베어링 번호 없음) — {TAG}")
+        bm = bearing_mults(str(m), "de")
+        if bm:
+            for mult, nm in ((bm[0], "BPFO"), (bm[1], "BPFI")):
+                ax.axvline(mult * fr, color="crimson", ls="--", lw=.9); ax.text(mult * fr, ax.get_ylim()[1] * .85, f"{nm} {mult*fr:.0f} Hz", color="crimson", fontsize=8)
+        ax.set_title(f"① 포락선 스펙트럼 — {m} ({brg['power_kw'].iloc[0]} kW) 정상 vs 베어링불량 · 대역 {CFG['envelope_band_hz']} Hz · 베어링 {bm[2] if bm else '미상'} (가이드라인 표) — {TAG}")
         p = plots / "01_envelope_normal_vs_bearing.png"; fig.tight_layout(); fig.savefig(p, dpi=110); plt.close(fig); made.append(p.name)
     # ② 정상 vs 축정렬불량 속도 스펙트럼 1×·2×
     mis = vib[vib["label_no"] == "03"]
@@ -242,14 +283,15 @@ def write_summary(feat: pd.DataFrame, meta: pd.DataFrame, report: dict, path: Pa
     fc = feat[feat["signal"] == "current"]
     L = ["# AI Hub 경량 샘플 특징 요약 (S3) — 참고용", "",
          "**경량 샘플 기준 참고값. 표본이 적고 원본과 다를 수 있어 임계값 보정에 사용하지 않는다.** "
-         "진동 단위는 설명서 미확인(g 추정)이라 속도 RMS 절대값은 단위가 확정되면 달라질 수 있다.", "",
+         "진동 단위 g 는 가이드라인 v2.4 로 확정. 베어링 배율은 가이드라인 표의 베어링 호칭 + 카탈로그 기하(추정)로 계산한 값이다.", "",
          f"- 입력: L2 {len(meta)} 파일 (진동 {int((meta['signal']=='vibration').sum())}, 전류 {int((meta['signal']=='current').sum())}), 특징 {len(feat)} 행(파일·채널). "
          f"변환 {report.get('s_per_file', 0)*1000:.1f} ms/파일, CSV→Parquet 크기비 ×{report.get('size_ratio', 0)}.", ""]
     L += ["## 1. 용량·라벨별 파일 수와 속도 RMS (진동, mm/s, g 추정)", "",
           "| 용량 | 모터 | 라벨 | 파일 | vel_rms 중앙값 | 최소~최대 | 95 % | 가속도 RMS 중앙값 (원 단위) | crest 중앙값 | 포락선 배율 |", "|---|---|---|---|---|---|---|---|---|---|"]
     for (kw, m, lab), g in fv.groupby(["power_kw", "aihub_motor_name", "label"]):
         v = g["vel_rms_mm_s"]
-        L.append(f"| {kw} | {m} | {lab} | {len(g)} | {v.median():.2f} | {v.min():.2f}~{v.max():.2f} | {v.quantile(.95):.2f} | {g['rms'].median():.4f} | {g['crest_factor'].median():.1f} | 계산 안 됨 (베어링 번호 없음) |")
+        eb = g["env_bpfo_ratio"]
+        L.append(f"| {kw} | {m} | {lab} | {len(g)} | {v.median():.2f} | {v.min():.2f}~{v.max():.2f} | {v.quantile(.95):.2f} | {g['rms'].median():.4f} | {g['crest_factor'].median():.1f} | " + (f"BPFO {eb.median():.1f} / BPFI {g['env_bpfi_ratio'].median():.1f} ({g['bearing_de'].iloc[0]})" if eb.notna().any() else "베어링 미상") + " |")
     # ISO 위치
     L += ["", "## 2. 현재 임계값과의 대략적 위치 (참고)", ""]
     for kw, g in fv[fv["label_no"] == "00"].groupby("power_kw"):
@@ -278,7 +320,7 @@ def write_summary(feat: pd.DataFrame, meta: pd.DataFrame, report: dict, path: Pa
           "- 진동 crest factor > 10 파일이 축정렬불량·불평형에 몰려 있다 — 충격성 성분인지 센서 글리치인지 전체 데이터에서 포락선으로 재확인.",
           "- `L-EF-04` 는 센서ID 에 따라 Motor Spec(rpm·정격전류)이 둘이다. 전체 데이터에서 같은 모터명 아래 사양이 바뀌는 경우를 메타에서 센서ID 로 구분해야 한다.",
           "- 결함 라벨이 모터당 한 종류라 정상 vs 결함 비교는 같은 모터의 정상과만 한다. 학습/검증 분할은 모터 단위로.",
-          "- 진동 1축·방향 미상, 베어링 번호 없음 → 포락선 BPFO/BPFI 배율은 전체 데이터에서도 NaN. 설명서에 베어링 모델이 있으면 config 한 줄로 켠다.",
+          "- 진동은 1축 vertical(가이드라인). 베어링 호칭은 헤더에 없고 가이드라인 표(모터별)에서 가져왔으며 기하는 카탈로그 추정 → 배율은 참고값.",
           "- 전류 DC 오프셋(−0.02~−0.26 A)은 특징 추출에서 제거했고 dc_offset 열에 남겼다.",
           "- **55 kW 두 대는 인버터 구동**이다 (전류 기본파 49.6 / 57.5 / 50.8 Hz, 모터·라벨마다 다름). 어노테이션 rpm(1760)은 명판값이라 실제 회전수와 다르므로 55 kW 의 fr_hz·a_1x 는 신뢰하지 않는다 — `fr_peak_hz` 열(1× 피크 탐색)과 비교. 2.2 kW 네 대는 60.00 Hz 상용 전원이다.",
           "- **55 kW 전류는 센서 범위 ±82 A 에서 포화**된다 (최대값 81.995 A 가 파일마다 반복, 평탄 구간 최대 17 %). RMS 58 A 면 피크 82 A 를 넘으므로 파형이 잘린다 → 55 kW 전류 특징(THD·고조파)은 쓰지 말 것. 2.2 kW 는 포화 없음.",

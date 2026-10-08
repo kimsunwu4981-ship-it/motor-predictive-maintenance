@@ -580,3 +580,16 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 디스크: 작업 전 348 MB(sample) → 후 632 MB (L2/full 142 + sampled 142 + L3 <1, L1 0). 피크 = 가장 큰 단위 L1 177 MB. Parquet 는 <L2>/waveforms/<signal>/ 구조로 바로 써서 extract_features 와 같은 배치(중복 복사 없음).
 - 테스트 `tests/test_aihub.py` 4건 (분할 zip, 메타 스키마·샘플 수, 선별 = config·manifest = 목록·샘플링 상한, 특징 범위). 전체 114건 통과.
 - 전체 데이터가 오면: `run_pipeline.py list --zip <part1>` → 패턴 확인 → `extract` → `sample` → `features`. 코드 변경 없이 같은 명령.
+
+### 14.6 설명서 2종 반영 (2026-10-08) — "설명서에 없음" 항목 확정
+
+사용자가 가이드라인 v2.4 와 테크니컬 리포트 PDF 를 보내 `data/aihub/docs/` 에 두었다. `docs/aihub_structure.md` §11 에 항목별로 정리.
+
+- 확정: 진동 단위 **g**(검수 기준 0.12 g), **단축 vertical**, 전류 R·S·T 3상, 기본 4 kHz·3 s(헤더가 정본), 37/55 kW **VVVF 인버터**(샘플 기본파 49.6~57.5 Hz 와 일치),
+  계획 운전(1시간 10분), 라벨은 **인위 고장 모의 장비 + 모터별 RMS 임계**로 부여, 정상 검수 기준 진동 RMS ≤ 0.12 g·전류 정격 ±2 %, 전체 용량 **약 50 GB**(사용자 추정 500 GB 와 10배 차이 — 페이지 재확인 필요).
+- **베어링 호칭이 가이드라인 "고장모의 현황" 표에 모터별로 있다** → `config/aihub_bearings.yaml`(호칭 = 가이드라인, 기하 = 카탈로그 추정, 24개 모터). `extract_features.py` 가
+  포락선 BPFO/BPFI 피크 ÷ 주변 바닥 비를 계산하고 `bearing_known=True`, `bearing_source` 를 남긴다 (DE·NDE 둘 다). 우리 M1~M5 값은 쓰지 않는다.
+- 결과(샘플): L-SF-04 정상 BPFO 배율 2.85 → 베어링불량 4.68 (×1.6) 로 속도 RMS(×1.07)보다 훨씬 잘 갈린다. 단 R-EF-05 정상이 5.05 로 높아(BPFO ≈ 3.57 fr 이 3×·4× 고조파 사이)
+  경계(2/5배)를 이 표본으로 옮기지는 않는다 — `docs/threshold_calibration_note.md` §2b.
+- L-EF-04 는 갑천역·대전역에 각각 있는 **동명이기** — Motor Spec 이 둘인 이유. `sensor_id` 로 구분. 일부 모터는 라벨링 기준상 "정상이 고장보다 RMS 가 높다"(라벨이 모터·시기별 경계).
+- 테스트 갱신(bearing_known·배율 양수·합성 충격열 검증) — 엔진 스위트 통과. 그림 `01_envelope_normal_vs_bearing.png` 에 BPFO/BPFI 선, `label_box_vel_bpfo.png`.

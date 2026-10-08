@@ -18,8 +18,9 @@ meta_keys:                      # 헤더 키 → 메타 열 (표기 변형 포�
   RMS: rms_annot                # 채널별 (진동 1, 전류 3)
   Data Length: n_samples_annot
 motor_spec_fields: [aihub_motor_name, rated_rpm, rated_power, rated_current]
-channels:                       # 설명서에 없음 — 샘플에서 확인한 수. 방향은 미상
-  vibration: { n: 1, names: [ch1], dir: ["unknown"], unit: "unknown (g 추정, docs/aihub_structure.md §2)" }
+channels:                       # 가이드라인 v2.4 §1.3.2: 진동 = 시간 + 가속도(단축 vertical, 모터 외부 부착), 전류 = 시간 + R·S·T 상전류
+  vibration: { n: 1, names: [ch1], dir: ["vertical"], unit: "g" }
   current:   { n: 3, names: [ch1, ch2, ch3], dir: ["phase1", "phase2", "phase3"], unit: "A" }
-bearing_in_annotation: false    # 베어링 번호 없음 → 포락선 BPFO/BPFI 배율은 NaN
+bearing_in_annotation: false    # 헤더에는 없다. 모터별 베어링은 가이드라인 표 → config/aihub_bearings.yaml (source: guideline + 카탈로그 기하 추정)
+bearing_map: aihub_bearings
 parquet: { compression: zstd, dtype: float32, layout: per_file }   # 파일당 1개 (§9 결정)

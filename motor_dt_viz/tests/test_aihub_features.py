@@ -41,6 +41,21 @@ def test_harmonic_peaks_and_fr_search():
     assert ef.peak_near(f, amp, 3 * fr, 0.03) < 0.05
 
 
+def test_bearing_multipliers_from_guideline_map():
+    import extract_features as ef
+    bm = ef.bearing_mults("L-SF-04", "de")                   # 6206: 9볼, 9.525/46 → BPFO 3.57, BPFI 5.43
+    assert bm and bm[2] == "6206" and bm[0] == pytest.approx(3.57, abs=0.02) and bm[1] == pytest.approx(5.43, abs=0.02)
+    assert ef.bearing_mults("NO-SUCH-MOTOR") is None
+    # 포락선 배율: 합성 충격열(BPFO 주기)에서 피크/바닥 비가 커야 한다
+    fs, fr = 4000.0, 29.3; t = np.arange(0, 3, 1 / fs); bpfo = bm[0] * fr
+    x = 0.002 * np.random.default_rng(0).standard_normal(len(t))
+    for k in np.arange(0, 3, 1 / bpfo):
+        dt = np.clip(t - k, 0, None)                           # 충격 전 구간은 0 (exp 오버플로 방지)
+        x += np.where(t >= k, 0.05 * np.exp(-dt * 800) * np.sin(2 * np.pi * 1200 * dt), 0.0)
+    fe, ae = ef.envelope_spectrum(x, fs)
+    assert ef.envelope_ratio(fe, ae, bpfo) > 5
+
+
 def test_i2i1_symmetrical_components():
     import extract_features as ef
     fs, f0 = 2000.0, 60.0; t = np.arange(0, 1, 1 / fs)
@@ -63,7 +78,13 @@ def test_feature_ranges():
     f = pd.read_parquet(L3)
     assert (f["rms"] >= 0).all() and (f["crest_factor"] >= 1).all() and (f["vel_rms_mm_s"].dropna() >= 0).all()
     assert f["nan_count"].eq(0).all()
-    assert f["bearing_known"].eq(False).all() and f["env_bpfo_ratio"].isna().all() and f["env_bpfi_ratio"].isna().all()
+    v0 = f[f["signal"] == "vibration"]
+    # 가이드라인 표에 베어링이 있는 모터는 배율이 계산되고, 전류 행·표에 없는 모터는 NaN + bearing_known False (M1~M5 값으로 대신하지 않는다)
+    known = v0[v0["bearing_known"]]
+    assert len(known) > 0 and known["env_bpfo_ratio"].notna().all() and (known["env_bpfo_ratio"] > 0).all() and known["bearing_source"].str.contains("guideline").all()
+    assert (known["bpfo_hz"] < known["bpfi_hz"]).all() and (known["bpfo_hz"] > 2 * known["fr_hz"]).all()
+    c0 = f[f["signal"] == "current"]
+    assert c0["bearing_known"].eq(False).all() and c0["env_bpfo_ratio"].isna().all()
     assert set(f["fr_source"]) == {"annotation_rpm"}
     v = f[f["signal"] == "vibration"]
     assert v["vel_rms_mm_s"].notna().all() and v["channel"].eq("ch1").all()

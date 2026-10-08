@@ -1,0 +1,40 @@
+# aihub_bearings.yaml — AI Hub 238 모터별 베어링 (출처: 데이터 구축 가이드라인 v2.4 §2.4.2 "장비별 고장모의 현황 및 라벨링 지정" 표, 부하측/반부하측).
+# 베어링 기하(볼 수·볼 지름·피치 지름)는 설명서에 없어 깊은홈 볼베어링 카탈로그 대표값으로 두었다 (source: estimated). BPFO/BPFI = engine.motor_library.bearing_multipliers.
+# 우리 모터(M1~M5)의 베어링 값은 쓰지 않는다 — 다른 모터다.
+source_doc: "data/aihub/docs/125.기계시설물_고장_예지_센서_데이터_구축_가이드라인.pdf p.27~28"
+geometry:                       # 호칭 → {n_balls, ball_d_mm, pitch_d_mm, contact_deg}
+  "6205": { n_balls: 9,  ball_d_mm: 7.94,  pitch_d_mm: 38.5,  contact_deg: 0, source: estimated }
+  "6206": { n_balls: 9,  ball_d_mm: 9.525, pitch_d_mm: 46.0,  contact_deg: 0, source: estimated }
+  "6207": { n_balls: 9,  ball_d_mm: 11.1,  pitch_d_mm: 53.5,  contact_deg: 0, source: estimated }
+  "6208": { n_balls: 9,  ball_d_mm: 11.9,  pitch_d_mm: 60.0,  contact_deg: 0, source: estimated }
+  "6212": { n_balls: 10, ball_d_mm: 15.88, pitch_d_mm: 85.0,  contact_deg: 0, source: estimated }
+  "6307": { n_balls: 8,  ball_d_mm: 13.5,  pitch_d_mm: 57.5,  contact_deg: 0, source: estimated }
+  "6309": { n_balls: 8,  ball_d_mm: 17.46, pitch_d_mm: 72.5,  contact_deg: 0, source: estimated }
+  "6311": { n_balls: 8,  ball_d_mm: 20.6,  pitch_d_mm: 87.5,  contact_deg: 0, source: estimated }
+  "6312": { n_balls: 8,  ball_d_mm: 22.2,  pitch_d_mm: 95.0,  contact_deg: 0, source: estimated }
+  "6315": { n_balls: 8,  ball_d_mm: 23.8,  pitch_d_mm: 117.5, contact_deg: 0, source: estimated }
+motors:                         # AI Hub 모터명 → 부하측(DE)/반부하측(NDE) 베어링. 역사가 다른 동명 모터는 센서ID 로 구분하지 못하므로 같은 값을 쓴다 (표에서 동일)
+  L-SF-04:    { de: "6206", nde: "6206", fault_sim: "그리스 제거 (베어링불량)" }
+  L-DSF-01:   { de: "6206", nde: "6205", fault_sim: "+5mm/4mm 이동 (축정렬불량)" }
+  L-EF-04:    { de: "6206", nde: "6205", fault_sim: "납 취부 (회전체불평형)" }
+  R-EF-05:    { de: "6206", nde: "6205", fault_sim: "전동기 3.16mm 이동 (벨트느슨함)" }
+  L-EF-02:    { de: "6206", nde: "6206", fault_sim: "그리스 제거" }
+  L-PAC-01:   { de: "6208", nde: "6206", fault_sim: "그리스 제거 / 납 취부" }
+  L-SF-02:    { de: "6208", nde: "6208", fault_sim: "외륜 소손" }
+  R-CAHU-01R: { de: "6208", nde: "6206", fault_sim: "납 취부" }
+  R-CAHU-02R: { de: "6309", nde: "6309", fault_sim: "외륜 소손" }
+  R-CAHU-01S: { de: "6309", nde: "6207", fault_sim: "내륜 소손" }
+  R-CAHU-02S: { de: "6311", nde: "6309", fault_sim: "내륜 소손" }
+  L-CAHU-01S: { de: "6309", nde: "6307", fault_sim: "납 취부 / 축정렬" }
+  L-CAHU-01R: { de: "6309", nde: "6307", fault_sim: "납 취부 / 축정렬" }
+  L-CAHU-02S: { de: "6311", nde: "6307", fault_sim: "납 취부" }
+  L-PAHU-03S: { de: "6315", nde: "6212", fault_sim: "납 취부 (회전체불평형), VVVF 인버터" }
+  R-PAHU-04S: { de: "6315", nde: "6212", fault_sim: "전동기 10mm 이동 (벨트느슨함), VVVF 인버터" }
+  L-PAHU-02S: { de: "6312", nde: "6212", fault_sim: "축정렬, VVVF 인버터" }
+  R-PAHU-03S: { de: "6312", nde: "6312", fault_sim: "축정렬" }
+  R-PAC-01S:  { de: "6208", nde: "6206", fault_sim: "축정렬" }
+  R-PAC-01R:  { de: "6206", nde: "6205", fault_sim: "축정렬" }
+  R-SF-01:    { de: "6208", nde: "6208", fault_sim: "축정렬 / 벨트" }
+  R-EF-01:    { de: "6206", nde: "6206", fault_sim: "축정렬" }
+  R-SF-03:    { de: "6206", nde: "6206", fault_sim: "벨트" }
+  L-SF-01:    { de: "6208", nde: "6208", fault_sim: "벨트" }
