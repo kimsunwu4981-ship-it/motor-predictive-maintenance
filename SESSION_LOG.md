@@ -645,3 +645,9 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 결정 B-3 ② 대로 config 무변경. 제안(§4): 진동 1.4/2.8/4.5 유지, 베어링 지표 정의를 kurtosis 또는 고조파 보정 포락선으로.
 - 테스트: `test_aihub.py` 가 외부 DATA(두 zip 합산 선별 수 = manifest = meta 377,321)로 통과, 엔진 115·대시보드 63.
 - 디스크: C:\vigent_data — zip 82 GB + L2/full 46.3 GB + sampled 3.2 GB + L3 0.3 GB. L1 은 비어 있다.
+
+### 16.1 베어링 지표 후보 비교 (사용자 결정 1번 자료, 23:27)
+
+`tools/aihub/bearing_metric_compare.py` → `docs/aihub_bearing_metric_comparison.md`, `docs/aihub_plots/bearing_metric_compare.png`. 같은 모터의 정상 vs 베어링불량 4대, 모터·라벨당 ≤2,000개(15,647 파일).
+소손 2대는 현재 포락선 배율(AUC 1.00/0.90)·kurtosis(1.00/1.00) 모두 잡지만 현재 배율은 M4 정상 100 %가 경고·87 %가 위험으로 오탐. 그리스 제거 2대는 어느 지표로도 안 갈림.
+고조파 보정 포락선(k·fr ±2 % 제외)은 오탐을 못 줄이고 M4 에서 BPFO≈3×fr 겹침으로 무너짐(AUC 0.19). 내륜 소손은 BPFI 배율이 맞음(1.00). 고주파 대역 RMS 가 M3 그리스 제거에도 반응(1.00, ×1.7). 결정 대기.
