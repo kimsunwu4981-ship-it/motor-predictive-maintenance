@@ -1,82 +1,110 @@
-﻿[
-    {
-        "motor":  "M1",
-        "mode":  "mechanical",
-        "MB":  3.9,
-        "duration_s":  187.41,
-        "offset_s":  2.003,
-        "log_end_s":  184.687,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M1_mechanical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M1\\mechanical\\demo_20261008_101241.csv"
-    },
-    {
-        "motor":  "M1",
-        "mode":  "electrical",
-        "MB":  6.6,
-        "duration_s":  172.43,
-        "offset_s":  2.005,
-        "log_end_s":  169.913,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M1_electrical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M1\\electrical\\demo_20261008_101609.csv"
-    },
-    {
-        "motor":  "M2",
-        "mode":  "mechanical",
-        "MB":  4.7,
-        "duration_s":  187.41,
-        "offset_s":  2.005,
-        "log_end_s":  184.674,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M2_mechanical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M2\\mechanical\\demo_20261008_101921.csv"
-    },
-    {
-        "motor":  "M2",
-        "mode":  "electrical",
-        "MB":  9,
-        "duration_s":  172.45,
-        "offset_s":  2.007,
-        "log_end_s":  169.665,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M2_electrical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M2\\electrical\\demo_20261008_102248.csv"
-    },
-    {
-        "motor":  "M3",
-        "mode":  "mechanical",
-        "MB":  4.7,
-        "duration_s":  187.41,
-        "offset_s":  2.002,
-        "log_end_s":  184.842,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M3_mechanical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M3\\mechanical\\demo_20261008_102559.csv"
-    },
-    {
-        "motor":  "M3",
-        "mode":  "electrical",
-        "MB":  8.9,
-        "duration_s":  172.43,
-        "offset_s":  2.009,
-        "log_end_s":  169.814,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M3_electrical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M3\\electrical\\demo_20261008_102928.csv"
-    },
-    {
-        "motor":  "M4",
-        "mode":  "mechanical",
-        "MB":  5.5,
-        "duration_s":  187.42,
-        "offset_s":  2.002,
-        "log_end_s":  184.759,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M4_mechanical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M4\\mechanical\\demo_20261008_103241.csv"
-    },
-    {
-        "motor":  "M4",
-        "mode":  "electrical",
-        "MB":  11.2,
-        "duration_s":  172.42,
-        "offset_s":  2.009,
-        "log_end_s":  169.778,
-        "video":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\..\\dashboard\\public\\media\\fleet\\M4_electrical.mp4",
-        "log_csv":  "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\fleet_rec\\M4\\electrical\\demo_20261008_103609.csv"
-    }
-]
+{
+ "generated": "2026-10-08",
+ "note": "B-1 ②(진동 규격 통일)·D-1 ②(자막 변수화) 반영 재녹화. 12:00·13:4x 에 다른 창이 찍힌 판은 폐기하고 14:07~14:20 에 다시 찍음",
+ "videos": [
+  {
+   "motor": "M1",
+   "mode": "mechanical",
+   "recorded": "20261008_140737",
+   "MB": 4.0,
+   "duration_s": 187.39,
+   "offset_s": 2.008,
+   "log_end_s": 184.89,
+   "fps_mean": 72.3,
+   "max_diff_vs_engine": 0.1,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M1",
+   "mode": "electrical",
+   "recorded": "20261008_141104",
+   "MB": 6.7,
+   "duration_s": 172.44,
+   "offset_s": 2.004,
+   "log_end_s": 169.88,
+   "fps_mean": 64.7,
+   "max_diff_vs_engine": 0.1,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M2",
+   "mode": "mechanical",
+   "recorded": "20261008_141418",
+   "MB": 4.8,
+   "duration_s": 187.36,
+   "offset_s": 2.004,
+   "log_end_s": 184.697,
+   "fps_mean": 63.9,
+   "max_diff_vs_engine": 0.1,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M2",
+   "mode": "electrical",
+   "recorded": "20261008_133903",
+   "MB": 9.0,
+   "duration_s": 172.41,
+   "offset_s": 2.003,
+   "log_end_s": 169.748,
+   "fps_mean": 62.0,
+   "max_diff_vs_engine": 0.0,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M3",
+   "mode": "mechanical",
+   "recorded": "20261008_141747",
+   "MB": 4.8,
+   "duration_s": 187.36,
+   "offset_s": 2.004,
+   "log_end_s": 184.829,
+   "fps_mean": 68.3,
+   "max_diff_vs_engine": 0.2,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M3",
+   "mode": "electrical",
+   "recorded": "20261008_134700",
+   "MB": 9.0,
+   "duration_s": 172.41,
+   "offset_s": 2.001,
+   "log_end_s": 169.781,
+   "fps_mean": 63.2,
+   "max_diff_vs_engine": 0.0,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M4",
+   "mode": "mechanical",
+   "recorded": "20261008_135013",
+   "MB": 5.7,
+   "duration_s": 187.34,
+   "offset_s": 2.005,
+   "log_end_s": 184.68,
+   "fps_mean": 70.6,
+   "max_diff_vs_engine": 0.1,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  },
+  {
+   "motor": "M4",
+   "mode": "electrical",
+   "recorded": "20261008_135341",
+   "MB": 11.3,
+   "duration_s": 172.41,
+   "offset_s": 2.004,
+   "log_end_s": 169.808,
+   "fps_mean": 62.4,
+   "max_diff_vs_engine": 0.1,
+   "vib_standard": "ISO 20816-3 Group 2 (5종 통일)",
+   "subtitle_vars": true
+  }
+ ]
+}

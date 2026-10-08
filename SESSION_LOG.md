@@ -616,3 +616,10 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - `tools/aihub/aihubshell`(AI Hub 공개 CLI v0.6) + `download_full.sh`. 파일 트리(키 없이 조회): Training vibration 78 GB · current 21 GB, Validation vibration 10 GB · current 3 GB.
   가이드라인의 "약 50 GB" 와 사용자 추정 500 GB 사이의 실제 값은 **112 GB(진동만 88 GB)**. C: 여유 241 GB 로 진동만이면 충분.
 - **다운로드는 사용자의 AI Hub API 키가 있어야 시작된다** (`AIHUB_API_KEY=<키> bash tools/aihub/download_full.sh`). 키는 저장소에 두지 않는다. 받은 뒤 `run_pipeline.py list/extract/sample/features` 를 zip 두 개(Training·Validation)에 차례로 돌린다.
+
+### 15.5 M1~M4 재녹화 (B-1·D-1 반영, 2026-10-08 13:38~14:20)
+
+- 1차(11:59~12:10, M1 기계·전기, M2 기계)와 M3 기계(13:43)는 녹화 중 다른 창(VS Code·유튜브·카카오톡 로그인)이 앞에 떠서 폐기. 사용자 "녹화중지하고 대기해" → "시작해" 신호 뒤 4편 재녹화(14:07~14:20) 로 8편 완성.
+- 8편 모두 프레임 확인: HUD 규격 "ISO 20816-3 Group 2", 자막 변수(M1 전기 12턴 "10.1 A (201 %)", M2 24.2 A) 채워짐, 다른 창 없음. Isaac 로그 ↔ 엔진 배치 장면 끝 최대 차 0.0~0.2, 평균 62~72 fps.
+  `docs/fleet_recording_summary.json`, 확인 프레임 `s6_fleet_*.png`. 산출물 `모터결함_애니메이션/4_모터별/` 8편 교체.
+- 교훈: `record_fleet.ps1` 을 `powershell -File` 로 부를 때 `-Motors M3,M4` 는 문자열 하나로 들어온다 → 스크립트에서 쉼표 분할. 녹화 전 알림 앱(카카오톡) 종료 필요.
