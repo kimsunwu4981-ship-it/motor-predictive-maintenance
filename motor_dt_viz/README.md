@@ -222,6 +222,8 @@ ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/f
 `dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 키 1~5 모터, Space 재생, ←→ 장면, M 기계/전기, F 발표.
 데이터는 `logs/fleet`(엔진 배치) 와 config 에서만 온다. 자세한 것은 `dashboard/README.md`, 결과 비교표는 `docs/fleet_summary.md`.
 
+베어링 지표(2026-10-08): 주 **kurtosis**(경고 3.5 / 위험 4.0, 모터 공통) + 보조 **고주파 대역 RMS 배율**(경고 1.5 / 위험 2.5, 기준선은 `config/motors/<id>.yaml bearing_hf_baseline`), 종합은 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만). 시뮬레이션은 `config/thermal.yaml` 의 결함별 등가값 — 정의·근거 `docs/bearing_metric_definition.md`, 전후 비교 `docs/bearing_metric_change_comparison.md` (`python tools/fleet_compare.py`).
+
 ## AI Hub 실측 데이터 (전체 데이터 도착 후 실행 순서)
 
 1. 다운로드: `AIHUB_API_KEY=<AI Hub 마이페이지 API 키> bash tools/aihub/download_full.sh` → 저장소 밖 `../aihub_full/` (진동 Training 78 GB + Validation 10 GB; 전류까지는 `AIHUB_FILEKEYS=44889,44890,44891,44815`). 파일 트리만 보려면 `--list`.

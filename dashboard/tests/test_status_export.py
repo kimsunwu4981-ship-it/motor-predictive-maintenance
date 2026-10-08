@@ -21,7 +21,8 @@ sys.path.insert(0, os.path.join(VIZ, "tools"))
 from engine import motor_library as ml  # noqa: E402
 from engine.config_loader import load  # noqa: E402
 from engine.thresholds import Judge  # noqa: E402
-from run_fleet import bearing_index  # noqa: E402
+from engine.thresholds import bearing_level  # noqa: E402
+from run_fleet import bearing_signals  # noqa: E402
 
 FLEET_DATA = os.path.join(DASH, "public", "data", "fleet")
 FLEET_LOGS = os.path.join(VIZ, "logs", "fleet")
@@ -69,7 +70,7 @@ def test_thresholds_match_config():
     for cls in ("bearing", "winding", "rotor", "default"):
         assert t["temperature"][cls]["safe_below"] == cfg["temperature"][cls]["safe_below"]
         assert t["temperature"][cls]["danger_from"] == cfg["temperature"][cls]["danger_from"]
-    assert t["current_ratio"] == cfg["current_ratio"] and t["i2i1"] == cfg["i2i1"] and t["bearing_index"] == cfg["bearing_index"]
+    assert t["current_ratio"] == cfg["current_ratio"] and t["i2i1"] == cfg["i2i1"] and t["bearing"] == cfg["bearing"]
     assert t["hysteresis_fraction"] == cfg["hysteresis"]["fraction"] and t["persistence_s"] == cfg["persistence_s"]
     assert idx["labels_ko"] == cfg["labels_ko"] and idx["colors"] == cfg["colors"] and idx["icons"] == cfg["icons"]
 
@@ -118,11 +119,13 @@ def test_status_equals_judge_recompute(mid, mode):
             "temperature": {n: float(r["T_" + n]) for n in nodes},
             "current_ratio": {p: float(r[f"I{p.lower()}_rms"]) / motor.rated_line_current_a for p in "ABC"},
             "i2i1": float(r["i2_over_i1"]), "vibration": float(r["vibration_mms"]),
-            "bearing_index": bearing_index(th_cfg, [x for x in r["faults"].split(";") if x]),
+            **bearing_signals(th_cfg, [x for x in r["faults"].split(";") if x]),
         })
         if v.status != s["status"][k] or v.cause_signal != s["cause_signal"][k]:
             mism += 1
-        assert s["bearing_index"][k] == bearing_index(th_cfg, [x for x in r["faults"].split(";") if x])
+        bs = bearing_signals(th_cfg, [x for x in r["faults"].split(";") if x])
+        assert s["bearing_kurtosis"][k] == bs["bearing_kurtosis"] and s["bearing_hf_ratio"][k] == bs["bearing_hf_ratio"]
+        assert s["levels"]["bearing"][k] == bearing_level(v.signals)          # 종합 = 둘 중 나쁜 쪽, 엔진이 쓴 값 그대로
     assert mism == 0, f"{mid} {mode}: 판정 불일치 {mism} 행"
 
 

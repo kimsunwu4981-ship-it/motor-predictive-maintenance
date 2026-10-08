@@ -651,3 +651,25 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 `tools/aihub/bearing_metric_compare.py` → `docs/aihub_bearing_metric_comparison.md`, `docs/aihub_plots/bearing_metric_compare.png`. 같은 모터의 정상 vs 베어링불량 4대, 모터·라벨당 ≤2,000개(15,647 파일).
 소손 2대는 현재 포락선 배율(AUC 1.00/0.90)·kurtosis(1.00/1.00) 모두 잡지만 현재 배율은 M4 정상 100 %가 경고·87 %가 위험으로 오탐. 그리스 제거 2대는 어느 지표로도 안 갈림.
 고조파 보정 포락선(k·fr ±2 % 제외)은 오탐을 못 줄이고 M4 에서 BPFO≈3×fr 겹침으로 무너짐(AUC 0.19). 내륜 소손은 BPFI 배율이 맞음(1.00). 고주파 대역 RMS 가 M3 그리스 제거에도 반응(1.00, ×1.7). 결정 대기.
+
+
+## 17. 베어링 지표 교체 — kurtosis + 고주파 대역 RMS 배율 (2026-10-08 밤 ~ 10-09 새벽, 완료)
+
+사용자 결정(16.1 비교표를 보고): 주 지표 kurtosis(경고 3.5 / 위험 4.0, 모터 공통), 보조 고주파 대역 RMS 정상 대비 배율(경고 1.5 / 위험 2.5, 기준선은 모터별 config),
+종합은 둘 중 나쁜 쪽. 포락선 BPFO·BPFI 는 판정 제외(베어링 번호 아는 모터에서 "결함 부위 추정" 표시만), 고조파 보정 포락선 폐기. 2번(Training 재다운로드)·3번(전류 2차)은 계속 보류.
+
+- **실측 근거 재계산** (`C:\vigent_data\aihub\L3\features.parquet`, 동일 모터 정상 중앙값 기준선): 소손 2대 kurtosis 94·103(5 % 55·73)·고주파 ×12.7·×18.0(5 % ×9.9·×16.3) → 새 규칙으로 위험 100 %.
+  그리스 제거 2대 kurtosis 2.7~2.9 유지, 고주파 ×0.95(M1, 안 보임)·×1.70(M3, 경고 100 %). 정상 오탐: M1 29 %(경고 18 + 위험 11, kurtosis 95 % 4.8·대별 고주파 편차), M3 13 %, M2 4 %, M4 1 %, M5 1 %.
+  축정렬불량은 M2 만 kurtosis 3.7·고주파 ×2.2. 용량대 정상 고주파 기준선(대별 중앙값의 중앙값, g): M1 0.0027 / M2 0.0012 / M3 0.0027 / M4 0.0050 / M5 0.0108.
+- **config**: `thresholds.yaml bearing{kurtosis, hf_ratio, combine: worst, envelope_hint, envelope_hint_min_ratio 2.0}` + persistence 두 지표(`bearing_index` 삭제).
+  `thermal.yaml bearing_normal{3.0, 1.0}` + 결함별 `bearing_type/bearing_kurtosis/bearing_hf_ratio`: DE 베어링 결함 = 소손형 50 / 9.0(실측 5 % 분위 중 작은 값 내림), NDE 베어링 결함 = 윤활 부족형 3.0 / 1.7(그리스 제거 실측),
+  축정렬불량 3.7 / 2.2(M2 실측), 팬·브레이크·과부하 = 정상값. 매핑 근거는 주석과 `docs/bearing_metric_definition.md` §3. `motors/M1~M5.yaml bearing_hf_baseline{rms_g, band_hz, source: aihub_normal_median, note}`.
+- **엔진**: `thresholds.py` KINDS → `bearing_kurtosis`·`bearing_hf_ratio`, `bearing_level()`(종합), `Judge.bearing_site_hint()`(외륜 쪽/내륜 쪽/-, 판정 아님); `motor_library.py` 기준선 검증(`_hf_baseline`).
+  `run_fleet.py bearing_signals()`(옛 `bearing_index` 손실 배율 대체값 폐기), status CSV 열 `bearing_kurtosis, bearing_hf_ratio, bearing`. 새 `tools/fleet_compare.py`(전후 비교표).
+- **상태 보드**: export `SIGNALS` 두 지표 + `bearing_combined`, `levels.bearing`, `bearing_site_hint: null`(시뮬레이션), index `thresholds.bearing`, 모터 `bearing_hf_baseline`.
+  게이지 9개(베어링 kurtosis 카드 제목에 종합 등급, 고주파 배율 카드에 기준선·출처), 추세 차트 두 지표, 기준표 2행, 용어 풀이 3항(kurtosis·고주파 배율·종합 등급). `source.ts LiveSample` 두 지표 + 선택 `bearing_site_hint`.
+- **실측 파이프라인**: `extract_features.py` 에 `hf_ratio`(band_hi ÷ 용량대 모터 config 기준선)·`hf_baseline_g`·`bearing_site_hint` 열, 포락선 열은 추정 표시용으로 유지. 샘플 L3 재추출(4,674 파일), 전체 L3 재추출(백그라운드).
+- **전후 비교** (`docs/bearing_metric_change_comparison.md`, `logs/fleet_before` ↔ `logs/fleet`): 종합 상태 변경 **0 행**. 기계 모드 베어링 결함 장면의 원인 신호만 vibration 4.8(M1·M2)·DE 베어링 온도(M3~M5) → `bearing_kurtosis 50`(초과 비율 12.5 가 가장 큼)로 바뀜(모터당 128 행). 축정렬불량 장면은 전후 모두 경고(원인 vibration 3.6). 전기 모드 변화 없음.
+- **영상**: HUD·자막에 베어링 지표 이름이 없어 재녹화 없음. **테스트**: 엔진 117(베어링 경계·종합·부위 추정·등가값 테스트 추가, fleet 테스트는 원인 신호 변경 반영), 대시보드 63, AI Hub 특징 6.
+- 문서: `docs/bearing_metric_definition.md`(정의·실측 근거·등가값·기준선), `threshold_calibration_note.md`·`aihub_bearing_metric_comparison.md` 후속 메모, README 상태 보드 절.
+- 남은 판단(사용자): M1·M3 정상 오탐(kurtosis 경계 3.5/4.0 이 공조기 충격성 정상 파일에 걸림)은 현장 정상 운전 실측 후 경계 조정 여부. 기준선은 용량대 대표값이라 현장값으로 교체 필요.

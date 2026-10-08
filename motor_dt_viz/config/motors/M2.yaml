@@ -31,6 +31,13 @@ bearing_fault_multipliers_nde:
   bpfo: 3.566
   bpfi: 5.434
   source: estimated
+# 베어링 보조 지표 기준선 — 고주파 대역(1 kHz~나이퀴스트, 4 kHz 샘플) 가속도 RMS 의 정상값 (g). 판정은 현재값 ÷ 이 값 (config/thresholds.yaml bearing.hf_ratio).
+# 이 모터의 실측이 아니라 같은 용량대 AI Hub 공조 모터 정상 데이터에서 가져온 대표값 — 현장 정상 운전 실측으로 교체할 것.
+bearing_hf_baseline:
+  rms_g: 0.0012
+  band_hz: [1000, 2000]
+  source: aihub_normal_median
+  note: "AI Hub 238 5.5 kW 정상 4대 중앙값의 중앙값 (대별 0.0009~0.0014) · 2026-10-08"
 geometry_scale: 0.733          # 프레임 축높이 비 132/180 (M5 180L = 1.0). 외형은 대표 형상 비례 스케일
 thermal:
   scale_rule: power_ratio        # 열회로 계수는 M5 보정값을 손실비·geometry_scale 로 스케일 (docs/thermal_scaling.md)

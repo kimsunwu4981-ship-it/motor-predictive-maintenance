@@ -6,7 +6,7 @@
 
 출력 (모터·모드마다):
   demo_fleet.csv     데모(demo_integrated.py)와 같은 컬럼 — 기존 export 도구가 그대로 읽는다
-  status_fleet.csv   판정 엔진(engine/thresholds.py) 결과: 시각별 상태·원인 신호·신호별 등급
+  status_fleet.csv   판정 엔진(engine/thresholds.py) 결과: 시각별 상태·원인 신호·신호별 등급 (bearing = kurtosis·고주파 배율 중 나쁜 쪽)
   meta.json          모터·모드·시간 간격·시나리오·엔진 버전
 
 왜 엔진만으로 하나 (P0 결정): 열·전류 수치의 정본은 엔진이고 Isaac 로그는 프레임 시각 흔들림만 더한다
@@ -32,26 +32,30 @@ from engine.current_model import CurrentModel  # noqa: E402
 from engine.fault_injector import FaultInjector  # noqa: E402
 from engine.scenario_player import ScenarioPlayer  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
-from engine.thresholds import Judge  # noqa: E402
+from engine.thresholds import Judge, bearing_level  # noqa: E402
 
 COLS = ["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
         "T_winding", "T_stator_core", "T_rotor", "T_shaft", "T_bearing_de", "T_bearing_nde", "T_endshield_de", "T_endshield_nde", "T_frame",
         "Ia_rms", "Ib_rms", "Ic_rms", "i2_over_i1", "vibration_mms", "iso_zone", "fps"]
 STATUS_COLS = ["t_real_s", "status", "label", "cause_signal", "cause_component", "value", "threshold",
-               "temperature", "current_ratio", "i2i1", "vibration", "bearing_index"]
+               "temperature", "current_ratio", "i2i1", "vibration", "bearing_kurtosis", "bearing_hf_ratio", "bearing"]
 H = 1.0 / 60.0        # 적분 간격 (데모 프레임과 같음)
 RATE_HZ = 4.0         # 로그 간격 (데모 로그 ≈ 4 Hz)
 TAIL_S = 5.0          # 시나리오 끝 뒤 여유 (데모와 같음)
 
 
-def bearing_index(thermal_cfg: dict, faults: list[str]) -> float:
-    """시뮬레이션용 베어링 결함 지표 = 베어링을 겨냥한 결함의 손실 배율 (정상 1.0). 실측 후 포락선 BPFO 피크비로 교체."""
-    idx = 1.0
+def bearing_signals(thermal_cfg: dict, faults: list[str]) -> dict[str, float]:
+    """시뮬레이션용 베어링 지표 등가값 (2026-10-08 정의): {"bearing_kurtosis": k, "bearing_hf_ratio": r}.
+    결함 없음 → thermal.yaml bearing_normal. 결함이 여럿이면 각 지표의 최댓값. 숫자는 config 에만 있다 (매핑 근거는 그 주석·docs/bearing_metric_definition.md)."""
+    base = thermal_cfg.get("bearing_normal") or {"kurtosis": 3.0, "hf_ratio": 1.0}
+    k, r = float(base["kurtosis"]), float(base["hf_ratio"])
     for f in faults:
         fc = thermal_cfg["faults"].get(f) or {}
-        if str(fc.get("target", "")).startswith("bearing") and "loss_multiplier" in fc:
-            idx = max(idx, float(fc["loss_multiplier"]))
-    return idx
+        if "bearing_kurtosis" in fc:
+            k = max(k, float(fc["bearing_kurtosis"]))
+        if "bearing_hf_ratio" in fc:
+            r = max(r, float(fc["bearing_hf_ratio"]))
+    return {"bearing_kurtosis": k, "bearing_hf_ratio": r}
 
 
 def run_one(motor: ml.Motor, mode: str, out_dir: str) -> dict:
@@ -92,14 +96,15 @@ def run_one(motor: ml.Motor, mode: str, out_dir: str) -> dict:
                 "temperature": {k: round(T[k], 1) for k in T},
                 "current_ratio": {p: round(cs.rms_A[k], 1) / i_line for k, p in enumerate("ABC")},
                 "i2i1": round(cs.i2_over_i1, 4), "vibration": round(vib, 1),
-                "bearing_index": bearing_index(th_cfg, faults),
+                **bearing_signals(th_cfg, faults),
             })
-            worst = {k: "SAFE" for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_index")}
+            worst = {k: "SAFE" for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_kurtosis", "bearing_hf_ratio")}
             for s in v.signals:
                 if ("SAFE", "WARN", "DANGER").index(s.level) > ("SAFE", "WARN", "DANGER").index(worst[s.kind]):
                     worst[s.kind] = s.level
+            worst["bearing"] = bearing_level(v.signals)            # 베어링 종합 = 둘 중 나쁜 쪽
             srows.append([tl, v.status, v.label_ko, v.cause_signal, v.cause_component, round(v.value, 4), v.threshold]
-                         + [worst[k] for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_index")])
+                         + [worst[k] for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing_kurtosis", "bearing_hf_ratio", "bearing")])
             next_log += 1.0 / RATE_HZ
         t += H
     with open(os.path.join(out_dir, "demo_fleet.csv"), "w", newline="", encoding="utf-8") as fh:

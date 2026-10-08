@@ -33,6 +33,13 @@ bearing_fault_multipliers_nde:   # NDE 6211: 대표 기하(볼 10, d 14.29, D 77
   bpfo: 4.078
   bpfi: 5.922
   source: estimated
+# 베어링 보조 지표 기준선 — 고주파 대역(1 kHz~나이퀴스트, 4 kHz 샘플) 가속도 RMS 의 정상값 (g). 판정은 현재값 ÷ 이 값 (config/thresholds.yaml bearing.hf_ratio).
+# 이 모터의 실측이 아니라 같은 용량대 AI Hub 공조 모터 정상 데이터에서 가져온 대표값 — 현장 정상 운전 실측으로 교체할 것.
+bearing_hf_baseline:
+  rms_g: 0.0108
+  band_hz: [1000, 2000]
+  source: aihub_normal_median
+  note: "AI Hub 238 22 kW 정상 3대 중앙값의 중앙값 (대별 0.0090~0.0130) · 2026-10-08"
 geometry_scale: 1.0              # 기준 (180L)
 thermal:
   scale_rule: power_ratio

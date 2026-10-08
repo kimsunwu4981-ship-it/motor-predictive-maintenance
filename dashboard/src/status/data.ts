@@ -7,8 +7,10 @@ import type { CauseChain } from "../live/types";
 
 export type Level = "SAFE" | "WARN" | "DANGER";
 export const LEVELS: Level[] = ["SAFE", "WARN", "DANGER"];
-export type Kind = "temperature" | "current_ratio" | "i2i1" | "vibration" | "bearing_index";
-export const KINDS: Kind[] = ["temperature", "current_ratio", "i2i1", "vibration", "bearing_index"];
+export type Kind = "temperature" | "current_ratio" | "i2i1" | "vibration" | "bearing_kurtosis" | "bearing_hf_ratio";
+export const KINDS: Kind[] = ["temperature", "current_ratio", "i2i1", "vibration", "bearing_kurtosis", "bearing_hf_ratio"];
+// 베어링 종합 등급 = kurtosis·고주파 배율 중 나쁜 쪽 (엔진이 status CSV 의 bearing 열에 써 둔 값; 여기서는 표시만)
+export const BEARING_KINDS: Kind[] = ["bearing_kurtosis", "bearing_hf_ratio"];
 export type Phase = "A" | "B" | "C";
 export const PHASES: Phase[] = ["A", "B", "C"];
 
@@ -26,6 +28,7 @@ export interface MotorSpec {
 export interface MotorInfo {
   id: string; name: string; tags: Record<string, string>; spec: MotorSpec;
   derived: { slip: number; rotor_freq_hz: number; torque_nm: number; bpfo_hz: number; bpfi_hz: number; loss_w: number };
+  bearing_hf_baseline?: { rms_g?: number; band_hz?: number[]; source?: string; note?: string };
   vibration: VibSpec; steady_C: Record<string, number>; thermal_scaled_from: unknown;
   demo: { mode: Mode; t_s: number; expect?: string; why?: string };
   files: Record<Mode, string>;
@@ -36,11 +39,13 @@ export interface FleetIndex {
   honesty: { label: string; lines: string[]; itsc_note: string };
   levels: Level[]; labels_ko: Record<Level, string>; icons: Record<Level, string>; colors: Record<Level, string>;
   signals: Record<Kind, { label: string; unit: string }>;
+  bearing_combined?: { label: string; unit: string };
   node_labels: Record<string, string>; phase_labels: Record<Phase, string>;
   thresholds: {
     temperature: { bearing: TempBand; winding: TempBand; rotor: TempBand; default: TempBand; component_class: Record<string, string> };
     current_ratio: { safe_low: number; safe_high: number; danger_over: number; danger_under: number };
-    i2i1: TempBand; bearing_index: TempBand;
+    i2i1: TempBand;
+    bearing: { kurtosis: TempBand; hf_ratio: TempBand; combine: string; envelope_hint: boolean; envelope_hint_min_ratio?: number };
     hysteresis_fraction: number; persistence_s: Record<string, number>; vibration_split_kw: number;
   };
   scenarios: Record<Mode, FleetScenario>;
@@ -53,9 +58,10 @@ export interface MotorSeries {
   t: number[]; step: string[]; time_scale: number[];
   temperature_C: Record<string, number[]>;
   current_rms_A: Record<Phase, number[]>; current_ratio: Record<Phase, number[]>;
-  i2i1: number[]; vibration_mms: number[]; bearing_index: number[];
+  i2i1: number[]; vibration_mms: number[]; bearing_kurtosis: number[]; bearing_hf_ratio: number[];
+  bearing_site_hint?: (string | null)[] | null;          // 결함 부위 추정(포락선 BPFO/BPFI) — 실측 전용, 시뮬레이션은 null
   status: Level[]; cause_signal: string[]; cause_component: string[]; cause_value: number[]; cause_threshold: string[];
-  levels: Record<Kind, Level[]>;
+  levels: Record<Kind, Level[]> & { bearing?: Level[] };
   scene_values: Record<string, SceneValues>;
 }
 export interface StatusScene { title: string; fingerprint?: string; cause_chain?: CauseChain; data_source_note?: string; [k: string]: unknown }
@@ -151,6 +157,10 @@ export function levelOf(spec: GaugeSpec, x: number): Level {
 }
 export const RANK: Record<Level, number> = { SAFE: 0, WARN: 1, DANGER: 2 };
 export function worse(a: Level, b: Level): Level { return RANK[a] >= RANK[b] ? a : b; }
+// 베어링 종합 등급 (둘 중 나쁜 쪽). 엔진이 써 둔 levels.bearing 이 있으면 그것, 없으면 두 지표 등급에서 합성.
+export function bearingLevel(s: MotorSeries, i: number): Level {
+  return s.levels.bearing?.[i] ?? worse(s.levels.bearing_kurtosis[i], s.levels.bearing_hf_ratio[i]);
+}
 
 // 원인 한 줄: "DE 베어링 온도 91.2 °C — 경고 (안전 <70 / …)"
 export function causeLine(index: FleetIndex, s: MotorSeries, i: number): { head: string; detail: string; level: Level } {
@@ -162,6 +172,7 @@ export function causeLine(index: FleetIndex, s: MotorSeries, i: number): { head:
   const compLabel = kind === "temperature" ? (index.node_labels[comp] ?? comp) + " "
     : kind === "current_ratio" ? (index.phase_labels[comp as Phase] ?? comp) + "상 " : "";
   const v = s.cause_value[i];
-  const val = kind === "current_ratio" ? `${v.toFixed(2)}× (${Math.round(v * 100)} %)` : kind === "i2i1" ? v.toFixed(3) : `${v.toFixed(1)}${sig.unit ? " " + sig.unit : ""}`;
+  const val = kind === "current_ratio" ? `${v.toFixed(2)}× (${Math.round(v * 100)} %)` : kind === "i2i1" ? v.toFixed(3)
+    : kind === "bearing_kurtosis" ? v.toFixed(1) : `${v.toFixed(1)}${sig.unit ? " " + sig.unit : ""}`;
   return { head: `${compLabel}${sig.label} ${val} — ${index.labels_ko[level]}`, detail: s.cause_threshold[i], level };
 }

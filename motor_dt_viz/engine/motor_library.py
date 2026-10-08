@@ -72,6 +72,7 @@ class Motor:
     bearing_source: str
     geometry_scale: float
     vibration: dict = field(default_factory=dict)   # {standard, watch_mms, plan_mms, act_mms}
+    bearing_hf_baseline: dict = field(default_factory=dict)   # {rms_g, band_hz, source, note} 고주파 RMS 정상 기준선 (베어링 보조 지표 분모)
     tags: dict = field(default_factory=dict)        # 용도·톤수 등 표시용
 
     # ---- 파생값 ----
@@ -197,7 +198,21 @@ def load_motor(mid: str) -> Motor:
         bearing_source=str(bm["source"]), geometry_scale=float(d["geometry_scale"]),
         vibration={k: (float(v) if k in ("watch_mms", "plan_mms", "act_mms") else str(v)) for k, v in d["vibration"].items()},
         tags=dict(d.get("tags") or {}),
+        bearing_hf_baseline=_hf_baseline(d),
     )
+
+
+def _hf_baseline(d: dict) -> dict:
+    """bearing_hf_baseline 블록 검증 (선택). rms_g > 0, source 는 nameplate|measured|aihub_normal_median."""
+    b = d.get("bearing_hf_baseline")
+    if not b:
+        return {}
+    mid = d.get("id", "?")
+    if "rms_g" not in b or float(b["rms_g"]) <= 0:
+        raise MotorLibraryError(f"{mid}: bearing_hf_baseline.rms_g 는 양수")
+    if str(b.get("source", "")) not in ("nameplate", "measured", "aihub_normal_median"):
+        raise MotorLibraryError(f"{mid}: bearing_hf_baseline.source 는 nameplate | measured | aihub_normal_median")
+    return {"rms_g": float(b["rms_g"]), "band_hz": list(b.get("band_hz") or []), "source": str(b["source"]), "note": str(b.get("note", ""))}
 
 
 def load_all() -> dict[str, Motor]:

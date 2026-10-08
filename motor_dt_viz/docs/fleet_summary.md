@@ -34,17 +34,17 @@
 | 1. 정상 운전 | M4 | 없음 | 없음 | - | 없음 | SAFE (-) | - |
 | 1. 정상 운전 | M5 | 없음 | 없음 | - | 없음 | SAFE (-) | - |
 | | | | | | | | |
-| 2. DE 베어링 열화 | M1 | 2.2 s (4.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 없음 | DANGER (vibration 4.8) | 2.00 s |
-| 2. DE 베어링 열화 | M2 | 1.8 s (3.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 25.2 s (50.5 분) | DANGER (vibration 4.8) | 1.50 s |
-| 2. DE 베어링 열화 | M3 | 1.0 s (2.0 분) | 3.2 s (6.5 분) | vibration 4.8 | 4.0 s (8.0 분) | DANGER (temperature/bearing_de 114.9) | 0.75 s |
-| 2. DE 베어링 열화 | M4 | 1.2 s (2.5 분) | 3.2 s (6.5 분) | vibration 4.8 | 3.5 s (7.0 분) | DANGER (temperature/bearing_de 122.2) | 1.00 s |
-| 2. DE 베어링 열화 | M5 | 1.0 s (2.0 분) | 2.5 s (5.0 분) | temperature/bearing_de 95.4 | 2.5 s (5.0 분) | DANGER (temperature/bearing_de 135.7) | 0.75 s |
+| 2. DE 베어링 열화 | M1 | 2.2 s (4.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 없음 | DANGER (bearing_kurtosis 50.0) | 2.00 s |
+| 2. DE 베어링 열화 | M2 | 1.8 s (3.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 25.2 s (50.5 분) | DANGER (bearing_kurtosis 50.0) | 1.50 s |
+| 2. DE 베어링 열화 | M3 | 1.0 s (2.0 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 4.0 s (8.0 분) | DANGER (bearing_kurtosis 50.0) | 0.75 s |
+| 2. DE 베어링 열화 | M4 | 1.2 s (2.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 3.5 s (7.0 분) | DANGER (bearing_kurtosis 50.0) | 1.00 s |
+| 2. DE 베어링 열화 | M5 | 1.0 s (2.0 분) | 2.5 s (5.0 분) | temperature/bearing_de 95.4 | 2.5 s (5.0 분) | DANGER (bearing_kurtosis 50.0) | 0.75 s |
 | | | | | | | | |
-| 3. 축 정렬 불량 | M1 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | vibration 4.8 | 없음 | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
-| 3. 축 정렬 불량 | M2 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | vibration 4.8 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
-| 3. 축 정렬 불량 | M3 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | temperature/bearing_de 115.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
-| 3. 축 정렬 불량 | M4 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | temperature/bearing_de 122.3 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
-| 3. 축 정렬 불량 | M5 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | temperature/bearing_de 135.8 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M1 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 없음 | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M2 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M3 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M4 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M5 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
 | | | | | | | | |
 | 4. 냉각팬 고장 | M1 | 0.0 s (0.0 분) | 없음 | - | 없음 | SAFE (-) | 온도 경고 없음 |
 | 4. 냉각팬 고장 | M2 | 0.0 s (0.0 분) | 없음 | - | 없음 | SAFE (-) | 온도 경고 없음 |

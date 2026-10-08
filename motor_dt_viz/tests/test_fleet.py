@@ -11,7 +11,8 @@ VIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, VIZ)
 sys.path.insert(0, os.path.join(VIZ, "tools"))
 
-from engine import motor_library as ml  # noqa: E402
+from engine import motor_library as ml
+from engine.config_loader import load  # noqa: E402
 from engine.thresholds import Judge  # noqa: E402
 import run_fleet as rf  # noqa: E402
 
@@ -22,12 +23,24 @@ def rows(path):
     return list(csv.DictReader(open(path, encoding="utf-8", newline="")))
 
 
-def test_bearing_index_from_fault_config():
+def test_bearing_signals_from_fault_config():
+    """시뮬레이션 베어링 지표 등가값은 thermal.yaml 에서만 온다 (결함 없음 = bearing_normal, 여럿이면 최댓값)."""
     th = ml.thermal_cfg(ml.load_motor("M5"))
-    assert rf.bearing_index(th, []) == 1.0
-    assert rf.bearing_index(th, ["bearing_de_fault"]) == 5.0
-    assert rf.bearing_index(th, ["misalignment"]) == 2.5
-    assert rf.bearing_index(th, ["fan_failure"]) == 1.0 and rf.bearing_index(th, ["brake_drag"]) == 1.0
+    raw = th["faults"]
+    assert rf.bearing_signals(th, []) == {"bearing_kurtosis": th["bearing_normal"]["kurtosis"], "bearing_hf_ratio": th["bearing_normal"]["hf_ratio"]}
+    de = rf.bearing_signals(th, ["bearing_de_fault"])
+    assert de == {"bearing_kurtosis": raw["bearing_de_fault"]["bearing_kurtosis"], "bearing_hf_ratio": raw["bearing_de_fault"]["bearing_hf_ratio"]}
+    # 매핑 근거(소손형 수십 / 윤활 부족형은 kurtosis 유지·고주파만 상승 / 무관 결함은 정상값)가 config 에 그대로 있다
+    thr = load("thresholds")["bearing"]
+    assert de["bearing_kurtosis"] >= thr["kurtosis"]["danger_from"] and de["bearing_hf_ratio"] >= thr["hf_ratio"]["danger_from"]
+    nde = rf.bearing_signals(th, ["bearing_nde_fault"])
+    assert nde["bearing_kurtosis"] < thr["kurtosis"]["safe_below"] and thr["hf_ratio"]["safe_below"] <= nde["bearing_hf_ratio"] < thr["hf_ratio"]["danger_from"]
+    for f in ("fan_failure", "brake_drag", "overload"):
+        assert rf.bearing_signals(th, [f]) == rf.bearing_signals(th, [])
+    both = rf.bearing_signals(th, ["bearing_nde_fault", "misalignment"])
+    assert both["bearing_hf_ratio"] == max(raw["bearing_nde_fault"]["bearing_hf_ratio"], raw["misalignment"]["bearing_hf_ratio"])
+    # 스케일된 모터(M1)도 등가값은 같다 (무차원 지표는 열회로 스케일과 무관)
+    assert rf.bearing_signals(ml.thermal_cfg(ml.load_motor("M1")), ["bearing_de_fault"]) == de
 
 
 def test_electrical_run_has_demo_columns_and_constant_temps(tmp_path):
@@ -57,7 +70,11 @@ def test_mechanical_small_motor_runs_cooler_than_reference(tmp_path):
     # 진동·ISO 구역은 시나리오 상수라 같다, 규격만 다르다
     assert e1["vibration_mms"] == e5["vibration_mms"] == "4.8" and e1["iso_zone"] == e5["iso_zone"]
     s1 = rows(tmp_path / "M1" / "status_fleet.csv")
-    assert any(r["status"] == "DANGER" and r["cause_signal"] == "vibration" for r in s1)
+    # 진동 4.8 mm/s 는 위험(≥4.5). 2026-10-08 베어링 지표 교체 뒤에는 같은 장면에서 bearing_kurtosis(소손형 등가값)의 초과 비율이 더 커
+    # 원인은 bearing_kurtosis 로 바뀐다 — 진동 자체의 등급은 여전히 DANGER (docs/bearing_metric_change_comparison.md)
+    assert any(r["status"] == "DANGER" and r["vibration"] == "DANGER" for r in s1)
+    assert any(r["status"] == "DANGER" and r["cause_signal"] == "bearing_kurtosis" and r["bearing"] == "DANGER" for r in s1)
+    assert any(r["bearing_hf_ratio"] == "WARN" and r["bearing_kurtosis"] == "WARN" for r in s1)   # 축정렬불량 장면: 둘 다 경고 (M2 실측 등가값)
     assert not any(r["temperature"] == "DANGER" for r in s1)    # M1: 온도만으로는 위험 미도달 (docs/fleet_summary.md)
 
 

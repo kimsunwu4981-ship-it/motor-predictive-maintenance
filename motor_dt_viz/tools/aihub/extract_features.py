@@ -5,6 +5,9 @@
 
 파라미터는 config/aihub_features.yaml 에서만 읽는다. 베어링 번호가 어노테이션에 없으므로 env_bpfo_ratio·env_bpfi_ratio 는 NaN,
 bearing_known=False 다 — 우리 모터(M1~M5)의 베어링 값으로 대신 계산하지 않는다.
+베어링 판정 지표(2026-10-08 정의, config/thresholds.yaml bearing): 주 kurtosis + 보조 hf_ratio(= band_hi ÷ 같은 용량대 모터 config 의
+bearing_hf_baseline.rms_g). 포락선 BPFO/BPFI 배율은 판정에서 빠졌고 bearing_site_hint("외륜 쪽"/"내륜 쪽"/"-", 베어링 번호 아는 모터만)로만 남는다.
+고조파 보정 포락선은 폐기 (tools/aihub/bearing_metric_compare.py 에 비교 기록만).
 
 단위 변환 (vel_rms_mm_s):
   accel_unit = g      : a[m/s²] = x · 9.80665
@@ -23,6 +26,9 @@ from pathlib import Path
 for _p in (os.environ.get("VIGENT_PYMODS"), r"C:\Temp\pymods"):
     if _p and os.path.isdir(_p) and _p not in sys.path:
         sys.path.append(_p)
+_VIZ_DIR = str(Path(__file__).resolve().parents[2])          # engine(모터 라이브러리·판정) import 용
+if _VIZ_DIR not in sys.path:
+    sys.path.insert(0, _VIZ_DIR)
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -31,9 +37,26 @@ import yaml  # noqa: E402
 from scipy import signal as sg  # noqa: E402
 from scipy.stats import kurtosis  # noqa: E402
 
+from engine import motor_library as ml  # noqa: E402
+from engine.thresholds import Judge  # noqa: E402
+
 VIZ = Path(__file__).resolve().parents[2]
 CFG = yaml.safe_load(open(VIZ / "config" / "aihub_features.yaml", encoding="utf-8"))
 FMT = yaml.safe_load(open(VIZ / "config" / "aihub_format.yaml", encoding="utf-8"))
+_JUDGE = Judge()
+_HF_BASE: dict[str, float] = {}
+
+
+def hf_baseline_g(motor_id: str) -> float:
+    """용량대 모터(M1~M5) config 의 bearing_hf_baseline.rms_g (없으면 NaN)."""
+    if motor_id not in _HF_BASE:
+        try:
+            _HF_BASE[motor_id] = float(ml.load_motor(motor_id).bearing_hf_baseline.get("rms_g", float("nan")))
+        except Exception:
+            _HF_BASE[motor_id] = float("nan")
+    return _HF_BASE[motor_id]
+
+
 BRG = yaml.safe_load(open(VIZ / "config" / "aihub_bearings.yaml", encoding="utf-8")) if (VIZ / "config" / "aihub_bearings.yaml").exists() else {"geometry": {}, "motors": {}}
 
 
@@ -194,6 +217,7 @@ def features_for_file(r: pd.Series, l2: Path) -> list[dict]:
             "a_1x": peak_near(f, amp, fr_use, tol), "a_2x": peak_near(f, amp, 2 * fr_use, tol), "a_3x": peak_near(f, amp, 3 * fr_use, tol),
             **env_cols,
             "band_lo": band_rms(x, fs, *CFG["bands_hz"]["lo"]), "band_mid": band_rms(x, fs, *CFG["bands_hz"]["mid"]), "band_hi": band_rms(x, fs, *CFG["bands_hz"]["hi"]),
+            "hf_ratio": float("nan"), "hf_baseline_g": float("nan"), "bearing_site_hint": "-",
             "clipping_ratio": float(np.mean(np.abs(x) >= CFG["clipping_top_fraction"] * np.abs(x).max())) if np.abs(x).max() > 0 else 0.0,
             "dc_offset": float(x.mean()), "nan_count": int(np.isnan(x).sum()),
             "i2i1_ref": i2i1, "phase_sequence": seq, "fund_hz": f_fund,
@@ -201,6 +225,12 @@ def features_for_file(r: pd.Series, l2: Path) -> list[dict]:
             "load_ratio": (rms / r["rated_current"]) if (r["signal"] == "current" and np.isfinite(r["rated_current"]) and r["rated_current"] > 0) else float("nan"),
             "running": bool(rms / r["rated_current"] >= CFG.get("running_min_load_ratio", 0.1)) if (r["signal"] == "current" and np.isfinite(r["rated_current"]) and r["rated_current"] > 0) else True,
         }
+        if r["signal"] == "vibration":
+            # 베어링 보조 지표: 고주파 대역 RMS ÷ 모터별 정상 기준선 (config/motors/<id>.yaml). 결함 부위 추정은 표시용 (판정 아님)
+            base = hf_baseline_g(str(r["motor_id"]))
+            row["hf_baseline_g"] = base
+            row["hf_ratio"] = row["band_hi"] / base if np.isfinite(base) and base > 0 else float("nan")
+            row["bearing_site_hint"] = _JUDGE.bearing_site_hint(row["env_bpfo_ratio"], row["env_bpfi_ratio"], bool(row["bearing_known"]))
         out.append(row)
     return out
 

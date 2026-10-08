@@ -122,6 +122,17 @@ duty_cycle:
     - { name: idle,  duration_s: 17.0, load: 0.00 }
 
 # 결함별 손실·방열 변화 배율
+# ── 베어링 지표 시뮬레이션 등가값 (2026-10-08, 판정 정의 config/thresholds.yaml bearing · 근거 docs/bearing_metric_definition.md)
+#   엔진은 가속도 파형을 만들지 않으므로 결함별로 kurtosis·고주파 RMS 배율 "등가값"을 둔다 (옛 손실 배율 대체값을 폐기).
+#   매핑 근거 — AI Hub 238 실측(동일 모터 정상 대비):
+#     · 소손(박리) 2대: kurtosis 94·103 (5 % 분위 55·73), 고주파 RMS ×12.7·×18.0 (5 % 분위 ×9.9·×16.3) → "소손 시 수십"
+#     · 윤활 부족(그리스 제거) 2대: kurtosis 2.9·2.7 (3~4 유지), 고주파 RMS ×0.95·×1.70 → "고주파 RMS 만 상승"
+#     · 축정렬불량 4대: M2 만 kurtosis 3.7·고주파 ×2.2 (베어링 하중 증가), M1·M3·M5 는 변화 없음(0.9~1.1배)
+#     · 정상: kurtosis 중앙값 2.5~3.0 (정규분포 3.0), 고주파 ×1.0 (정의상)
+#   등가값 규칙: 소손형 = 실측 2대 5 % 분위 중 작은 값을 내림(초기 박리 등가, 게이지 범위 안) / 윤활 부족형 = 실측 M3 값 /
+#               축정렬불량 = 변화가 있었던 M2 실측 중앙값 / 베어링과 무관한 결함 = 정상값. 수치는 여기에만 있다.
+bearing_normal: { kurtosis: 3.0, hf_ratio: 1.0 }     # 결함 없음 — 정규분포 kurtosis, 정상 기준선 대비 1.0
+
 faults:
   bearing_de_fault:
     label: "DE 베어링 결함"
@@ -132,6 +143,9 @@ faults:
       - [shaft, bearing_de, 2.0]
       - [bearing_de, endshield_de, 2.5]
     vibration_mms: 4.8        # ISO 20816-3 Act(4.5) 초과
+    bearing_type: 소손형          # 박리·소손: 충격 → kurtosis 급증 + 고주파 상승
+    bearing_kurtosis: 50.0       # 실측 소손 5 % 분위(55·73) 중 작은 값 내림
+    bearing_hf_ratio: 9.0        # 실측 소손 5 % 분위(×9.9·×16.3) 중 작은 값 내림
   bearing_nde_fault:
     label: "NDE 베어링 결함"
     target: bearing_nde
@@ -140,26 +154,37 @@ faults:
       - [shaft, bearing_nde, 2.0]
       - [bearing_nde, endshield_nde, 2.5]
     vibration_mms: 4.2
+    bearing_type: 윤활 부족형     # 그리스 소실: 마찰열(손실 ×5)은 크지만 충격은 없어 kurtosis 3~4 유지, 고주파만 상승
+    bearing_kurtosis: 3.0        # 실측 그리스 제거 2.7~2.9 → 정상값 유지
+    bearing_hf_ratio: 1.7        # 실측 M3 L-PAC-01 ×1.70 (M1 L-SF-04 는 ×0.95 로 변화 없음 — 보이는 쪽을 채택)
   misalignment:
     label: "축 정렬 불량"
     target: bearing_de
     loss_multiplier: 2.5
     also: { shaft: 2.0 }
     vibration_mms: 3.6
+    bearing_kurtosis: 3.7        # 실측 M2 L-SF-02 축정렬불량 중앙값 (M1·M3·M5 는 변화 없음)
+    bearing_hf_ratio: 2.2        # 실측 M2 L-SF-02 축정렬불량 중앙값 ×2.22
   fan_failure:
     label: "냉각팬 고장"
     target: frame
     r_amb_multiplier: 3.2     # 강제대류 상실 → 자연대류
     vibration_mms: 1.2
+    bearing_kurtosis: 3.0        # 베어링과 무관 — 정상값
+    bearing_hf_ratio: 1.0
   brake_drag:
     label: "브레이크 끌림"
     target: shaft
     extra_loss_W: 900.0       # 브레이크 드래그 발열이 축으로 유입
     vibration_mms: 2.0
+    bearing_kurtosis: 3.0        # 베어링과 무관 — 정상값
+    bearing_hf_ratio: 1.0
   overload:
     label: "과부하"
     load_multiplier: 1.35     # 부하율 135 %
     vibration_mms: 2.2
+    bearing_kurtosis: 3.0        # 베어링과 무관 — 정상값
+    bearing_hf_ratio: 1.0
 
 # 표시용 필터 (색 급변 방지)
 display:

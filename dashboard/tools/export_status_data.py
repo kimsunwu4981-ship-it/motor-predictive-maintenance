@@ -9,7 +9,7 @@
   dashboard/public/data/<mode>/{scenarios,thresholds,narration_values}.json (장면 경계·부품 이름·M5 해설 변수)
 출력:
   dashboard/public/data/fleet/index.json          모터 5종 사양·임계값·데모 위치·시나리오·정직성 라벨
-  dashboard/public/data/fleet/<id>_<mode>.json    시계열(온도·전류·I₂/I₁·진동·베어링 지표) + 판정(status/cause) + 장면 변수
+  dashboard/public/data/fleet/<id>_<mode>.json    시계열(온도·전류·I₂/I₁·진동·베어링 kurtosis·고주파 배율) + 판정(status/cause) + 장면 변수
 
 판정은 status_fleet.csv(engine/thresholds.py 가 히스테리시스·지속 시간까지 적용한 결과)를 그대로 옮긴다 — 대시보드가 다시 판정하지 않는다.
 """
@@ -32,7 +32,8 @@ import yaml  # noqa: E402
 from engine import motor_library as ml  # noqa: E402
 from engine.config_loader import load  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
-from run_fleet import bearing_index  # noqa: E402
+from engine.thresholds import bearing_level  # noqa: E402
+from run_fleet import bearing_signals  # noqa: E402
 
 FLEET = os.path.join(VIZ, "logs", "fleet")
 OUT = os.path.join(DASH, "public", "data", "fleet")
@@ -43,8 +44,10 @@ SIGNALS = {
     "current_ratio": {"label": "전류 (정격 대비)", "unit": "×"},
     "i2i1": {"label": "I₂/I₁ (역상 전류비)", "unit": ""},
     "vibration": {"label": "진동 속도 RMS", "unit": "mm/s"},
-    "bearing_index": {"label": "베어링 결함 지표", "unit": "배"},
+    "bearing_kurtosis": {"label": "베어링 kurtosis", "unit": ""},
+    "bearing_hf_ratio": {"label": "베어링 고주파 RMS (정상 대비)", "unit": "배"},
 }
+BEARING_COMBINED = {"label": "베어링 종합 (둘 중 나쁜 쪽)", "unit": ""}
 HONESTY_LINES = ["대표 사양 (명판 아님)", "외형은 프레임 비례 스케일", "열회로 계수는 M5 기준 스케일", "ITSC는 해석식 등가 표현"]
 SPEC_KEYS = ("rated_power_kw", "poles", "sync_rpm", "rated_rpm", "voltage_v", "frequency_hz", "connection", "efficiency", "power_factor",
              "rated_line_current_a", "rated_phase_current_a", "frame", "insulation_class", "duty", "bearing_de", "bearing_nde", "geometry_scale", "source")
@@ -117,13 +120,16 @@ def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mo
         "current_ratio": {p: [round(f(r[f"I{p.lower()}_rms"]) / i_line, 4) for r in d] for p in ("A", "B", "C")},
         "i2i1": [f(r["i2_over_i1"]) for r in d],
         "vibration_mms": [f(r["vibration_mms"]) for r in d],
-        "bearing_index": [bearing_index(th_cfg, [x for x in r["faults"].split(";") if x]) for r in d],
+        "bearing_kurtosis": [bearing_signals(th_cfg, [x for x in r["faults"].split(";") if x])["bearing_kurtosis"] for r in d],
+        "bearing_hf_ratio": [bearing_signals(th_cfg, [x for x in r["faults"].split(";") if x])["bearing_hf_ratio"] for r in d],
+        "bearing_site_hint": None,                      # 결함 부위 추정(포락선 BPFO/BPFI)은 실측 전용 — 시뮬레이션은 없음
         "status": [r["status"] for r in s],
         "cause_signal": [r["cause_signal"] for r in s],
         "cause_component": [r["cause_component"] for r in s],
         "cause_value": [f(r["value"]) for r in s],
         "cause_threshold": [r["threshold"] for r in s],
-        "levels": {k: [r[k] for r in s] for k in SIGNALS},
+        "levels": {**{k: [r[k] for r in s] for k in SIGNALS},
+                   "bearing": [r.get("bearing") or bearing_level({"bearing_kurtosis": r["bearing_kurtosis"], "bearing_hf_ratio": r["bearing_hf_ratio"]}) for r in s]},
         "scene_values": scene_values(motor, mode, d, nv_mode.get("scenes", {}), steps, th_mode),
     }
     return out
@@ -158,6 +164,7 @@ def main():
             "spec": {k: getattr(m, k) for k in SPEC_KEYS},
             "derived": {"slip": round(m.slip, 4), "rotor_freq_hz": round(m.rotor_freq_hz, 3), "torque_nm": round(m.torque_nm, 1),
                         "bpfo_hz": round(m.bpfo_hz(), 1), "bpfi_hz": round(m.bpfi_hz(), 1), "loss_w": round(m.loss_w)},
+            "bearing_hf_baseline": m.bearing_hf_baseline,
             "vibration": m.vib_thresholds,
             "steady_C": {k: round(v, 1) for k, v in ss.items()},
             "thermal_scaled_from": th_cfg.get("scaled_from"),
@@ -170,11 +177,11 @@ def main():
         "honesty": {"label": "대표 사양 기반 시뮬레이션 추정값 (Simulation-based)", "lines": HONESTY_LINES,
                     "itsc_note": "I₂/I₁ 목표값은 M5 기준 해석식 등가값을 전 모터에 적용 (TASK §4.3)"},
         "levels": list(thr["levels"]), "labels_ko": thr["labels_ko"], "icons": thr["icons"], "colors": thr["colors"],
-        "signals": SIGNALS, "node_labels": node_labels,
+        "signals": SIGNALS, "bearing_combined": BEARING_COMBINED, "node_labels": node_labels,
         "phase_labels": th["electrical"]["electrical"].get("phase_labels", {"A": "A", "B": "B", "C": "C"}),
         "thresholds": {
             "temperature": {k: thr["temperature"][k] for k in ("bearing", "winding", "rotor", "default", "component_class")},
-            "current_ratio": thr["current_ratio"], "i2i1": thr["i2i1"], "bearing_index": thr["bearing_index"],
+            "current_ratio": thr["current_ratio"], "i2i1": thr["i2i1"], "bearing": thr["bearing"],
             "hysteresis_fraction": thr["hysteresis"]["fraction"], "persistence_s": thr["persistence_s"],
             "vibration_split_kw": ml.VIB_STANDARD_SPLIT_KW,
         },

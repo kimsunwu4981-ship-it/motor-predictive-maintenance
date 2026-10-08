@@ -85,6 +85,13 @@ def test_feature_ranges():
     assert (known["bpfo_hz"] < known["bpfi_hz"]).all() and (known["bpfo_hz"] > 2 * known["fr_hz"]).all()
     c0 = f[f["signal"] == "current"]
     assert c0["bearing_known"].eq(False).all() and c0["env_bpfo_ratio"].isna().all()
+    # 베어링 판정 지표(2026-10-08): hf_ratio = band_hi ÷ 용량대 모터 config 기준선, 결함 부위 추정은 베어링 아는 모터에서만 문자열
+    from engine import motor_library as ml
+    for mid, g in v0.groupby("motor_id"):
+        base = ml.load_motor(mid).bearing_hf_baseline["rms_g"]
+        assert (g["hf_baseline_g"] == base).all() and np.allclose(g["hf_ratio"], g["band_hi"] / base)
+    assert set(v0["bearing_site_hint"]) <= {"-", "외륜 쪽", "내륜 쪽"} and v0[~v0["bearing_known"]]["bearing_site_hint"].eq("-").all()
+    assert c0["hf_ratio"].isna().all() and c0["bearing_site_hint"].eq("-").all()
     assert set(f["fr_source"]) == {"annotation_rpm"}
     v = f[f["signal"] == "vibration"]
     assert v["vel_rms_mm_s"].notna().all() and v["channel"].eq("ch1").all()

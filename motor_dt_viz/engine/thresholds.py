@@ -13,6 +13,8 @@
   · 종합 상태 = 모든 신호 중 가장 나쁜 등급. 같은 등급이 여럿이면 임계 초과 정도(초과 비율)가 큰 것이 원인.
   · 히스테리시스: 등급 하향은 임계값의 hysteresis.fraction 만큼 안전 쪽으로 더 들어와야 바뀐다 (깜빡임 방지).
   · 지속 시간: 전류·진동·I₂/I₁·베어링 지표는 persistence_s 이상 계속돼야 등급이 오른다 (기동 돌입전류 무시).
+  · 베어링 지표(2026-10-08 정의): 주 bearing_kurtosis(모터 공통) + 보조 bearing_hf_ratio(고주파 RMS ÷ 모터별 정상 기준선).
+    베어링 종합 등급 = 둘 중 나쁜 쪽 (bearing_level). 포락선 BPFO/BPFI 는 판정에 쓰지 않는다 (결함 부위 추정 표시만, bearing_site_hint).
     온도는 persistence 0 (느린 신호). 등급 하향에는 지속 조건을 두지 않는다 (히스테리시스가 맡는다).
   · 첫 호출(상태 없음)은 지속 조건 없이 현재값으로 판정한다 (로그 중간부터 판정을 시작해도 처음부터 맞게).
 """
@@ -24,7 +26,9 @@ from .config_loader import load
 
 LEVELS = ("SAFE", "WARN", "DANGER")
 RANK = {lv: i for i, lv in enumerate(LEVELS)}
-KINDS = ("temperature", "current_ratio", "i2i1", "vibration", "bearing_index")
+KINDS = ("temperature", "current_ratio", "i2i1", "vibration", "bearing_kurtosis", "bearing_hf_ratio")
+BEARING_KINDS = ("bearing_kurtosis", "bearing_hf_ratio")      # 베어링 종합 = 둘 중 나쁜 쪽
+BEARING_CFG_KEY = {"bearing_kurtosis": "kurtosis", "bearing_hf_ratio": "hf_ratio"}
 
 
 @dataclass
@@ -57,6 +61,16 @@ class Verdict:
                 "cause_signal": self.cause_signal, "cause_component": self.cause_component,
                 "value": self.value, "threshold": self.threshold,
                 "signals": [vars(s) for s in self.signals]}
+
+
+def bearing_level(signals) -> str:
+    """베어링 종합 등급: bearing_kurtosis·bearing_hf_ratio 의 등급 중 나쁜 쪽. signals 는 SignalVerdict 목록 또는 {kind: level}."""
+    best = "SAFE"
+    items = signals.items() if isinstance(signals, dict) else ((s.kind, s.level) for s in signals)
+    for kind, lv in items:
+        if kind in BEARING_KINDS and RANK[lv] > RANK[best]:
+            best = lv
+    return best
 
 
 class Judge:
@@ -115,12 +129,14 @@ class Judge:
             note = "정비 계획" if (lv == "WARN" and p < a and value >= p) else ("주시" if lv == "WARN" else ("즉시 조치" if lv == "DANGER" else "정상"))
             std = f" ({self.vib_standard})" if self.vib_standard else ""
             return lv, f"안전 <{w:g} / 경고 {w:g}~{a:g} / 위험 ≥{a:g} mm/s{std}", ex, note
-        if kind == "bearing_index":
-            b = c["bearing_index"]
+        if kind in BEARING_KINDS:
+            b = c["bearing"][BEARING_CFG_KEY[kind]]
             lo, hi = float(b["safe_below"]), float(b["danger_from"])
             lv = "SAFE" if value < lo else ("WARN" if value < hi else "DANGER")
             ex = 0.0 if lv == "SAFE" else value / (lo if lv == "WARN" else hi)
-            return lv, f"안전 <{lo:g}배 / 경고 {lo:g}~{hi:g}배 / 위험 ≥{hi:g}배 (정상 대비)", ex, ""
+            if kind == "bearing_kurtosis":
+                return lv, f"안전 <{lo:g} / 경고 {lo:g}~{hi:g} / 위험 ≥{hi:g} (kurtosis, 모터 공통)", ex, ""
+            return lv, f"안전 <{lo:g}배 / 경고 {lo:g}~{hi:g}배 / 위험 ≥{hi:g}배 (고주파 RMS, 모터별 정상 기준선 대비)", ex, ""
         raise ValueError(f"알 수 없는 신호 종류: {kind}")
 
     def _downgrade_allowed(self, kind: str, value: float, component: str, cur: str) -> bool:
@@ -131,8 +147,8 @@ class Judge:
             b = self.temp_bounds(component)
             edge = float(b["danger_from"]) if cur == "DANGER" else float(b["safe_below"])
             return value < edge * (1 - h)
-        if kind in ("i2i1", "bearing_index"):
-            b = c[kind]
+        if kind == "i2i1" or kind in BEARING_KINDS:
+            b = c["bearing"][BEARING_CFG_KEY[kind]] if kind in BEARING_KINDS else c[kind]
             edge = float(b["danger_from"]) if cur == "DANGER" else float(b["safe_below"])
             return value < edge * (1 - h)
         if kind == "vibration":
@@ -174,7 +190,8 @@ class Judge:
                              threshold=thr, exceed=ex, note=note)
 
     def update(self, t: float, signals: dict) -> Verdict:
-        """signals: {"temperature": {node: °C}, "current_ratio": {phase: r} | float, "i2i1": x, "vibration": mm/s, "bearing_index": x}"""
+        """signals: {"temperature": {node: °C}, "current_ratio": {phase: r} | float, "i2i1": x, "vibration": mm/s,
+                 "bearing_kurtosis": k, "bearing_hf_ratio": r}  (베어링 둘은 각각 판정, 종합은 bearing_level)"""
         out: list[SignalVerdict] = []
         for kind in KINDS:
             if kind not in signals or signals[kind] is None:
@@ -201,6 +218,24 @@ class Judge:
 
     def _deco(self, level: str) -> dict:
         return {"label_ko": self.cfg["labels_ko"][level], "icon": self.cfg["icons"][level], "color": self.cfg["colors"][level]}
+
+    # ------------------------------------------------------------------ 베어링 종합·보조 표시
+    @staticmethod
+    def bearing_level(signals: list[SignalVerdict]) -> str:
+        """베어링 종합 등급 = kurtosis·고주파 배율 중 나쁜 쪽 (config bearing.combine: worst). 둘 다 없으면 SAFE."""
+        return bearing_level(signals)
+
+    def bearing_site_hint(self, env_bpfo_ratio: float | None, env_bpfi_ratio: float | None, bearing_known: bool) -> str:
+        """결함 부위 추정 보조 표시 (판정에 쓰지 않는다). 베어링 번호를 아는 모터에서 포락선 BPFO/BPFI 피크비 중 큰 쪽이
+        bearing.envelope_hint_min_ratio 이상이면 '외륜 쪽'/'내륜 쪽', 아니면 '-'."""
+        b = self.cfg.get("bearing", {})
+        if not b.get("envelope_hint", False) or not bearing_known or env_bpfo_ratio is None or env_bpfi_ratio is None:
+            return "-"
+        m = float(b.get("envelope_hint_min_ratio", 0.0))
+        o, i = float(env_bpfo_ratio), float(env_bpfi_ratio)
+        if o != o or i != i or max(o, i) < m:          # NaN 또는 문턱 미만
+            return "-"
+        return "외륜 쪽" if o >= i else "내륜 쪽"
 
     def reset(self) -> None:
         self._state.clear(); self._since.clear(); self._last_t = None

@@ -42,13 +42,22 @@ vibration:
   source: motor_library       # watch_mms / plan_mms / act_mms
   fallback: { watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5, standard: "ISO 20816-3 Group 2 (모터 미지정 시)" }
 
-# ── 베어링 결함 지표 — 2026-10-08 결정 B-3 ②: 실측 정의 확정, 수치는 유지.
-#   정의: 가속도 신호를 대역통과(500~1,600 Hz @4 kHz; 샘플 주파수의 40 % 상한) → Hilbert 포락선 → 스펙트럼에서 BPFO(= 베어링 배율 × 회전 주파수) ±3 % 피크를
-#   주변 ±25 Hz(피크 제외) 중앙값으로 나눈 비 (tools/aihub/extract_features.py envelope_ratio). 경고 2배 / 위험 5배.
-#   시뮬레이션(엔진 배치·애니메이션)에서는 베어링 결함의 손실 배율로 대체한다. 수치 보정은 M1 외 용량 실측이 생긴 뒤 별도 지시로.
-bearing_index:
-  safe_below: 2.0
-  danger_from: 5.0
+# ── 베어링 결함 지표 — 2026-10-08 결정 (AI Hub 전체 진동 데이터 비교 docs/aihub_bearing_metric_comparison.md → docs/bearing_metric_definition.md).
+#   주 지표 bearing_kurtosis  : 가속도 시계열의 kurtosis (정규분포 3.0). 모터 공통 경계. 박리·소손의 충격에 민감.
+#   보조 지표 bearing_hf_ratio: 고주파 대역(1 kHz~나이퀴스트) 가속도 RMS ÷ 모터별 정상 기준선(config/motors/<id>.yaml bearing_hf_baseline).
+#   베어링 종합 등급 = 둘 중 나쁜 쪽 (combine: worst). 포락선 BPFO/BPFI 피크비는 판정에서 제외하고, 베어링 번호를 아는 모터에서만
+#   "결함 부위 추정"(외륜/내륜) 보조 표시로 남긴다 (envelope_hint). 고조파 보정 포락선은 폐기.
+#   실측 근거(AI Hub 238 전체 진동 37.7만 파일, 동일 모터 정상 대비):
+#     소손    M2 L-SF-02(외륜)·M4 R-CAHU-01S(내륜): kurtosis 중앙값 94·103 (5 % 분위 55·73), 고주파 RMS ×12.7·×18.0 (5 % 분위 ×9.9·×16.3)
+#     윤활 부족(그리스 제거) M1 L-SF-04·M3 L-PAC-01: kurtosis 2.9·2.7 (정상과 같음), 고주파 RMS ×0.95·×1.70 → kurtosis 는 못 보고 고주파만 본다
+#     정상 kurtosis 95 % 분위: M1 4.8 / M2 2.9 / M3 5.0 / M4 3.2 / M5 3.3 (M1·M3 는 충격성 정상 파일 포함 → 이 경계로 M1 정상 29 %, M3 13 % 가 경고 이상)
+#   시뮬레이션(엔진 배치·상태 보드)은 config/thermal.yaml faults.<결함>.bearing_kurtosis / bearing_hf_ratio 등가값을 쓴다 (그 주석에 매핑 근거).
+bearing:
+  kurtosis:  { safe_below: 3.5, danger_from: 4.0 }    # 주 지표, 모터 공통
+  hf_ratio:  { safe_below: 1.5, danger_from: 2.5 }    # 보조 지표, 정상 기준선 대비 배 (기준선은 모터별)
+  combine: worst                                      # 베어링 종합 = 둘 중 나쁜 쪽
+  envelope_hint: true                                 # BPFO/BPFI 포락선: 판정 제외, 베어링 번호 아는 모터에서 결함 부위 추정 표시만
+  envelope_hint_min_ratio: 2.0                        # 포락선 피크비가 이 값 이상인 쪽(외륜/내륜)만 표시 (옛 경고 경계 2배를 표시 문턱으로 재사용)
 
 # ── 깜빡임·돌입전류 방지
 hysteresis:
@@ -57,7 +66,8 @@ persistence_s:                # 등급 상향은 이 시간 이상 지속될 때
   current_ratio: 3.0
   i2i1: 3.0
   vibration: 3.0
-  bearing_index: 3.0
+  bearing_kurtosis: 3.0
+  bearing_hf_ratio: 3.0
   temperature: 0.0
 
 mapping_4to3: { normal: SAFE, caution: WARN, warning: WARN, danger: DANGER }

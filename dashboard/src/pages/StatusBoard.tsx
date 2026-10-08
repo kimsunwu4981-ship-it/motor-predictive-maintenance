@@ -8,8 +8,7 @@ import { TrendChart, type TrendSel } from "../status/TrendChart";
 import {
   causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent,
   simElapsed, stepAt, worse, KINDS, PHASES,
-  type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent,
-} from "../status/data";
+  type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent, bearingLevel } from "../status/data";
 import { pickSource, appendSample, type StatusSource } from "../status/source";
 import { applyNameplates, loadNameplates, saveNameplates, parseField, yamlSnippet, NAMEPLATE_FIELDS, type Nameplates } from "../status/nameplate";
 import "../status/status.css";
@@ -239,10 +238,11 @@ function specFor(index: FleetIndex, motor: MotorInfo, sel: TrendSel) {
   if (sel.kind === "current_ratio") return gaugeCurrent(index);
   if (sel.kind === "i2i1") return gaugeLoHi(index.thresholds.i2i1, 0.3, "");
   if (sel.kind === "vibration") return gaugeVib(motor.vibration);
-  return gaugeLoHi(index.thresholds.bearing_index, 8, "배");
+  if (sel.kind === "bearing_kurtosis") return gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "");
+  return gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배");
 }
 
-// 신호별 게이지 8개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 지표. 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.
+// 신호별 게이지 9개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 kurtosis · 베어링 고주파 RMS 배율 (베어링 종합 = 둘 중 나쁜 쪽). 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.
 function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; motor: MotorInfo; s: MotorSeries; i: number; onPick: (t: TrendSel) => void; picked: TrendSel }) {
   const cur = gaugeCurrent(index);
   const rated = motor.spec.rated_line_current_a;                                       // 명판값을 넣으면 여기서 바로 바뀐다 (판정은 배치 재실행 후)
@@ -263,8 +263,12 @@ function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; mot
         <Gauge index={index} title="I₂/I₁ 역상 전류비" unit="" spec={gaugeLoHi(index.thresholds.i2i1, 0.3, "")} value={s.i2i1[i]} judged={s.levels.i2i1[i]} />)}
       {item("vib", { kind: "vibration" },
         <Gauge index={index} title="진동 속도 RMS" unit="mm/s" spec={gaugeVib(motor.vibration)} value={s.vibration_mms[i]} judged={s.levels.vibration[i]} note={motor.vibration.standard.split(" (")[0] + (motor.vibration.plan_mms < motor.vibration.act_mms ? ` · ${motor.vibration.plan_mms} 부터 정비 계획` : "")} />)}
-      {item("brg", { kind: "bearing_index" },
-        <Gauge index={index} title="베어링 결함 지표 (정상 대비)" unit="배" spec={gaugeLoHi(index.thresholds.bearing_index, 8, "배")} value={s.bearing_index[i]} judged={s.levels.bearing_index[i]} note="시뮬레이션: 결함 손실 배율로 대체" />)}
+      {item("brg_k", { kind: "bearing_kurtosis" },
+        <Gauge index={index} title={`베어링 kurtosis · 종합 ${index.icons[bearingLevel(s, i)]} ${index.labels_ko[bearingLevel(s, i)]}`} unit="" spec={gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "")} value={s.bearing_kurtosis[i]} judged={s.levels.bearing_kurtosis[i]}
+          note={"주 지표 · 모터 공통 경계 · 시뮬레이션: 결함별 등가값 (thermal.yaml)" + (s.bearing_site_hint?.[i] ? ` · 결함 부위 추정 ${s.bearing_site_hint[i]}` : "")} />)}
+      {item("brg_h", { kind: "bearing_hf_ratio" },
+        <Gauge index={index} title="베어링 고주파 RMS (정상 대비)" unit="배" spec={gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배")} value={s.bearing_hf_ratio[i]} judged={s.levels.bearing_hf_ratio[i]}
+          note={"보조 지표 · 기준선 " + (motor.bearing_hf_baseline?.rms_g != null ? `${motor.bearing_hf_baseline.rms_g} g (${motor.bearing_hf_baseline.source})` : "미설정") + " · 종합은 둘 중 나쁜 쪽"} />)}
     </div>
   );
 }
@@ -291,7 +295,7 @@ function ThresholdTab({ index }: { index: FleetIndex }) {
   return (
     <div>
       <p className="muted" style={{ marginTop: 0 }}>세 단계 <b>안전 / 경고 / 위험</b>. 모터 전체 상태는 모든 신호 중 가장 나쁜 등급이고, 원인 신호를 항상 함께 표시합니다.
-        등급 하향은 임계값의 {Math.round(th.hysteresis_fraction * 100)} % 안쪽으로 들어와야 바뀌고(히스테리시스), 전류·진동·I₂/I₁·베어링 지표는 {th.persistence_s.current_ratio} s 이상 지속돼야 상향됩니다(돌입전류 무시).</p>
+        등급 하향은 임계값의 {Math.round(th.hysteresis_fraction * 100)} % 안쪽으로 들어와야 바뀌고(히스테리시스), 전류·진동·I₂/I₁·베어링 지표(kurtosis·고주파 배율)는 {th.persistence_s.current_ratio} s 이상 지속돼야 상향됩니다(돌입전류 무시).</p>
       <table className="grid">
         <thead><tr><th>신호</th><th><span className="sw" style={{ background: index.colors.SAFE }} />{index.icons.SAFE} 안전</th><th><span className="sw" style={{ background: index.colors.WARN }} />{index.icons.WARN} 경고</th><th><span className="sw" style={{ background: index.colors.DANGER }} />{index.icons.DANGER} 위험</th><th>근거 · 적용</th></tr></thead>
         <tbody>
@@ -303,7 +307,8 @@ function ThresholdTab({ index }: { index: FleetIndex }) {
           <tr><td>I₂/I₁</td><td>&lt; {th.i2i1.safe_below}</td><td>{th.i2i1.safe_below}~{th.i2i1.danger_from}</td><td>≥ {th.i2i1.danger_from}</td><td>{index.honesty.itsc_note}</td></tr>
           {[...groups.entries()].map(([k, ids]) => { const v = index.motors.find((m) => m.id === ids[0])!.vibration; return (
             <tr key={k}><td>진동 속도 RMS<div className="dim">{v.standard}</div></td><td>&lt; {v.watch_mms} mm/s</td><td>{v.watch_mms}~{v.act_mms}{v.plan_mms < v.act_mms ? ` (${v.plan_mms} 부터 "정비 계획")` : ""}</td><td>≥ {v.act_mms}</td><td>{ids.join(" · ")}{v.note ? ` — ${v.note}` : ""}</td></tr>); })}
-          <tr><td>베어링 결함 지표</td><td>&lt; {th.bearing_index.safe_below}배</td><td>{th.bearing_index.safe_below}~{th.bearing_index.danger_from}배</td><td>≥ {th.bearing_index.danger_from}배</td><td>실측: 포락선 BPFO 피크 / 정상. 시뮬레이션: 결함 손실 배율</td></tr>
+          <tr><td>베어링 kurtosis (주 지표)</td><td>&lt; {th.bearing.kurtosis.safe_below}</td><td>{th.bearing.kurtosis.safe_below}~{th.bearing.kurtosis.danger_from}</td><td>≥ {th.bearing.kurtosis.danger_from}</td><td>가속도 첨도, 모터 공통. 정상 ≈3, 소손 시 수십. 시뮬레이션은 결함별 등가값</td></tr>
+          <tr><td>베어링 고주파 RMS 배율 (보조 지표)</td><td>&lt; {th.bearing.hf_ratio.safe_below}배</td><td>{th.bearing.hf_ratio.safe_below}~{th.bearing.hf_ratio.danger_from}배</td><td>≥ {th.bearing.hf_ratio.danger_from}배</td><td>1 kHz 이상 대역 RMS ÷ 모터별 정상 기준선 ({index.motors.map((m) => `${m.id} ${m.bearing_hf_baseline?.rms_g ?? "-"} g`).join(" · ")}). 베어링 종합 = 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만)</td></tr>
         </tbody>
       </table>
     </div>

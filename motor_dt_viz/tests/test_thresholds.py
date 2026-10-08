@@ -64,8 +64,39 @@ def test_vibration_standard_depends_on_motor():
     assert Judge().raw("vibration", 1.6)[0] == "WARN"      # 모터 미지정 → fallback(20816-3)
 
 
-def test_bearing_index_boundaries():
-    assert lv("bearing_index", 1.9) == "SAFE" and lv("bearing_index", 2.5) == "WARN" and lv("bearing_index", 5.0) == "DANGER"
+def test_bearing_kurtosis_and_hf_ratio_boundaries():
+    # 2026-10-08 정의: 주 kurtosis 3.5/4.0 (모터 공통), 보조 고주파 RMS 배율 1.5/2.5 — 숫자는 config 에서 읽는다
+    b = load("thresholds")["bearing"]
+    k, h = b["kurtosis"], b["hf_ratio"]
+    assert lv("bearing_kurtosis", k["safe_below"] - 0.01) == "SAFE" and lv("bearing_kurtosis", k["safe_below"]) == "WARN"
+    assert lv("bearing_kurtosis", k["danger_from"] - 0.01) == "WARN" and lv("bearing_kurtosis", k["danger_from"]) == "DANGER"
+    assert lv("bearing_hf_ratio", h["safe_below"] - 0.01) == "SAFE" and lv("bearing_hf_ratio", h["safe_below"]) == "WARN"
+    assert lv("bearing_hf_ratio", h["danger_from"]) == "DANGER"
+    assert "kurtosis" in Judge().raw("bearing_kurtosis", 3.0)[1] and "고주파" in Judge().raw("bearing_hf_ratio", 1.0)[1]
+    with pytest.raises(ValueError):
+        Judge().raw("bearing_index", 1.0)                      # 옛 지표(손실 배율 대체값)는 폐기
+
+
+def test_bearing_combined_is_worse_of_two():
+    from engine.thresholds import bearing_level
+    j = Judge()
+    v = j.update(0.0, {"bearing_kurtosis": 3.0, "bearing_hf_ratio": 1.7})          # 윤활 부족형: kurtosis 정상, 고주파만 경고
+    assert bearing_level(v.signals) == "WARN" and v.status == "WARN" and v.cause_signal == "bearing_hf_ratio"
+    v = Judge().update(0.0, {"bearing_kurtosis": 50.0, "bearing_hf_ratio": 1.0})   # 소손형: kurtosis 만으로 위험
+    assert bearing_level(v.signals) == "DANGER" and v.cause_signal == "bearing_kurtosis"
+    assert bearing_level({"bearing_kurtosis": "SAFE", "bearing_hf_ratio": "SAFE", "vibration": "DANGER"}) == "SAFE"   # 진동은 베어링 종합에 안 섞인다
+    assert bearing_level([]) == "SAFE"
+
+
+def test_bearing_site_hint_is_display_only():
+    j = Judge()
+    m = load("thresholds")["bearing"]["envelope_hint_min_ratio"]
+    assert j.bearing_site_hint(m + 1, 1.0, True) == "외륜 쪽" and j.bearing_site_hint(1.0, m + 1, True) == "내륜 쪽"
+    assert j.bearing_site_hint(m + 1, 1.0, False) == "-"                           # 베어링 번호 모르는 모터: 표시 없음
+    assert j.bearing_site_hint(m - 0.1, m - 0.1, True) == "-" and j.bearing_site_hint(float("nan"), 1.0, True) == "-"
+    assert j.bearing_site_hint(None, None, True) == "-"
+    v = j.update(0.0, {"bearing_kurtosis": 3.0, "bearing_hf_ratio": 1.0})          # 포락선은 판정에 들어가지 않는다
+    assert v.status == "SAFE" and all(s.kind in ("bearing_kurtosis", "bearing_hf_ratio") for s in v.signals)
 
 
 # ---------------------------------------------------------------- 히스테리시스

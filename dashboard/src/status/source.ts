@@ -10,7 +10,8 @@ import { getJson } from "../live/load";
 
 export interface LiveSample {           // 스트림 한 샘플 (append 용). 시계열 JSON 의 한 행과 같은 의미
   motor: string; mode: Mode; t: number; status: string; cause_signal: string; cause_component: string; cause_value: number;
-  temperature_C: Record<string, number>; current_rms_A: Record<string, number>; i2i1: number; vibration_mms: number; bearing_index: number;
+  temperature_C: Record<string, number>; current_rms_A: Record<string, number>; i2i1: number; vibration_mms: number; bearing_kurtosis: number; bearing_hf_ratio: number;
+  bearing_site_hint?: string | null;                 // 결함 부위 추정 (포락선 BPFO/BPFI, 베어링 번호 아는 모터만) — 판정에 쓰지 않음
 }
 export interface StatusSource {
   kind: "replay" | "live";
@@ -59,11 +60,13 @@ export function appendSample(s: MotorSeries, x: LiveSample, ratedLineA: number, 
     temperature_C: Object.fromEntries(Object.keys(s.temperature_C).map((k) => [k, [...cut(s.temperature_C[k]), x.temperature_C[k] ?? NaN]])),
     current_rms_A: { A: [...cut(s.current_rms_A.A), x.current_rms_A.A ?? NaN], B: [...cut(s.current_rms_A.B), x.current_rms_A.B ?? NaN], C: [...cut(s.current_rms_A.C), x.current_rms_A.C ?? NaN] },
     current_ratio: { A: [...cut(s.current_ratio.A), (x.current_rms_A.A ?? NaN) / ratedLineA], B: [...cut(s.current_ratio.B), (x.current_rms_A.B ?? NaN) / ratedLineA], C: [...cut(s.current_ratio.C), (x.current_rms_A.C ?? NaN) / ratedLineA] },
-    i2i1: [...cut(s.i2i1), x.i2i1], vibration_mms: [...cut(s.vibration_mms), x.vibration_mms], bearing_index: [...cut(s.bearing_index), x.bearing_index],
+    i2i1: [...cut(s.i2i1), x.i2i1], vibration_mms: [...cut(s.vibration_mms), x.vibration_mms],
+    bearing_kurtosis: [...cut(s.bearing_kurtosis), x.bearing_kurtosis], bearing_hf_ratio: [...cut(s.bearing_hf_ratio), x.bearing_hf_ratio],
+    bearing_site_hint: [...cut(s.bearing_site_hint ?? s.t.map(() => null)), x.bearing_site_hint ?? null],
     status: [...cut(s.status), x.status as MotorSeries["status"][number]], cause_signal: [...cut(s.cause_signal), x.cause_signal],
     cause_component: [...cut(s.cause_component), x.cause_component], cause_value: [...cut(s.cause_value), x.cause_value],
     cause_threshold: [...cut(s.cause_threshold), ""],
-    levels: Object.fromEntries(Object.keys(s.levels).map((k) => [k, [...cut(s.levels[k as keyof typeof s.levels]), "SAFE"]])) as MotorSeries["levels"],
+    levels: Object.fromEntries(Object.keys(s.levels).map((k) => [k, [...cut(s.levels[k as keyof typeof s.levels] ?? []), "SAFE"]])) as MotorSeries["levels"],
   };
   return out;
 }

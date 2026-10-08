@@ -32,7 +32,8 @@ export function TrendChart({ index, motor, series, sel, spec, t, onSeek }: {
       yName = "전류 / 정격 (×)";
     } else if (sel.kind === "i2i1") lines.push({ name: "I₂/I₁", data: series.i2i1, color: "#b78bff" });
     else if (sel.kind === "vibration") lines.push({ name: "진동 RMS", data: series.vibration_mms, color: "#62d2ff" });
-    else lines.push({ name: "베어링 지표", data: series.bearing_index, color: "#e0c48a" });
+    else if (sel.kind === "bearing_kurtosis") lines.push({ name: "베어링 kurtosis", data: series.bearing_kurtosis, color: "#e0c48a" });
+    else lines.push({ name: "베어링 고주파 RMS 배율", data: series.bearing_hf_ratio, color: "#f0a06a" });
     const vmax = Math.max(...lines.flatMap((l) => l.data));
     const yMax = Math.max(spec.max, vmax * 1.08);
     const bands: Area[] = spec.segments.map((s) => [
