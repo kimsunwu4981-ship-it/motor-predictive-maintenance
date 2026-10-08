@@ -58,3 +58,6 @@ desktop.ini
 
 # AI Hub 외부 데이터·변환본 (원본은 바탕화면 샘플 폴더, 산출물은 재생성 가능)
 motor_dt_viz/data/
+
+# AI Hub 전체 데이터 다운로드 (download_full.sh 기본 대상, 88~112 GB)
+aihub_full/
