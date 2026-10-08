@@ -623,3 +623,15 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 8편 모두 프레임 확인: HUD 규격 "ISO 20816-3 Group 2", 자막 변수(M1 전기 12턴 "10.1 A (201 %)", M2 24.2 A) 채워짐, 다른 창 없음. Isaac 로그 ↔ 엔진 배치 장면 끝 최대 차 0.0~0.2, 평균 62~72 fps.
   `docs/fleet_recording_summary.json`, 확인 프레임 `s6_fleet_*.png`. 산출물 `모터결함_애니메이션/4_모터별/` 8편 교체.
 - 교훈: `record_fleet.ps1` 을 `powershell -File` 로 부를 때 `-Motors M3,M4` 는 문자열 하나로 들어온다 → 스크립트에서 쉼표 분할. 녹화 전 알림 앱(카카오톡) 종료 필요.
+
+## 16. AI Hub 전체 진동 데이터 — 다운로드·선별·변환 (2026-10-08 저녁, 진행 중)
+
+- 사용자가 API 키로 `download_full.sh` 실행(14:45~18:20, 평균 4.2 MB/s). aihubshell 이 tar 를 풀어 `1.Training/vibration.zip`, `2._Validation/vibration.zip` 두 파일로 남김.
+- **Training zip 이 잘렸다**: 66.8 GiB(목록 78 GB), 끝 1 MB 에 중앙 디렉터리 없음 → `zipfile` 은 "not a zip". 로컬 헤더를 순차 스캔하니(83 s) data descriptor 없이 크기가 다 있어
+  **875,070개 항목이 완전**하고 마지막 완전 항목이 `55kW/L-PAHU-03S/정상/…154843` — 알파벳 순서 끝인 **7.5 kW 폴더 전체와 55 kW 뒷부분이 누락**. `run_pipeline.py` 에 `ScanZip`(순차 스캔 색인, `<zip>.scanindex.json` 캐시, 완전 항목만)을 넣어 `open_zip` 이 자동 전환.
+  로컬 헤더 이름은 **cp949**(utf-8 플래그 없음, 중앙 디렉터리는 utf-8) → 디코딩 분기. 선별 327,543 파일(85 GB CSV, 37 %).
+- Validation zip 은 온전(126,712개): 선별 49,778 파일 12.9 GB → 13단위 추출·변환·검증(20/20) 완료, L2/full 6.1 GB(×0.47). 7.5 kW(M3) 실측은 이 분만 있다.
+- **OneDrive 함정**: 저장소가 바탕 화면(OneDrive) 아래라 5만 파일을 쓰는 동안 OneDrive 가 동기화(2.3 GB 메모리) → 파일당 38 ms(샘플 때 7 ms). 산출물·zip 을 `C:igent_data\{aihub,aihub_full}` 로 옮기고
+  `run_pipeline.py`/`tests/test_aihub.py` 가 `VIGENT_AIHUB_DATA`(기본 `C:\vigent_data\aihub`) 를 우선 보게 했다. 경로 문자열에 `\v`·`\a` 이스케이프가 들어가 한 번 실패 → chr(92) 로 재작성.
+- L1 단위 폴더가 모터명 대신 라벨명으로 생기던 경로 버그 수정(`parts[-3]/<file>`).
+- Training 추출 20:34 시작(32만 파일, 외부 디스크). 이후 `sample` → `features` → 요약.

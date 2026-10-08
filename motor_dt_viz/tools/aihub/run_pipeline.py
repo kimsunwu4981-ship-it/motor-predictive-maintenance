@@ -109,6 +109,8 @@ class ScanZip:
         else:
             d = self._scan(); json.dump(d, open(idx, "w", encoding="utf-8"), ensure_ascii=False)
         self.members = [_Member(*m) for m in d["members"]]; self.partial = d.get("partial"); self.truncated = d.get("truncated", True)
+        self._by_name = {m.filename: m for m in self.members}        # 이름 → 항목 (실측: 선형 탐색이면 32만 × 87만 = 파일당 130 ms)
+        self._fh = None
 
     def _scan(self) -> dict:
         import struct
@@ -134,15 +136,18 @@ class ScanZip:
     def namelist(self): return [m.filename for m in self.members]
     def open(self, name):
         import zlib
-        m = next(x for x in self.members if x.filename == name)
-        with open(self.path, "rb") as f:
-            f.seek(m.offset); raw = f.read(m.compress_size)
+        m = self._by_name[name]
+        if self._fh is None:
+            self._fh = open(self.path, "rb")
+        self._fh.seek(m.offset); raw = self._fh.read(m.compress_size)
         data = raw if m.method == 0 else zlib.decompress(raw, -15)
         if len(data) != m.file_size: raise ValueError(f"{name}: 크기 불일치 {len(data)} ≠ {m.file_size}")
         return io.BytesIO(data)
     def read(self, name): return self.open(name).read()
     def __enter__(self): return self
-    def __exit__(self, *a): return False
+    def __exit__(self, *a):
+        if self._fh: self._fh.close(); self._fh = None
+        return False
 
 
 def open_zip(path: str):
