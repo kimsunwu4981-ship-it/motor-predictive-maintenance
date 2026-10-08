@@ -3,7 +3,7 @@
 **다음 작업(임계값 보정)의 입력이다.** 원본: AI Hub 238 전체 진동 데이터 — Training zip(잘린 파일, 7.5 kW 누락, 순차 스캔 회수분) + Validation zip(온전). M3(7.5 kW)는 Validation 분만 있다. 결함은 가이드라인의 **인위 모의**(그리스 제거 / 외륜·내륜 소손 / 축 이동)이며 모터당 한 종류라, 정상 vs 결함 비교는 같은 모터끼리 한다 (§3).
 진동 단위 g 는 가이드라인 v2.4 로 확정. 포락선 BPFO/BPFI 배율은 가이드라인 표의 모터별 베어링 호칭(`config/aihub_bearings.yaml`) + 카탈로그 기하(추정)로 계산 — 참고값.
 
-- 특징 377321 행 / 377321 파일, 1169.0 s. 결측률(선별 신호에 해당하는 열만): env_bpfo_ratio 15%, env_bpfi_ratio 15%, env_bpfo_ratio_nde 15%, env_bpfi_ratio_nde 15%, bpfo_hz 15%, bpfi_hz 15%. 전부 NaN 인 열: i2i1_ref, fund_hz, load_ratio (베어링 번호 없음 / 전류 전용).
+- 특징 377321 행 / 377321 파일, 2538.7 s. 결측률(선별 신호에 해당하는 열만): env_bpfo_ratio 15%, env_bpfi_ratio 15%, env_bpfo_ratio_nde 15%, env_bpfi_ratio_nde 15%, bpfo_hz 15%, bpfi_hz 15%. 전부 NaN 인 열: i2i1_ref, fund_hz, load_ratio (베어링 번호 없음 / 전류 전용).
 
 ## 1. 용량·라벨별 속도 RMS (mm/s)
 
