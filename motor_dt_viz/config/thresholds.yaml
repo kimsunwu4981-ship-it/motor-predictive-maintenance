@@ -35,11 +35,17 @@ i2i1:
 
 # ── 진동 속도 RMS [mm/s] — 모터 출력에 따라 규격이 다르다 (규칙 4). 경계는 config/motors/<id>.yaml 의 vibration 블록에서 온다.
 #    안전 < watch, 경고 watch~act (20816-3 의 plan 2.8 은 경고 안의 "정비 계획" 세부 라벨), 위험 ≥ act
+# 진동: 5종 모두 ISO 20816-3 Group 2 강성 지지 (경고 1.4 / 정비 계획 2.8 / 위험 4.5 mm/s) — 2026-10-08 결정 B-1 ②.
+#   AI Hub 「기계시설물 고장 예지 센서」 가이드라인 v2.4 는 같은 규격(KS B ISO 10816-3 2군)의 **유연 지지 B/C 4.5 mm/s** 를 정상 검수 상한으로 썼다
+#   (강성 2.8). 우리는 권상 모터가 구조물에 강성 체결된다고 보고 강성 지지 값을 쓴다 (docs/aihub_structure.md §11).
 vibration:
   source: motor_library       # watch_mms / plan_mms / act_mms
   fallback: { watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5, standard: "ISO 20816-3 Group 2 (모터 미지정 시)" }
 
-# ── 베어링 결함 지표 (포락선 BPFO 피크 / 정상 대비). 시뮬레이션에서는 결함 손실 배율로 대체, 실측 후 교체
+# ── 베어링 결함 지표 — 2026-10-08 결정 B-3 ②: 실측 정의 확정, 수치는 유지.
+#   정의: 가속도 신호를 대역통과(500~1,600 Hz @4 kHz; 샘플 주파수의 40 % 상한) → Hilbert 포락선 → 스펙트럼에서 BPFO(= 베어링 배율 × 회전 주파수) ±3 % 피크를
+#   주변 ±25 Hz(피크 제외) 중앙값으로 나눈 비 (tools/aihub/extract_features.py envelope_ratio). 경고 2배 / 위험 5배.
+#   시뮬레이션(엔진 배치·애니메이션)에서는 베어링 결함의 손실 배율로 대체한다. 수치 보정은 M1 외 용량 실측이 생긴 뒤 별도 지시로.
 bearing_index:
   safe_below: 2.0
   danger_from: 5.0

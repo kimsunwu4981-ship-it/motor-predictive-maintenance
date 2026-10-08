@@ -174,7 +174,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
                   <div className="st-sig">{KINDS.map((k) => <span key={k} style={{ borderColor: index.colors[cur.levels[k][i]] }}><i style={{ background: index.colors[cur.levels[k][i]] }} />{index.signals[k].label.split(" (")[0]}</span>)}</div>
                 </div>
               )}
-              <div className="st-scene"><span className="dim">장면 {step.n}/{sc.steps.length}</span> <b>{scene?.title ?? step.label}</b> <span className="dim">— {step.subtitle}</span></div>
+              <div className="st-scene"><span className="dim">장면 {step.n}/{sc.steps.length}</span> <b>{scene?.title ?? step.label}</b> <span className="dim">— {fill(step.subtitle, cur?.scene_values[step.id])}</span></div>
               {scene?.cause_chain ? (
                 <div className="chain fade" key={`${sel}-${step.id}`}>
                   {(["cause", "mechanism", "effect", "action"] as const).map((k, n) => (

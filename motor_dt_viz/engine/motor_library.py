@@ -5,7 +5,7 @@
   1) YAML 로드 + 스키마 검증 (필수 키, 단위, 범위, 선/상전류 정합)
   2) 파생값: 회전 주파수 fr, 동기속도 검산, 슬립, 상전류, 베어링 결함 주파수(BPFO/BPFI Hz)
   3) 기존 엔진에 꽂기: motor.yaml 모양의 dict(→ MotorSpec), M5 기준 스케일된 thermal cfg, electrical cfg
-  4) 진동 규격 선택: 15 kW 미만 ISO 10816-1 Class I / 15 kW 이상 ISO 20816-3 Group 2 (규칙 4)
+  4) 진동 규격: 5종 모두 ISO 20816-3 Group 2 강성 지지 (1.4/2.8/4.5) — 2026-10-08 결정 B-1 ②. (이전: 15 kW 미만 10816-1 Class I)
 
 열회로 스케일 규칙 (§4.2, docs/thermal_scaling.md):
   손실 P_loss ∝ P_rated·(1−η)/η            → 노드 정격 손실·브레이크 끌림 추가 손실에 비율 적용
@@ -29,7 +29,8 @@ from .config_loader import CONFIG_DIR, MotorSpec, load, val
 
 MOTORS_DIR = os.path.join(CONFIG_DIR, "motors")
 REFERENCE_ID = "M5"          # 열회로 튜닝 기준 모터 (현 프로젝트 22 kW, thermal.yaml 의 값)
-VIB_STANDARD_SPLIT_KW = 15.0  # 규칙 4: 15 kW 미만 10816-1, 이상 20816-3
+VIB_STANDARD_SPLIT_KW = 0.0   # 규칙 4(구): 15 kW 경계. 2026-10-08 부터 0 = 경계 없음, 전 모터 VIB_STANDARD_REQUIRED
+VIB_STANDARD_REQUIRED = "ISO 20816-3"   # 5종 통일 (강성 지지 1.4/2.8/4.5). AI Hub 가이드라인은 유연 지지 4.5 를 정상 상한으로 씀
 
 REQUIRED = ("id", "name", "source", "rated_power_kw", "poles", "sync_rpm", "rated_rpm", "voltage_v", "frequency_hz",
             "connection", "efficiency", "power_factor", "rated_line_current_a", "rated_phase_current_a", "frame",
@@ -168,9 +169,9 @@ def validate(d: dict) -> None:
             raise MotorLibraryError(f"{mid}: vibration.{k} 누락")
     if not (0 < float(vib["watch_mms"]) <= float(vib["plan_mms"]) <= float(vib["act_mms"])):
         raise MotorLibraryError(f"{mid}: 진동 경계는 watch ≤ plan ≤ act")
-    want = "ISO 10816-1" if p < VIB_STANDARD_SPLIT_KW else "ISO 20816-3"
+    want = VIB_STANDARD_REQUIRED if VIB_STANDARD_SPLIT_KW <= 0 else ("ISO 10816-1" if p < VIB_STANDARD_SPLIT_KW else "ISO 20816-3")
     if not str(vib["standard"]).startswith(want):
-        raise MotorLibraryError(f"{mid}: {p} kW 는 {want} 를 써야 한다 (규칙 4), 현재 {vib['standard']}")
+        raise MotorLibraryError(f"{mid}: {p} kW 는 {want} 를 써야 한다 (규칙 4, 5종 통일), 현재 {vib['standard']}")
 
 
 @lru_cache(maxsize=None)

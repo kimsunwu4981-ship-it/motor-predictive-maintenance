@@ -137,6 +137,8 @@ def main():
     sc = {m: j(os.path.join(DASH, "public", "data", m, "scenarios.json")) for m in MODES}
     nv = {m: j(os.path.join(DASH, "public", "data", m, "narration_values.json")) for m in MODES}
     node_labels = {p["key"]: p["label"] for p in th["mechanical"]["thermal"]["parts"]}
+    from engine.scenario_player import ScenarioPlayer
+    raw_sub = {m: {s["id"]: s["subtitle"] for s in ScenarioPlayer.for_mode(m).steps} for m in MODES}
     motors = []
     for mid in ml.list_ids():
         m = ml.load_motor(mid)
@@ -177,7 +179,9 @@ def main():
             "vibration_split_kw": ml.VIB_STANDARD_SPLIT_KW,
         },
         "scenarios": {m: {"total_duration_s": sc[m]["total_duration_s"],
-                          "steps": [{k: st[k] for k in ("n", "id", "label", "subtitle", "t_start", "t_end", "time_scale", "load", "faults", "electrical_case")} for st in sc[m]["steps"]]}
+                          "steps": [{**{k: st[k] for k in ("n", "id", "label", "subtitle", "t_start", "t_end", "time_scale", "load", "faults", "electrical_case")},
+                                     "subtitle": raw_sub[m].get(st["id"], st["subtitle"])}          # 변수 포함 원문 — 보드가 모터별 scene_values 로 채운다 (D-1 ②)
+                                    for st in sc[m]["steps"]]}
                       for m in MODES},
         "demo_note": demo_cfg.get("note", ""),
         "motors": motors,

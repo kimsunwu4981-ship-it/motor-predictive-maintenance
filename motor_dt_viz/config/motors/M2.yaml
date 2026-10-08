@@ -35,8 +35,8 @@ geometry_scale: 0.733          # 프레임 축높이 비 132/180 (M5 180L = 1.0)
 thermal:
   scale_rule: power_ratio        # 열회로 계수는 M5 보정값을 손실비·geometry_scale 로 스케일 (docs/thermal_scaling.md)
 vibration:
-  standard: "ISO 10816-1 Class I (15 kW 미만, 소형기)"
-  watch_mms: 1.8
-  plan_mms: 4.5
+  standard: "ISO 20816-3 Group 2 (강성 지지, 5종 통일)"
+  watch_mms: 1.4
+  plan_mms: 2.8
   act_mms: 4.5
-  note: "Class I 는 Watch/Act 두 경계만 있어 plan=act 로 둔다 (경고 1.8~4.5, 위험 ≥4.5)"
+  note: "2026-10-08 결정 B-1 ②: 15 kW 미만도 20816-3 2군 강성 지지(1.4/2.8/4.5)로 통일. AI Hub 가이드라인은 같은 규격의 유연 지지 B/C 4.5 mm/s 를 정상 검수 기준으로 썼다 (docs/aihub_structure.md §11)"

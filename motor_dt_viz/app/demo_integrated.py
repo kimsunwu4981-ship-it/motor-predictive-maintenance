@@ -81,7 +81,7 @@ from pxr import Gf, UsdGeom, UsdLux  # noqa: E402
 from engine.config_loader import load  # noqa: E402
 from engine.current_model import CurrentModel  # noqa: E402
 from engine.fault_injector import FaultInjector  # noqa: E402
-from engine.scenario_player import ScenarioPlayer  # noqa: E402
+from engine.scenario_player import ScenarioPlayer, fill_vars  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
 from engine import motor_library as ml  # noqa: E402
 
@@ -535,6 +535,9 @@ while simulation_app.is_running():
                    f"Mode: {mode} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
             if MOTOR:
                 sub = sub.replace("ISO 20816-3", VIB_STD)      # 시나리오 자막의 규격 이름을 모터 규격으로
+            if "{" in sub:                                     # 자막 변수 (모터별 전류 수치, D-1 ②)
+                _cs = cm.evaluate_case(case)
+                sub = fill_vars(sub, {"rated_line_A": i_line, "a_rms_end": round(_cs.rms_A[0], 1), "a_pct_end": round(_cs.ratio[0] * 100)})
             hud.update_scenario(title, sub if not frame else f"[{CASE_EN.get(case, case)}]  {sub}",
                                 source=frame.source_en if frame else "")
             # 타임코드는 CSV 의 t_s 와 같은 값이다 (영상에서 오프셋을 눈으로 검증할 때 쓴다)

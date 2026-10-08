@@ -54,9 +54,9 @@ def test_i2i1_boundaries_4turn_is_danger():
 
 def test_vibration_standard_depends_on_motor():
     m1, m5 = ml.load_motor("M1"), ml.load_motor("M5")
-    assert lv("vibration", 1.6, motor=m1) == "SAFE"        # 10816-1 Class I: 경고 1.8 부터
+    assert lv("vibration", 1.3, motor=m1) == "SAFE" and lv("vibration", 1.6, motor=m1) == "WARN"   # 5종 통일: 경고 1.4 부터 (결정 B-1 ②)
     assert lv("vibration", 1.6, motor=m5) == "WARN"        # 20816-3: 경고 1.4 부터
-    assert lv("vibration", 1.8, motor=m1) == "WARN" and lv("vibration", 4.5, motor=m1) == "DANGER"
+    assert Judge(motor=m1).raw("vibration", 3.0)[3] == "정비 계획" and lv("vibration", 4.5, motor=m1) == "DANGER"
     assert lv("vibration", 4.5, motor=m5) == "DANGER" and lv("vibration", 4.49, motor=m5) == "WARN"
     j5 = Judge(motor=m5)
     assert j5.raw("vibration", 3.6)[3] == "정비 계획"     # 2.8 이상은 경고 안의 세부 라벨

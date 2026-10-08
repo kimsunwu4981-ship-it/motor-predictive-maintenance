@@ -17,11 +17,12 @@ playback:
   subtitle_font_size: 26
   hud_update_hz: 15
 
+# subtitle 변수: {rated_line_A} 정격 선전류, {a_rms_end}/{a_pct_end} 그 장면 R상 전류·정격 대비 % — 모터별로 채운다 (데모 HUD, export, 상태 보드). 값은 전류 모델에서만 온다.
 steps:
   - id: healthy
     label: "1. 정상 (3상 균형)"
-    subtitle: "세 상 전류가 고르게 흐른다 — 선전류 43.7 A, I₂/I₁ 0.006"
-    subtitle_en: "All three phases balanced - line current 43.7 A, I2/I1 = 0.006"
+    subtitle: "세 상 전류가 고르게 흐른다 — 선전류 {rated_line_A} A, I₂/I₁ 0.006"
+    subtitle_en: "All three phases balanced - line current {rated_line_A} A, I2/I1 = 0.006"
     source: "해석식 3상 모델"
     source_en: "Analytic 3-phase model"
     duration_s: 20
@@ -46,8 +47,8 @@ steps:
 
   - id: itsc_12turn
     label: "3. 턴간 단락 진행 (12턴)"
-    subtitle: "단락 범위가 넓어져 R상이 88 A (201 %) — I₂/I₁ 0.269"
-    subtitle_en: "Short spreads to 12 turns - phase R hits 88 A (201 %), I2/I1 = 0.269"
+    subtitle: "단락 범위가 넓어져 R상이 {a_rms_end} A ({a_pct_end} %) — I₂/I₁ 0.269"
+    subtitle_en: "Short spreads to 12 turns - phase R hits {a_rms_end} A ({a_pct_end} %), I2/I1 = 0.269"
     source: "해석식 모델 · 목표 I₂/I₁ 을 재현한 등가 표현"
     source_en: "Analytic model - equivalent representation reproducing target I2/I1"
     duration_s: 30

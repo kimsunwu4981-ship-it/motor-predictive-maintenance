@@ -58,9 +58,9 @@ def test_motors_match_library_yaml():
         mo = ml.load_motor(m["id"])
         assert m["vibration"]["watch_mms"] == mo.vib_thresholds["watch_mms"] and m["vibration"]["act_mms"] == mo.vib_thresholds["act_mms"]
         assert m["derived"]["bpfo_hz"] == pytest.approx(mo.bpfo_hz(), abs=0.05)
-    # 진동 규격은 출력 15 kW 를 경계로 갈린다 (M1~M3 1.8, M4·M5 1.4)
-    w = {m["id"]: m["vibration"]["watch_mms"] for m in idx["motors"]}
-    assert w["M1"] == w["M2"] == w["M3"] == 1.8 and w["M4"] == w["M5"] == 1.4
+    # 진동 규격은 5종 통일 (ISO 20816-3 Group 2 강성 지지 1.4/2.8/4.5 — 2026-10-08 결정 B-1 ②)
+    w = {m["id"]: (m["vibration"]["watch_mms"], m["vibration"]["plan_mms"], m["vibration"]["act_mms"]) for m in idx["motors"]}
+    assert all(v == (1.4, 2.8, 4.5) for v in w.values()) and all(m["vibration"]["standard"].startswith("ISO 20816-3") for m in idx["motors"])
 
 
 def test_thresholds_match_config():

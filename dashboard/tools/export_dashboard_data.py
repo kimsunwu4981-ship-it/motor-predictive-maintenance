@@ -325,6 +325,13 @@ def build_faults(mode: str) -> dict:
 
 
 # ----------------------------------------------------------------- main
+def _fill_subtitles(sc: dict, values: dict) -> None:
+    """시나리오 자막의 {변수}(정격 전류, 장면 끝 R상 전류 등)를 해설 변수로 채운다 — 이 export 는 M5 기준 (D-1 ②)."""
+    from engine.scenario_player import fill_vars
+    for st in sc["steps"]:
+        st["subtitle"] = fill_vars(st.get("subtitle", ""), values.get(st["id"]))
+
+
 def export(mode: str) -> dict:
     out_dir = os.path.join(DASH, "public", "data", mode)
     os.makedirs(out_dir, exist_ok=True)
@@ -338,6 +345,7 @@ def export(mode: str) -> dict:
         sys.path.insert(0, HERE)
         from export_mechanical_extras import apply_extras
         events, values = apply_extras(th, ts, sc, fa)
+        _fill_subtitles(sc, values)
         files += [("events", {"mode": mode, "n": len(events), "events": events}),
                   ("narration_values", {"mode": mode, "scenes": values})]
         rc = ts["replay_check"]
@@ -348,6 +356,7 @@ def export(mode: str) -> dict:
         sys.path.insert(0, HERE)
         from export_electrical_extras import apply_extras as apply_elec
         events, values, waves = apply_elec(th, ts, sc, fa)
+        _fill_subtitles(sc, values)
         files += [("events", {"mode": mode, "n": len(events), "events": events}),
                   ("narration_values", {"mode": mode, "scenes": values}), ("waveforms", waves)]
         rc = ts["recompute_check"]

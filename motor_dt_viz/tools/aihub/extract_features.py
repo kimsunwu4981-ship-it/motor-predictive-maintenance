@@ -270,7 +270,7 @@ def make_plots(feat: pd.DataFrame, meta: pd.DataFrame, l2: Path, plots: Path) ->
         order = sorted(fv["grp"].unique())
         fig, ax = plt.subplots(figsize=(11, 4.5))
         ax.boxplot([fv[fv["grp"] == g]["vel_rms_mm_s"].dropna() for g in order], tick_labels=order, showfliers=True)
-        for y, lab in ((1.8, "10816-1 Class I 경고 1.8"), (1.4, "20816-3 경고 1.4"), (4.5, "위험 4.5")):
+        for y, lab in ((1.4, "20816-3 경고 1.4 (5종 통일)"), (2.8, "정비 계획 2.8"), (4.5, "위험 4.5")):
             ax.axhline(y, ls="--", lw=.8, color="gray"); ax.text(0.5, y, lab, fontsize=8, color="gray", va="bottom")
         ax.set_ylabel("속도 RMS mm/s (10~1000 Hz, g 추정)"); ax.tick_params(axis="x", labelsize=8)
         ax.set_title(f"③ 용량·라벨별 속도 RMS — {TAG} (단위 미확정, 임계값 보정에 쓰지 않음)")
@@ -296,8 +296,8 @@ def write_summary(feat: pd.DataFrame, meta: pd.DataFrame, report: dict, path: Pa
     L += ["", "## 2. 현재 임계값과의 대략적 위치 (참고)", ""]
     for kw, g in fv[fv["label_no"] == "00"].groupby("power_kw"):
         med = g["vel_rms_mm_s"].median(); q95 = g["vel_rms_mm_s"].quantile(.95)
-        std = "ISO 10816-1 Class I (경고 1.8 / 위험 4.5)" if kw < 15 else "ISO 20816-3 Group 2 (경고 1.4 / 위험 4.5)"
-        lim = 1.8 if kw < 15 else 1.4
+        std = "ISO 20816-3 Group 2 강성 지지 (경고 1.4 / 위험 4.5, 5종 통일)"
+        lim = 1.4
         L.append(f"- {kw} kW 정상 속도 RMS 중앙값 {med:.2f} mm/s (95 % {q95:.2f}) — 우리 기준 {std} 에서 **대략** 경고 하한의 {med/lim*100:.0f} % 위치 (g 단위 가정).")
     # 1x 2x
     L += ["", "## 3. 회전 성분 (1×·2×, 가속도 원 단위, 모터별 중앙값)", "", "| 모터 | 라벨 | 파일 | fr Hz | a_1x | a_2x | a_2x/a_1x | kurtosis |", "|---|---|---|---|---|---|---|---|"]

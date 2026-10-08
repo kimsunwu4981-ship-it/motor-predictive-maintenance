@@ -4,7 +4,7 @@
   · 5종 YAML 스키마 검증 통과, 파생값(fr, BPFO Hz, 상전류, 슬립)이 수계산과 일치
   · M5 = 기존 motor.yaml / thermal.yaml 과 완전히 동일 (회귀)
   · 5종 정상 운전 수렴 온도가 모터별 '정상' 범위 안
-  · 진동 규격이 출력에 따라 바뀐다 (15 kW 미만 10816-1, 이상 20816-3)
+  · 진동 규격은 5종 모두 ISO 20816-3 Group 2 (2026-10-08 결정 B-1 ②)
 """
 import copy
 import math
@@ -64,7 +64,7 @@ def test_schema_rejects_bad_values():
     with pytest.raises(ml.MotorLibraryError):
         ml.validate(d)
     d = copy.deepcopy(ml.load_motor("M1").raw)
-    d["vibration"]["standard"] = "ISO 20816-3 Group 2"          # 2.2 kW 에 20816-3 → 규칙 4 위반
+    d["vibration"]["standard"] = "ISO 10816-1 Class I"          # 통일 규격(20816-3)이 아니면 규칙 4 위반
     with pytest.raises(ml.MotorLibraryError):
         ml.validate(d)
     d = copy.deepcopy(ml.load_motor("M1").raw)
@@ -144,7 +144,7 @@ def test_scaling_monotonic_and_rule():
 
 def test_vibration_standard_by_power():
     assert ml.load_motor("M1").vib_thresholds["watch_mms"] == pytest.approx(1.8)
-    assert ml.load_motor("M3").vib_thresholds["standard"].startswith("ISO 10816-1")
+    assert ml.load_motor("M3").vib_thresholds["standard"].startswith("ISO 20816-3")
     assert ml.load_motor("M4").vib_thresholds["watch_mms"] == pytest.approx(1.4)
     assert ml.load_motor("M5").vib_thresholds["standard"].startswith("ISO 20816-3")
     # FaultInjector 가 모터 규격을 쓴다: 1.6 mm/s 는 M1 에선 정상, M5 에선 Watch

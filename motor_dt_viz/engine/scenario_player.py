@@ -6,6 +6,7 @@ config/scenario.yaml 의 steps 를 벽시계 시간에 따라 진행하며,
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from .config_loader import load
@@ -42,6 +43,20 @@ class ScenarioFrame:
 
     def to_fault_state(self) -> FaultState:
         return FaultState(list(self.thermal_faults), self.electrical_case, self.load)
+
+
+def fill_vars(text: str, values: dict | None) -> str:
+    """자막의 {변수} 를 채운다. 없는 변수는 그대로 둔다 (테스트가 잡는다). 숫자는 정수면 그대로, 아니면 소수 1자리."""
+    if not text or not values:
+        return text
+    def one(m):
+        v = values.get(m.group(1))
+        if v is None:
+            return m.group(0)
+        if isinstance(v, float):
+            return str(int(round(v))) if abs(v - round(v)) < 1e-9 else f"{v:.1f}"
+        return str(v)
+    return re.sub(r"\{([a-zA-Z0-9_]+)\}", one, text)
 
 
 class ScenarioPlayer:

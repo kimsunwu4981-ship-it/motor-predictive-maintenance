@@ -284,7 +284,7 @@ def write_feature_summary(feat: pd.DataFrame, meta: pd.DataFrame, dt: float):
         L.append(f"| {mid} | {kw:g} | {m} | {lab} | {len(g)} | {v.mean():.3f} | {v.median():.3f} | {v.quantile(.95):.3f} | {v.max():.3f} | {g['crest_factor'].median():.1f} | {g['kurtosis'].median():.1f} | " + (f"BPFO {eb.median():.1f} (95 % {eb.quantile(.95):.1f}) / BPFI {g['env_bpfi_ratio'].median():.1f} · {g['bearing_de'].iloc[0]}" if eb.notna().any() else "베어링 미상") + " |")
     L += ["", "## 2. 정상 속도 RMS 의 ISO 등급 위치 (용량별)", "", "| 모터 ID | 용량 | 정상 파일 | 중앙값 | 95 % | 적용 규격 | 경고 하한 | 중앙값/경고 | 95 %/경고 |", "|---|---|---|---|---|---|---|---|---|"]
     for (mid, kw), g in fv[fv["label_no"] == "00"].groupby(["motor_id", "power_kw"], dropna=False):
-        std, lim = ("ISO 10816-1 Class I", 1.8) if kw < 15 else ("ISO 20816-3 Group 2", 1.4)
+        std, lim = "ISO 20816-3 Group 2 강성 지지 (5종 통일)", 1.4
         v = g["vel_rms_mm_s"]
         L.append(f"| {mid} | {kw:g} | {len(g)} | {v.median():.3f} | {v.quantile(.95):.3f} | {std} | {lim} | {v.median()/lim:.0%} | {v.quantile(.95)/lim:.0%} |")
     L += ["", "## 3. 정상 vs 베어링 불량 — 포락선 배율과 보조 지표", "",
