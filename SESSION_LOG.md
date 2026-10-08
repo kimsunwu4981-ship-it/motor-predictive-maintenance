@@ -503,7 +503,7 @@ motor_dt_viz/config/status_demo.yaml 데모 위치 (M1 기계 15 s 안전 · M2 
 - **`python` 별칭 없음** — Blender 파이썬 + `PYTHONPATH=C:\Temp\pymods` (yaml).
 - **게이지가 1080p 에서 잘림** — 탭 19vh, 차트 150 px, 1366 에서는 게이지 3열.
 
-### 13.7 해설 PDF "2.2 kW" 문구 제안 (적용 전, 사용자 확인용)
+### 13.7 해설 PDF "2.2 kW" 문구 제안 → 2026-10-08 "남은 작업 진행해" 지시로 적용 (PDF 재생성·qa.yaml 2곳)
 
 현재(`animation_guide.md` §Q&A, `content/*/qa.yaml`): "이 프로젝트의 3D 모델·시뮬레이션은 도면(JW-01-HTO-00)의 22 kW 6극 크레인 권상 모터를 기준으로 합니다."
 제안: **"이 프로젝트의 3D 모델·애니메이션·해설 대시보드는 모터 라이브러리 M1~M5(1톤 2.2 kW ~ 15~20톤 22 kW) 중 M5(22 kW 6극, 도면 JW-01-HTO-00)를 기준으로
