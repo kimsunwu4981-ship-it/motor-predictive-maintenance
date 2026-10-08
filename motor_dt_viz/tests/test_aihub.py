@@ -62,9 +62,11 @@ def test_selection_follows_config():
     mm = {float(k): v for k, v in SEL["motor_map"].items()}
     assert all(mm[kw] == mid for kw, mid in zip(m["power_kw"], m["motor_id"]))
     # manifest 행 수 = 목록(list_report) 예상 선별 파일 수 = 메타 행 수
-    rep = json.load(open(DATA / "list_report.json", encoding="utf-8"))
+    # zip 이 여러 개(Training·Validation)면 list_report_<split>.json 의 선별 수 합 = manifest = meta
+    reps = sorted(DATA.glob("list_report_*.json")) or [DATA / "list_report.json"]
+    expected = sum(json.load(open(r, encoding="utf-8"))["selected_files"] for r in reps)
     man = sum(1 for _ in open(DATA / "L1" / "manifest.csv", encoding="utf-8")) - 1
-    assert man == rep["selected_files"] == len(m)
+    assert man == expected == len(m)
     # 균형 샘플링: 조합당 상한 이하
     s = pd.read_parquet(DATA / "L2" / "sampled" / "meta.parquet")
     assert s.groupby(["motor_id", "label", "signal"]).size().le(SEL["sample_per_motor_label"]).all()

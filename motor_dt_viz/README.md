@@ -227,7 +227,8 @@ ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/f
 1. 다운로드: `AIHUB_API_KEY=<AI Hub 마이페이지 API 키> bash tools/aihub/download_full.sh` → 저장소 밖 `../aihub_full/` (진동 Training 78 GB + Validation 10 GB; 전류까지는 `AIHUB_FILEKEYS=44889,44890,44891,44815`). 파일 트리만 보려면 `--list`.
 2. D0: `python -I tools/aihub/run_pipeline.py list --zip <a.zip.part1>` — 병합 없이 목록·선별 패턴(`config/aihub_select.yaml`)·`docs/aihub_selection.md`. 패턴 확인 후
 3. D1+D2: `python -I tools/aihub/run_pipeline.py extract --zip <a.zip.part1>` — 단위별 추출 → Parquet(L2/full) → 검증 → L1 삭제 (6.9 ms/파일, CSV ×0.4~0.5). 이어서 `sample` (균형 샘플링).
-4. D3: `python -I tools/aihub/run_pipeline.py features` → `data/aihub/L3/features.parquet`, `docs/aihub_feature_summary.md`, `docs/aihub_plots/`.
+4. D3: `python -I -X utf8 tools/aihub/run_pipeline.py features --workers 4` → `<DATA>/L3/features.parquet`(37.7만 파일 20분), `docs/aihub_feature_summary.md`, `docs/aihub_plots/`.
+   산출물 폴더 `<DATA>` 는 `VIGENT_AIHUB_DATA`(기본 `C:\vigent_data\aihub`, OneDrive 밖). 잘린 zip(중앙 디렉터리 없음)도 `ScanZip` 이 순차 스캔으로 읽는다.
 5. 검증: `pytest tests/test_aihub.py tests/test_aihub_convert.py tests/test_aihub_features.py -q`. 임계값 보정은 별도 지시로 — 샘플 수치(`docs/aihub_sample_summary.md`)는 참고용.
 
 ## 기록

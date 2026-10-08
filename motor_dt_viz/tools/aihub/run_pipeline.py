@@ -360,7 +360,8 @@ def write_feature_summary(feat: pd.DataFrame, meta: pd.DataFrame, dt: float):
     fv = feat[feat["signal"] == "vibration"].copy()
     plots = DOCS / "aihub_plots"; plots.mkdir(exist_ok=True)
     L = ["# AI Hub 238 선별본 특징 요약 (D3) — docs/aihub_feature_summary.md", "",
-         "**다음 작업(임계값 보정)의 입력이다.** 단, 이번 실행은 *경량 샘플 zip* 을 원본으로 썼으므로 수치는 참고용이고 전체 데이터가 오면 같은 명령으로 다시 만든다.",
+         "**다음 작업(임계값 보정)의 입력이다.** 원본: AI Hub 238 전체 진동 데이터 — Training zip(잘린 파일, 7.5 kW 누락, 순차 스캔 회수분) + Validation zip(온전). "
+         "M3(7.5 kW)는 Validation 분만 있다. 결함은 가이드라인의 **인위 모의**(그리스 제거 / 외륜·내륜 소손 / 축 이동)이며 모터당 한 종류라, 정상 vs 결함 비교는 같은 모터끼리 한다 (§3).",
          "진동 단위 g 는 가이드라인 v2.4 로 확정. 포락선 BPFO/BPFI 배율은 가이드라인 표의 모터별 베어링 호칭(`config/aihub_bearings.yaml`) + 카탈로그 기하(추정)로 계산 — 참고값.", "",
          f"- 특징 {len(feat)} 행 / {len(meta)} 파일, {dt:.1f} s. 결측률(선별 신호에 해당하는 열만): " + (", ".join(f"{k} {v:.0%}" for k, v in feat.isna().mean().items() if 0 < v < 1) or "없음") + ". 전부 NaN 인 열: " + ", ".join(k for k, v in feat.isna().mean().items() if v == 1) + " (베어링 번호 없음 / 전류 전용).", "",
          "## 1. 용량·라벨별 속도 RMS (mm/s)", "", "| 모터 ID | 용량 | 모터 | 라벨 | 파일 | 평균 | 중앙값 | 95 % | 최대 | crest 중앙값 | kurtosis 중앙값 | 포락선 BPFO 배율 |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -383,11 +384,13 @@ def write_feature_summary(feat: pd.DataFrame, meta: pd.DataFrame, dt: float):
                 L.append(f"- {m} `{col}`: 정상 중앙값 {nor[col].median():.4g} (n={len(nor)}) vs 베어링불량 {b[col].median():.4g} (n={len(b)}) → 비 {b[col].median()/max(nor[col].median(),1e-12):.2f}")
     # 그림: 라벨별 박스 (vel_rms, band_hi)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
-    fv["grp"] = fv["motor_id"].astype(str) + " " + fv["aihub_motor_name"] + "\n" + fv["label"]
+    fv["grp"] = fv["motor_id"].astype(str) + "\n" + fv["label"]                       # 모터 ID·라벨 (13 묶음 — 모터명까지 나누면 30 묶음이라 읽기 어렵다)
     order = sorted(fv["grp"].unique())
-    for ax, col, ttl in zip(axes, ("vel_rms_mm_s", "env_bpfo_ratio"), ("속도 RMS mm/s (g)", "포락선 BPFO 배율 (피크/바닥, 가이드라인 베어링)")):
-        ax.boxplot([fv[fv["grp"] == g][col].dropna() for g in order], tick_labels=order, showfliers=True); ax.set_title(ttl); ax.tick_params(axis="x", labelsize=7)
-    fig.suptitle("선별본 라벨별 분포 — 경량 샘플 기반, 참고용 (베어링 호칭은 가이드라인 표, 기하는 카탈로그 추정)")
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.8))
+    for ax, col, ttl in zip(axes, ("vel_rms_mm_s", "kurtosis", "env_bpfo_ratio"), ("속도 RMS mm/s (g)", "kurtosis (정상 ≈3, 소손 ≫10, 로그축)", "포락선 BPFO 배율 (피크/바닥 — 고조파와 겹쳐 정상도 큼)")):
+        ax.boxplot([fv[fv["grp"] == g][col].dropna() for g in order], tick_labels=order, showfliers=False); ax.set_title(ttl); ax.tick_params(axis="x", labelsize=7)
+        if col == "kurtosis": ax.set_yscale("log")
+    fig.suptitle("AI Hub 전체 진동 데이터 — 모터 ID·라벨별 분포 (이상치 생략; 결함은 인위 모의, 베어링 호칭은 가이드라인 표·기하는 카탈로그 추정)")
     fig.tight_layout(); p = plots / "label_box_vel_bpfo.png"; fig.savefig(p, dpi=110); plt.close(fig)
     L += ["", f"그림: `{p.relative_to(VIZ).as_posix()}`"]
     (DOCS / "aihub_feature_summary.md").write_text("\n".join(L) + "\n", encoding="utf-8")

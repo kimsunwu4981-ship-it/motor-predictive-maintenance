@@ -624,7 +624,7 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
   `docs/fleet_recording_summary.json`, 확인 프레임 `s6_fleet_*.png`. 산출물 `모터결함_애니메이션/4_모터별/` 8편 교체.
 - 교훈: `record_fleet.ps1` 을 `powershell -File` 로 부를 때 `-Motors M3,M4` 는 문자열 하나로 들어온다 → 스크립트에서 쉼표 분할. 녹화 전 알림 앱(카카오톡) 종료 필요.
 
-## 16. AI Hub 전체 진동 데이터 — 다운로드·선별·변환 (2026-10-08 저녁, 진행 중)
+## 16. AI Hub 전체 진동 데이터 — 다운로드·선별·변환·특징 (2026-10-08 저녁, 완료)
 
 - 사용자가 API 키로 `download_full.sh` 실행(14:45~18:20, 평균 4.2 MB/s). aihubshell 이 tar 를 풀어 `1.Training/vibration.zip`, `2._Validation/vibration.zip` 두 파일로 남김.
 - **Training zip 이 잘렸다**: 66.8 GiB(목록 78 GB), 끝 1 MB 에 중앙 디렉터리 없음 → `zipfile` 은 "not a zip". 로컬 헤더를 순차 스캔하니(83 s) data descriptor 없이 크기가 다 있어
@@ -637,4 +637,11 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - ScanZip 의 `open()` 이 이름을 선형 탐색해 파일당 130 ms → 사전 색인 + 파일 핸들 재사용으로 0.8 ms. Training 추출 20:38~22:44 (10단위, 각 20/20 검증, L1 단위 삭제):
   327,543 파일 83 GB CSV → Parquet, **L2/full 합계 377,321 파일 46.3 GB**(file_id 중복 0). 모터별: M1 정상 129,311·베어링 21,558·축정렬 18,583 / M2 57,599·19,750·18,001 /
   M3 4,398·2,401·2,001(Validation 만) / M4 35,771·21,601(축정렬 없음) / M5 32,791·축정렬 13,556(베어링 없음).
-- `features --workers 4`(ProcessPoolExecutor, 샘플 검증 4.8 ms/파일) 추가. 22:45 `sample` → `features` 시작.
+- `features --workers 4`(ProcessPoolExecutor, 샘플 검증 4.8 ms/파일) 추가. 22:45 `sample`(조합당 2,000 → 26,000 파일) → `features` 377,321 파일 1,169 s(**3.1 ms/파일**) → `L3/features.parquet`,
+  `docs/aihub_feature_summary.md`(모터·라벨별 속도 RMS·포락선 배율·kurtosis), `docs/aihub_plots/label_box_vel_bpfo.png`, `docs/threshold_calibration_note.md` 전체 데이터판.
+- **전체 데이터가 말하는 것**: 정상 속도 RMS 중앙값 M1 0.16 / M2 0.09 / M3 0.19 / M4 0.25 / M5 0.29 mm/s(95 % ≤ 0.72) — 경고 1.4 의 7~21 %. 외륜·내륜 소손(M2 L-SF-02, M4 R-CAHU-01S)은
+  속도 ×3.9/×24(M4 3.9 mm/s), kurtosis 2.8→94 / 3.1→103, 포락선 BPFO ×15 / BPFI ×4.4 로 또렷. 그리스 제거(M1 L-SF-04, M3 L-PAC-01)는 모든 지표에서 거의 안 보임(×1.04~1.5).
+  포락선 BPFO 배율은 정상에서도 M4 7, M5 15~37 (기하 추정 BPFO 가 고조파와 겹침) → 임계값으로 부적합, kurtosis 가 깨끗. 축정렬은 속도 RMS 로 안 갈림(2× 성분으로). M3 L-SF-01 정상 63개는 정지 상태(진동 running 판정 필요).
+- 결정 B-3 ② 대로 config 무변경. 제안(§4): 진동 1.4/2.8/4.5 유지, 베어링 지표 정의를 kurtosis 또는 고조파 보정 포락선으로.
+- 테스트: `test_aihub.py` 가 외부 DATA(두 zip 합산 선별 수 = manifest = meta 377,321)로 통과, 엔진 115·대시보드 63.
+- 디스크: C:\vigent_data — zip 82 GB + L2/full 46.3 GB + sampled 3.2 GB + L3 0.3 GB. L1 은 비어 있다.
