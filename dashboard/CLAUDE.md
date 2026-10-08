@@ -251,7 +251,7 @@ MVP 필수: D0~D3 + D4의 색상 기준표·용어 풀이. 결함 도감은 시�
 
 ## C. D0 산출물
 
-- 영상 `dashboard/public/media/integrated_autoplay.mp4` (1456×938, 30 fps, 172 s, 17.3 MB)
+- 영상 `dashboard/public/media/integrated_autoplay.mp4` (1456×938, 30 fps, 172 s, 16.6 MB — 2026-10-08 R·S·T HUD·타임코드 없음으로 재녹화, 이전 판 `media/integrated_backup_phA/`)
 - 로그 `motor_dt_viz/logs/demo_20260921_163337.csv` (`t_real_s` 포함)
 - 메타 `motor_dt_viz/logs/recording_integrated_autoplay.json`
 - 바탕화면 사본 `바탕 화면/모터결함_애니메이션/07_통합_자동재생.mp4`

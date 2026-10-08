@@ -90,8 +90,8 @@ C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay
 Isaac Sim 녹화 영상 + 로그 CSV 를 동기 재생하는 설명형 대시보드. 지침: `dashboard/CLAUDE.md`.
 
 ### D0 산출물
-- 영상 `dashboard/public/media/integrated_autoplay.mp4` (1456×938, 30 fps, 172 s, 17.3 MB)
-- 메타 `motor_dt_viz/logs/recording_integrated_autoplay.json` (`video_offset_s` = 2.006)
+- 영상 `dashboard/public/media/integrated_autoplay.mp4` (1456×938, 30 fps, 172 s, 16.6 MB — 2026-10-08 R·S·T HUD·타임코드 없음으로 재녹화, 이전 판 `media/integrated_backup_phA/`)
+- 메타 `motor_dt_viz/logs/integrated/recording_integrated_autoplay.json` (`video_offset_s` = 2.004; 2021-09 판은 2.006)
 - 로그 `motor_dt_viz/logs/demo_20260921_163337.csv` (`t_real_s` 컬럼 포함)
 - 바탕화면 사본 `바탕 화면/모터결함_애니메이션/07_통합_자동재생.mp4`
 - Node.js 26.7.0 / npm 11.19.0 설치 완료 (Vite + React + TS 사용 승인됨)
@@ -523,7 +523,8 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
   그 모터 출처가 `nameplate`로 바뀌고 상단 정직성 줄·② 머리글·사양표 출처가 "명판값 (입력 YYYY-MM-DD)" 로 바뀐다. 전류 비율 게이지는 명판 정격으로 즉시 재계산,
   판정은 "배치 재실행 전" 표시. YAML 조각 복사 버튼 → `config/motors/<id>.yaml` 반영 후 `run_fleet → export_status_data → build`. 스크린샷 `s5_nameplate_M3_1920.png`.
 - **임계값 보정 가능성 메모** `motor_dt_viz/docs/threshold_calibration_note.md`: 샘플(M1 한 용량, 베어링 번호 없음, 단위 미확정)로는 바꾸지 않는 근거와 조건. config 무변경.
-- 하지 않은 것: 5종 애니메이션 재녹화(USD 프레임 스케일 결정 + 긴 녹화), 통합 영상 재녹화(화면 비우기 필요 → "시작" 신호 대기).
+- 통합 영상 재녹화 (2026-10-08 09:56, "진행해" 를 시작 신호로): `demo_integrated.py --mode integrated --record --no_timecode`, 172 s, 오프셋 2.004 s, HUD Ph R·S·T 확인(`s5_integrated_rst_110s.png`), `모터결함_애니메이션/3_통합/07_통합_자동재생.mp4` 교체. 이전 판은 `media/integrated_backup_phA/`.
+- 하지 않은 것: 5종 애니메이션 재녹화(USD 프레임 스케일 결정 + 30분 이상 녹화 — 지시 시).
 
 ## 14. AI Hub 「기계시설물 고장 예지 센서」 경량 샘플로 파이프라인 준비 (2026-10-07, S0~S3 완료)
 
