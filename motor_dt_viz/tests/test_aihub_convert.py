@@ -20,7 +20,7 @@ for _p in (os.environ.get("VIGENT_PYMODS"), r"C:\Temp\pymods"):
 
 import yaml  # noqa: E402
 
-SAMPLE = Path(os.environ.get("AIHUB_SAMPLE", r"C:\Users\sunwu\OneDrive\바탕 화면\2020-02-125.기계시설물고장예지_sample"))
+SAMPLE = Path(os.environ.get("AIHUB_SAMPLE", r"C:\Users\sunwu\OneDrive\바탕 화면\프로젝트\디지털 트윈\2020-02-125.기계시설물고장예지_sample"))
 L2 = VIZ / "data" / "aihub" / "sample" / "L2"
 pytestmark = pytest.mark.skipif(not (L2 / "meta.parquet").exists(), reason="L2 없음 — tools/aihub/convert_parquet.py 먼저")
 
