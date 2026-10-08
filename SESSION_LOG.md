@@ -673,3 +673,12 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **영상**: HUD·자막에 베어링 지표 이름이 없어 재녹화 없음. **테스트**: 엔진 117(베어링 경계·종합·부위 추정·등가값 테스트 추가, fleet 테스트는 원인 신호 변경 반영), 대시보드 63, AI Hub 특징 6.
 - 문서: `docs/bearing_metric_definition.md`(정의·실측 근거·등가값·기준선), `threshold_calibration_note.md`·`aihub_bearing_metric_comparison.md` 후속 메모, README 상태 보드 절.
 - 남은 판단(사용자): M1·M3 정상 오탐(kurtosis 경계 3.5/4.0 이 공조기 충격성 정상 파일에 걸림)은 현장 정상 운전 실측 후 경계 조정 여부. 기준선은 용량대 대표값이라 현장값으로 교체 필요.
+
+### 17.1 마무리·다음 작업 (2026-10-09 00:40, 커밋 48dc65a)
+
+- 사용자 결정: 베어링 kurtosis 경계 3.5/4.0 **유지**. 근거(오탐 수치, 벨트 구동 공조기의 충격성, 권상 모터 베이스라인 실측 T1 후 조정, 3초 지속 조건으로 단발 충격은 경고 안 뜸)는 `docs/bearing_metric_definition.md` §2.1.
+- 전체 데이터 L3 재추출 완료(377,321 파일, `hf_ratio`·`hf_baseline_g`·`bearing_site_hint` 열) → 같은 문서 §6, `docs/aihub_feature_summary.md` 갱신.
+- **다음**: `TASK_실시간_디지털트윈_대시보드.md` **R0** 시작 — 지시서 파일이 디스크에 없어 사용자가 본문/위치를 줘야 한다. 확정 조건: 10장(마이그레이션) 제외,
+  데스크탑 Isaac Sim + 맥북(같은 Wi-Fi) 대시보드, WebSocket·대시보드 서버 0.0.0.0 바인드, 윈도우 방화벽 인바운드 규칙 절차 README, 데스크탑 IP 를 HUD 에 표시,
+  렌더 프리셋 3070 Ti 8 GB 기준 1280×720 RTX Real-Time. 추정 약 4 h (맥북 실접속 확인은 사용자).
+- 보류 유지: 2번(Training zip 재다운로드, filekey 44890), 3번(전류 2차). `logs/fleet_before`(비교용 변경 전 로그)는 저장소 밖 로컬에만 있다.
