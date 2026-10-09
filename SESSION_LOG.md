@@ -739,3 +739,4 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 장애 테스트 `tools/live_fault_tests.py`(`docs/live_r4/fault_tests.json`): 범위 밖·목록 밖 거부, 동시 명령 마지막 승(1.2), 핫 스위치 0.11 s, 강제 종료 close 감지 1.7 s. 새로고침은 localStorage 로 즉시 재접속(R2). 삽질: kill 대상 명령줄 패턴 불일치 + state 가 계속 와서 무한 대기 → `--kill-match`·60 s 상한.
 - 체크리스트 `docs/live_demo_checklist.md`(전날·시작 순서·**라이브 실패 시 15 초 전환 절차와 백업 영상 경로**·데모 중·끝나고), README 핫 스위치·`--preset demo`.
 - (17:00) 맥북 Wi-Fi 끄기 테스트(사용자): 끊김→녹화 **3 s**, 복귀 **8 s**(Wi-Fi 재연결 포함), 끊긴 동안 게이지는 녹화 데이터로 움직임, 띠 "라이브 연결 끊김 — 녹화 재생 중", 특이사항 없음 → 장애 표 6종 전부 통과. **R0~R4 MVP 완료.** 테스트 Isaac 인스턴스 종료.
+- (17:15) 사용자 요청으로 Isaac Sim 기계 모드 라이브(`--mode mechanical --live --motor M5 --preset demo`, 로그 `logs/live_mech/`)를 띄우고 데스크탑 브라우저에 `#/status?live=ws://127.0.0.1:8765&ctl=1` 을 열어 둠. 대시보드 서버는 4173 에서 계속 실행 중. 저장 시점: R0~R4 MVP 완료, 커밋 b50a3a5 까지 푸시됨.
