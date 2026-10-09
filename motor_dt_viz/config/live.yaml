@@ -6,7 +6,7 @@ server:
   state_hz: 10            # state 송신 주기. 메인 루프는 매 프레임 publish 하고 브리지는 최신 것만 보낸다 (큐 적체 없음)
   heartbeat_hz: 1         # 클라이언트가 없어도 보낸다 — 대시보드는 3 s 무응답이면 끊김으로 본다 (dashboard 쪽 config)
   perf_period_s: 5        # VRAM(nvidia-smi)·RAM(psutil) 샘플 주기 — 브리지 쪽 스레드에서, 메인 루프 밖
-  max_clients: 8          # 발표자 노트북 + 심사용 화면 + 여유
+  max_clients: 32         # 발표자 노트북·심사용 화면·열어 둔 탭마다 1 (실측: 맥북+데스크탑 탭으로 8 을 넘겨 "too many clients" 거부 발생)
   bind_retry_s: 90        # 모터 전환 재기동 뒤 이전 인스턴스가 포트를 놓을 때까지 1 s 간격으로 다시 바인드 (R3)
 dashboard:
   port: 4173              # dashboard/serve.cjs 포트 — 콘솔·HUD 에 접속 주소를 찍을 때 쓴다

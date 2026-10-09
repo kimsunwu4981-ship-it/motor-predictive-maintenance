@@ -42,7 +42,12 @@
 
 ## 4. 데모 대본 · 녹화
 
-`docs/live_demo_script.md` 5단계(정상 → 베어링 결함 → 턴간 단락 4턴 → 리셋 → M1 전환 후 같은 결함). 녹화는 `tools/record_live_demo.ps1`(Isaac 창 왼쪽, 브라우저 오른쪽, 데스크톱 캡처 1920 폭) — **화면을 비운 뒤** 실행. 결과 영상은 `모터결함_애니메이션/10_라이브_양방향_데모_1920x1080.mp4` (녹화 후 기록).
+`docs/live_demo_script.md` 5단계(정상 → 베어링 결함 → 턴간 단락 4턴 → 리셋 → M1 전환 후 같은 결함). 녹화 `tools/record_live_demo.ps1`: 다른 창 전부 최소화 → Isaac 창(프로세스 핸들로 찾음)을 왼쪽 위 1280×950 → Edge 앱 창을 오른쪽 절반 → ffmpeg 데스크톱 캡처(1920 폭) + `live_demo_drive.py` 자동 전송 → 끝나면 창 복원.
+
+**결과 영상** `모터결함_애니메이션/10_라이브_양방향_데모_1920x1080.mp4` — 2026-10-09 16:03~16:07 녹화, **207 s, 10.3 MB**, 1920×1080 30 fps. 확인 프레임 `docs/live_r3/demo_frame_{25,70,100,150,190}s.png`:
+25 s 정상(전부 초록) · 70 s 베어링 결함+단락(Isaac HUD `Inter-turn short (4 turns)` STATUS DANGER, 보드 위험·R상 132 %·I₂/I₁ 0.104·kurtosis 50) · 100 s 리셋 후 식는 중 · 150 s 띠 "모터 전환 중 (M1, 약 60초) · 경과 21초" + Isaac 재기동 화면 · 190 s M1 `● LIVE` 베어링 결함(DE 85 °C 경고, M5 는 같은 시점 143 °C 위험). 전환은 **23.1 s**(ack→M1 첫 state).
+
+녹화 시도 기록: ① 접속 클라이언트 8명 초과(`too many clients`, 맥북·데스크탑 탭) → `max_clients 32` ② VS Code 창이 Isaac 뒤로 찍힘 → 녹화 전 전체 최소화 ③ Isaac 창을 제목으로 못 찾아 최소화된 채 녹화 → `Get-Process kit` MainWindowHandle ④ 성공.
 
 ## 5. 한계
 - 재기동 중에는 Isaac 창이 사라졌다 다시 뜬다(약 1 분). 발표 흐름상 "모터 전환" 은 마지막 단계에 두었다.

@@ -727,3 +727,4 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 자동 구동 `tools/live_demo_drive.py --fast`: 5단계 모두 ack ok — 베어링 결함 8 s 뒤 DANGER(bearing_kurtosis 50, DE 121 °C), ITSC 4턴 R상 57.8 A·I₂/I₁ 0.104, 리셋 SAFE, M1 전환 47 s, M1 같은 결함 71.6 °C(M5 121 °C) — "작은 모터는 늦게 뜨거워진다" 확인.
 - 대본 `docs/live_demo_script.md`, 녹화 `tools/record_live_demo.ps1`(Isaac 왼쪽·Edge 오른쪽, 데스크톱 캡처 1920 폭). **녹화는 화면을 비운 뒤** 사용자 신호로 진행(미완).
 - 테스트: 브리지 6(hello·select_motor·restart_args 추가), 대시보드 63, 엔진 전체 통과. 커밋 후 R4(프리셋·장애 표·체크리스트).
+- (16:07) **데모 녹화 완료** `모터결함_애니메이션/10_라이브_양방향_데모_1920x1080.mp4`(207 s, 10.3 MB): 5단계 모두 담김, M1 전환 23 s. 시도 4회 — too many clients(max_clients 8→32), VS Code 배경, Isaac 창 제목 탐색 실패(프로세스 핸들로) 뒤 성공. 확인 프레임 docs/live_r3/demo_frame_*.png. 녹화 스크립트는 창 전체 최소화·복원까지 자동.
