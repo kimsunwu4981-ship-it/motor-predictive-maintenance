@@ -738,4 +738,4 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 프리셋 `config/render_demo.yaml` `--preset demo`(1280×720, RTX Real-Time, 서브스텝 2, 입자 12, 뷰포트 1개) + 기동 `[perf] start` 로그(`perf_start.json`: fps 48~58 @8 s 워밍업, VRAM 3.3 GB, RAM 4.9 GB) + FPS<30 경고.
 - 장애 테스트 `tools/live_fault_tests.py`(`docs/live_r4/fault_tests.json`): 범위 밖·목록 밖 거부, 동시 명령 마지막 승(1.2), 핫 스위치 0.11 s, 강제 종료 close 감지 1.7 s. 새로고침은 localStorage 로 즉시 재접속(R2). 삽질: kill 대상 명령줄 패턴 불일치 + state 가 계속 와서 무한 대기 → `--kill-match`·60 s 상한.
 - 체크리스트 `docs/live_demo_checklist.md`(전날·시작 순서·**라이브 실패 시 15 초 전환 절차와 백업 영상 경로**·데모 중·끝나고), README 핫 스위치·`--preset demo`.
-- (17:00) 맥북 Wi-Fi 끄기 테스트는 사용자가 수행 — 끊김→녹화 N초 / 복귀 M초 수치는 아직 템플릿만 전달돼 보고서 표에 "수치 보고 대기"로 둠. 나머지 R4 항목 완료. 테스트 Isaac 인스턴스(8765) 종료.
+- (17:00) 맥북 Wi-Fi 끄기 테스트(사용자): 끊김→녹화 **3 s**, 복귀 **8 s**(Wi-Fi 재연결 포함), 끊긴 동안 게이지는 녹화 데이터로 움직임, 띠 "라이브 연결 끊김 — 녹화 재생 중", 특이사항 없음 → 장애 표 6종 전부 통과. **R0~R4 MVP 완료.** 테스트 Isaac 인스턴스 종료.
