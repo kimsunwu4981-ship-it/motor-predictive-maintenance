@@ -188,3 +188,26 @@ table.grid th { color: var(--fg2); font-weight: 700; }
 .live-video .chapters .chapter { min-width: 0; }
 .st-card.off { opacity: .5; filter: grayscale(.4); }
 .st-card .st-live { font-size: .72em; color: #26f259; font-weight: 800; margin-left: 6px; }
+
+/* ---- 제어 패널 서랍 (R3, 라이브 전용) ---- */
+.ctl-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 92vw); z-index: 60; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgba(0,0,0,.35); display: flex; flex-direction: column; }
+.ctl-h { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.ctl-h .grow { flex: 1; }
+.ctl-note { margin: 10px 14px 0; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, #ffc93c 22%, var(--panel)); border: 1px solid #ffc93c; font-size: .92em; }
+.ctl-b { padding: 8px 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 14px; }
+.ctl-b section h4 { margin: 0 0 6px; font-size: .95em; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.ctl-b section h4 .dim { font-weight: 400; font-size: .85em; }
+.ctl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+.ctl-fault { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-align: left; cursor: pointer; }
+.ctl-fault.on { border-color: #ff731a; background: color-mix(in srgb, #ff731a 22%, var(--panel2)); font-weight: 700; }
+.ctl-fault.el.on { border-color: #ff5b3a; background: color-mix(in srgb, #ff5b3a 22%, var(--panel2)); }
+.ctl-fault:disabled, .ctl-row button:disabled { opacity: .45; cursor: not-allowed; }
+.ctl-b label { display: block; margin: 6px 0; font-size: .92em; }
+.ctl-b label input[type=range] { width: 100%; }
+.ctl-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.ctl-row button.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.ctl-toasts { display: flex; flex-direction: column; gap: 4px; font-size: .9em; }
+.ctl-toast { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); }
+.ctl-toast.ok { border-color: #26f259; } .ctl-toast.bad { border-color: #ff140d; background: color-mix(in srgb, #ff140d 15%, var(--panel2)); }
+.small { font-size: .85em; }
+.live-banner.restart { background: color-mix(in srgb, #62d2ff 18%, var(--panel)); border-color: #62d2ff; }

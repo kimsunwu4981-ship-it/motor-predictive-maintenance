@@ -15,6 +15,7 @@ import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } fro
 import { openChannel, type MainState, type Msg } from "../live/broadcast";
 import { useLiveSession } from "../live/session";
 import { LiveToggle, LiveBanner } from "../live/LiveToggle";
+import { ControlPanel } from "../live/ControlPanel";
 import { LiveVideoPanel } from "../live/LiveVideoPanel";
 import { liveHistory, revealLevel, toMechData, useLivePlayback } from "../live/livedata";
 import { REVEAL_LABEL } from "../live/captions";
@@ -47,7 +48,8 @@ function Inner({ data: data0 }: { data: MechData }) {
   const pb = liveData ? pbLive : pbRec;
   const [present, setPresent] = useState(false);
   const [autoMode, setAutoMode] = useState(true);       // 자동 해설 / 발표자 모드 (TASK 7.1)
-  const [captions, setCaptions] = useState(true);       // C 키: 자막 켜기/끄기
+  const [captions, setCaptions] = useState(true);
+  const [ctl, setCtl] = useState(() => new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("ctl") === "1");                // K 키: 제어 패널 (라이브)       // C 키: 자막 켜기/끄기
   const [qa, setQa] = useState(() => new URLSearchParams(window.location.hash.split("?")[1] ?? "").get("qa") === "1");   // Q 키: 예상 질문 서랍 (?qa=1 로 열린 채 시작)
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; }
@@ -132,6 +134,7 @@ function Inner({ data: data0 }: { data: MechData }) {
       else if (e.key === "c" || e.key === "C") setCaptions((c) => !c);
       else if (e.key === "q" || e.key === "Q") setQa((q) => !q);
       else if (e.key === "n" || e.key === "N") nextLevel();
+      else if (e.key === "k" || e.key === "K") setCtl((c) => !c);
       else if (e.key === "Escape" && present) setPresent(false);
       else if (e.key >= "1" && e.key <= "9") pb.gotoStep(Number(e.key));
     };
@@ -150,7 +153,7 @@ function Inner({ data: data0 }: { data: MechData }) {
         <HUDLive data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
                  present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
                  captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter}
-                 extra={<LiveToggle live={live} compact />} banner={<LiveBanner live={live} />} />
+                 extra={<><LiveToggle live={live} compact />{live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 제어 패널">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}</>} banner={<LiveBanner live={live} />} />
         <div className="live-main">
           {liveData ? <LiveVideoPanel data={data} live={live} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
                     : <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />}
@@ -165,6 +168,7 @@ function Inner({ data: data0 }: { data: MechData }) {
           <CausePanel data={data} focus={focus} />
         </div>
         <QaDrawer data={data} open={qa} onClose={() => setQa(false)} />
+        <ControlPanel live={live} open={ctl} onClose={() => setCtl(false)} />
       </div>
     </PlaybackContext.Provider>
   );

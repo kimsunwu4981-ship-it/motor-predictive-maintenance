@@ -6,7 +6,7 @@
 //   live.send(name, args) → 명령 (R3 제어 패널)
 // 세 화면(#/status, #/mechanical, #/electrical)이 같은 훅을 쓴다. 토글은 localStorage(vigent-live)로 공유된다.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LIVE_CFG_DEFAULT, LiveFeed, loadLiveCfg, type FeedStatus, type LiveAck, type LiveCfg, type LiveState } from "./feed";
+import { LIVE_CFG_DEFAULT, LiveFeed, loadLiveCfg, type FeedStatus, type LiveAck, type LiveCfg, type LiveHello, type LiveState } from "./feed";
 
 const KEY = "vigent-live";
 interface Saved { enabled: boolean; url: string }
@@ -47,6 +47,8 @@ export interface LiveSession {
   buffer: LiveBuffer; version: number; last: LiveState | null; clients: number;
   send: (name: string, args?: Record<string, unknown>) => Promise<LiveAck>;
   lastAck: LiveAck | null;
+  hello: LiveHello | null;               // 허용 명령·모터 목록 (제어 패널)
+  restarting: { motor_id: string; eta_s: number; at: number } | null;   // select_motor 뒤 Isaac 재기동 중 (띠 "모터 전환 중")
 }
 
 export function useLiveSession(): LiveSession {
@@ -55,6 +57,8 @@ export function useLiveSession(): LiveSession {
   const [status, setStatus] = useState<FeedStatus>("off");
   const [version, setVersion] = useState(0);
   const [lastAck, setLastAck] = useState<LiveAck | null>(null);
+  const [hello, setHello] = useState<LiveHello | null>(null);
+  const [restarting, setRestarting] = useState<LiveSession["restarting"]>(null);
   const feedRef = useRef<LiveFeed | null>(null);
   const bufRef = useRef<LiveBuffer>(new LiveBuffer(LIVE_CFG_DEFAULT.window_s, LIVE_CFG_DEFAULT.buffer_max_n));
   useEffect(() => { loadLiveCfg().then((c) => { setCfg(c); bufRef.current.windowS = c.window_s; bufRef.current.maxN = c.buffer_max_n; }); }, []);
@@ -66,8 +70,16 @@ export function useLiveSession(): LiveSession {
     feedRef.current = feed;
     const offs = [
       feed.onStatus((s) => setStatus(s)),
-      feed.onState((s) => { bufRef.current.push(s); setVersion((v) => v + 1); }),
-      feed.onAck((a) => setLastAck(a)),
+      feed.onState((s) => {
+        bufRef.current.push(s); setVersion((v) => v + 1);
+        if (feed.hello) setHello(feed.hello);
+        setRestarting((r) => (r && s.motor_id === r.motor_id ? null : r));            // 새 모터의 첫 state → 전환 끝
+      }),
+      feed.onAck((a) => {
+        setLastAck(a);
+        const ap = a.applied as { restart?: boolean; motor_id?: string; eta_s?: number } | undefined;
+        if (a.ok && a.name === "select_motor" && ap?.restart && ap.motor_id) { bufRef.current.clear(); setRestarting({ motor_id: ap.motor_id, eta_s: Number(ap.eta_s ?? 45), at: Date.now() }); }
+      }),
     ];
     feed.start();
     return () => { offs.forEach((f) => f()); feed.stop(); if (feedRef.current === feed) feedRef.current = null; };
@@ -80,11 +92,17 @@ export function useLiveSession(): LiveSession {
     const f = feedRef.current;
     return f ? f.send(name, args) : Promise.resolve<LiveAck>({ type: "ack", id: null, name, ok: false, reason: "LIVE 꺼짐", t_wall: Date.now() / 1000 });
   }, []);
+  // 전환이 너무 오래 걸리면(2×eta 또는 timeout) 일반 끊김으로 되돌린다
+  useEffect(() => {
+    if (!restarting) return;
+    const h = setTimeout(() => setRestarting(null), Math.max(restarting.eta_s * 2, 60) * 1000);
+    return () => clearTimeout(h);
+  }, [restarting]);
   const buf = bufRef.current;
   const active = saved.enabled && status === "live" && buf.states.length >= 2;
   const fallback = saved.enabled && !active;
   return useMemo(() => ({
     cfg, enabled: saved.enabled, setEnabled, url, setUrl, status, active, fallback,
-    buffer: buf, version, last: buf.last, clients: feedRef.current?.clients ?? 0, send, lastAck,
-  }), [cfg, saved.enabled, setEnabled, url, setUrl, status, active, fallback, buf, version, send, lastAck]);
+    buffer: buf, version, last: buf.last, clients: feedRef.current?.clients ?? 0, send, lastAck, hello, restarting,
+  }), [cfg, saved.enabled, setEnabled, url, setUrl, status, active, fallback, buf, version, send, lastAck, hello, restarting]);
 }

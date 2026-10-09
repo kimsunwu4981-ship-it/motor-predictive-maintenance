@@ -1,0 +1,30 @@
+{
+ "url": "ws://127.0.0.1:8766",
+ "target": "M3",
+ "from": "M1",
+ "fps_before": 34.0,
+ "ack": {
+  "type": "ack",
+  "id": "rs1",
+  "name": "select_motor",
+  "ok": true,
+  "t_wall": 1791525629.659603,
+  "applied": {
+   "restart": true,
+   "motor_id": "M3",
+   "from": "M1",
+   "eta_s": 45.0
+  }
+ },
+ "send_to_ack_s": 0.014,
+ "ack_to_close_s": 0.34,
+ "first_state": {
+  "motor_id": "M3",
+  "mode": "integrated",
+  "step": "manual",
+  "fps": 0.5
+ },
+ "reconnect_attempts": 18,
+ "ack_to_reconnect_s": 46.5,
+ "ack_to_first_state_s": 46.5
+}

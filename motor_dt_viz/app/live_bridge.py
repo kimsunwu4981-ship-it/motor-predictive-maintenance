@@ -28,6 +28,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
 from engine.config_loader import load  # noqa: E402
+from engine import motor_library as ml  # noqa: E402
 
 
 def lan_ip() -> str:
@@ -156,6 +157,12 @@ class LiveBridge:
         cmd = {"type": "command", "id": msg.get("id"), "name": name, "args": args}
         if spec.get("runtime") is False:
             return False, str(spec.get("reason", "not available at runtime")), cmd
+        if name == "select_motor":                                   # runtime: restart — 모터 목록만 검사, 재기동은 메인 루프가
+            mid = str(args.get("motor_id", "")).upper()
+            if mid not in ml.list_ids():
+                return False, f"motor_id not in library: {args.get('motor_id')} (allowed {', '.join(ml.list_ids())})", cmd
+            args["motor_id"] = mid
+            return True, "", cmd
         if name == "inject_fault":
             f = str(args.get("fault", ""))
             f = (spec.get("aliases") or {}).get(f, f)
@@ -205,11 +212,27 @@ class LiveBridge:
             self.error = f"{type(e).__name__}: {e}"
             self._ready.set()
 
+    def hello(self) -> dict:
+        """접속 직후 보내는 허용 명령 목록·모터 목록 (대시보드 제어 패널의 단일 출처 = config/live.yaml)."""
+        return {"type": "hello", "schema": self.schema, "commands": self.commands, "motors": ml.list_ids(),
+                "restart_eta_s": float((self.commands.get("select_motor") or {}).get("restart_eta_s", 45)), "ws": self.url, "t_wall": time.time()}
+
     async def _main(self) -> None:
         import websockets
         self._loop = asyncio.get_running_loop()
         self._out_q = asyncio.Queue()
-        async with websockets.serve(self._handler, self.host, self.port, ping_interval=20, ping_timeout=20, max_size=1 << 20):
+        # 재기동 직후에는 이전 인스턴스가 아직 포트를 쥐고 있을 수 있다 → bind_retry_s 동안 1 s 간격으로 다시 시도
+        deadline = time.time() + float((self.cfg.get("server") or {}).get("bind_retry_s", 0))
+        while True:
+            try:
+                server = await websockets.serve(self._handler, self.host, self.port, ping_interval=20, ping_timeout=20, max_size=1 << 20)
+                break
+            except OSError as e:
+                if time.time() >= deadline:
+                    raise
+                self.log(f"[live] port {self.port} busy ({e.errno}) - retrying")
+                await asyncio.sleep(1.0)
+        async with server:
             self._ready.set()
             tasks = [asyncio.create_task(self._broadcaster()), asyncio.create_task(self._heartbeat()), asyncio.create_task(self._sender())]
             try:
@@ -231,6 +254,7 @@ class LiveBridge:
         self._clients.add(ws)
         peer = getattr(ws, "remote_address", None)
         self.log(f"[live] client + {peer}  ({len(self._clients)})")
+        await self._safe_send(ws, self.hello())
         try:
             async for raw in ws:
                 try:

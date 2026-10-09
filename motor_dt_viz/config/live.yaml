@@ -7,6 +7,7 @@ server:
   heartbeat_hz: 1         # 클라이언트가 없어도 보낸다 — 대시보드는 3 s 무응답이면 끊김으로 본다 (dashboard 쪽 config)
   perf_period_s: 5        # VRAM(nvidia-smi)·RAM(psutil) 샘플 주기 — 브리지 쪽 스레드에서, 메인 루프 밖
   max_clients: 8          # 발표자 노트북 + 심사용 화면 + 여유
+  bind_retry_s: 90        # 모터 전환 재기동 뒤 이전 인스턴스가 포트를 놓을 때까지 1 s 간격으로 다시 바인드 (R3)
 dashboard:
   port: 4173              # dashboard/serve.cjs 포트 — 콘솔·HUD 에 접속 주소를 찍을 때 쓴다
   route: "#/status?live=ws://{ip}:{port}"
@@ -25,4 +26,8 @@ commands:                 # 허용 목록. name 이 없거나 인자가 범위 �
   play_scenario: { scene_min: 1 }        # scene 생략 = 처음부터, n = 그 장면 시작으로 점프 (장면 수는 모드 시나리오 config 가 정한다)
   stop_scenario: {}
   reset: {}
-  select_motor: { runtime: false, reason: "restart required: run demo_integrated.py --motor <id> (전환 방식은 R3 에서 결정)" }
+  select_motor:                          # R3 결정(2026-10-09): 자동 재시작. 현재 모터를 정리하고 같은 인자(--mode/--live/--live_port/--low…, --autoplay·--max_s·--record 는 제외)로 새 모터 재기동
+    runtime: restart
+    restart_eta_s: 60                    # 대시보드 띠 "모터 전환 중 (약 N초)" 예상값 — 실측(2026-10-09, 3070 Ti): 46.5 s(Isaac 1개), 133 s(다른 Isaac 인스턴스 동시 실행) → docs/live_r3_report.md
+    restart_timeout_s: 120               # 이 시간 안에 새 모터 state 가 안 오면 대시보드는 일반 끊김으로 취급
+

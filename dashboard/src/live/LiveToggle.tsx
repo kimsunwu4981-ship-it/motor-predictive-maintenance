@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { LiveSession } from "./session";
 
 // 상단 녹화 / LIVE 스위치 (TASK 실시간 §6). LIVE 를 누르면 주소 입력(마지막 값 기억) → 연결되면 초록 LIVE 뱃지,
@@ -7,6 +7,7 @@ export function LiveToggle({ live, compact }: { live: LiveSession; compact?: boo
   const [edit, setEdit] = useState(false);
   const [draft, setDraft] = useState(live.url);
   const badge = !live.enabled ? { cls: "rec", text: "녹화" }
+    : live.restarting ? { cls: "wait", text: `전환 중 → ${live.restarting.motor_id}` }
     : live.status === "live" ? { cls: "on", text: `LIVE${live.last ? ` · ${live.last.motor_id}` : ""}${live.clients ? ` · ${live.clients}명` : ""}` }
     : live.status === "connecting" ? { cls: "wait", text: "연결 중…" }
     : { cls: "lost", text: "끊김 → 녹화" };
@@ -32,6 +33,17 @@ export function LiveToggle({ live, compact }: { live: LiveSession; compact?: boo
 
 // 끊김 띠 (§1.3): LIVE 를 켰는데 스트림이 없을 때만 보인다. 발표 중 멈추지 않도록 화면은 녹화 데이터로 계속 간다.
 export function LiveBanner({ live }: { live: LiveSession }) {
+  const [, tick] = useState(0);
+  useEffect(() => { if (!live.restarting) return; const h = setInterval(() => tick((x) => x + 1), 1000); return () => clearInterval(h); }, [live.restarting]);
+  if (live.restarting) {                                   // select_motor 자동 재시작 (R3): 끊김이 아니라 전환 중
+    const el = Math.round((Date.now() - live.restarting.at) / 1000);
+    return (
+      <div className="live-banner restart">
+        ⟳ <b>모터 전환 중 ({live.restarting.motor_id}, 약 {Math.round(live.restarting.eta_s)}초)</b> — Isaac Sim 재기동, 재접속 대기 · 경과 {el}초
+        <span className="grow" /><span className="dim">그동안 녹화 데이터를 보여줍니다</span>
+      </div>
+    );
+  }
   if (!live.fallback) return null;
   const why = live.status === "connecting" ? "연결 중" : live.status === "lost" ? `재연결 시도 중 (${live.cfg.reconnect_s} s 간격)` : "스트림 대기";
   return (

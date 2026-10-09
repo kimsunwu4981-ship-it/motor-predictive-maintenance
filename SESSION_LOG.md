@@ -716,3 +716,14 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 확인: 녹화 모드 3화면 회귀 동일, 라이브 3화면(사용자가 띄워 둔 Isaac `--live` M5 수동 구간에 접속: LIVE·M5 뱃지, 게이지·차트·페이저 갱신, FPS 79·VRAM 3.2 GB 표시), 폴백(닫힌 포트: 띠+"끊김 → 녹화"+녹화 데이터 정상). 테스트 대시보드 63·엔진 121.
 - 삽질: `?live=ws://` 가 옛 HTTP LiveSource 에 걸려 index.json fetch 실패 → 스킴으로 분기. 띠를 grid 자식으로 두니 카드 행이 밀림 → HUD 안으로. 라이브 모터 자동 선택이 재생기를 pause 시킴 → 선택 효과에서 라이브 모터 제외. 사용자가 켜 둔 kit.exe(13:54, --live)가 8765 를 점유 → 내 검증 실행은 포트 충돌(그 인스턴스를 그대로 검증에 사용). cp949 콘솔에 em dash 출력 불가 → ASCII 메시지.
 - 남은 것: R3 제어 패널(결함 토글·슬라이더·리셋·시나리오, ack 확정·거부 토스트)과 데모 시나리오 녹화, R4 프리셋·장애 표·체크리스트. 영상 자리 옵션 2·3 은 R5.
+
+## 21. 라이브 모드 R3 — 양방향 제어 패널 · 모터 전환 자동 재시작 (2026-10-09 오후, 녹화 제외 완료)
+
+사용자: 맥북 라이브(연결·결함 토글·종료 폴백) 확인 → R3. 모터 전환은 자동 재시작(select_motor → Isaac 재기동, 대시보드 "모터 전환 중 (약 N초)" 띠 후 재접속), 재시작 시간 실측 보고, 녹화 전 화면 비우기 안내. 보고서 `motor_dt_viz/docs/live_r3_report.md`.
+
+- Isaac: `live.yaml select_motor {runtime: restart, restart_eta_s 60, restart_timeout_s 120}`, `server.bind_retry_s 90`; 브리지 `hello`(허용 명령·모터 목록, 접속 직후)·select_motor 검증·포트 재바인딩 재시도; 데모 `select_motor` → ack{restart} → HUD RESTARTING → 루프 종료 → 브리지 정지 → `restart_args()` 로 kit.exe 재기동(stdout → `logs/live_restart_<id>.log`). 첫 시도는 DETACHED 자식의 `sys.stderr=None` 으로 SimulationApp 이 죽음 → 로그 파일 핸들로 해결.
+- 대시보드: `ControlPanel.tsx` 서랍(K·`&ctl=1`): 결함 토글(모드별), 부하/배속/슬로모션 슬라이더, 모드, 시나리오 재생·장면·정지, 리셋, 모터 M1~M5; 상태는 state 로 확정, 거부는 토스트. `session.restarting` + 띠 "모터 전환 중 (M1, 약 60초) · 경과 n초", 옛 인스턴스(hello 없음) 안내.
+- 실측(3070 Ti, 통합 모드): M5→M1 133 s(사용자 Isaac 인스턴스 동시 실행, FPS 50), M1→M3 46.5 s, 자동 구동 M5→M1 47.2 s. 끊김은 ack 뒤 0.3 s. 단독 실행 45~60 s, Isaac 두 개면 2 분+ → 발표 때 하나만.
+- 자동 구동 `tools/live_demo_drive.py --fast`: 5단계 모두 ack ok — 베어링 결함 8 s 뒤 DANGER(bearing_kurtosis 50, DE 121 °C), ITSC 4턴 R상 57.8 A·I₂/I₁ 0.104, 리셋 SAFE, M1 전환 47 s, M1 같은 결함 71.6 °C(M5 121 °C) — "작은 모터는 늦게 뜨거워진다" 확인.
+- 대본 `docs/live_demo_script.md`, 녹화 `tools/record_live_demo.ps1`(Isaac 왼쪽·Edge 오른쪽, 데스크톱 캡처 1920 폭). **녹화는 화면을 비운 뒤** 사용자 신호로 진행(미완).
+- 테스트: 브리지 6(hello·select_motor·restart_args 추가), 대시보드 63, 엔진 전체 통과. 커밋 후 R4(프리셋·장애 표·체크리스트).

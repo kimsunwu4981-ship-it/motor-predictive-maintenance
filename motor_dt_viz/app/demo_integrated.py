@@ -216,6 +216,7 @@ LIVE_CFG = load("live")
 LIVE_THERMAL = set(LIVE_CFG["commands"]["inject_fault"]["thermal"])
 LIVE_ELECTRICAL = set(LIVE_CFG["commands"]["inject_fault"]["electrical"])
 LIVE_JUMP = {"scene": None}          # play_scenario {scene: n} → request_play 처리 때 그 장면 시작으로 점프
+LIVE_RESTART = {"motor_id": None}    # select_motor → 루프를 끝내고 같은 인자로 새 모터 재기동 (R3 자동 재시작)
 
 
 def _load_reveal_timing() -> dict:
@@ -303,7 +304,31 @@ def apply_command(cmd: dict) -> tuple[bool, object]:
         else:
             state.request_reset = True; state.thermal_faults.clear(); state.electrical_case = "healthy"
         return True, {"reset": True}
+    if name == "select_motor":
+        mid = str(a["motor_id"]).upper()
+        cur = MOTOR.id if MOTOR else ml.REFERENCE_ID
+        if mid == cur:
+            return False, f"already running motor {cur}"
+        LIVE_RESTART["motor_id"] = mid
+        eta = float((LIVE_CFG["commands"].get("select_motor") or {}).get("restart_eta_s", 45))
+        if hud:
+            hud.set_live(f"RESTARTING -> {mid}  (about {eta:.0f} s)")
+        return True, {"restart": True, "motor_id": mid, "from": cur, "eta_s": eta}
     return False, f"unhandled command {name}"
+
+
+def restart_args(argv: list[str], motor_id: str) -> list[str]:
+    """재기동 인자: 원래 인자에서 --motor/--autoplay/--max_s/--record/--no_timecode/--switch_seq 를 빼고 --motor <id> 를 붙인다 (수동 모드로 시작)."""
+    out, skip = [], 0
+    for i, a in enumerate(argv):
+        if skip:
+            skip -= 1; continue
+        if a in ("--motor", "--max_s", "--record", "--switch_seq"):
+            skip = 1; continue
+        if a.startswith(("--motor=", "--max_s=", "--record=", "--switch_seq=")) or a in ("--autoplay", "--no_timecode"):
+            continue
+        out.append(a)
+    return out + ["--motor", motor_id]
 
 
 CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
@@ -763,6 +788,12 @@ while simulation_app.is_running():
 
     if args.max_s and t_session >= args.max_s:
         break
+    if LIVE_RESTART["motor_id"]:
+        # ack 가 클라이언트에 나갈 시간을 준 뒤 루프를 끝낸다 (대시보드는 끊김을 '모터 전환 중' 띠로 보여주고 재접속 대기)
+        for _ in range(20):
+            world.render()
+        print(f"[live] restarting with motor {LIVE_RESTART['motor_id']}", flush=True)
+        break
 
 if recorder is not None:
     _stop_recording(recorder)
@@ -776,7 +807,20 @@ if recorder is not None:
 
 if bridge is not None:
     print("[live] stats", json.dumps(bridge.stats), flush=True)
-    bridge.stop()
+    bridge.stop()                                   # 포트를 먼저 놓는다 — 새 인스턴스가 bind_retry_s 안에 잡는다
+if LIVE_RESTART["motor_id"]:
+    import subprocess
+    _argv = restart_args(sys.argv[1:], LIVE_RESTART["motor_id"])
+    _script = os.path.abspath(__file__)
+    print(f"[live] spawn: {sys.executable} {_script} {' '.join(_argv)}", flush=True)
+    with open(os.path.join(LOG_DIR, "live_restart.json"), "w", encoding="utf-8") as f:
+        json.dump({"t_wall": time.time(), "motor_id": LIVE_RESTART["motor_id"], "argv": _argv}, f, ensure_ascii=False)
+    # python.bat 이 만든 환경(CARB_APP_PATH 등)을 그대로 물려받으므로 kit.exe 를 바로 띄운다. 부모가 닫혀도 살도록 분리한다.
+    # 콘솔 없이(DETACHED) 띄우면 sys.stderr 가 None 이라 SimulationApp 의 faulthandler.enable() 이 죽는다(실측) → 표준 출력을 로그 파일로 준다.
+    _flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+    _logf = open(os.path.join(LOG_DIR, f"live_restart_{LIVE_RESTART['motor_id']}.log"), "a", encoding="utf-8")
+    subprocess.Popen([sys.executable, _script] + _argv, cwd=os.getcwd(), creationflags=_flags, close_fds=True,
+                     stdin=subprocess.DEVNULL, stdout=_logf, stderr=subprocess.STDOUT)
 csv_file.close()
 steady = [f for f in _fps_hist[5:] if f > 0]
 summary = {"csv": csv_path, "duration_s": round(t_real, 1), "frames_t_wall_s": round(t_wall, 1),

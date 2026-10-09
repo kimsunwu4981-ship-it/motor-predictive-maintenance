@@ -60,6 +60,8 @@ def test_state_heartbeat_and_command_roundtrip():
 
     async def run():
         async with websockets.connect(f"ws://127.0.0.1:{b.port}") as ws:
+            hello = await recv_until(ws, lambda m: m["type"] == "hello")          # 접속 직후: 허용 명령 목록·모터 목록 (config/live.yaml)
+            assert set(hello["commands"]) == set(load("live")["commands"]) and hello["motors"] == ["M1", "M2", "M3", "M4", "M5"] and hello["restart_eta_s"] > 0
             b.publish({"t_s": 1.0, "mode": "mechanical", "perf": {"fps": 60.0}})
             st = await recv_until(ws, lambda m: m["type"] == "state")
             assert st["schema"] == load("live")["schema"] and st["t_s"] == 1.0 and "t_wall" in st
@@ -96,8 +98,8 @@ def test_rejections_follow_config():
             assert a["ok"] is False and "range" in a["reason"]
             a = await send(ws, "r2", "run_code", {"src": "print(1)"})          # 허용 목록 밖 → 거부, 큐에 안 들어감
             assert a["ok"] is False and "not allowed" in a["reason"]
-            a = await send(ws, "r3", "select_motor", {"motor_id": "M3"})       # 런타임 불가 → 재시작 안내
-            assert a["ok"] is False and "restart" in a["reason"]
+            a = await send(ws, "r3", "select_motor", {"motor_id": "M9"})       # 라이브러리에 없는 모터 → 거부
+            assert a["ok"] is False and "library" in a["reason"]
             a = await send(ws, "r4", "inject_fault", {"fault": "no_such_fault", "on": True})
             assert a["ok"] is False and "fault" in a["reason"]
             a = await send(ws, "r5", "set_mode", {"mode": "thermal"})
@@ -113,6 +115,10 @@ def test_rejections_follow_config():
             await ws.send(json.dumps({"type": "command", "id": "ok2", "name": "play_scenario", "args": {"scene": "2"}}))
             cmds = await wait_commands(b)
             assert cmds and cmds[0]["args"]["scene"] == 2
+            # select_motor (R3 자동 재시작): 라이브러리 모터면 통과해 메인 루프로 (재기동은 메인 루프가), 소문자도 정규화
+            await ws.send(json.dumps({"type": "command", "id": "ok3", "name": "select_motor", "args": {"motor_id": "m3"}}))
+            cmds = await wait_commands(b)
+            assert cmds and cmds[0]["name"] == "select_motor" and cmds[0]["args"]["motor_id"] == "M3"
     asyncio.run(run())
     assert b.stats["rejected"] == 6
     b.stop()
@@ -141,3 +147,14 @@ def test_lan_ip_and_urls():
     b = make_bridge()
     assert b.url == f"ws://{b.ip}:{b.port}" and b.dashboard_url.startswith(f"http://{b.ip}:{load('live')['dashboard']['port']}/#/status?live=ws://")
     b.stop()
+
+
+def test_restart_args_keep_mode_and_live_drop_autoplay():
+    import importlib.util
+    # demo_integrated 는 Isaac 없이 import 할 수 없으므로 함수 소스만 떼어 실행한다
+    src = open(os.path.join(VIZ, "app", "demo_integrated.py"), encoding="utf-8").read()
+    i = src.index("def restart_args("); j = src.index("\n\n\n", i)
+    ns: dict = {}; exec(src[i:j], ns)
+    out = ns["restart_args"](["--gui", "--autoplay", "--mode", "integrated", "--live", "--live_port", "8766", "--motor", "M5", "--max_s", "90", "--low"], "M1")
+    assert out == ["--gui", "--mode", "integrated", "--live", "--live_port", "8766", "--low", "--motor", "M1"]
+    assert importlib.util.find_spec("websockets") is not None

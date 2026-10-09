@@ -1,0 +1,30 @@
+{
+ "url": "ws://127.0.0.1:8766",
+ "target": "M1",
+ "from": "M5",
+ "fps_before": 50.3,
+ "ack": {
+  "type": "ack",
+  "id": "rs1",
+  "name": "select_motor",
+  "ok": true,
+  "t_wall": 1791525478.241505,
+  "applied": {
+   "restart": true,
+   "motor_id": "M1",
+   "from": "M5",
+   "eta_s": 45.0
+  }
+ },
+ "send_to_ack_s": 0.009,
+ "ack_to_close_s": 0.33,
+ "first_state": {
+  "motor_id": "M1",
+  "mode": "integrated",
+  "step": "manual",
+  "fps": null
+ },
+ "reconnect_attempts": 51,
+ "ack_to_reconnect_s": 133.4,
+ "ack_to_first_state_s": 133.4
+}

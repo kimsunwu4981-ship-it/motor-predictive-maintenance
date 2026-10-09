@@ -247,6 +247,13 @@ HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원�
 주소로 바로 켜기: `http://<데스크탑 IP>:4173/#/status?live=ws://<데스크탑 IP>:8765`. 스트림이 3 s 끊기면 **자동으로 녹화 재생**으로 돌아가고 노란 띠("라이브 연결 끊김 — 녹화 재생 중")가 뜬다. 다시 붙으면 저절로 LIVE 복귀.
 라이브에서 재생 바는 "최근 5 분" 창(`dashboard/public/content/live.yaml window_s`), `❚❚ 최근 기록 보기`로 버퍼 안을 돌려보고 `▶ LIVE 복귀`. ←/→·챕터 클릭은 Isaac 에 `play_scenario` 명령을 보낸다. 영상 자리는 "Isaac Sim 창을 보세요"(듀얼 모니터용). 자세한 것은 `docs/live_r2_report.md`.
 
+### 제어 패널 — 대시보드에서 Isaac 조작 (R3, L2)
+
+LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=1` 이면 열린 채 시작). 결함 토글(열 결함 6 · 전류 케이스 6, 모드에 맞는 것만), 부하 0~150 %, 시간 배속 1~600, 슬로모션 1/1~240, 모드(기계/전기/통합), 시나리오 재생·장면 번호·정지, 리셋, **모터 선택(M1~M5)**.
+버튼 상태는 내가 누른 값이 아니라 Isaac 이 적용해 state 로 돌려준 값으로 확정되고, 거부되면 "최근 명령"에 이유가 뜬다(예: 시나리오 재생 중 결함 주입 → `stop_scenario` 먼저). 허용 목록·범위는 Isaac 이 접속 직후 보내는 `hello`(= `config/live.yaml commands`)에서 온다.
+**모터 전환은 자동 재시작**: `select_motor` → Isaac 이 현재 모터를 정리하고 같은 인자(`--mode/--live/--live_port/--low`, `--autoplay·--max_s·--record` 제외)로 새 모터를 재기동한다. 그동안 대시보드는 "모터 전환 중 (M1, 약 N초)" 띠를 띄우고 녹화 데이터를 보여주다 새 모터의 첫 state 가 오면 LIVE 로 돌아온다. 실측 시간은 `docs/live_r3_report.md`, 재기동 로그는 `logs/live_restart_<모터>.log`.
+데모 대본 `docs/live_demo_script.md`(5단계), 자동 구동 `tools/live_demo_drive.py`, 녹화 `tools/record_live_demo.ps1`(화면을 비워야 한다).
+
 ### 다른 기기(맥북, 같은 Wi-Fi)에서 접속 — 윈도우 방화벽 인바운드 규칙
 
 1. 데스크탑 IP 확인: HUD 의 `LIVE ws://…` 또는 `ipconfig`(이더넷/Wi-Fi 의 IPv4). 맥북은 같은 공유기에 붙어 있어야 한다(같은 서브넷).

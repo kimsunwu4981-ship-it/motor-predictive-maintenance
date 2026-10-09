@@ -41,11 +41,13 @@ export interface LiveState {
 }
 export interface LiveAck { type: "ack"; id: string | null; name?: string; ok: boolean; applied?: Record<string, unknown>; reason?: string; t_wall: number }
 export interface LiveHeartbeat { type: "heartbeat"; t_wall: number; clients: number; schema?: number }
+export interface LiveHello { type: "hello"; schema: number; commands: Record<string, Record<string, unknown>>; motors: string[]; restart_eta_s: number; ws: string; t_wall: number }
 export type FeedStatus = "off" | "connecting" | "live" | "lost";
 
 export class LiveFeed {
   status: FeedStatus = "off";
   last: LiveState | null = null;
+  hello: LiveHello | null = null;            // 접속 직후 Isaac 이 보내는 허용 명령·모터 목록 (config/live.yaml)
   lastMsgAt = 0;
   clients = 0;
   error = "";
@@ -115,8 +117,9 @@ export class LiveFeed {
   }
   private onMessage(e: MessageEvent) {
     this.lastMsgAt = performance.now();
-    let m: LiveState | LiveAck | LiveHeartbeat;
+    let m: LiveState | LiveAck | LiveHeartbeat | LiveHello;
     try { m = JSON.parse(String(e.data)); } catch { return; }
+    if (m.type === "hello") { this.hello = m; return; }
     if (m.type === "heartbeat") { this.clients = m.clients; this.setStatus("live"); return; }
     if (m.type === "state") {
       this.last = m; this.clients = m.host?.clients ?? this.clients; this.setStatus("live");

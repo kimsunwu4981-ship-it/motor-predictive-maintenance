@@ -12,6 +12,7 @@ import {
 import { pickSource, appendSample, type StatusSource } from "../status/source";
 import { useLiveSession } from "../live/session";
 import { LiveToggle, LiveBanner } from "../live/LiveToggle";
+import { ControlPanel } from "../live/ControlPanel";
 import { liveSteps, pageMode, toMotorSeries, useLivePlayback } from "../live/livedata";
 import type { Step } from "../data";
 import { applyNameplates, loadNameplates, saveNameplates, parseField, yamlSnippet, NAMEPLATE_FIELDS, type Nameplates } from "../status/nameplate";
@@ -99,6 +100,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
   const [theme, setTheme] = useState<"dark" | "light">(() => { try { return (localStorage.getItem("vigent-theme") as "dark" | "light") || "dark"; } catch { return "dark"; } });
   useEffect(() => { document.documentElement.setAttribute("data-theme", theme); try { localStorage.setItem("vigent-theme", theme); } catch { /* */ } }, [theme]);
   const [tab, setTab] = useState<"thr" | "spec" | "gloss">("thr");
+  const [ctl, setCtl] = useState<boolean>(() => params.get("ctl") === "1");                                   // K: 제어 패널 (라이브)
   const [trend, setTrend] = useState<TrendSel | null>(null);
 
   useEffect(() => {
@@ -109,6 +111,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
       else if (e.key === "ArrowRight") { e.preventDefault(); pb.gotoStep(pb.stepIndex + 2); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
       else if (e.key === "f" || e.key === "F") setPresent((p) => !p);
+      else if (e.key === "k" || e.key === "K") setCtl((c) => !c);
       else if ((e.key === "m" || e.key === "M") && !isLiveSel) toggleMode();
       else if (e.key === "Escape") setPresent(false);
       else if (e.key >= "1" && e.key <= "9") { const id = ids[Number(e.key) - 1]; if (id) setSel(id); }
@@ -139,6 +142,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (M5 애니메이션)">전기 해설 ↗</a>}
           {!present && <button className="b-theme" onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
           <LiveToggle live={live} />
+          {live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 결함 주입·부하·배속·모터 전환 (라이브)">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}
           <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
           <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
             <b>{index.honesty.label}{liveSeries ? " · LIVE (Isaac Sim)" : source.kind === "live" ? " · 실측 스트림" : ""}</b>
@@ -233,6 +237,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} scenario={isLiveSel ? sc : undefined} />}
         </div>
 
+        <ControlPanel live={live} open={ctl} onClose={() => setCtl(false)} />
         {npOpen && <NameplateForm motor={index0.motors.find((m) => m.id === sel)!} current={nameplates[sel]} onClose={() => setNpOpen(false)}
           onSave={(np) => { const n = { ...nameplates }; if (np) n[sel] = np; else delete n[sel]; setNameplates(n); saveNameplates(n); setNpOpen(false); }} />}
         {!present && (
