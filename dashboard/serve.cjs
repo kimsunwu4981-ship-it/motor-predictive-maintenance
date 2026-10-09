@@ -1,7 +1,7 @@
 // serve.cjs — 의존성 없는 오프라인 정적 서버 (dist/ 를 그대로 서빙).
 //
 // 발표장에서 인터넷 없이 더블클릭으로 띄우기 위한 것이다. Node.js 만 있으면 된다.
-//   node serve.cjs                 → http://localhost:4173/
+//   node serve.cjs                 → http://localhost:4173/  (0.0.0.0 바인드 — LAN 의 다른 기기는 콘솔에 찍히는 주소로)
 //   node serve.cjs --open mechanical  → 브라우저를 #/mechanical 로 연다
 // 영상은 Range 요청을 지원해야 <video> 탐색(seek)이 된다.
 const http = require("http");
@@ -50,9 +50,13 @@ http.createServer((req, res) => {
     res.writeHead(200, { "Content-Type": type, "Content-Length": stat.size, "Accept-Ranges": "bytes", "Cache-Control": "no-store" });
     fs.createReadStream(file).pipe(res);
   }
-}).listen(PORT, () => {
+}).listen(PORT, "0.0.0.0", () => {                       // 0.0.0.0: 같은 LAN 의 다른 기기(맥북)에서도 접속 (라이브 모드 R1, 방화벽 인바운드 4173 필요)
   const base = `http://localhost:${PORT}/`;
   console.log(`대시보드 서버: ${base}  (Ctrl+C 로 종료)`);
+  const nets = require("os").networkInterfaces();
+  for (const name of Object.keys(nets)) for (const n of nets[name] || []) {
+    if (n.family === "IPv4" && !n.internal) console.log(`  다른 기기에서: http://${n.address}:${PORT}/#/status   (${name})`);
+  }
   if (openRoute !== null) {
     const target = openRoute ? `${base}#/${openRoute}` : base;
     exec(process.platform === "win32" ? `start "" "${target}"` : `xdg-open "${target}"`);
