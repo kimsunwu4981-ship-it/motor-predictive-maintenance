@@ -53,6 +53,9 @@ ap.add_argument("--motor", default="", metavar="M1..M5",
                 help="모터 라이브러리 ID. 열회로·전류 모델·진동 규격·HUD 문구를 그 모터로 바꾸고 카메라 거리를 1/geometry_scale 로 (비우면 config/motor.yaml = M5)")
 ap.add_argument("--switch_seq", metavar="mode:sec,...",
                 help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
+ap.add_argument("--live", action="store_true",
+                help="라이브 모드: WebSocket 브리지(config/live.yaml)로 state 송신·명령 수신. 없으면 기존 동작과 완전히 같다")
+ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
 args = ap.parse_args()
 
 from isaacsim import SimulationApp  # noqa: E402
@@ -145,6 +148,10 @@ tm = ThermalModel(TH_CFG)
 cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR) if MOTOR else None)
 injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds if MOTOR else None)
 player = ScenarioPlayer.for_mode(args.mode)
+# 판정은 한 곳에서 (TASK 실시간 §5.2): fleet 배치·상태 보드와 같은 엔진. HUD 색·CSV 판정 열·라이브 state 가 모두 이 결과를 쓴다.
+from engine.thresholds import Judge, bearing_level  # noqa: E402
+from engine.fault_injector import bearing_signals  # noqa: E402
+judge = Judge(motor=MOTOR)
 THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
 NODE_LABELS = {n.key: n.label for n in tm.nodes}
 HUD_TEMP_KEYS = ["bearing_de", "winding", "rotor", "frame"]
@@ -195,10 +202,117 @@ if args.gui:
     except Exception as e:
         print("[demo] HUD 생성 실패:", e, flush=True)
 
+# ------------------------------------------------------------------ 라이브 모드 (LiveBridge)
+bridge = None
+if args.live:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from live_bridge import LiveBridge  # noqa: E402
+    try:
+        bridge = LiveBridge(port=args.live_port or None).start()
+    except Exception as e:
+        print("[live] 브리지 시작 실패 — 라이브 없이 계속:", e, flush=True)
+        bridge = None
+LIVE_CFG = load("live")
+LIVE_THERMAL = set(LIVE_CFG["commands"]["inject_fault"]["thermal"])
+LIVE_ELECTRICAL = set(LIVE_CFG["commands"]["inject_fault"]["electrical"])
+LIVE_JUMP = {"scene": None}          # play_scenario {scene: n} → request_play 처리 때 그 장면 시작으로 점프
+
+
+def _load_reveal_timing() -> dict:
+    """대시보드 해설(narration.yaml)의 장면별 reveal_timing — 라이브 state 의 narration_key.reveal 을 Isaac 쪽에서 평가한다 (§5.1)."""
+    out = {}
+    try:
+        import yaml
+        for m in ("mechanical", "electrical"):
+            p = os.path.join(ROOT, "..", "dashboard", "public", "content", m, "narration.yaml")
+            if os.path.exists(p):
+                sc = (yaml.safe_load(open(p, encoding="utf-8")) or {}).get("scenes") or {}
+                out[m] = {k: dict(v.get("reveal_timing") or {}) for k, v in sc.items() if isinstance(v, dict)}
+    except Exception as e:
+        print("[live] reveal_timing 로드 실패:", e, flush=True)
+    return out
+
+
+REVEAL = _load_reveal_timing()
+
+
+def _reveal_stage(mode_: str, frame_) -> str | None:
+    if frame_ is None:
+        return None
+    rt = (REVEAL.get(mode_) or {}).get(frame_.step_id) or {"why": 0.0, "visible": 0.4, "result": 0.8}
+    p = frame_.step_progress
+    stage_ = None
+    for k, v in sorted(rt.items(), key=lambda kv: float(kv[1])):
+        if p >= float(v):
+            stage_ = k
+    return stage_
+
+
+def apply_command(cmd: dict) -> tuple[bool, object]:
+    """메인 루프에서 명령을 DemoState 에 적용한다 (브리지가 허용 목록·범위는 이미 검사했다). (ok, applied|reason)."""
+    name, a = cmd["name"], cmd.get("args") or {}
+    if name == "inject_fault":
+        if state.playing_scenario:
+            return False, "scenario is playing — send stop_scenario first"
+        f, on = a["fault"], bool(a.get("on", True))
+        applied = {}
+        if f in LIVE_THERMAL and state.mode in ("mechanical", "integrated"):
+            if on and f not in state.thermal_faults:
+                state.thermal_faults.append(f)
+            elif not on and f in state.thermal_faults:
+                state.thermal_faults.remove(f)
+            applied["thermal_faults"] = list(state.thermal_faults)
+        if f in LIVE_ELECTRICAL and state.mode in ("electrical", "integrated"):
+            state.electrical_case = f if on else "healthy"
+            applied["electrical_case"] = state.electrical_case
+        if not applied:
+            return False, f"fault {f} does not apply in mode {state.mode}"
+        state.dirty = True
+        if panel:
+            panel.sync_from_state()
+        return True, applied
+    if name == "set_load":
+        state.load = float(a["pct"]) / 100.0; state.dirty = True
+        if panel:
+            panel.sync_from_state()
+        return True, {"load": state.load}
+    if name == "set_time_scale":
+        state.time_scale = float(a["x"]); state.dirty = True
+        return True, {"time_scale": state.time_scale}
+    if name == "set_slowmo":
+        state.slowmo = 1.0 / float(a["x"]); state.dirty = True
+        return True, {"slowmo": state.slowmo}
+    if name == "set_mode":
+        m = normalize_mode(a["mode"])
+        if panel:
+            panel._set_mode(m)                      # 버튼과 같은 경로 (무관한 결함 해제 포함)
+        else:
+            state.mode = m; state.request_mode_reset = True
+        return True, {"mode": m}
+    if name == "play_scenario":
+        LIVE_JUMP["scene"] = a.get("scene")
+        state.request_play = True
+        return True, {"scene": a.get("scene") or 1}
+    if name == "stop_scenario":
+        state.playing_scenario = False
+        player.stop()
+        return True, {"playing": False}
+    if name == "reset":
+        if panel:
+            panel._reset()
+        else:
+            state.request_reset = True; state.thermal_faults.clear(); state.electrical_case = "healthy"
+        return True, {"reset": True}
+    return False, f"unhandled command {name}"
+
+
 CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
            "itsc_12turn": "Inter-turn short (12 turns)", "overload": "Overload 135%",
            "single_phasing": "Single phasing (phase R lost)", "no_load": "No load",
            "voltage_unbalance": "Supply voltage unbalance"}
+SIGNAL_EN = {"temperature": "temp", "current_ratio": "current", "i2i1": "I2/I1", "vibration": "vibration",
+             "bearing_kurtosis": "bearing kurtosis", "bearing_hf_ratio": "bearing HF ratio"}
+PHASE_EN = {"A": "Ph R", "B": "Ph S", "C": "Ph T"}
 STEP_EN_BY_MODE = {
     "integrated": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
                    "itsc_4turn": "3. Inter-turn short (early, 4T)",
@@ -222,7 +336,8 @@ csv_file = open(csv_path, "w", newline="", encoding="utf-8")
 writer = csv.writer(csv_file)
 writer.writerow(["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
                  *[f"T_{k}" for k in tm.node_keys], "Ia_rms", "Ib_rms", "Ic_rms",
-                 "i2_over_i1", "vibration_mms", "iso_zone", "fps"])
+                 "i2_over_i1", "vibration_mms", "iso_zone", "fps",
+                 "status", "cause_signal", "cause_component", "cause_value"])      # 끝 4열: Judge 판정 (R1, 기존 독자는 이름으로 읽는다)
 
 fs_a = cm.f0 * 256
 t_win = np.arange(0, 4 / cm.f0, 1 / fs_a)
@@ -273,6 +388,8 @@ _t0 = time.time()
 _prev_wall = _t0
 _fps_hist: list[float] = []
 _last_log_t = -1.0
+_last_judge_t = -1.0
+STATE_PERIOD_S = 0.5 / float(load("live")["server"].get("state_hz", 10))   # 판정·state 갱신 주기 = 송신 주기의 절반 (브리지가 매 틱 새 state 를 보게 — 같으면 9.2 Hz 로 떨어졌다)
 LOG_PERIOD_S = 0.25      # CSV·status 기록 주기 (실제 시간)
 status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
 
@@ -392,6 +509,7 @@ while simulation_app.is_running():
         state.mode = normalize_mode(state.mode)
         player = ScenarioPlayer.for_mode(state.mode)
         tm.reset()
+        judge.reset()
         driver.reset_to_base()                 # 발열 색·발광 제거
         driver.set_opacity(["endshield_de"], 1.0)
         driver.set_opacity(["housing_frame"], 1.0)
@@ -408,13 +526,18 @@ while simulation_app.is_running():
     # ---------- 패널 요청 처리 ----------
     if state.request_reset:
         tm.reset()
+        judge.reset()
         player.reset()
         state.playing_scenario = False
         state.request_reset = False
         t_real = 0.0
     if state.request_play:
         tm.reset()
+        judge.reset()
         player.start()
+        if LIVE_JUMP["scene"]:                                 # 라이브 play_scenario {scene: n}: 그 장면 시작으로 점프
+            player.elapsed = min(sum(float(s["duration_s"]) for s in player.steps[:int(LIVE_JUMP["scene"]) - 1]), player.total_duration - 1e-3)
+            LIVE_JUMP["scene"] = None
         state.playing_scenario = True
         state.request_play = False
         t_real = 0.0                 # 시나리오 t=0 을 실제 시간축의 원점으로 삼는다
@@ -423,6 +546,16 @@ while simulation_app.is_running():
             rec_meta["scenario_start_wall"] = time.time()
             rec_meta["video_offset_s"] = round(
                 rec_meta["scenario_start_wall"] - rec_meta["ffmpeg_start_wall"], 3)
+
+    # ---------- 라이브 명령 (브리지 큐 → DemoState, ack) ----------
+    if bridge is not None:
+        for _cmd in bridge.poll_commands():
+            try:
+                _ok, _info = apply_command(_cmd)
+            except Exception as _e:                           # 명령 하나가 루프를 죽이면 안 된다
+                _ok, _info = False, f"error: {_e}"
+            bridge.ack(_cmd, _ok, _info)
+            print(f"[live] {_cmd['name']} {_cmd.get('args')} → {'ok' if _ok else 'rejected'} {_info}", flush=True)
 
     # ---------- 시나리오 재생이면 상태를 시나리오가 결정 ----------
     frame = None
@@ -517,18 +650,48 @@ while simulation_app.is_running():
         set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
     state.dirty = False
 
-    # ---------- HUD ----------
+    # ---------- 판정 (Judge — fleet 배치와 같은 신호·같은 반올림) ----------
     vib = th.vibration_mms
     zone = injector.iso_zone(vib)
+    # 판정·state 는 live.yaml state_hz(10 Hz)로만 갱신한다 — 매 프레임 돌리면 FPS 가 −8 % (R1 실측). HUD 는 캐시된 등급을 매 프레임 쓴다.
+    _judge_due = (t_session - _last_judge_t) >= STATE_PERIOD_S or _last_judge_t < 0
+    with _prof("judge"):
+        if _judge_due:
+            _last_judge_t = t_session
+            brg = bearing_signals(tm.cfg, faults)
+            verdict = judge.update(t_session, {
+                "temperature": {k: round(th.temperature_C[k], 1) for k in tm.node_keys},
+                "current_ratio": {p: round(st_line.rms_A[i], 1) / i_line for i, p in enumerate("ABC")},
+                "i2i1": round(st_line.i2_over_i1, 4), "vibration": round(vib, 1), **brg,
+            })
+            levels = {(s_.kind, s_.component): s_.level for s_ in verdict.signals}
+            kind_worst = {}
+            for s_ in verdict.signals:
+                if ("SAFE", "WARN", "DANGER").index(s_.level) >= ("SAFE", "WARN", "DANGER").index(kind_worst.get(s_.kind, "SAFE")):
+                    kind_worst[s_.kind] = s_.level
+            kind_worst["bearing"] = bearing_level(verdict.signals)
+
+    # ---------- HUD ----------
     with _prof("hud"):
         if hud:
             if mode in ("electrical", "integrated"):
-                hud.update_current(st_line)
+                hud.update_current(st_line, levels={p: levels.get(("current_ratio", p), "SAFE") for p in "ABC"},
+                                   i2i1_level=levels.get(("i2i1", "-"), "SAFE"))
             if mode in ("mechanical", "integrated"):
                 hud.update_thermal({k: th.temperature_C[k] for k in HUD_TEMP_KEYS},
                                    {k: th.stage[k] for k in HUD_TEMP_KEYS},
-                                   HUD_TEMP_EN, HUD_TEMP_KEYS)
-                hud.update_vibration(vib, zone)
+                                   HUD_TEMP_EN, HUD_TEMP_KEYS,
+                                   levels={k: levels.get(("temperature", k), "SAFE") for k in HUD_TEMP_KEYS})
+                hud.update_vibration(vib, zone, level=levels.get(("vibration", "-"), "SAFE"))
+            if verdict.status == "SAFE":
+                _cause = "all signals within safe range"
+            else:
+                _comp = HUD_TEMP_EN.get(verdict.cause_component, NODE_LABELS.get(verdict.cause_component, verdict.cause_component))
+                _comp = PHASE_EN.get(verdict.cause_component, _comp) if verdict.cause_signal == "current_ratio" else _comp
+                _cause = f"{_comp + ' ' if verdict.cause_component != '-' else ''}{SIGNAL_EN.get(verdict.cause_signal, verdict.cause_signal)} {verdict.value:g}"
+            hud.update_status(verdict, _cause)
+            if bridge is not None:
+                hud.set_live(f"LIVE  {bridge.url}   clients {bridge.clients}")
             _steps_en = STEP_EN_BY_MODE.get(mode, {})
             title = _steps_en.get(frame.step_id, frame.label) if frame else CASE_EN.get(case, case)
             sub = (frame.subtitle_en if frame else
@@ -548,6 +711,30 @@ while simulation_app.is_running():
     _prof_n += 1
     t_wall += 1 / 60
 
+    # ---------- state dict (CSV 로깅과 라이브 송신이 같은 것을 쓴다 — 키 = CSV 컬럼, docs/live_r0_report.md §5) ----------
+    if _judge_due:
+        _rpm = w * 60 / (2 * math.pi)
+        state_dict = {
+            "t_s": round(t_wall, 2), "t_real_s": round(t_real, 3), "t_session_s": round(t_session, 2),
+            "motor_id": MOTOR.id if MOTOR else ml.REFERENCE_ID, "mode": mode, "step": frame.step_id if frame else "manual", "case": case,
+            "scene": ({"id": frame.step_id, "label": frame.label, "elapsed_s": round(frame.step_elapsed_s, 1), "duration_s": frame.step_duration_s,
+                       "progress": round(frame.step_progress, 3), "total_elapsed_s": round(frame.total_elapsed_s, 1), "time_scale": frame.time_scale,
+                       "playing": state.playing_scenario} if frame else None),
+            "faults": list(faults), "load": round(state.load, 2), "time_scale": state.time_scale, "slowmo": state.slowmo, "rpm": round(_rpm, 1),
+            "T": {k: round(th.temperature_C[k], 1) for k in tm.node_keys}, "stage": dict(th.stage),
+            "Ia_rms": round(st_line.rms_A[0], 1), "Ib_rms": round(st_line.rms_A[1], 1), "Ic_rms": round(st_line.rms_A[2], 1),
+            "i2_over_i1": round(st_line.i2_over_i1, 4), "rated_line_A": i_line, "current_status": list(st_line.status),
+            "vibration_mms": round(vib, 2), "iso_zone": zone,
+            "bearing_kurtosis": brg["bearing_kurtosis"], "bearing_hf_ratio": brg["bearing_hf_ratio"],
+            "status": {"status": verdict.status, "label": verdict.label_ko, "cause_signal": verdict.cause_signal, "cause_component": verdict.cause_component,
+                       "value": round(verdict.value, 4), "threshold": verdict.threshold, "levels": kind_worst,
+                       "signals": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4)} for s_ in verdict.signals]},
+            "narration_key": {"mode": mode, "scene": frame.step_id if frame else None, "reveal": _reveal_stage(mode, frame)},
+            "perf": {"fps": round(_fps_hist[-1], 1) if _fps_hist else None},
+        }
+        if bridge is not None:
+            bridge.publish(state_dict)
+
     # ---------- 로깅 ----------
     # 기록 주기는 t_session 기준 — t_real 은 모드 전환·재생 시 0 으로 돌아가 기록이 멈춘다(실측)
     if t_session - _last_log_t >= LOG_PERIOD_S:
@@ -560,7 +747,8 @@ while simulation_app.is_running():
                          "|".join(faults), round(state.load, 2), round(rpm, 1),
                          *[round(th.temperature_C[k], 1) for k in tm.node_keys],
                          *[round(v, 1) for v in st_line.rms_A], round(st_line.i2_over_i1, 4),
-                         round(vib, 2), zone, round(fps, 1)])
+                         round(vib, 2), zone, round(fps, 1),
+                         verdict.status, verdict.cause_signal, verdict.cause_component, round(verdict.value, 4)])
         with open(status_path, "w", encoding="utf-8") as f:
             json.dump({"t": round(t_wall, 2), "t_real": round(t_real, 2), "t_session": round(t_session, 2),
                        "mode": mode, "case": case,
@@ -585,6 +773,9 @@ if recorder is not None:
     with open(os.path.join(RUN_LOG_DIR, f"recording_{rec_name}.json"), "w", encoding="utf-8") as f:
         json.dump(rec_meta, f, ensure_ascii=False, indent=2)
 
+if bridge is not None:
+    print("[live] stats", json.dumps(bridge.stats), flush=True)
+    bridge.stop()
 csv_file.close()
 steady = [f for f in _fps_hist[5:] if f > 0]
 summary = {"csv": csv_path, "duration_s": round(t_real, 1), "frames_t_wall_s": round(t_wall, 1),

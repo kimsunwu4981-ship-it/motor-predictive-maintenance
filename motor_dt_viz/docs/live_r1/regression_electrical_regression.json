@@ -1,0 +1,17 @@
+{
+ "pass": true,
+ "worst": {
+  "Ia_rms": 0.0,
+  "Ib_rms": 0.0,
+  "Ic_rms": 0.0,
+  "i2_over_i1": 0.0
+ },
+ "grid_worst": {
+  "Ia_rms": 30.200000000000003,
+  "Ib_rms": 17.9,
+  "Ic_rms": 16.200000000000003,
+  "i2_over_i1": 0.16500000000000004
+ },
+ "ref": "logs/electrical/demo_20260922_231908.csv",
+ "new": "logs/r1_live_elec\\demo_20261009_133022.csv"
+}

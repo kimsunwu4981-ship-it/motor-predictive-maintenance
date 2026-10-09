@@ -106,3 +106,18 @@ class FaultInjector:
         if v >= float(m["watch_mms"]["value"]):
             return "Watch"
         return "Normal"
+
+
+def bearing_signals(thermal_cfg: dict, faults: list[str]) -> dict[str, float]:
+    """시뮬레이션용 베어링 지표 등가값 (2026-10-08 정의): {"bearing_kurtosis": k, "bearing_hf_ratio": r}.
+    결함 없음 → thermal.yaml bearing_normal. 결함이 여럿이면 각 지표의 최댓값. 숫자는 config 에만 있다
+    (매핑 근거는 thermal.yaml 주석·docs/bearing_metric_definition.md). fleet 배치(tools/run_fleet.py)와 데모 루프가 같이 쓴다."""
+    base = thermal_cfg.get("bearing_normal") or {"kurtosis": 3.0, "hf_ratio": 1.0}
+    k, r = float(base["kurtosis"]), float(base["hf_ratio"])
+    for f in faults:
+        fc = (thermal_cfg.get("faults") or {}).get(f) or {}
+        if "bearing_kurtosis" in fc:
+            k = max(k, float(fc["bearing_kurtosis"]))
+        if "bearing_hf_ratio" in fc:
+            r = max(r, float(fc["bearing_hf_ratio"]))
+    return {"bearing_kurtosis": k, "bearing_hf_ratio": r}

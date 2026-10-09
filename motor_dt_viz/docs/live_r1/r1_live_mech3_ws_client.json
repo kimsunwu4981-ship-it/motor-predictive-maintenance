@@ -1,0 +1,20 @@
+{
+ "url": "ws://127.0.0.1:8765",
+ "seconds": 60.1,
+ "state_msgs": 605,
+ "heartbeats": 60,
+ "rate_hz": 10.07,
+ "gap_ms_p50": 94.3,
+ "gap_ms_max": 112.4,
+ "latency_ms_p50": 1.0,
+ "latency_ms_max": 3.2,
+ "bytes_p50": 2998,
+ "ack": {
+  "type": "ack",
+  "id": "proto-1",
+  "name": "noop",
+  "ok": false,
+  "reason": "command not allowed: noop",
+  "t_wall": 1791520801.2857282
+ }
+}

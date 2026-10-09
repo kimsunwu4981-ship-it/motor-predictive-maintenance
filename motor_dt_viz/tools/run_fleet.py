@@ -29,7 +29,7 @@ sys.path.insert(0, VIZ)
 
 from engine import motor_library as ml  # noqa: E402
 from engine.current_model import CurrentModel  # noqa: E402
-from engine.fault_injector import FaultInjector  # noqa: E402
+from engine.fault_injector import FaultInjector, bearing_signals  # noqa: E402,F401  (데모 루프와 같은 함수)
 from engine.scenario_player import ScenarioPlayer  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
 from engine.thresholds import Judge, bearing_level  # noqa: E402
@@ -42,20 +42,6 @@ STATUS_COLS = ["t_real_s", "status", "label", "cause_signal", "cause_component",
 H = 1.0 / 60.0        # 적분 간격 (데모 프레임과 같음)
 RATE_HZ = 4.0         # 로그 간격 (데모 로그 ≈ 4 Hz)
 TAIL_S = 5.0          # 시나리오 끝 뒤 여유 (데모와 같음)
-
-
-def bearing_signals(thermal_cfg: dict, faults: list[str]) -> dict[str, float]:
-    """시뮬레이션용 베어링 지표 등가값 (2026-10-08 정의): {"bearing_kurtosis": k, "bearing_hf_ratio": r}.
-    결함 없음 → thermal.yaml bearing_normal. 결함이 여럿이면 각 지표의 최댓값. 숫자는 config 에만 있다 (매핑 근거는 그 주석·docs/bearing_metric_definition.md)."""
-    base = thermal_cfg.get("bearing_normal") or {"kurtosis": 3.0, "hf_ratio": 1.0}
-    k, r = float(base["kurtosis"]), float(base["hf_ratio"])
-    for f in faults:
-        fc = thermal_cfg["faults"].get(f) or {}
-        if "bearing_kurtosis" in fc:
-            k = max(k, float(fc["bearing_kurtosis"]))
-        if "bearing_hf_ratio" in fc:
-            r = max(r, float(fc["bearing_hf_ratio"]))
-    return {"bearing_kurtosis": k, "bearing_hf_ratio": r}
 
 
 def run_one(motor: ml.Motor, mode: str, out_dir: str) -> dict:

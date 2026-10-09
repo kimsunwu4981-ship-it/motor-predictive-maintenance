@@ -1,0 +1,10 @@
+{
+  "csv": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\r1_live_elec\\demo_20261009_133022.csv",
+  "duration_s": 195.0,
+  "frames_t_wall_s": 227.0,
+  "fps": {
+    "mean": 77.2,
+    "min": 37.3,
+    "pass": true
+  }
+}

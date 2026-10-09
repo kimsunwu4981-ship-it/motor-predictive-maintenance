@@ -694,3 +694,14 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 프로토타입(`tools/r0_proto/`, 기존 demo 를 runpy 로 감싸 서버 스레드만 추가): FPS 기준 86.5 → 서버 83.6(−3.4 %), `--low` 1280×720 + 서버 90.3. 10 Hz 수신 9.82 Hz, 지연 중앙 0.8 ms, VRAM 3.07/2.92 GB, Isaac 워킹셋 5.1 GB. 완료 기준(10 % 이내) 통과.
 - 삽질: cmd 인자로 한글 경로를 넘기면 깨짐 → ASCII 경로 JSON 으로 인자 전달; MSYS 가 `/FI` 를 경로로 바꿔 tasklist 필터 실패 → PowerShell Get-Process 로 RAM 측정.
 - state 스키마 초안(CSV 컬럼 이름 유지 + `status` = Verdict + fleet levels + bearing 종합, `narration_key`, `host.ip`), 명령 허용 목록 초안(`select_motor` 는 거부+재시작 안내). 네트워크: 데스크탑 유선 172.30.1.37, 포트 8765/4173.
+
+## 19. 라이브 모드 R1 — Isaac 쪽 LiveBridge + Judge 한 곳 판정 (2026-10-09 오후, 완료)
+
+사용자 추가 3건: ① Judge 를 루프에 넣고 HUD 색도 Judge 등급(열 모델 4단계는 세부 라벨), M5 로그 회귀 ② select_motor 는 재시작 필요 ack(전환은 R3) ③ 실제 state 로 FPS·지연 재측정. 보고서 `motor_dt_viz/docs/live_r1_report.md`.
+
+- `config/live.yaml`(0.0.0.0:8765, 10 Hz, heartbeat 1 Hz, 허용 명령·범위·별칭), `app/live_bridge.py`(스레드 asyncio+websockets, 최신 1건 publish, 명령 검증→큐→ack 방송, perf 스레드, lan_ip), `demo_integrated.py --live`(없으면 기존 동일): Judge 루프 투입(fleet 과 같은 신호), state_dict(키=CSV 컬럼)·CSV 끝 4열 판정, apply_command, play_scenario 장면 점프, narration reveal 평가. `viz/hud.py` 행 색 = Judge, STATUS·LIVE 행. `bearing_signals` 는 `engine/fault_injector.py` 로.
+- 회귀(`tools/compare_demo_logs.py`, 9-22 로그 ↔ --live 180/195 s): 장면 끝 온도 차 ≤0.1 °C, 전류 0.000 A → 통과. 격자 최대 차이는 장면 전환 순간뿐.
+- 성능(실제 state 3.0 KB): 처음 −8.5 %(77.7/81.6) → 판정 10 Hz 제한은 효과 없음(82.0) → **HUD style 객체 매 프레임 생성이 원인**, 바뀔 때만 주게 하니 89.1(기준 89.2). 수신 10.07 Hz, 지연 중앙 1.0 ms(최대 3.2), VRAM 3.4 GB, Isaac RAM 5.6 GB. 판정 주기는 송신의 2배(20 Hz) — 같은 10 Hz 면 9.2 Hz 로 빠짐.
+- README "라이브 모드" 절(실행·확인·맥북 접속·방화벽 인바운드 절차), `tools/firewall_rules.ps1`(8765·4173, 개인·도메인 프로필). 테스트 `tests/test_live_bridge.py` 4개(엔진 121·대시보드 63 통과).
+- 삽질: websockets 17 클라이언트에서 `time.sleep` 으로 기다리면 송신이 flush 안 됨 → 테스트는 `asyncio.sleep`; 130 s 짧은 실행을 전체 시나리오 기준표와 비교하면 뒤 장면이 '행 없음'으로 실패 — 회귀 문서는 180 s 실행 것.
+- 다음 R2: 대시보드 `LiveSource`(WebSocket 수신→성장 버퍼), 녹화/LIVE 토글, 3 s 폴백, 실시간 추세, serve.cjs 주소 표시. 맥북 실접속 확인은 사용자(방화벽 스크립트 관리자 실행 후).

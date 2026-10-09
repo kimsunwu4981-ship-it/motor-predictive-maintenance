@@ -224,6 +224,36 @@ ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/f
 
 베어링 지표(2026-10-08): 주 **kurtosis**(경고 3.5 / 위험 4.0, 모터 공통) + 보조 **고주파 대역 RMS 배율**(경고 1.5 / 위험 2.5, 기준선은 `config/motors/<id>.yaml bearing_hf_baseline`), 종합은 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만). 시뮬레이션은 `config/thermal.yaml` 의 결함별 등가값 — 정의·근거 `docs/bearing_metric_definition.md`, 전후 비교 `docs/bearing_metric_change_comparison.md` (`python tools/fleet_compare.py`).
 
+## 라이브 모드 — Isaac Sim ↔ 대시보드 실시간 연동 (R1: Isaac 쪽 LiveBridge)
+
+녹화 모드는 그대로 남고, `--live` 를 주면 Isaac Sim 안에서 WebSocket 브리지(`app/live_bridge.py`, 설정 `config/live.yaml`)가
+별도 스레드로 떠서 state 를 10 Hz 로 보내고 명령(결함 주입·부하·배속·모드·시나리오·리셋)을 받는다. `--live` 가 없으면 기존 동작과 완전히 같다.
+판정은 한 곳(`engine/thresholds.py Judge`)에서만: HUD 색·CSV 끝 4열(`status, cause_signal, cause_component, cause_value`)·라이브 state 의 `status` 가 모두 같은 결과다
+(열 모델 4단계 normal/caution/warning/danger 는 HUD 괄호 안 세부 라벨로만 남는다). 정의·스키마는 `docs/live_r0_report.md` §5, 실측은 `docs/live_r1_report.md`.
+
+```bat
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical --live            # 콘솔에 ws://<IP>:8765 와 대시보드 주소가 찍힌다
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --mode mechanical --live --motor M3            # 모터는 기동 시에만 고른다 (select_motor 명령은 "재시작 필요" 로 거부)
+```
+
+HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원인>` 행이 보인다. 간단 확인(아무 PC, websockets 설치된 파이썬):
+`python tools/r0_proto/ws_client.py ws://<데스크탑 IP>:8765 10` → 10 s 동안 수신 건수·지연을 찍는다.
+명령 예: `{"type":"command","id":"1","name":"inject_fault","args":{"fault":"bearing","on":true}}` → `{"type":"ack","id":"1","ok":true,"applied":{...}}`.
+허용 목록·범위 밖은 `ok:false` 와 이유가 온다 (`config/live.yaml commands`). 시나리오 재생 중에는 결함 주입을 거부하므로 `stop_scenario` 를 먼저 보낸다.
+
+### 다른 기기(맥북, 같은 Wi-Fi)에서 접속 — 윈도우 방화벽 인바운드 규칙
+
+1. 데스크탑 IP 확인: HUD 의 `LIVE ws://…` 또는 `ipconfig`(이더넷/Wi-Fi 의 IPv4). 맥북은 같은 공유기에 붙어 있어야 한다(같은 서브넷).
+2. 네트워크 프로필이 **개인(Private)** 인지 확인: 설정 → 네트워크 및 인터넷 → 이더넷(또는 Wi-Fi) → 네트워크 프로필 → "개인 네트워크". 공용이면 아래 규칙이 적용되지 않는다(공용 Wi-Fi 에서는 열지 않는다).
+3. 규칙 추가 — 관리자 PowerShell:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File toolsirewall_rules.ps1          # TCP 8765(WebSocket)·4173(대시보드) 인바운드 허용, 개인·도메인 프로필
+   powershell -ExecutionPolicy Bypass -File toolsirewall_rules.ps1 -Show    # 확인   /  -Remove 제거
+   ```
+   GUI 로 하려면: Windows 보안 → 방화벽 및 네트워크 보호 → 고급 설정 → 인바운드 규칙 → 새 규칙 → 포트 → TCP, 특정 로컬 포트 `8765, 4173` → 연결 허용 → 프로필 "개인·도메인"만 체크 → 이름 `VIGENT Live`.
+4. 대시보드 서버는 `dashboard/serve.cjs`(0.0.0.0:4173). 맥북 브라우저에서 `http://<데스크탑 IP>:4173/#/status?live=ws://<데스크탑 IP>:8765` (대시보드 쪽 LiveSource 는 R2).
+5. 안 되면: 데스크탑에서 `netstat -an | findstr 8765` 로 LISTENING 확인 → 맥북에서 `nc -vz <IP> 8765` → 막히면 2·3번(프로필·규칙), 공유기의 "AP 격리/클라이언트 격리" 옵션 해제.
+
 ## AI Hub 실측 데이터 (전체 데이터 도착 후 실행 순서)
 
 1. 다운로드: `AIHUB_API_KEY=<AI Hub 마이페이지 API 키> bash tools/aihub/download_full.sh` → 저장소 밖 `../aihub_full/` (진동 Training 78 GB + Validation 10 GB; 전류까지는 `AIHUB_FILEKEYS=44889,44890,44891,44815`). 파일 트리만 보려면 `--list`.

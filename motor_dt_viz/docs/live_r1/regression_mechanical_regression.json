@@ -1,0 +1,25 @@
+{
+ "pass": true,
+ "worst": {
+  "T_winding": 0.10000000000000142,
+  "T_stator_core": 0.09999999999999432,
+  "T_rotor": 0.10000000000000142,
+  "T_shaft": 0.10000000000000853,
+  "T_bearing_de": 0.10000000000000853,
+  "T_bearing_nde": 0.0,
+  "T_frame": 0.09999999999999432,
+  "vibration_mms": 0.0
+ },
+ "grid_worst": {
+  "T_winding": 1.2000000000000028,
+  "T_stator_core": 0.3999999999999986,
+  "T_rotor": 0.4000000000000057,
+  "T_shaft": 1.2999999999999972,
+  "T_bearing_de": 2.200000000000003,
+  "T_bearing_nde": 0.4000000000000057,
+  "T_frame": 0.4000000000000057,
+  "vibration_mms": 2.4000000000000004
+ },
+ "ref": "logs/mechanical/demo_20260922_174529.csv",
+ "new": "logs/r1_live_mech\\demo_20261009_132703.csv"
+}

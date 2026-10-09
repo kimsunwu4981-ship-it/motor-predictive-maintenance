@@ -31,7 +31,9 @@ def _style(size: int, color: int = 0xFFFFFFFF, **extra) -> dict:
     return {"font_size": size, "color": color, **extra}
 
 
-STAGE_LABEL = {"normal": "NORMAL", "caution": "CAUTION", "warning": "WARNING", "danger": "DANGER"}
+STAGE_LABEL = {"normal": "normal", "caution": "caution", "warning": "warning", "danger": "danger"}   # Judge 등급 뒤 세부 라벨 (소문자)
+LEVEL_LABEL = {"SAFE": "SAFE", "WARN": "WARN", "DANGER": "DANGER"}
+ZONE_LABEL = {"Normal": "zone A/B", "Watch": "watch", "Plan": "plan", "Act": "act"}
 STATUS_LABEL = {"over_danger": "OVER-CURRENT (HIGH)", "over_caution": "OVER-CURRENT",
                 "normal": "NORMAL", "under_caution": "UNDER-CURRENT",
                 "under_danger": "UNDER-CURRENT (LOW)"}
@@ -43,16 +45,25 @@ def _hex(rgb) -> int:
     return 0xFF000000 | (b << 16) | (g << 8) | r
 
 
+def _hex_css(css: str) -> int:
+    """"#rrggbb" → omni.ui 0xAABBGGRR (thresholds.yaml colors)."""
+    css = css.lstrip("#")
+    r, g, b = int(css[0:2], 16), int(css[2:4], 16), int(css[4:6], 16)
+    return 0xFF000000 | (b << 16) | (g << 8) | r
+
+
 class MotorHUD:
     """omni.ui 창 기반 HUD. Isaac Sim GUI 에서만 생성된다."""
 
     # 내용이 창보다 길면 omni.ui 가 스크롤해 제목·자막이 위로 밀려난다(실측).
     # 자막이 발표의 핵심이므로 창을 내용보다 넉넉하게 잡는다.
-    def __init__(self, title: str = "VIGENT - Motor Digital Twin", width: int = 430, height: int = 790):
+    def __init__(self, title: str = "VIGENT - Motor Digital Twin", width: int = 430, height: int = 840):
         import omni.ui as ui
         self.ui = ui
         self.elec = load("electrical")
         self.colors = load("colors")
+        # 판정 색은 판정 엔진 config 와 같다 (SAFE/WARN/DANGER) — 영상·상태 보드·라이브가 같은 판정·같은 색 (2026-10-09 R1 ①)
+        self.level_colors = {k: _hex_css(v) for k, v in (load("thresholds").get("colors") or {}).items()}
         self.ecmap = ElectricalColormap(self.colors)
         self.window = ui.Window(title, width=width, height=height)
         try:
@@ -60,7 +71,13 @@ class MotorHUD:
         except Exception:
             pass
         self._labels: dict[str, object] = {}
+        self._last_style: dict[str, object] = {}     # 라벨별 마지막 색 — 바뀔 때만 style 을 다시 준다 (매 프레임 style 생성은 FPS 를 깎는다)
         self._build()
+
+    def _restyle(self, key: str, lab, size: int, color: int) -> None:
+        if self._last_style.get(key) != (size, color):
+            self._last_style[key] = (size, color)
+            lab.style = _style(size, color)
 
     # ------------------------------------------------------------------ 구성
     def _build(self) -> None:
@@ -81,6 +98,12 @@ class MotorHUD:
                 # 장면별 데이터 출처 (정직성 표기). scenario yaml 의 source 필드.
                 self._labels["source"] = ui.Label("", height=16, word_wrap=True,
                                                   style=_style(12, 0xFF99BBAA))
+                # 종합 판정 (engine/thresholds.py Judge) — 원인 신호와 함께. 상태 보드와 같은 판정이다
+                with ui.HStack(height=22):
+                    ui.Label("STATUS", width=60, style=_style(14, 0xFF66DDFF))
+                    self._labels["status"] = ui.Label("-", style=_style(15))
+                # 라이브 모드 접속 주소 (--live 일 때만 채운다)
+                self._labels["live"] = ui.Label("", height=16, style=_style(12, 0xFF55FF55))
                 ui.Separator(height=6)
 
                 # 전기 섹션 — 기계 전용 모드에서 통째로 숨긴다
@@ -167,20 +190,26 @@ class MotorHUD:
         self._labels["basis"].text = basis
 
     # ------------------------------------------------------------------ 갱신
-    def update_current(self, state) -> None:
-        """CurrentState 로 전류 표시를 갱신한다."""
+    def update_current(self, state, levels: dict | None = None, i2i1_level: str | None = None) -> None:
+        """CurrentState 로 전류 표시를 갱신한다. levels={"A": "SAFE"|"WARN"|"DANGER"} 가 있으면 색은 Judge 등급, 과/저전류 문구는 세부 라벨."""
         for i, ph in enumerate(("A", "B", "C")):
             rms, ratio, status = state.rms_A[i], state.ratio[i], state.status[i]
             self._labels[f"i_{ph}"].text = f"{rms:6.1f} A  ({ratio * 100:5.1f} %)"
-            col = self.ecmap.sample(status)["diffuse"]
             lab = self._labels[f"st_{ph}"]
-            lab.text = STATUS_LABEL.get(status, status)
-            lab.style = _style(14, _hex(col))
-        self._labels["i2i1"].text = f"{state.i2_over_i1:.4f}"
+            lv = (levels or {}).get(ph)
+            if lv:
+                lab.text = f"{LEVEL_LABEL.get(lv, lv)}  ({STATUS_LABEL.get(status, status).lower()})"
+                self._restyle(f"st_{ph}", lab, 14, self.level_colors.get(lv, 0xFFFFFFFF))
+            else:
+                lab.text = STATUS_LABEL.get(status, status)
+                self._restyle(f"st_{ph}", lab, 14, _hex(self.ecmap.sample(status)["diffuse"]))
+        self._labels["i2i1"].text = f"{state.i2_over_i1:.4f}" + (f"   {LEVEL_LABEL.get(i2i1_level, i2i1_level)}" if i2i1_level else "")
+        if i2i1_level:
+            self._restyle("i2i1", self._labels["i2i1"], 18, self.level_colors.get(i2i1_level, 0xFFFFAA33))
 
     def update_thermal(self, temperatures: dict, stages: dict, labels: dict,
-                       keys: list[str] | None = None) -> None:
-        """부품 온도 목록을 갱신한다 (표시할 키만)."""
+                       keys: list[str] | None = None, levels: dict | None = None) -> None:
+        """부품 온도 목록을 갱신한다 (표시할 키만). levels={node: SAFE|WARN|DANGER} 가 있으면 색은 Judge 등급, 열 모델 4단계는 괄호 안 세부 라벨."""
         ui = self.ui
         keys = keys or list(temperatures)
         status_colors = self.colors["status"]
@@ -196,8 +225,13 @@ class MotorHUD:
             if not row:
                 continue
             stage = stages.get(k, "normal")
-            row.text = f"{temperatures[k]:6.1f} C   {STAGE_LABEL.get(stage, stage)}"
-            row.style = _style(14, _hex(status_colors.get(stage, [1, 1, 1])))
+            lv = (levels or {}).get(k)
+            if lv:
+                row.text = f"{temperatures[k]:6.1f} C   {LEVEL_LABEL.get(lv, lv)}  ({STAGE_LABEL.get(stage, stage)})"
+                self._restyle(f"T_{k}", row, 14, self.level_colors.get(lv, 0xFFFFFFFF))
+            else:
+                row.text = f"{temperatures[k]:6.1f} C   {STAGE_LABEL.get(stage, stage).upper()}"
+                self._restyle(f"T_{k}", row, 14, _hex(status_colors.get(stage, [1, 1, 1])))
 
     def update_scenario(self, label: str, subtitle: str, source: str = "") -> None:
         self._labels["subtitle"].text = label
@@ -209,9 +243,28 @@ class MotorHUD:
         """로그 CSV 의 t_s 를 화면에 띄운다. None 이면 비운다(발표용)."""
         self._labels["timecode"].text = "" if t_s is None else f"t {t_s:6.2f}s"
 
-    def update_vibration(self, mms: float, zone: str) -> None:
+    def update_vibration(self, mms: float, zone: str, level: str | None = None) -> None:
+        lab = self._labels["vib"]
+        std = getattr(self, "vib_standard", "ISO 20816-3")          # 규격 이름은 모터 라이브러리
+        if level:                                                   # Judge 등급 색, ISO 구역은 세부 라벨
+            lab.text = f"{mms:.1f} mm/s   {LEVEL_LABEL.get(level, level)}  ({std} {ZONE_LABEL.get(zone, zone)})"
+            self._restyle("vib", lab, 14, self.level_colors.get(level, 0xFFFFFFFF))
+            return
         col = {"Normal": [0.15, 0.95, 0.35], "Watch": [1.0, 0.75, 0.1],
                "Plan": [1.0, 0.45, 0.1], "Act": [1.0, 0.1, 0.05]}.get(zone, [1, 1, 1])
-        lab = self._labels["vib"]
-        lab.text = f"{mms:.1f} mm/s   {getattr(self, 'vib_standard', 'ISO 20816-3')}: {zone}"   # 규격 이름은 모터 라이브러리(10816-1 / 20816-3)
-        lab.style = _style(14, _hex(col))
+        lab.text = f"{mms:.1f} mm/s   {std}: {zone}"
+        self._restyle("vib", lab, 14, _hex(col))
+
+    def update_status(self, verdict, cause_label: str = "") -> None:
+        """종합 판정 행: Judge Verdict (status, cause_signal, cause_component, value). cause_label 은 영문 원인 설명."""
+        lab = self._labels["status"]
+        lv = verdict.status
+        txt = LEVEL_LABEL.get(lv, lv) + (f"   {cause_label}" if cause_label else "")
+        if lab.text != txt:
+            lab.text = txt
+        self._restyle("status", lab, 15, self.level_colors.get(lv, 0xFFFFFFFF))
+
+    def set_live(self, text: str) -> None:
+        """라이브 모드 주소·접속 수 (영문/숫자만). 빈 문자열이면 숨긴 것과 같다."""
+        if self._labels["live"].text != text:
+            self._labels["live"].text = text

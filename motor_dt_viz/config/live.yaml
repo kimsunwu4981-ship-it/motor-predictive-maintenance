@@ -1,0 +1,28 @@
+# live.yaml — 라이브 모드 (Isaac Sim ↔ 대시보드 WebSocket) 설정. app/live_bridge.py 와 demo_integrated.py --live 가 읽는다.
+# 숫자·허용 명령은 여기에만 있다 (TASK 실시간 §1.5: 허용 목록 밖 명령은 거부하고 로그).
+server:
+  host: 0.0.0.0           # LAN 의 다른 기기(맥북)에서 접속 — 윈도우 방화벽 인바운드 TCP 8765 허용 필요 (README "라이브 모드", tools/firewall_rules.ps1)
+  port: 8765
+  state_hz: 10            # state 송신 주기. 메인 루프는 매 프레임 publish 하고 브리지는 최신 것만 보낸다 (큐 적체 없음)
+  heartbeat_hz: 1         # 클라이언트가 없어도 보낸다 — 대시보드는 3 s 무응답이면 끊김으로 본다 (dashboard 쪽 config)
+  perf_period_s: 5        # VRAM(nvidia-smi)·RAM(psutil) 샘플 주기 — 브리지 쪽 스레드에서, 메인 루프 밖
+  max_clients: 8          # 발표자 노트북 + 심사용 화면 + 여유
+dashboard:
+  port: 4173              # dashboard/serve.cjs 포트 — 콘솔·HUD 에 접속 주소를 찍을 때 쓴다
+  route: "#/status?live=ws://{ip}:{port}"
+schema: 1                 # state JSON 의 schema 번호 (키 이름 = 기존 demo CSV 컬럼, docs/live_r0_report.md §5)
+commands:                 # 허용 목록. name 이 없거나 인자가 범위 밖이면 거부 ack. select_motor 는 런타임 불가 → 거부 + 재시작 안내
+  inject_fault:
+    thermal: [bearing_de_fault, bearing_nde_fault, misalignment, fan_failure, brake_drag, overload]     # config/thermal.yaml faults
+    electrical: [itsc_4turn, itsc_12turn, overload, voltage_unbalance, single_phasing, no_load]           # config/electrical.yaml cases
+    aliases: { bearing: bearing_de_fault, bearing_nde: bearing_nde_fault, fan: fan_failure, brake: brake_drag,
+               itsc4: itsc_4turn, itsc12: itsc_12turn, unbalance: voltage_unbalance, phase_loss: single_phasing }
+    note: "overload 는 기계 모드에선 열 결함, 전기 모드에선 전류 케이스, 통합 모드에선 둘 다. 시나리오 재생 중이면 거부 (stop_scenario 먼저)."
+  set_load: { pct: [0, 150] }            # 제어 패널 슬라이더와 같은 범위
+  set_time_scale: { x: [1, 600] }
+  set_slowmo: { x: [1, 240] }            # 전기 모드 슬로모션 1/x
+  set_mode: { modes: [mechanical, electrical, integrated] }
+  play_scenario: { scene_min: 1 }        # scene 생략 = 처음부터, n = 그 장면 시작으로 점프 (장면 수는 모드 시나리오 config 가 정한다)
+  stop_scenario: {}
+  reset: {}
+  select_motor: { runtime: false, reason: "restart required: run demo_integrated.py --motor <id> (전환 방식은 R3 에서 결정)" }
