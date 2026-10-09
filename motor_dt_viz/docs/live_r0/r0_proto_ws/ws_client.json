@@ -1,0 +1,18 @@
+{
+ "url": "ws://127.0.0.1:8765",
+ "seconds": 60.1,
+ "state_msgs": 590,
+ "heartbeats": 59,
+ "rate_hz": 9.82,
+ "gap_ms_p50": 100.9,
+ "gap_ms_max": 356.9,
+ "latency_ms_p50": 0.8,
+ "latency_ms_max": 9.0,
+ "bytes_p50": 57,
+ "ack": {
+  "type": "ack",
+  "id": "proto-1",
+  "ok": false,
+  "reason": "prototype: no commands"
+ }
+}

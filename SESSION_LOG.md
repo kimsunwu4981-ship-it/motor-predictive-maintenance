@@ -682,3 +682,15 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
   데스크탑 Isaac Sim + 맥북(같은 Wi-Fi) 대시보드, WebSocket·대시보드 서버 0.0.0.0 바인드, 윈도우 방화벽 인바운드 규칙 절차 README, 데스크탑 IP 를 HUD 에 표시,
   렌더 프리셋 3070 Ti 8 GB 기준 1280×720 RTX Real-Time. 추정 약 4 h (맥북 실접속 확인은 사용자).
 - 보류 유지: 2번(Training zip 재다운로드, filekey 44890), 3번(전류 2차). `logs/fleet_before`(비교용 변경 전 로그)는 저장소 밖 로컬에만 있다.
+
+## 18. Isaac Sim 실시간 연동 디지털 트윈 대시보드 — R0 현황 파악 (2026-10-09 낮, 완료)
+
+지시서 `TASK: Isaac Sim 실시간 연동 디지털 트윈 대시보드`(라이브 모드, L1 스트림 + L2 제어). 사용자 조건: 10장 제외, 이 데스크탑(3070 Ti 8 GB) Isaac Sim + 맥북(같은 Wi-Fi) 대시보드,
+0.0.0.0 바인드, 방화벽 인바운드 절차 README, 데스크탑 IP HUD 표시, 프리셋 1280×720 RTX Real-Time. 보고서 `motor_dt_viz/docs/live_r0_report.md`.
+
+- 데이터 소스 추상화: 상태 보드는 `StatusSource`(Replay/Live 자리) 있음, 기계·전기 화면은 영상 currentTime 단일 시간 소스 + 완성 시계열 모델이라 **없음** → R2 에서 `DataSource` 일반화(성장 버퍼 + 벽시계 재생기) 범위 정리.
+- 데모 루프: state 가 한 dict 로 안 모임(로깅 블록에서만 합침) → R1 에서 `state_dict` 로 통일. 결함·부하·배속·모드·리셋·재생은 `DemoState` 로 런타임 변경 가능, **모터 전환은 재시작 필요**(기동 시 tm/cm/카메라/HUD 고정). 판정 엔진은 루프에 아직 없음(HUD 는 stage 색) → R1 에서 Judge 추가.
+- Isaac 파이썬(3.10.15)에 websockets 12.0·aiohttp·psutil 내장. `omni.kit.async_engine` 없음 → threading + asyncio.
+- 프로토타입(`tools/r0_proto/`, 기존 demo 를 runpy 로 감싸 서버 스레드만 추가): FPS 기준 86.5 → 서버 83.6(−3.4 %), `--low` 1280×720 + 서버 90.3. 10 Hz 수신 9.82 Hz, 지연 중앙 0.8 ms, VRAM 3.07/2.92 GB, Isaac 워킹셋 5.1 GB. 완료 기준(10 % 이내) 통과.
+- 삽질: cmd 인자로 한글 경로를 넘기면 깨짐 → ASCII 경로 JSON 으로 인자 전달; MSYS 가 `/FI` 를 경로로 바꿔 tasklist 필터 실패 → PowerShell Get-Process 로 RAM 측정.
+- state 스키마 초안(CSV 컬럼 이름 유지 + `status` = Verdict + fleet levels + bearing 종합, `narration_key`, `host.ip`), 명령 허용 목록 초안(`select_motor` 는 거부+재시작 안내). 네트워크: 데스크탑 유선 172.30.1.37, 포트 8765/4173.
