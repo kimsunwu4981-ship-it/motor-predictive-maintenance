@@ -31,7 +31,7 @@ export function VibChart({ data }: { data: MechData }) {
       animation: false, backgroundColor: "transparent",
       tooltip: { trigger: "axis", valueFormatter: (v) => (v == null ? "-" : `${Number(v).toFixed(1)} mm/s`), axisPointer: { label: { formatter: (o) => fmtT(Number(o.value)) } } },
       grid: { left: 44, right: 14, top: 30, bottom: 26 },
-      xAxis: { type: "value", min: 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
       yAxis: { type: "value", name: "mm/s", min: 0, max: maxV, axisLabel: { color: fg }, splitLine: { lineStyle: { color: line } } },
       series: [
         { id: "vib", name: "진동 속도 RMS", type: "line", showSymbol: false, step: "end", lineStyle: { width: 2.5, color: "#ffd166" }, itemStyle: { color: "#ffd166" },

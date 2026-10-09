@@ -20,7 +20,9 @@ export function LiveNarration({ data, level, history }: { data: LiveData; level:
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => { const el = listRef.current; if (el) el.scrollTop = el.scrollHeight; }, [nPast]);
 
-  if (!scene) return <div className="panel narr"><div className="panel-h">실시간 해설</div><div className="panel-b muted">narration.yaml 에 {step.id} 장면이 없습니다</div></div>;
+  if (!scene) return <div className="panel narr"><div className="panel-h">실시간 해설</div><div className="panel-b muted">{step.id === "manual"
+    ? <>수동 조작 구간입니다 — 장면 해설은 시나리오가 재생될 때 나옵니다 (→ 키 또는 play_scenario 명령). 지금은 결함 토글·게이지·사건 자막으로 보세요.</>
+    : <>narration.yaml 에 {step.id} 장면이 없습니다</>}</div></div>;
   const rt = revealTimes(scene, step);
   const emphasize = level >= 3;
   return (

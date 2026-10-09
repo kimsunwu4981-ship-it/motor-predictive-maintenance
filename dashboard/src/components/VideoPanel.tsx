@@ -15,7 +15,7 @@ export function VideoPanel({ data, overlay }: { data: ModeData; overlay?: ReactN
         <span className="dim">{sc.steps[stepIndex].n}/{sc.steps.length} {sc.steps[stepIndex].label}</span>
       </div>
       <div className="video-box">
-        <video ref={videoRef} src={`${sc.video}?v=${sc.video_offset_s}`} preload="auto" playsInline onClick={toggle} />   /* 재녹화(오프셋 변경)마다 주소가 바뀌어 캐시된 옛 영상이 나오지 않는다 */
+        <video ref={videoRef} src={`${sc.video}?v=${sc.video_offset_s}`} preload="auto" playsInline onClick={toggle} />{/* 재녹화(오프셋 변경)마다 주소가 바뀌어 캐시된 옛 영상이 나오지 않는다 */}
         {overlay}
       </div>
       <div className="controls">

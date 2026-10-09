@@ -13,6 +13,12 @@ import { CaptionBar } from "../live/CaptionBar";
 import { QaDrawer } from "../live/QaDrawer";
 import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../live/captions";
 import { openChannel, type MainState, type Msg } from "../live/broadcast";
+import { useLiveSession } from "../live/session";
+import { LiveToggle, LiveBanner } from "../live/LiveToggle";
+import { LiveVideoPanel } from "../live/LiveVideoPanel";
+import { liveHistory, revealLevel, toMechData, useLivePlayback } from "../live/livedata";
+import { REVEAL_LABEL } from "../live/captions";
+import { loadFleetIndex, type FleetIndex } from "../status/data";
 import "../mech/schematic.css";
 
 // 기계적 결함 실시간 해설 대시보드 (TASK_기계실시간해설). 전기 대시보드(ModeDashboard)는 그대로 둔다.
@@ -28,8 +34,17 @@ export function MechanicalLive() {
   return <Inner data={data} />;
 }
 
-function Inner({ data }: { data: MechData }) {
-  const pb = usePlaybackController(data.scenarios);
+function Inner({ data: data0 }: { data: MechData }) {
+  // 라이브 모드 (TASK 실시간 §6): 같은 컴포넌트, 데이터 소스만 다르다. 끊기면 live.active 가 내려가 녹화 데이터로 돌아간다.
+  const live = useLiveSession();
+  const [fleet, setFleet] = useState<FleetIndex | null>(null);           // 라벨·임계값(사건 문구용) — config 에서 export 한 index.json
+  useEffect(() => { if (live.enabled && !fleet) loadFleetIndex().then(setFleet).catch(() => undefined); }, [live.enabled, fleet]);
+  const focusForEvents = data0.content.scenes[live.last?.step ?? ""]?.focus_component ?? "bearing_de";
+  const liveData = useMemo(() => (live.active ? toMechData(data0, live.buffer, fleet, focusForEvents) : null), [live.active, live.version, live.buffer, data0, fleet, focusForEvents]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const data = liveData ?? data0;
+  const pbRec = usePlaybackController(data0.scenarios);
+  const pbLive = useLivePlayback(live.buffer, live.version, data.scenarios.steps, live.send);
+  const pb = liveData ? pbLive : pbRec;
   const [present, setPresent] = useState(false);
   const [autoMode, setAutoMode] = useState(true);       // 자동 해설 / 발표자 모드 (TASK 7.1)
   const [captions, setCaptions] = useState(true);       // C 키: 자막 켜기/끄기
@@ -54,12 +69,12 @@ function Inner({ data }: { data: MechData }) {
   // 해설 단계 공개 (TASK 5.2 / 7.1): 자동 해설 모드는 reveal_timing, 발표자 모드는 N 키. 장면이 바뀌면 수동 단계는 0 으로.
   const [manual, setManual] = useState<{ scene: string; level: number }>({ scene: step.id, level: 0 });
   const manualLevel = manual.scene === step.id ? manual.level : 0;
-  const level = autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;
+  const level = liveData && autoMode ? revealLevel(live.last) : autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;   // 라이브: Isaac 이 평가한 reveal 단계
   const nextLevel = useCallback(() => { if (!autoMode) setManual({ scene: step.id, level: Math.min(3, manualLevel + 1) }); }, [autoMode, step.id, manualLevel]);
 
   // 이벤트 자막 · 이력 (events.json + event_templates.yaml)
-  const clusters = useMemo(() => buildClusters(data.events), [data.events]);
-  const history = useMemo(() => buildHistory(data, clusters), [data, clusters]);
+  const clusters = useMemo(() => buildClusters(data.events.filter((e) => (e.type as string) !== "reveal")), [data.events]);
+  const history = useMemo(() => (liveData ? liveHistory(data.events, data.content.templates, (e) => `${REVEAL_LABEL[e.reveal as keyof typeof REVEAL_LABEL] ?? e.reveal} 공개`) : buildHistory(data, clusters)), [data, clusters, liveData]);
   const cap = useMemo(() => captionAt(clusters, pb.t), [clusters, pb.t]);
   const sceneCap = useMemo(() => sceneCaptionAt(data.events, pb.t, data.content.templates), [data.events, data.content.templates, pb.t]);
 
@@ -134,9 +149,11 @@ function Inner({ data }: { data: MechData }) {
       <div className={"dash live" + (present ? " present" : "")}>
         <HUDLive data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
                  present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
-                 captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter} />
+                 captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter}
+                 extra={<LiveToggle live={live} compact />} banner={<LiveBanner live={live} />} />
         <div className="live-main">
-          <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
+          {liveData ? <LiveVideoPanel data={data} live={live} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
+                    : <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />}
           <div className="live-side">
             <LiveNarration data={data} level={level} history={history} />
             <MotorSchematic data={data} focus={focus} />

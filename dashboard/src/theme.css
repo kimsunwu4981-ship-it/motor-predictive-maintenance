@@ -163,3 +163,28 @@ table.grid th { color: var(--fg2); font-weight: 700; }
   .video-wrap video { max-height: 30vh; }
   .chapter { min-height: 36px; font-size: .72em; }
 }
+
+/* ---- 라이브 모드 (TASK 실시간 §6): 녹화/LIVE 토글 · 뱃지 · 끊김 띠 · 영상 자리 안내 ---- */
+.live-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: .9em; }
+.live-toggle .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.live-toggle .seg button { border: 0; border-radius: 0; padding: 4px 12px; background: transparent; color: var(--fg2); cursor: pointer; }
+.live-toggle .seg button.on { background: var(--accent); color: #fff; font-weight: 700; }
+.live-badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); font-weight: 700; font-variant-numeric: tabular-nums; }
+.live-badge i { width: 9px; height: 9px; border-radius: 50%; background: var(--fg2); }
+.live-badge.on { color: #26f259; border-color: #26f259; } .live-badge.on i { background: #26f259; box-shadow: 0 0 8px #26f259; animation: live-pulse 1.2s infinite; }
+.live-badge.wait i { background: #ffc93c; } .live-badge.lost { color: #ff731a; border-color: #ff731a; } .live-badge.lost i { background: #ff731a; }
+.live-badge.rec i { background: var(--fg2); }
+@keyframes live-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+.live-url { display: inline-flex; gap: 6px; align-items: center; }
+.live-url input { width: 240px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); font: inherit; }
+.live-banner { display: flex; align-items: center; gap: 10px; margin: 0; flex-basis: 100%; padding: 8px 14px; border-radius: 10px; background: color-mix(in srgb, #ffc93c 22%, var(--panel)); border: 1px solid #ffc93c; color: var(--fg); font-size: .95em; }
+.live-banner .grow { flex: 1; } .live-banner code { font-size: .9em; }
+.live-video .video-box.live-hint { display: flex; align-items: center; justify-content: center; background: var(--panel2); min-height: 260px; position: relative; }
+.live-video .hint-main { padding: 18px 22px; max-width: 640px; }
+.live-video .hint-title { font-size: 1.6em; font-weight: 800; margin-bottom: 6px; }
+.live-video .hint-sub { color: var(--fg2); margin-bottom: 12px; line-height: 1.45; }
+.live-video .hint-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; font-size: .95em; }
+.live-video .hint-grid i { font-style: normal; color: var(--fg2); margin-right: 8px; }
+.live-video .chapters .chapter { min-width: 0; }
+.st-card.off { opacity: .5; filter: grayscale(.4); }
+.st-card .st-live { font-size: .72em; color: #26f259; font-weight: 800; margin-left: 6px; }

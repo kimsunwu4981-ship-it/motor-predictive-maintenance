@@ -18,7 +18,7 @@ export interface FleetStep {
   n: number; id: string; label: string; subtitle: string; t_start: number; t_end: number;
   time_scale: number; load: number; faults: string[]; electrical_case: string;
 }
-export interface FleetScenario { total_duration_s: number; steps: FleetStep[] }
+export interface FleetScenario { total_duration_s: number; steps: FleetStep[]; t_min?: number }   // t_min: 라이브 창 시작
 export interface VibSpec { standard: string; watch_mms: number; plan_mms: number; act_mms: number; note?: string }
 export interface MotorSpec {
   rated_power_kw: number; poles: number; sync_rpm: number; rated_rpm: number; voltage_v: number; frequency_hz: number;

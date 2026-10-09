@@ -14,6 +14,12 @@ import { CaptionBar } from "../live/CaptionBar";
 import { QaDrawer } from "../live/QaDrawer";
 import { autoLevel, buildClusters, buildHistory, captionAt, sceneCaptionAt } from "../live/captions";
 import { openChannel, type MainState, type Msg } from "../live/broadcast";
+import { useLiveSession } from "../live/session";
+import { LiveToggle, LiveBanner } from "../live/LiveToggle";
+import { LiveVideoPanel } from "../live/LiveVideoPanel";
+import { liveHistory, revealLevel, toElecData, useLivePlayback } from "../live/livedata";
+import { REVEAL_LABEL } from "../live/captions";
+import { loadFleetIndex, type FleetIndex } from "../status/data";
 import "../mech/schematic.css";   /* 공통 레이아웃(.dash.live)·자막·해설·Q 서랍 규칙 */
 import "../elec/elec.css";
 
@@ -30,8 +36,15 @@ export function ElectricalLive() {
   return <Inner data={data} />;
 }
 
-function Inner({ data }: { data: ElecData }) {
-  const pb = usePlaybackController(data.scenarios);
+function Inner({ data: data0 }: { data: ElecData }) {
+  const live = useLiveSession();
+  const [fleet, setFleet] = useState<FleetIndex | null>(null);
+  useEffect(() => { if (live.enabled && !fleet) loadFleetIndex().then(setFleet).catch(() => undefined); }, [live.enabled, fleet]);
+  const liveData = useMemo(() => (live.active ? toElecData(data0, live.buffer, fleet) : null), [live.active, live.version, live.buffer, data0, fleet]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const data = liveData ?? data0;
+  const pbRec = usePlaybackController(data0.scenarios);
+  const pbLive = useLivePlayback(live.buffer, live.version, data.scenarios.steps, live.send);
+  const pb = liveData ? pbLive : pbRec;
   const [present, setPresent] = useState(false);
   const [autoMode, setAutoMode] = useState(true);
   const [captions, setCaptions] = useState(true);
@@ -50,11 +63,11 @@ function Inner({ data }: { data: ElecData }) {
   // 해설 단계 공개: 자동 해설 모드는 reveal_timing, 발표자 모드는 N 키
   const [manual, setManual] = useState<{ scene: string; level: number }>({ scene: step.id, level: 0 });
   const manualLevel = manual.scene === step.id ? manual.level : 0;
-  const level = autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;
+  const level = liveData && autoMode ? revealLevel(live.last) : autoMode ? (scene ? autoLevel(scene, step, pb.t) : 3) : manualLevel;
   const nextLevel = useCallback(() => { if (!autoMode) setManual({ scene: step.id, level: Math.min(3, manualLevel + 1) }); }, [autoMode, step.id, manualLevel]);
 
-  const clusters = useMemo(() => buildClusters(data.events), [data.events]);
-  const history = useMemo(() => buildHistory(data, clusters), [data, clusters]);
+  const clusters = useMemo(() => buildClusters(data.events.filter((e) => e.type !== "reveal")), [data.events]);
+  const history = useMemo(() => (liveData ? liveHistory(data.events, data.content.templates, (e) => `${REVEAL_LABEL[e.reveal as keyof typeof REVEAL_LABEL] ?? e.reveal} 공개`) : buildHistory(data, clusters)), [data, clusters, liveData]);
   const cap = useMemo(() => captionAt(clusters, pb.t), [clusters, pb.t]);
   const sceneCap = useMemo(() => sceneCaptionAt(data.events, pb.t, data.content.templates), [data.events, data.content.templates, pb.t]);
 
@@ -132,9 +145,10 @@ function Inner({ data }: { data: ElecData }) {
         <HUDElec data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
                  present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
                  captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter}
-                 basis={basis} onBasis={() => setBasis((b) => (b === "line" ? "phase" : "line"))} />
+                 basis={basis} onBasis={() => setBasis((b) => (b === "line" ? "phase" : "line"))} extra={<LiveToggle live={live} compact />} banner={<LiveBanner live={live} />} />
         <div className="live-main">
-          <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
+          {liveData ? <LiveVideoPanel data={data} live={live} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
+                    : <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />}
           <div className="live-side">
             <LiveNarration data={data} level={level} history={history} />
             <CircuitSchematic data={data} focus={focus} />

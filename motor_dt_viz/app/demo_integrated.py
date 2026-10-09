@@ -210,7 +210,7 @@ if args.live:
     try:
         bridge = LiveBridge(port=args.live_port or None).start()
     except Exception as e:
-        print("[live] 브리지 시작 실패 — 라이브 없이 계속:", e, flush=True)
+        print("[live] bridge start failed - continuing without live:", e, flush=True)   # 콘솔이 cp949 라 ASCII 로
         bridge = None
 LIVE_CFG = load("live")
 LIVE_THERMAL = set(LIVE_CFG["commands"]["inject_fault"]["thermal"])
@@ -722,6 +722,7 @@ while simulation_app.is_running():
                        "playing": state.playing_scenario} if frame else None),
             "faults": list(faults), "load": round(state.load, 2), "time_scale": state.time_scale, "slowmo": state.slowmo, "rpm": round(_rpm, 1),
             "T": {k: round(th.temperature_C[k], 1) for k in tm.node_keys}, "stage": dict(th.stage),
+            "loss_W": {k: round(float(th.loss_W.get(k, 0.0)), 1) for k in tm.node_keys},        # 부품별 손실열 (대시보드 원인 패널)
             "Ia_rms": round(st_line.rms_A[0], 1), "Ib_rms": round(st_line.rms_A[1], 1), "Ic_rms": round(st_line.rms_A[2], 1),
             "i2_over_i1": round(st_line.i2_over_i1, 4), "rated_line_A": i_line, "current_status": list(st_line.status),
             "vibration_mms": round(vib, 2), "iso_zone": zone,

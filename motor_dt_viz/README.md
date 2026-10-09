@@ -241,6 +241,12 @@ HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원�
 명령 예: `{"type":"command","id":"1","name":"inject_fault","args":{"fault":"bearing","on":true}}` → `{"type":"ack","id":"1","ok":true,"applied":{...}}`.
 허용 목록·범위 밖은 `ok:false` 와 이유가 온다 (`config/live.yaml commands`). 시나리오 재생 중에는 결함 주입을 거부하므로 `stop_scenario` 를 먼저 보낸다.
 
+### 대시보드에서 LIVE 켜기 (R2)
+
+세 화면(`#/status`, `#/mechanical`, `#/electrical`) 상단의 **녹화 / LIVE** 스위치. LIVE 를 누르면 주소 입력(기본 `ws://localhost:8765`, 맥북이면 `ws://<데스크탑 IP>:8765`, 마지막 값 기억) → 연결되면 초록 `LIVE · M5 · n명` 뱃지.
+주소로 바로 켜기: `http://<데스크탑 IP>:4173/#/status?live=ws://<데스크탑 IP>:8765`. 스트림이 3 s 끊기면 **자동으로 녹화 재생**으로 돌아가고 노란 띠("라이브 연결 끊김 — 녹화 재생 중")가 뜬다. 다시 붙으면 저절로 LIVE 복귀.
+라이브에서 재생 바는 "최근 5 분" 창(`dashboard/public/content/live.yaml window_s`), `❚❚ 최근 기록 보기`로 버퍼 안을 돌려보고 `▶ LIVE 복귀`. ←/→·챕터 클릭은 Isaac 에 `play_scenario` 명령을 보낸다. 영상 자리는 "Isaac Sim 창을 보세요"(듀얼 모니터용). 자세한 것은 `docs/live_r2_report.md`.
+
 ### 다른 기기(맥북, 같은 Wi-Fi)에서 접속 — 윈도우 방화벽 인바운드 규칙
 
 1. 데스크탑 IP 확인: HUD 의 `LIVE ws://…` 또는 `ipconfig`(이더넷/Wi-Fi 의 IPv4). 맥북은 같은 공유기에 붙어 있어야 한다(같은 서브넷).

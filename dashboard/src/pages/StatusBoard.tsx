@@ -10,6 +10,10 @@ import {
   simElapsed, stepAt, worse, KINDS, PHASES,
   type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent, bearingLevel } from "../status/data";
 import { pickSource, appendSample, type StatusSource } from "../status/source";
+import { useLiveSession } from "../live/session";
+import { LiveToggle, LiveBanner } from "../live/LiveToggle";
+import { liveSteps, pageMode, toMotorSeries, useLivePlayback } from "../live/livedata";
+import type { Step } from "../data";
 import { applyNameplates, loadNameplates, saveNameplates, parseField, yamlSnippet, NAMEPLATE_FIELDS, type Nameplates } from "../status/nameplate";
 import "../status/status.css";
 
@@ -63,13 +67,28 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
     });
   }, [source, index]);
 
+  // ---- 라이브 (TASK 실시간 §6): Isaac --live 스트림의 모터 하나가 LIVE, 나머지 카드는 배치 로그(흐리게). 끊기면 자동으로 전부 녹화.
+  const live = useLiveSession();
+  const liveMotor = live.active ? live.last!.motor_id : null;
+  const liveMode: Mode | null = live.active ? pageMode(live.last!.mode) : null;
+  const liveSeries = useMemo(() => (live.active && liveMotor ? toMotorSeries(live.buffer, index, series[`${liveMotor}/${liveMode}`] ?? null) : null),
+    [live.active, live.version, live.buffer, index, liveMotor, liveMode]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const isLiveSel = !!liveSeries && sel === liveMotor;
   const motor = index.motors.find((m) => m.id === sel)!;
-  const mode = modes[sel];
-  const sc = index.scenarios[mode];
-  const pb = useClockPlayback(sc, pos[sel]);
+  const mode: Mode = isLiveSel && liveMode ? liveMode : modes[sel];
+  const scRec = index.scenarios[mode];
+  const liveStepList: Step[] = useMemo(() => (liveSeries ? liveSteps(live.buffer, index.scenarios[mode].steps.map((s) => ({ ...s, source: "", video_start: 0, video_end: 0, highlight: false, clip: null }))) : []),
+    [liveSeries, live.buffer, index, mode]);
+  const sc = useMemo(() => (isLiveSel ? { ...scRec, total_duration_s: live.buffer.tEnd, t_min: live.buffer.tMin, steps: liveStepList as unknown as typeof scRec.steps } : scRec), [isLiveSel, scRec, live.buffer, liveStepList, live.version]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const pbClock = useClockPlayback(scRec, pos[sel]);
+  const pbLive = useLivePlayback(live.buffer, live.version, liveStepList, live.send);
+  const pb = isLiveSel ? pbLive : pbClock;
+  useEffect(() => { if (liveMotor && ids.includes(liveMotor)) setSel(liveMotor); }, [liveMotor]);   // 스트림이 붙으면 그 모터를 선택  eslint-disable-line react-hooks/exhaustive-deps
+  const x0 = isLiveSel ? (sc.t_min ?? 0) : 0;                  // 재생 바·추세의 창 시작
+  const span = Math.max(sc.total_duration_s - x0, 1e-6);
   // 선택이 바뀌면 그 모터의 저장 시각으로, 재생 중이면 선택 모터의 시각을 저장한다
   const selRef = useRef(sel);
-  useEffect(() => { if (selRef.current !== sel) { selRef.current = sel; pb.pause(); pb.seek(pos[sel] ?? 0); } }, [sel]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (selRef.current !== sel) { selRef.current = sel; if (!(liveMotor && sel === liveMotor)) { pb.pause(); pb.seek(pos[sel] ?? 0); } } }, [sel]);   // 라이브 모터로 바뀔 때는 LIVE 따라가기 유지  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPos((p) => (Math.abs((p[sel] ?? 0) - pb.t) < 1e-3 ? p : { ...p, [sel]: pb.t })); }, [pb.t, sel]);
   const toggleMode = useCallback(() => {
     const nm: Mode = mode === "mechanical" ? "electrical" : "mechanical";
@@ -90,18 +109,18 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
       else if (e.key === "ArrowRight") { e.preventDefault(); pb.gotoStep(pb.stepIndex + 2); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); pb.gotoStep(pb.stepIndex); }
       else if (e.key === "f" || e.key === "F") setPresent((p) => !p);
-      else if (e.key === "m" || e.key === "M") toggleMode();
+      else if ((e.key === "m" || e.key === "M") && !isLiveSel) toggleMode();
       else if (e.key === "Escape") setPresent(false);
       else if (e.key >= "1" && e.key <= "9") { const id = ids[Number(e.key) - 1]; if (id) setSel(id); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pb, ids, toggleMode, npOpen]);
+  }, [pb, ids, toggleMode, npOpen, isLiveSel]);
   const npCount = Object.keys(nameplates).length;
 
-  const cur = series[`${sel}/${mode}`];
+  const cur = isLiveSel ? liveSeries! : series[`${sel}/${mode}`];
   const i = cur ? idxAt(cur.t, pb.t) : 0;
-  const step = stepAt(sc, pb.t);
+  const step = isLiveSel ? (liveStepList[pb.stepIndex] ?? liveStepList[liveStepList.length - 1] ?? stepAt(sc, pb.t)) : stepAt(sc, pb.t);
   const scene = content.narration[mode][step.id];
   const cl = cur ? causeLine(index, cur, i) : null;
   // 추세 차트 기본 선택: 원인 신호 (없으면 DE 베어링 온도)
@@ -119,27 +138,30 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           {!present && <a className="btn" href="#/mechanical" title="기계적 결함 실시간 해설 대시보드 (M5 애니메이션)">기계 해설 ↗</a>}
           {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (M5 애니메이션)">전기 해설 ↗</a>}
           {!present && <button className="b-theme" onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
+          <LiveToggle live={live} />
           <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
           <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
-            <b>{index.honesty.label}{source.kind === "live" ? " · 실측 스트림" : ""}</b>
+            <b>{index.honesty.label}{liveSeries ? " · LIVE (Isaac Sim)" : source.kind === "live" ? " · 실측 스트림" : ""}</b>
             <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 대표 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
           </span>
+          <LiveBanner live={live} />
         </div>
 
         <div className="st-cards">
           {index.motors.map((m, n) => {
-            const s = series[`${m.id}/${modes[m.id]}`];
-            const t = pos[m.id] ?? m.demo.t_s;
+            const isLive = !!liveSeries && m.id === liveMotor;
+            const s = isLive ? liveSeries! : series[`${m.id}/${modes[m.id]}`];
+            const t = isLive ? (m.id === sel ? pb.t : live.buffer.tEnd) : (pos[m.id] ?? m.demo.t_s);
             const k = s ? idxAt(s.t, t) : 0;
             const lv: Level = s ? s.status[k] : "SAFE";
             const c = s ? causeLine(index, s, k) : null;
-            const st = stepAt(index.scenarios[modes[m.id]], t);
+            const st = isLive ? (liveStepList[liveStepList.length - 1] ?? stepAt(index.scenarios[modes[m.id]], 0)) : stepAt(index.scenarios[modes[m.id]], t);
             return (
-              <div key={m.id} className={"st-card" + (m.id === sel ? " sel" : "")} onClick={() => setSel(m.id)} style={{ borderColor: m.id === sel ? index.colors[lv] : undefined }}>
-                <div className="st-card-h"><span className="kbd">{n + 1}</span><b>{m.id}</b> <span className="muted">{m.tags.hoist_ton ?? ""} · {m.spec.rated_power_kw} kW {m.spec.poles}극</span></div>
+              <div key={m.id} className={"st-card" + (m.id === sel ? " sel" : "") + (liveSeries && !isLive ? " off" : "")} onClick={() => setSel(m.id)} style={{ borderColor: m.id === sel ? index.colors[lv] : undefined }}>
+                <div className="st-card-h"><span className="kbd">{n + 1}</span><b>{m.id}</b> <span className="muted">{m.tags.hoist_ton ?? ""} · {m.spec.rated_power_kw} kW {m.spec.poles}극</span>{isLive && <span className="st-live">● LIVE</span>}</div>
                 <div className="st-badge" style={{ background: index.colors[lv] }}>{index.icons[lv]} {index.labels_ko[lv]}</div>
                 <div className="st-cause">{c ? c.head : "불러오는 중…"}</div>
-                <div className="dim st-foot">{modes[m.id] === "mechanical" ? "기계" : "전기"} 시나리오 · {st.label} · {fmtT(t)}</div>
+                <div className="dim st-foot">{isLive ? `LIVE · ${st.label} · ${fmtT(t)}` : liveSeries ? `라이브 아님 · 배치 로그 · ${st.label}` : `${modes[m.id] === "mechanical" ? "기계" : "전기"} 시나리오 · ${st.label} · ${fmtT(t)}`}</div>
               </div>
             );
           })}
@@ -173,7 +195,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
                   <div className="st-sig">{KINDS.map((k) => <span key={k} style={{ borderColor: index.colors[cur.levels[k][i]] }}><i style={{ background: index.colors[cur.levels[k][i]] }} />{index.signals[k].label.split(" (")[0]}</span>)}</div>
                 </div>
               )}
-              <div className="st-scene"><span className="dim">장면 {step.n}/{sc.steps.length}</span> <b>{scene?.title ?? step.label}</b> <span className="dim">— {fill(step.subtitle, cur?.scene_values[step.id])}</span></div>
+              <div className="st-scene"><span className="dim">{isLiveSel ? "LIVE · 장면" : "장면"} {step.n}{isLiveSel ? "" : `/${sc.steps.length}`}</span> <b>{scene?.title ?? step.label}</b> <span className="dim">— {fill(step.subtitle, cur?.scene_values[step.id])}</span></div>
               {scene?.cause_chain ? (
                 <div className="chain fade" key={`${sel}-${step.id}`}>
                   {(["cause", "mechanism", "effect", "action"] as const).map((k, n) => (
@@ -194,21 +216,21 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
 
         <div className="panel st-bottom">
           <div className="st-bar">
-            <button onClick={pb.toggle} title="Space">{pb.playing ? "⏸ 일시정지" : "▶ 재생"}</button>
-            <button onClick={toggleMode} title="M 키: 기계 ↔ 전기 시나리오">{mode === "mechanical" ? "기계 시나리오" : "전기 시나리오"} ⇄</button>
-            <span className="time">{fmtT(pb.t)} / {fmtT(sc.total_duration_s)}</span>
+            <button onClick={pb.toggle} title="Space">{isLiveSel ? (pb.playing ? "❚❚ 최근 기록 보기" : "▶ LIVE 복귀") : (pb.playing ? "⏸ 일시정지" : "▶ 재생")}</button>
+            {!isLiveSel && <button onClick={toggleMode} title="M 키: 기계 ↔ 전기 시나리오">{mode === "mechanical" ? "기계 시나리오" : "전기 시나리오"} ⇄</button>}
+            <span className="time">{isLiveSel ? (pb.playing ? `LIVE · 최근 ${Math.round(live.cfg.window_s / 60)} 분` : `${fmtT(pb.t)} (버퍼)`) : `${fmtT(pb.t)} / ${fmtT(sc.total_duration_s)}`}</span>
             {mode === "mechanical" && <span className="tc"><span className="tc-scale">배속 ×<b>{step.time_scale}</b></span><span className="tc-elapsed">시뮬 경과 <b>{fmtSim(simElapsed(sc, pb.t))}</b></span></span>}
-            <div className="st-strip" onClick={(e) => { const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect(); pb.seek(((e.clientX - r.left) / r.width) * sc.total_duration_s); }} title="클릭: 이동 · 색: 판정 상태">
-              {cur && <StatusStrip index={index} s={cur} total={sc.total_duration_s} />}
-              {sc.steps.map((s) => <span key={s.id} className={"st-ch" + (s.id === step.id ? " cur" : "")} style={{ left: `${(s.t_start / sc.total_duration_s) * 100}%`, width: `${((s.t_end - s.t_start) / sc.total_duration_s) * 100}%` }} title={s.label}>{s.n}</span>)}
-              <i className="st-cur" style={{ left: `${(pb.t / sc.total_duration_s) * 100}%` }} />
+            <div className="st-strip" onClick={(e) => { const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect(); pb.seek(x0 + ((e.clientX - r.left) / r.width) * span); }} title={isLiveSel ? "클릭: 버퍼 안 그 시점 보기 (최근 기록) · 색: 판정 상태" : "클릭: 이동 · 색: 판정 상태"}>
+              {cur && <StatusStrip index={index} s={cur} total={sc.total_duration_s} from={x0} />}
+              {sc.steps.map((s) => <span key={s.id + s.t_start} className={"st-ch" + (s.id === step.id && (!isLiveSel || s.t_start === step.t_start) ? " cur" : "")} style={{ left: `${((s.t_start - x0) / span) * 100}%`, width: `${((s.t_end - s.t_start) / span) * 100}%` }} title={s.label}>{s.n || "·"}</span>)}
+              <i className="st-cur" style={{ left: `${((pb.t - x0) / span) * 100}%` }} />
             </div>
             <span className="chips">
               {KINDS.map((k) => <span key={k} className={"chip" + (trendSel.kind === k ? " on" : "")} onClick={() => setTrend({ kind: k, component: k === "temperature" ? (trendSel.kind === "temperature" ? trendSel.component : "bearing_de") : undefined })}>{index.signals[k].label.split(" (")[0]}</span>)}
               {trendSel.kind === "temperature" && TEMP_GAUGES.map((n) => <span key={n} className={"chip" + (trendSel.component === n ? " on" : "")} onClick={() => setTrend({ kind: "temperature", component: n })}>{index.node_labels[n]}</span>)}
             </span>
           </div>
-          {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} />}
+          {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} scenario={isLiveSel ? sc : undefined} />}
         </div>
 
         {npOpen && <NameplateForm motor={index0.motors.find((m) => m.id === sel)!} current={nameplates[sel]} onClose={() => setNpOpen(false)}
@@ -274,7 +296,7 @@ function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; mot
 }
 
 // 재생 바 배경: 시각별 판정 상태 색 (구간 병합)
-function StatusStrip({ index, s, total }: { index: FleetIndex; s: MotorSeries; total: number }) {
+function StatusStrip({ index, s, total, from = 0 }: { index: FleetIndex; s: MotorSeries; total: number; from?: number }) {
   const segs = useMemo(() => {
     const out: { from: number; to: number; lv: Level }[] = [];
     for (let k = 0; k < s.t.length; k++) {
@@ -284,7 +306,7 @@ function StatusStrip({ index, s, total }: { index: FleetIndex; s: MotorSeries; t
     }
     return out;
   }, [s]);
-  return <>{segs.map((g, n) => <i key={n} className="st-seg" style={{ left: `${(g.from / total) * 100}%`, width: `${Math.max(0.2, ((g.to - g.from) / total) * 100)}%`, background: index.colors[g.lv] }} />)}</>;
+  return <>{segs.map((g, n) => <i key={n} className="st-seg" style={{ left: `${((g.from - from) / (total - from)) * 100}%`, width: `${Math.max(0.2, ((g.to - g.from) / (total - from)) * 100)}%`, background: index.colors[g.lv] }} />)}</>;
 }
 
 function ThresholdTab({ index }: { index: FleetIndex }) {

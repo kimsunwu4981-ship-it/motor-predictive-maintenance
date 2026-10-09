@@ -52,6 +52,7 @@ export interface LeadTime {
 export interface Scenarios {
   mode: Mode; video: string; video_offset_s: number; video_duration_s: number | null;
   total_duration_s: number; steps: Step[]; lead_time: LeadTime;
+  t_min?: number;                 // 라이브 모드: 차트 창의 시작 시각 (없으면 0). total_duration_s 가 창의 끝(버퍼 끝)
 }
 
 export interface Timeseries {

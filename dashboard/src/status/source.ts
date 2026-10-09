@@ -48,7 +48,8 @@ export class LiveSource implements StatusSource {
 
 export function pickSource(params: URLSearchParams): StatusSource {
   const live = params.get("live");
-  return live ? new LiveSource(live.replace(/\/$/, "")) : new ReplaySource();
+  // ws:// 는 라이브 세션(live/session.ts, WebSocket) 이 맡는다 — 여기서는 HTTP(+SSE) 계약의 실측 소스만 (R2 이후 둘 다 가능)
+  return live && /^https?:/.test(live) ? new LiveSource(live.replace(/\/$/, "")) : new ReplaySource();
 }
 
 // 라이브 샘플을 시계열 끝에 붙인다 (불변 갱신). 메모리 상한은 호출자가 정한다.

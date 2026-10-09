@@ -62,7 +62,7 @@ export function TempChart({ data, focus, shown, onToggle }: {
       animation: false, backgroundColor: "transparent",
       tooltip: { trigger: "axis", valueFormatter: (v) => (v == null ? "-" : `${Number(v).toFixed(1)} °C`), axisPointer: { label: { formatter: (o) => fmtT(Number(o.value)) } } },
       grid: { left: 52, right: 18, top: 40, bottom: 26 },
-      xAxis: { type: "value", min: 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
       yAxis: { type: "value", name: "°C", min: 0, max: maxT, axisLabel: { color: fg }, splitLine: { lineStyle: { color: line } } },
       visualMap,
       series: [

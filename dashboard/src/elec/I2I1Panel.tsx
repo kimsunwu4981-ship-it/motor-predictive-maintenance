@@ -34,7 +34,7 @@ export function I2I1Panel({ data, focus }: { data: ElecData; focus: boolean }) {
       animation: false, backgroundColor: "transparent",
       tooltip: { trigger: "axis", valueFormatter: (x) => (x == null ? "-" : Number(x).toFixed(3)), axisPointer: { label: { formatter: (o) => fmtT(Number(o.value)) } } },
       grid: { left: 40, right: 10, top: 6, bottom: 20 },
-      xAxis: { type: "value", min: 0, max: sc.total_duration_s, axisLabel: { formatter: (x: number) => fmtT(x), color: fg, fontSize: 10 }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { formatter: (x: number) => fmtT(x), color: fg, fontSize: 10 }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
       yAxis: { type: "value", min: 0, max: maxV, axisLabel: { color: fg, fontSize: 10 }, splitLine: { lineStyle: { color: line } } },
       series: [
         { id: "v", name: "I₂/I₁", type: "line", showSymbol: false, step: "end", lineStyle: { width: 2.5, color: "#ffd166" }, itemStyle: { color: "#ffd166" }, areaStyle: { color: "rgba(255,209,102,.12)" }, data: [] as number[][],

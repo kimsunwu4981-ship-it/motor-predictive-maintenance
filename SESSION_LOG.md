@@ -705,3 +705,14 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - README "라이브 모드" 절(실행·확인·맥북 접속·방화벽 인바운드 절차), `tools/firewall_rules.ps1`(8765·4173, 개인·도메인 프로필). 테스트 `tests/test_live_bridge.py` 4개(엔진 121·대시보드 63 통과).
 - 삽질: websockets 17 클라이언트에서 `time.sleep` 으로 기다리면 송신이 flush 안 됨 → 테스트는 `asyncio.sleep`; 130 s 짧은 실행을 전체 시나리오 기준표와 비교하면 뒤 장면이 '행 없음'으로 실패 — 회귀 문서는 180 s 실행 것.
 - 다음 R2: 대시보드 `LiveSource`(WebSocket 수신→성장 버퍼), 녹화/LIVE 토글, 3 s 폴백, 실시간 추세, serve.cjs 주소 표시. 맥북 실접속 확인은 사용자(방화벽 스크립트 관리자 실행 후).
+
+## 20. 라이브 모드 R2 — 대시보드 LiveSource·녹화/LIVE 토글·폴백·실시간 추세 (2026-10-09 오후, 완료)
+
+사용자: 맥북에서 `http://172.30.1.37:4173` 열림 확인(네트워크 OK) → R2 진행. 보고서 `motor_dt_viz/docs/live_r2_report.md`, 스크린샷 `docs/live_r2/`.
+
+- 공통: `src/live/feed.ts`(WebSocket, 하트비트 3 s 감시, 재접속 2 s, send→ack), `session.ts`(`useLiveSession`: 토글·주소 localStorage·`?live=ws://`, 수신 버퍼 300 s, active/fallback), `LiveToggle.tsx`(스위치·뱃지·노란 띠), `livedata.ts`(버퍼→MotorSeries/MechData/ElecData, 관찰된 장면 전환·등급 변화 사건, `useLivePlayback`), `LiveVideoPanel.tsx`(영상 자리 안내), `public/content/live.yaml`.
+- 화면: 세 페이지가 `live.active` 면 라이브 데이터·라이브 재생기, 아니면 기존 그대로(훅은 항상 둘 다 호출). 차트 x축 `min: sc.t_min ?? 0` 로 흐르는 창. 상태 보드는 스트림 모터 자동 선택·`● LIVE`·나머지 카드 흐림, M 키 무시. 해설 단계는 state.narration_key.reveal, 사건 자막은 status 등급 변화. 끊김 띠는 HUD 패널 안에 넣어 grid 행이 밀리지 않게.
+- `dashboard/serve.cjs` 0.0.0.0 명시 + LAN 주소 출력. `status/source.ts pickSource` 는 http(s) 만 옛 LiveSource. 데모 state 에 `loss_W` 추가(원인 패널 손실열). `tools/cdp_shot.mjs`(헤드리스 Edge+CDP 실시간 스크린샷).
+- 확인: 녹화 모드 3화면 회귀 동일, 라이브 3화면(사용자가 띄워 둔 Isaac `--live` M5 수동 구간에 접속: LIVE·M5 뱃지, 게이지·차트·페이저 갱신, FPS 79·VRAM 3.2 GB 표시), 폴백(닫힌 포트: 띠+"끊김 → 녹화"+녹화 데이터 정상). 테스트 대시보드 63·엔진 121.
+- 삽질: `?live=ws://` 가 옛 HTTP LiveSource 에 걸려 index.json fetch 실패 → 스킴으로 분기. 띠를 grid 자식으로 두니 카드 행이 밀림 → HUD 안으로. 라이브 모터 자동 선택이 재생기를 pause 시킴 → 선택 효과에서 라이브 모터 제외. 사용자가 켜 둔 kit.exe(13:54, --live)가 8765 를 점유 → 내 검증 실행은 포트 충돌(그 인스턴스를 그대로 검증에 사용). cp949 콘솔에 em dash 출력 불가 → ASCII 메시지.
+- 남은 것: R3 제어 패널(결함 토글·슬라이더·리셋·시나리오, ack 확정·거부 토스트)과 데모 시나리오 녹화, R4 프리셋·장애 표·체크리스트. 영상 자리 옵션 2·3 은 R5.

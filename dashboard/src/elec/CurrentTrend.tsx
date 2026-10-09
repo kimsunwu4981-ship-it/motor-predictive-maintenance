@@ -28,7 +28,7 @@ export function CurrentTrend({ data, basis, focus }: { data: ElecData; basis: Ba
       animation: false, backgroundColor: "transparent",
       tooltip: { trigger: "axis", valueFormatter: (v) => (v == null ? "-" : `${Number(v).toFixed(1)} A`), axisPointer: { label: { formatter: (o) => fmtT(Number(o.value)) } } },
       grid: { left: 44, right: 12, top: 8, bottom: 22 },
-      xAxis: { type: "value", min: 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg, fontSize: 10 }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { formatter: (v: number) => fmtT(v), color: fg, fontSize: 10 }, axisLine: { lineStyle: { color: line } }, splitLine: { show: false } },
       yAxis: { type: "value", min: 0, max: Math.ceil(A(maxR)), axisLabel: { color: fg, fontSize: 10 }, splitLine: { lineStyle: { color: line } } },
       series: [
         ...PHASES.map((p) => ({ id: p, name: `${el.phase_labels[p]}상`, type: "line" as const, showSymbol: false, step: "end" as const, lineStyle: { width: focus.includes(p) || !focus.length ? 2.5 : 1.2, color: pc(p) }, itemStyle: { color: pc(p) }, data: [] as number[][], markArea: p === "A" ? { silent: true, data: bands } : undefined })),

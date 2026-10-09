@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { usePlayback } from "../state/playback";
 import { ELEC_ICON } from "../components/Legend";
 import { ELEC_SEVERITY, idxAt, PHASES, type Basis, type ElecData } from "./data";
 
 // 상단 바 (전기): 모드 · 장면 n/7 제목·지문 · 상태 뱃지(주목 상 기준) · 슬로모션 표시(TASK 5.4) · 선/상전류 토글 · 정직성 라벨
-export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode, captions, onCaptions, qa, onQa, onPresenter, basis, onBasis }: {
+export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, onAutoMode, captions, onCaptions, qa, onQa, onPresenter, basis, onBasis, extra, banner }: {
   data: ElecData; theme: "dark" | "light"; onTheme: () => void; present: boolean; onPresent: () => void;
   autoMode: boolean; onAutoMode: () => void; captions: boolean; onCaptions: () => void; qa: boolean; onQa: () => void; onPresenter: () => void;
   basis: Basis; onBasis: () => void;
+  extra?: React.ReactNode;            // 녹화/LIVE 토글
+  banner?: React.ReactNode;           // 끊김 띠
 }) {
   const { t, stepIndex } = usePlayback();
   const th = data.thresholds, el = th.electrical, ts = data.timeseries;
@@ -45,6 +47,7 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
         {basis === "line" ? "선전류 ⇄" : "상전류 ⇄"}
       </button>
       <span className="grow" />
+      {extra}
       {!present && <button onClick={onAutoMode} title="자동 해설: 해설 단계가 시간에 따라 저절로 공개 / 발표자 모드: N 키를 눌러야 다음 단계">{autoMode ? "자동 해설" : "발표자 모드 · N"}</button>}
       {!present && <button className="b-qa" onClick={onQa} title="Q 키: 예상 질문과 답 서랍">{qa ? "☑ 질문 Q" : "☐ 질문 Q"}</button>}
       {!present && <button className="b-pres" onClick={onPresenter} title="발표자 노트북용 화면을 새 창으로 연다 (멘트는 그 창에만)">발표자 ↗</button>}
@@ -56,6 +59,7 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
         <span>{th.honesty.rating_basis}</span>
         <span>{th.honesty.current_note}</span>
       </span>
+      {banner}
     </div>
   );
 }

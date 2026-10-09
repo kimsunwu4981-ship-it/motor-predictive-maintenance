@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as echarts from "echarts";
 import { fmtT } from "../data";
-import type { FleetIndex, GaugeSpec, Kind, MotorInfo, MotorSeries, Phase } from "./data";
+import type { FleetIndex, FleetScenario, GaugeSpec, Kind, MotorInfo, MotorSeries, Phase } from "./data";
 import { PHASES } from "./data";
 
 // 신호별 추세 차트 (TASK_다중모터 §7.1 ④): 선택 신호를 임계 구간 배경 위에 그린다. 장면 경계 띠, 현재 시각 커서, 클릭으로 이동.
 // 전체 시계열을 그리고 커서로 현재를 표시한다 (상태 보드는 해설용이 아니라 감시용이라 미래를 숨기지 않는다).
 export interface TrendSel { kind: Kind; component?: string }
 
-export function TrendChart({ index, motor, series, sel, spec, t, onSeek }: {
+export function TrendChart({ index, motor, series, sel, spec, t, onSeek, scenario }: {
   index: FleetIndex; motor: MotorInfo; series: MotorSeries; sel: TrendSel; spec: GaugeSpec; t: number; onSeek: (t: number) => void;
+  scenario?: FleetScenario;            // 라이브: 흐르는 창 {t_min, total_duration_s=버퍼 끝, 관찰된 장면}
 }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
-  const sc = index.scenarios[series.mode];
+  const sc = scenario ?? index.scenarios[series.mode];
 
   const base = useMemo<echarts.EChartsOption>(() => {
     const css = getComputedStyle(document.documentElement);
@@ -47,7 +48,7 @@ export function TrendChart({ index, motor, series, sel, spec, t, onSeek }: {
       grid: { left: 54, right: 16, top: 22, bottom: 24 },
       tooltip: { trigger: "axis", valueFormatter: (v) => (typeof v === "number" ? (Math.abs(v) < 1 ? v.toFixed(3) : v.toFixed(2)) : String(v)) },
       legend: { show: lines.length > 1, top: 0, right: 10, textStyle: { color: fg, fontSize: 11 } },
-      xAxis: { type: "value", min: 0, max: sc.total_duration_s, axisLabel: { color: fg, formatter: (v: number) => fmtT(v) }, splitLine: { show: false }, axisLine: { lineStyle: { color: line } } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { color: fg, formatter: (v: number) => fmtT(v) }, splitLine: { show: false }, axisLine: { lineStyle: { color: line } } },
       yAxis: { type: "value", min: Math.min(spec.min, 0), max: yMax, name: yName, nameLocation: "end", nameGap: 4, nameTextStyle: { color: fg, align: "left", padding: [0, 0, 0, -44], fontSize: 11 }, axisLabel: { color: fg }, splitLine: { lineStyle: { color: line, opacity: .5 } } },
       series: [
         ...lines.map((l, n) => ({
