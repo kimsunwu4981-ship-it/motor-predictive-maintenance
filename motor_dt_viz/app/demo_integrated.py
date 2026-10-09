@@ -56,7 +56,14 @@ ap.add_argument("--switch_seq", metavar="mode:sec,...",
 ap.add_argument("--live", action="store_true",
                 help="라이브 모드: WebSocket 브리지(config/live.yaml)로 state 송신·명령 수신. 없으면 기존 동작과 완전히 같다")
 ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
+ap.add_argument("--preset", default="", metavar="demo|full", help="config/render_demo.yaml 프리셋 (해상도·RTX 모드·물리 서브스텝·입자·뷰포트). --low 보다 우선")
 args = ap.parse_args()
+PRESET = None
+if args.preset:
+    import yaml as _yaml
+    with open(os.path.join(ROOT, "config", "render_demo.yaml"), encoding="utf-8") as _f:
+        PRESET = _yaml.safe_load(_f)["presets"][args.preset]
+    print(f"[demo] preset {args.preset}: {PRESET}", flush=True)
 
 from isaacsim import SimulationApp  # noqa: E402
 
@@ -64,13 +71,25 @@ from isaacsim import SimulationApp  # noqa: E402
 # 병목은 렌더링이므로 --low 는 해상도를 먼저 낮추고, 물리 서브스텝과 입자 수를 함께 줄인다.
 _W, _H = (1280, 720) if args.low else (1600, 900)
 PHYSICS_SUBSTEPS = 2 if args.low else 4
+if PRESET:
+    _W, _H = int(PRESET["width"]), int(PRESET["height"]); PHYSICS_SUBSTEPS = int(PRESET["physics_substeps"])
 PHYSICS_DT = 1.0 / (60 * PHYSICS_SUBSTEPS)         # 서브스텝을 줄여도 프레임당 총 1/60 s 는 유지
 PARTICLES_PER_PATH = 12 if args.low else None      # None = config 값 사용
+if PRESET:
+    PARTICLES_PER_PATH = PRESET.get("particles_per_path")
 
 simulation_app = SimulationApp({"headless": not args.gui, "width": _W, "height": _H})
 import carb  # noqa: E402
 
 carb.settings.get_settings().set("/physics/cudaDevice", -1)
+if PRESET:
+    carb.settings.get_settings().set("/rtx/rendermode", str(PRESET.get("render_mode", "RaytracedLighting")))   # RTX Real-Time
+    for _ext in PRESET.get("disable_extensions") or []:
+        try:
+            import omni.kit.app as _oka
+            _oka.get_app().get_extension_manager().set_extension_enabled_immediate(_ext, False)
+        except Exception as _e:
+            print("[demo] extension disable failed:", _ext, _e, flush=True)
 
 import numpy as np  # noqa: E402
 from isaacsim.core.api import World  # noqa: E402
@@ -128,9 +147,19 @@ CAM_CLOSE = ([-0.62, -0.86, 0.42], [0.30, 0.0, 0.02])     # 모터 클로즈업(
 def _scaled(cam):
     eye, tgt = cam
     return ([t + (e - t) / GEOM_SCALE for e, t in zip(eye, tgt)], list(tgt))
-CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE), _scaled(CAM_CLOSE)
+CAM_WIDE0, CAM_CLOSE0 = CAM_WIDE, CAM_CLOSE          # 스케일 전 기준값 (핫 모터 스위치가 다시 쓴다)
+CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
 set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
 world.reset()
+if PRESET and PRESET.get("single_viewport") and args.gui:
+    try:
+        import omni.ui as _ui
+        for _name in ("Viewport 2", "Layer", "Semantics Schema Editor"):
+            _w = _ui.Workspace.get_window(_name)
+            if _w:
+                _w.visible = False
+    except Exception as _e:
+        print("[demo] single_viewport:", _e, flush=True)
 
 # ------------------------------------------------------------------ 시각화 구성
 driver = MaterialDriver(stage, prefer_omnipbr=True,
@@ -249,6 +278,43 @@ def _reveal_stage(mode_: str, frame_) -> str | None:
     return stage_
 
 
+def hot_switch_motor(mid: str) -> dict:
+    """프로세스 안에서 모터만 교체 (R4): 모터 라이브러리 → 열회로·전류 모델·결함 주입기·판정·임계값·정격·물리 상수·카메라 거리·HUD 문구.
+    USD 스테이지·물리 바디·머티리얼·입자는 그대로(외형은 카메라 거리로 비례 표현 — 정직성 라벨 '외형은 프레임 비례 스케일'). 결함·케이스는 해제, 열 상태 초기화."""
+    global MOTOR, TH_CFG, EL_CFG, GEOM_SCALE, VIB_STD, tm, cm, injector, judge, THRESHOLDS, i_line, i_phase, RATED
+    global mc, w_sync, s_rated, T_rated, T_max, CAM_WIDE, CAM_CLOSE, player, t_real
+    t0 = time.perf_counter()
+    MOTOR = ml.load_motor(mid)
+    TH_CFG, EL_CFG = ml.thermal_cfg(MOTOR), ml.electrical_cfg(MOTOR)
+    GEOM_SCALE = float(MOTOR.geometry_scale)
+    VIB_STD = str(MOTOR.vibration["standard"]).split(" (")[0]
+    tm = ThermalModel(TH_CFG)
+    cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR))
+    injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds)
+    judge = Judge(motor=MOTOR)
+    THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
+    i_line = cm.motor.rated_current("rated_line_A"); i_phase = cm.motor.rated_current("rated_phase_A")
+    RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"}, "short_loop": i_phase}
+    mc = ml.motor_spec_cfg(MOTOR)
+    w_sync = float(V(mc["rating"]["sync_rpm"])) * 2 * math.pi / 60
+    s_rated = float(V(mc["rating"]["slip"])); T_rated = float(V(mc["rating"]["torque_Nm"])); T_max = T_rated * 2.5
+    CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
+    set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
+    player = ScenarioPlayer.for_mode(state.mode)
+    state.playing_scenario = False; state.thermal_faults.clear(); state.electrical_case = "healthy"; state.dirty = True
+    driver.reset_to_base()
+    t_real = 0.0
+    if panel:
+        panel.sync_from_state()
+    if hud:
+        hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id}, representative spec, frame x{GEOM_SCALE:.2f} of M5)")
+        hud.vib_standard = VIB_STD
+        hud.set_mode(state.mode)
+    dt = time.perf_counter() - t0
+    print(f"[live] hot switch -> {mid} in {dt * 1000:.0f} ms", flush=True)
+    return {"hot": True, "motor_id": mid, "switch_ms": round(dt * 1000)}
+
+
 def apply_command(cmd: dict) -> tuple[bool, object]:
     """메인 루프에서 명령을 DemoState 에 적용한다 (브리지가 허용 목록·범위는 이미 검사했다). (ok, applied|reason)."""
     name, a = cmd["name"], cmd.get("args") or {}
@@ -309,8 +375,16 @@ def apply_command(cmd: dict) -> tuple[bool, object]:
         cur = MOTOR.id if MOTOR else ml.REFERENCE_ID
         if mid == cur:
             return False, f"already running motor {cur}"
+        sm_cfg = LIVE_CFG["commands"].get("select_motor") or {}
+        if str(sm_cfg.get("switch_mode", "hot")) == "hot":
+            try:
+                info = hot_switch_motor(mid)
+            except Exception as e:
+                return False, f"hot switch failed: {e}"
+            info.update({"from": cur, "eta_s": float(sm_cfg.get("switch_banner_min_s", 10))})
+            return True, info
         LIVE_RESTART["motor_id"] = mid
-        eta = float((LIVE_CFG["commands"].get("select_motor") or {}).get("restart_eta_s", 45))
+        eta = float(sm_cfg.get("restart_eta_s", 45))
         if hud:
             hud.set_live(f"RESTARTING -> {mid}  (about {eta:.0f} s)")
         return True, {"restart": True, "motor_id": mid, "from": cur, "eta_s": eta}
@@ -414,6 +488,10 @@ _prev_wall = _t0
 _fps_hist: list[float] = []
 _last_log_t = -1.0
 _last_judge_t = -1.0
+_perf_logged = False
+_last_fps_warn_t = -1.0
+FPS_WARN_BELOW = float((PRESET or {}).get("fps_warn_below", 30))
+PERF_LOG_AFTER_S = float((PRESET or {}).get("perf_log_after_s", 8))
 STATE_PERIOD_S = 0.5 / float(load("live")["server"].get("state_hz", 10))   # 판정·state 갱신 주기 = 송신 주기의 절반 (브리지가 매 틱 새 state 를 보게 — 같으면 9.2 Hz 로 떨어졌다)
 LOG_PERIOD_S = 0.25      # CSV·status 기록 주기 (실제 시간)
 status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
@@ -768,6 +846,28 @@ while simulation_app.is_running():
         wall = time.time() - _t0
         fps = t_wall / wall * 60.0 if wall > 0.5 else 0.0
         _fps_hist.append(fps)
+        # 기동 성능 로그(한 번) + FPS 경고 (R4): 숫자는 render_demo.yaml fps_warn_below / perf_log_after_s
+        if not _perf_logged and t_session >= PERF_LOG_AFTER_S and fps > 0:
+            _perf_logged = True
+            _perf = {"t_session_s": round(t_session, 1), "fps": round(fps, 1), "preset": args.preset or ("low" if args.low else "default"),
+                     "resolution": [_W, _H], "ram_mb": None, "vram_mb": None, "motor": MOTOR.id if MOTOR else ml.REFERENCE_ID}
+            try:
+                import psutil
+                _perf["ram_mb"] = round(psutil.Process().memory_info().rss / 1048576)
+            except Exception:
+                pass
+            try:
+                import subprocess as _sp
+                _perf["vram_mb"] = float(_sp.run(["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"], capture_output=True, text=True, timeout=3).stdout.strip().splitlines()[0])
+            except Exception:
+                pass
+            print(f"[perf] start: {json.dumps(_perf)}", flush=True)
+            with open(os.path.join(RUN_LOG_DIR, "perf_start.json"), "w", encoding="utf-8") as _f:
+                json.dump(_perf, _f, indent=1)
+        if t_session - _last_fps_warn_t >= 5.0:
+            _last_fps_warn_t = t_session
+            if 0 < fps < FPS_WARN_BELOW and t_session > PERF_LOG_AFTER_S:
+                print(f"[perf] WARNING fps {fps:.1f} < {FPS_WARN_BELOW:g} (t={t_session:.0f}s)", flush=True)
         rpm = float(art.get_joint_velocities()[0]) * 60 / (2 * math.pi)
         writer.writerow([round(t_wall, 2), round(t_real, 3), mode, frame.step_id if frame else "manual", case,
                          "|".join(faults), round(state.load, 2), round(rpm, 1),

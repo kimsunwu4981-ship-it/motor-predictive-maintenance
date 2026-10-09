@@ -1,0 +1,47 @@
+{
+ "motor_before": "M1",
+ "A_out_of_range": {
+  "type": "ack",
+  "id": "A1",
+  "name": "set_load",
+  "ok": false,
+  "reason": "pct out of range 0~150: 500",
+  "t_wall": 1791531755.2190354
+ },
+ "B_not_allowed": {
+  "type": "ack",
+  "id": "B1",
+  "name": "run_code",
+  "ok": false,
+  "reason": "command not allowed: run_code",
+  "t_wall": 1791531755.2200396
+ },
+ "C_concurrent": {
+  "ack_a": true,
+  "ack_b": true,
+  "ack_b_also_seen_by_a": true,
+  "final_load": 1.2,
+  "expected_last_wins": 1.2
+ },
+ "D_switch": {
+  "ack": {
+   "hot": true,
+   "motor_id": "M3",
+   "switch_ms": 6,
+   "from": "M1",
+   "eta_s": 10.0
+  },
+  "send_to_ack_s": 0.056,
+  "socket_closed": false,
+  "ack_to_first_state_s": 0.11,
+  "new_motor": "M3"
+ },
+ "E_force_kill": {
+  "close_detected_after_s": 1.7,
+  "killed_pids": [
+   "636"
+  ],
+  "last_state_before_close_s": 1.46,
+  "note": "대시보드는 close 즉시 또는 heartbeat_timeout_s(3 s) 안에 '끊김 → 녹화' 띠"
+ }
+}

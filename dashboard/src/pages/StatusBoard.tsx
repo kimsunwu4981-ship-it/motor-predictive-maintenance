@@ -148,7 +148,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
             <b>{index.honesty.label}{liveSeries ? " · LIVE (Isaac Sim)" : source.kind === "live" ? " · 실측 스트림" : ""}</b>
             <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 대표 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
           </span>
-          <LiveBanner live={live} />
+          <LiveBanner live={live} index={index} />
         </div>
 
         <div className="st-cards">

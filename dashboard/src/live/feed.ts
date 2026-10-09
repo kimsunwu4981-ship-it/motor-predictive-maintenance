@@ -11,6 +11,7 @@ export type Level = "SAFE" | "WARN" | "DANGER";
 export interface LiveCfg {
   default_url: string; heartbeat_timeout_s: number; reconnect_s: number; window_s: number; buffer_max_n: number;
   command_timeout_s: number; video_panel: "hint" | "snapshot" | "webrtc";
+  switch_why_hot?: string; switch_why_restart?: string; switch_compare?: string;
 }
 export const LIVE_CFG_DEFAULT: LiveCfg = {
   default_url: "ws://localhost:8765", heartbeat_timeout_s: 3, reconnect_s: 2, window_s: 300, buffer_max_n: 6000, command_timeout_s: 3, video_panel: "hint",

@@ -6,3 +6,7 @@ window_s: 300                          # 실시간 추세·수신 버퍼 창 (�
 buffer_max_n: 6000                     # 버퍼 상한 (10 Hz × 600 s)
 command_timeout_s: 3                   # 명령 ack 대기 시간
 video_panel: hint                      # 라이브에서 영상 패널 자리: hint(안내 문구, 듀얼 모니터용 기본) | snapshot(미구현, R5) | webrtc(미구현, R5)
+switch_why_hot: "Isaac Sim 안에서 모터 라이브러리({to_id})의 열회로·전류 모델·판정 임계값·카메라 거리만 바꿨습니다 — 재기동 없음, {switch_ms} ms."
+switch_why_restart: "Isaac Sim 은 모터별 열회로·전류 모델·외형 스케일을 기동 때 만들기 때문에 새 모터로 재기동합니다 (약 {eta}초)."
+switch_compare: "{to_id} 은(는) {to_name} — {to_kw} kW {to_poles}극, 출력은 {from_id}({from_kw} kW)의 {ratio} %. 같은 결함을 넣어 열용량이 작은 모터가 얼마나 빨리/늦게 반응하는지 비교해 보세요. 직전 {from_id}: {from_summary}"
+switch_hint_fields: "변수: to_id to_name to_kw to_poles from_id from_kw ratio from_summary eta switch_ms — 숫자는 index.json(모터 라이브러리)과 마지막 state 에서"

@@ -211,3 +211,7 @@ table.grid th { color: var(--fg2); font-weight: 700; }
 .ctl-toast.ok { border-color: #26f259; } .ctl-toast.bad { border-color: #ff140d; background: color-mix(in srgb, #ff140d 15%, var(--panel2)); }
 .small { font-size: .85em; }
 .live-banner.restart { background: color-mix(in srgb, #62d2ff 18%, var(--panel)); border-color: #62d2ff; }
+
+.live-banner.restart { flex-direction: column; align-items: stretch; gap: 4px; }
+.live-banner .lb-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.live-banner .lb-cmp { font-size: 1.02em; line-height: 1.45; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--panel2) 70%, transparent); }

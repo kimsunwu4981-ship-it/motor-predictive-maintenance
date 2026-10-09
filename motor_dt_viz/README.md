@@ -233,7 +233,7 @@ ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/f
 
 ```bat
 C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical --live            # 콘솔에 ws://<IP>:8765 와 대시보드 주소가 찍힌다
-C:\ISSACS~1\python.bat app\demo_integrated.py --gui --mode mechanical --live --motor M3            # 모터는 기동 시에만 고른다 (select_motor 명령은 "재시작 필요" 로 거부)
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --mode integrated --live --motor M5 --preset demo   # 발표용: 1280×720 RTX Real-Time, 물리 서브스텝 2, 입자 12, 뷰포트 1개 (config/render_demo.yaml). 모터 전환은 제어 패널에서
 ```
 
 HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원인>` 행이 보인다. 간단 확인(아무 PC, websockets 설치된 파이썬):
@@ -251,7 +251,7 @@ HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원�
 
 LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=1` 이면 열린 채 시작). 결함 토글(열 결함 6 · 전류 케이스 6, 모드에 맞는 것만), 부하 0~150 %, 시간 배속 1~600, 슬로모션 1/1~240, 모드(기계/전기/통합), 시나리오 재생·장면 번호·정지, 리셋, **모터 선택(M1~M5)**.
 버튼 상태는 내가 누른 값이 아니라 Isaac 이 적용해 state 로 돌려준 값으로 확정되고, 거부되면 "최근 명령"에 이유가 뜬다(예: 시나리오 재생 중 결함 주입 → `stop_scenario` 먼저). 허용 목록·범위는 Isaac 이 접속 직후 보내는 `hello`(= `config/live.yaml commands`)에서 온다.
-**모터 전환은 자동 재시작**: `select_motor` → Isaac 이 현재 모터를 정리하고 같은 인자(`--mode/--live/--live_port/--low`, `--autoplay·--max_s·--record` 제외)로 새 모터를 재기동한다. 그동안 대시보드는 "모터 전환 중 (M1, 약 N초)" 띠를 띄우고 녹화 데이터를 보여주다 새 모터의 첫 state 가 오면 LIVE 로 돌아온다. 실측 시간은 `docs/live_r3_report.md`, 재기동 로그는 `logs/live_restart_<모터>.log`.
+**모터 전환**: 기본은 **핫 스위치**(`config/live.yaml select_motor.switch_mode: hot`) — Isaac 프로세스 안에서 모터 라이브러리의 열회로·전류 모델·판정·정격·카메라 거리·HUD 문구만 새 모터로 재생성한다(USD·Isaac 재로드 없음, 1 s 미만). 대시보드 띠는 최소 `switch_banner_min_s`(10 s) 동안 "왜 바뀌는지 + 무엇을 비교할지"(문구는 `dashboard/public/content/live.yaml switch_*`)를 보여준다. `switch_mode: restart` 로 두면 R3 방식(현재 모터 정리 → 같은 인자로 재기동, 45~130 s, 로그 `logs/live_restart_<모터>.log`). 실측은 `docs/live_r3_report.md`·`live_r4_report.md`.
 데모 대본 `docs/live_demo_script.md`(5단계), 자동 구동 `tools/live_demo_drive.py`, 녹화 `tools/record_live_demo.ps1`(화면을 비워야 한다).
 
 ### 다른 기기(맥북, 같은 Wi-Fi)에서 접속 — 윈도우 방화벽 인바운드 규칙

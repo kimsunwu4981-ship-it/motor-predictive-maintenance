@@ -26,8 +26,10 @@ commands:                 # 허용 목록. name 이 없거나 인자가 범위 �
   play_scenario: { scene_min: 1 }        # scene 생략 = 처음부터, n = 그 장면 시작으로 점프 (장면 수는 모드 시나리오 config 가 정한다)
   stop_scenario: {}
   reset: {}
-  select_motor:                          # R3 결정(2026-10-09): 자동 재시작. 현재 모터를 정리하고 같은 인자(--mode/--live/--live_port/--low…, --autoplay·--max_s·--record 는 제외)로 새 모터 재기동
-    runtime: restart
+  select_motor:                          # R3 결정(2026-10-09): 자동 재시작 → R4 에서 기본을 핫 스위치로 (재기동 없이 프로세스 안에서 모터 라이브러리만 교체, USD·Isaac 재로드 생략)
+    runtime: restart                     # 브리지 검증 분기용 (값은 restart 그대로 — 실제 방식은 switch_mode)
+    switch_mode: hot                     # hot = 열회로·전류 모델·판정·카메라·HUD 만 새 모터로 재생성 (실측 1 s 미만) | restart = 프로세스 재기동(45~130 s)
+    switch_banner_min_s: 10              # 대시보드 '모터 전환' 안내 띠를 최소 이 시간은 보여준다 (핫 스위치는 순식간이라 설명 시간을 확보)
     restart_eta_s: 60                    # 대시보드 띠 "모터 전환 중 (약 N초)" 예상값 — 실측(2026-10-09, 3070 Ti): 46.5 s(Isaac 1개), 133 s(다른 Isaac 인스턴스 동시 실행) → docs/live_r3_report.md
     restart_timeout_s: 120               # 이 시간 안에 새 모터 state 가 안 오면 대시보드는 일반 끊김으로 취급
 

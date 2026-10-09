@@ -153,7 +153,7 @@ function Inner({ data: data0 }: { data: MechData }) {
         <HUDLive data={data} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
                  present={present} onPresent={togglePresent} autoMode={autoMode} onAutoMode={() => setAutoMode((a) => !a)}
                  captions={captions} onCaptions={() => setCaptions((c) => !c)} qa={qa} onQa={() => setQa((q) => !q)} onPresenter={openPresenter}
-                 extra={<><LiveToggle live={live} compact />{live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 제어 패널">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}</>} banner={<LiveBanner live={live} />} />
+                 extra={<><LiveToggle live={live} compact />{live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 제어 패널">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}</>} banner={<LiveBanner live={live} index={fleet} />} />
         <div className="live-main">
           {liveData ? <LiveVideoPanel data={data} live={live} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />
                     : <VideoPanel data={data} overlay={captions ? <CaptionBar scene={sceneCap} cap={cap} tpl={data.content.templates} /> : null} />}

@@ -49,7 +49,7 @@ export function ControlPanel({ live, open, onClose }: { live: LiveSession; open:
   const loadR = range("set_load", "pct", [0, 150]), tsR = range("set_time_scale", "x", [1, 600]), smR = range("set_slowmo", "x", [1, 240]);
   const motors = hello?.motors ?? [];
   const modes = (cmds.set_mode as { modes?: string[] } | undefined)?.modes ?? ["mechanical", "electrical", "integrated"];
-  const disabled = !live.active || !!live.restarting;
+  const disabled = !live.active || (!!live.restarting && !live.restarting.arrived && !live.restarting.hot);
   const loadV = load ?? Math.round((st?.load ?? 1) * 100), tsV = ts ?? (st?.time_scale ?? 60), smV = sm ?? Math.round(1 / (st?.slowmo || 1 / 60));
   const scenes = useMemo(() => (cmds.play_scenario ? [1, 2, 3, 4, 5, 6, 7] : []), [cmds.play_scenario]);
   if (!open) return null;
@@ -61,7 +61,7 @@ export function ControlPanel({ live, open, onClose }: { live: LiveSession; open:
         {busy && <span className="dim">{busy}…</span>}
         <button onClick={onClose} title="Esc">닫기</button>
       </div>
-      {live.restarting && <div className="ctl-note">모터 전환 중 — {live.restarting.motor_id} 재기동 (약 {Math.round(live.restarting.eta_s)} s), 재접속 대기</div>}
+      {live.restarting && !live.restarting.hot && <div className="ctl-note">모터 전환 중 — {live.restarting.motor_id} 재기동 (약 {Math.round(live.restarting.eta_s)} s), 재접속 대기</div>}
       {live.active && !hello && <div className="ctl-note">Isaac 이 허용 명령 목록(hello)을 보내지 않았습니다 — R3 이전 코드로 떠 있는 인스턴스입니다. Isaac 을 다시 실행하면 결함·모터 버튼이 채워집니다.</div>}
       <div className="ctl-b">
         <section>
@@ -103,7 +103,7 @@ export function ControlPanel({ live, open, onClose }: { live: LiveSession; open:
           </div>
         </section>
         <section>
-          <h4>모터 선택 <span className="dim">자동 재시작 — 약 {Math.round(hello?.restart_eta_s ?? 45)} s 끊김 뒤 새 모터로 재접속</span></h4>
+          <h4>모터 선택 <span className="dim">{(hello?.commands?.select_motor as { switch_mode?: string } | undefined)?.switch_mode === "restart" ? `자동 재시작 — 약 ${Math.round(hello?.restart_eta_s ?? 45)} s 끊김 뒤 재접속` : "핫 스위치 — 재기동 없이 열회로·전류 모델·카메라만 교체 (안내 띠 몇 초)"}</span></h4>
           <div className="ctl-row">
             {motors.map((m) => <button key={m} className={st?.motor_id === m ? "on" : ""} disabled={disabled || st?.motor_id === m}
               onClick={() => run("select_motor", { motor_id: m }, `모터 ${m} 전환`)}>{m}</button>)}

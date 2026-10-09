@@ -48,7 +48,7 @@ export interface LiveSession {
   send: (name: string, args?: Record<string, unknown>) => Promise<LiveAck>;
   lastAck: LiveAck | null;
   hello: LiveHello | null;               // 허용 명령·모터 목록 (제어 패널)
-  restarting: { motor_id: string; eta_s: number; at: number } | null;   // select_motor 뒤 Isaac 재기동 중 (띠 "모터 전환 중")
+  restarting: { motor_id: string; from: string; eta_s: number; at: number; hot: boolean; switch_ms?: number; from_summary: string; arrived: boolean } | null;   // select_motor 뒤 전환 안내 (hot: 재기동 없음, 최소 eta_s 동안 안내 띠)
 }
 
 export function useLiveSession(): LiveSession {
@@ -73,12 +73,21 @@ export function useLiveSession(): LiveSession {
       feed.onState((s) => {
         bufRef.current.push(s); setVersion((v) => v + 1);
         if (feed.hello) setHello(feed.hello);
-        setRestarting((r) => (r && s.motor_id === r.motor_id ? null : r));            // 새 모터의 첫 state → 전환 끝
+        setRestarting((r) => {                                                          // 새 모터의 첫 state → 도착 표시; 띠는 최소 eta_s 유지(안내 시간)
+          if (!r || s.motor_id !== r.motor_id) return r;
+          if (r.arrived) return Date.now() - r.at >= r.eta_s * 1000 ? null : r;
+          return { ...r, arrived: true };
+        });
       }),
       feed.onAck((a) => {
         setLastAck(a);
-        const ap = a.applied as { restart?: boolean; motor_id?: string; eta_s?: number } | undefined;
-        if (a.ok && a.name === "select_motor" && ap?.restart && ap.motor_id) { bufRef.current.clear(); setRestarting({ motor_id: ap.motor_id, eta_s: Number(ap.eta_s ?? 45), at: Date.now() }); }
+        const ap2 = a.applied as { restart?: boolean; hot?: boolean; motor_id?: string; from?: string; eta_s?: number; switch_ms?: number } | undefined;
+        if (a.ok && a.name === "select_motor" && ap2?.motor_id && (ap2.restart || ap2.hot)) {
+          const last = bufRef.current.last;
+          const sum = last ? `${last.status.label ?? last.status.status}${last.status.cause_signal !== "-" ? ` (${last.status.cause_signal} ${last.status.value})` : ""} · DE 베어링 ${last.T?.bearing_de ?? "-"} °C · 진동 ${last.vibration_mms} mm/s` : "-";
+          bufRef.current.clear();
+          setRestarting({ motor_id: ap2.motor_id, from: ap2.from ?? last?.motor_id ?? "-", eta_s: Number(ap2.eta_s ?? 45), at: Date.now(), hot: !!ap2.hot, switch_ms: ap2.switch_ms, from_summary: sum, arrived: false });
+        }
       }),
     ];
     feed.start();
@@ -95,7 +104,9 @@ export function useLiveSession(): LiveSession {
   // 전환이 너무 오래 걸리면(2×eta 또는 timeout) 일반 끊김으로 되돌린다
   useEffect(() => {
     if (!restarting) return;
-    const h = setTimeout(() => setRestarting(null), Math.max(restarting.eta_s * 2, 60) * 1000);
+    // 도착했으면 최소 안내 시간(eta_s)만, 아직이면 재기동 한도(2×eta 또는 timeout) 뒤 일반 끊김으로
+    const ms = restarting.arrived ? Math.max(0, restarting.eta_s * 1000 - (Date.now() - restarting.at)) : Math.max(restarting.eta_s * 2, 60) * 1000;
+    const h = setTimeout(() => setRestarting(null), ms);
     return () => clearTimeout(h);
   }, [restarting]);
   const buf = bufRef.current;

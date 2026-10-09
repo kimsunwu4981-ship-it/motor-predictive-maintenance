@@ -728,3 +728,13 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 대본 `docs/live_demo_script.md`, 녹화 `tools/record_live_demo.ps1`(Isaac 왼쪽·Edge 오른쪽, 데스크톱 캡처 1920 폭). **녹화는 화면을 비운 뒤** 사용자 신호로 진행(미완).
 - 테스트: 브리지 6(hello·select_motor·restart_args 추가), 대시보드 63, 엔진 전체 통과. 커밋 후 R4(프리셋·장애 표·체크리스트).
 - (16:07) **데모 녹화 완료** `모터결함_애니메이션/10_라이브_양방향_데모_1920x1080.mp4`(207 s, 10.3 MB): 5단계 모두 담김, M1 전환 23 s. 시도 4회 — too many clients(max_clients 8→32), VS Code 배경, Isaac 창 제목 탐색 실패(프로세스 핸들로) 뒤 성공. 확인 프레임 docs/live_r3/demo_frame_*.png. 녹화 스크립트는 창 전체 최소화·복원까지 자동.
+
+## 22. 라이브 모드 R4 — 핫 모터 스위치·데모 프리셋·장애 테스트·체크리스트 (2026-10-09 오후, Wi-Fi 테스트만 남음)
+
+사용자 추가: ① 전환 공백을 설명 시간으로 + 전환 시간 단축 ② 체크리스트에 백업 영상 경로·실패 시 전환 절차 ③ 맥북 Wi-Fi 끄기는 사용자. 보고서 `motor_dt_viz/docs/live_r4_report.md`.
+
+- **핫 스위치**(`demo_integrated.py hot_switch_motor`, `live.yaml select_motor.switch_mode: hot` 기본): 프로세스 안에서 열회로·전류 모델·결함 주입기·판정·정격·물리 상수·카메라 거리·HUD 만 재생성 — USD·Isaac 재로드 없음. 실측 switch 5~14 ms, ack→새 모터 첫 state 0.11 s, 소켓 유지. 재시작 방식은 `switch_mode: restart` 로 남김.
+- 띠: ack 의 hot/from/switch_ms + 직전 state 요약을 받아 최소 `switch_banner_min_s`(10 s) 동안 "왜 바뀌는지"(hot/restart 문구) + "무엇을 비교할지"(모터 사양·출력비·직전 상태) 두 줄 — 템플릿 `dashboard/public/content/live.yaml switch_*`. 스크린샷 `docs/live_r4/switch_banner_status.png`.
+- 프리셋 `config/render_demo.yaml` `--preset demo`(1280×720, RTX Real-Time, 서브스텝 2, 입자 12, 뷰포트 1개) + 기동 `[perf] start` 로그(`perf_start.json`: fps 48~58 @8 s 워밍업, VRAM 3.3 GB, RAM 4.9 GB) + FPS<30 경고.
+- 장애 테스트 `tools/live_fault_tests.py`(`docs/live_r4/fault_tests.json`): 범위 밖·목록 밖 거부, 동시 명령 마지막 승(1.2), 핫 스위치 0.11 s, 강제 종료 close 감지 1.7 s. 새로고침은 localStorage 로 즉시 재접속(R2). 삽질: kill 대상 명령줄 패턴 불일치 + state 가 계속 와서 무한 대기 → `--kill-match`·60 s 상한.
+- 체크리스트 `docs/live_demo_checklist.md`(전날·시작 순서·**라이브 실패 시 15 초 전환 절차와 백업 영상 경로**·데모 중·끝나고), README 핫 스위치·`--preset demo`.

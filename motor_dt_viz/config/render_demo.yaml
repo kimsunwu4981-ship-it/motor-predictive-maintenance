@@ -1,0 +1,23 @@
+# render_demo.yaml — 데모 렌더 프리셋 (TASK 실시간 §8 R4). demo_integrated.py --preset <이름> 으로 한 줄 전환. 숫자는 여기에만.
+# 기준 PC: RTX 3070 Ti 8 GB (사용자 결정 2026-10-09). 실측(R0/R1): 1280×720 + RTX Real-Time 에서 86~90 fps, VRAM 2.9~3.4 GB(GPU 전체).
+presets:
+  demo:
+    width: 1280
+    height: 720
+    render_mode: RaytracedLighting      # RTX Real-Time (경로 추적 PathTracing 은 데모에 쓰지 않는다)
+    physics_substeps: 2                 # --low 와 같다 (프레임당 1/60 s 유지)
+    particles_per_path: 12
+    single_viewport: true               # 뷰포트 1개만 (추가 뷰포트·레이아웃 창 닫음)
+    disable_extensions: []              # 필요 시 끌 확장 이름 (예: omni.kit.window.console). 비워 두면 건드리지 않는다
+    fps_warn_below: 30                  # 이 아래로 떨어지면 콘솔 경고 (5 s 마다 검사)
+    perf_log_after_s: 8                 # 기동 뒤 이 시점에 VRAM·RAM·FPS 를 로그로 (logs/<subdir>/perf_start.json)
+  full:
+    width: 1600
+    height: 900
+    render_mode: RaytracedLighting
+    physics_substeps: 4
+    particles_per_path: null
+    single_viewport: false
+    disable_extensions: []
+    fps_warn_below: 30
+    perf_log_after_s: 8
