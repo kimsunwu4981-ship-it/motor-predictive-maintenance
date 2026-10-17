@@ -3,6 +3,7 @@
 import type { ElecStatus, ModeData, Thresholds, Timeseries } from "../data";
 import { getJson, getYaml, getYamlOptional } from "../live/load";
 import type { GlossaryItem, LiveData, LiveEvent, LiveScene, QaItem, SceneValues, Templates } from "../live/types";
+import type { ElecSource } from "../live/feed";
 
 export type Phase = "A" | "B" | "C";
 export const PHASES: Phase[] = ["A", "B", "C"];
@@ -13,6 +14,7 @@ export interface ElecTimeseries extends Timeseries {
   phase_rms_A: Record<Phase, number[]>;
   phasor_deg: Record<Phase, number[]>;     // 기본파 페이저 각 (엔진 재계산, config 위상)
   case: string[];
+  i2_over_in?: (number | null)[];          // 라이브(LUT 방식)에서만 — 부하 무관 보조 지표, 판정 없음
   recompute_check: { method: string; max_rms_diff_A: number; max_i2i1_diff: number; max_i2i1_diff_from_log_rms: number; pass: boolean };
 }
 export interface ElecEvent extends LiveEvent {
@@ -42,6 +44,7 @@ export interface ElecData extends ModeData, LiveData<ElecScene> {
   events: ElecEvent[];
   waveforms: Waveforms;
   content: { scenes: Record<string, ElecScene>; templates: Templates; qa: QaItem[]; glossary: GlossaryItem[] };
+  source?: ElecSource | null;             // 전류 신호 근거 (라이브 state.electrical_source). 녹화 데이터는 undefined = legacy 해석식
 }
 
 export async function loadElecData(base: ModeData): Promise<ElecData> {

@@ -11,6 +11,12 @@ const at = (d: ModeData, i: number) => ({
   i2: d.timeseries.i2_over_i1[i], sa: d.timeseries.current_status.A[i], sb: d.timeseries.current_status.B[i], sc: d.timeseries.current_status.C[i],
 });
 const label = (d: ModeData, st: string) => d.thresholds.electrical.status_labels[st as keyof typeof d.thresholds.electrical.status_labels];
+// 라이브 LUT 방식(M1)의 근거 — toElecData 가 state.electrical_source 를 data.source 에 넣는다. 녹화 데이터는 undefined (legacy 문구)
+type SrcLite = { method?: string; lut_version?: string | null; status?: string; inherent_i2i1?: number; base_turns_per_phase?: number | null; rated_current_A?: number | null;
+  cases?: { key: string; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null }[] };
+const src = (d: ModeData): SrcLite | undefined => (d as unknown as { source?: SrcLite | null }).source ?? undefined;
+const lutCase = (d: ModeData, key: string) => src(d)?.cases?.find((c) => c.key === key);
+const f3 = (v: number | null | undefined) => (v == null ? "—" : v.toFixed(3));
 
 const chapter = (id: string, d: ModeData, i: number): ChapterText => {
   const e = d.thresholds.electrical, I = e.rated_line_A, x = at(d, i);
@@ -24,6 +30,12 @@ const chapter = (id: string, d: ModeData, i: number): ChapterText => {
     };
     case "itsc_4turn": {
       const f = fault(d, "itsc_4turn");
+      const s = src(d), lc = lutCase(d, "itsc_4turn");
+      if (s?.method === "lut" && lc) return {
+        see: `케이블 색은 거의 그대로입니다 — R ${A(x.a)} / S ${A(x.b)} / T ${A(x.c)}, 전류 크기로는 ${label(d, x.sa)} 범위. 대신 균형 지표 I₂/I₁ 이 ${x.i2.toFixed(3)} 으로 정상 바닥 ${healthy} 의 ${healthy ? (x.i2 / healthy).toFixed(1) : "—"}배입니다. 권선 안의 단락 루프에는 큰 순환 전류가 돕니다.`,
+        why: `상당 ${s.base_turns_per_phase ?? 192}턴 중 ${lc.turns}턴이 접촉 저항 ${lc.R_f_ohm} Ω 로 붙은 경우입니다. 단락 턴은 자기적으로 '단락된 변압기 2차'처럼 큰 순환 전류를 흘리지만, 선전류 불평형은 작습니다. 이 값은 등가회로 LUT(RMxprt v2 + 다중결합 회로, ${s.lut_version}, FEM 미검증·${s.status})의 I₂/I₁ 에 고유 비대칭 ${s.inherent_i2i1} 을 더한 설계값 ${f3(lc.expected_i2i1)} 입니다.`,
+        act: `색보다 숫자가 먼저 말하는 장면입니다. 4턴 수준은 고유 비대칭과 겹쳐 '주의' 근처에 머물 수 있으므로 추세(상승)와 함께 보고, 절연 저항 측정·서지 비교 시험을 계획합니다.`,
+      };
       return {
         see: `R상 케이블과 권선 오버레이가 빨강으로 바뀌고, 권선 안에 빨간 단락 루프가 나타납니다. 지금 R ${A(x.a)} (${pct(x.a / I)}, ${label(d, x.sa)}) — S·T 는 그대로. I₂/I₁ 은 ${x.i2.toFixed(3)}.`,
         why: `권선 코일 4턴의 절연이 깨져 서로 붙으면(ITSC) 그 상의 임피던스가 낮아져 전류가 늘고 세 상의 균형이 깨집니다. 이 화면은 목표 I₂/I₁ ${f?.target_i2i1} 을 재현한 해석식 등가 표현입니다.`,
@@ -32,6 +44,12 @@ const chapter = (id: string, d: ModeData, i: number): ChapterText => {
     }
     case "itsc_12turn": {
       const f = fault(d, "itsc_12turn");
+      const s = src(d), lc = lutCase(d, "itsc_12turn");
+      if (s?.method === "lut" && lc) return {
+        see: `R상이 커지고 T상이 작아져 세 줄의 길이가 눈에 띄게 어긋납니다 — R ${A(x.a)} (${pct(x.a / I)}, ${label(d, x.sa)}) / S ${A(x.b)} / T ${A(x.c)} (${label(d, x.sc)}). I₂/I₁ ${x.i2.toFixed(3)} — 위험 눈금을 넘습니다.`,
+        why: `단락 턴이 ${lc.turns}턴(${s.base_turns_per_phase ? ((lc.turns ?? 0) / s.base_turns_per_phase * 100).toFixed(1) : "—"} %)으로 늘면 역상분이 턴수에 거의 비례해 커집니다 (LUT 설계값 ${f3(lc.expected_i2i1)}, 고유 비대칭 포함). 단락 루프 손실이 정격 권선 동손의 몇 배라 권선이 국부적으로 탑니다 — 통합 모드에서는 이 손실이 권선 온도로 이어집니다.`,
+        act: `즉시 정지하고 권선을 점검·재권선합니다. 여기까지 오면 수리 단계입니다 — 목표는 앞 장면(4턴)과 그 사이(8턴부터는 고유 비대칭을 빼도 위험 눈금 위)에서 알리는 것입니다.`,
+      };
       return {
         see: `R상이 더 진한 빨강이고 입자가 빨라집니다. 지금 R ${A(x.a)} (${pct(x.a / I)}) — 위험 과전류 기준 ${A(od.line_A ?? 0)} (×${od.ratio}) 를 크게 넘습니다. I₂/I₁ ${x.i2.toFixed(3)}.`,
         why: `단락된 턴 수가 12 로 늘면 그 상의 전류가 훨씬 커지고 단락 루프에는 큰 순환 전류가 흐릅니다. 이 열이 권선을 국부적으로 태웁니다 (목표 I₂/I₁ ${f?.target_i2i1}).`,

@@ -119,6 +119,10 @@ class MotorHUD:
                     with ui.HStack(height=26):
                         ui.Label("I2/I1", width=60, style=_style(16, 0xFFFFAA33))
                         self._labels["i2i1"] = ui.Label("-", style=_style(18, 0xFFFFAA33))
+                    with ui.HStack(height=18):     # D4: 부하 무관 보조 지표 (판정에 쓰지 않음) — LUT 방식일 때만 값이 온다
+                        ui.Label("I2/In", width=60, style=_style(13, 0xFFBBBBBB))
+                        self._labels["i2in"] = ui.Label("-", style=_style(13, 0xFFBBBBBB))
+                    self._labels["esrc"] = ui.Label("", style=_style(11, 0xFF9999AA), word_wrap=True)   # D5: 전류 신호 근거 (lut/legacy)
                     ui.Separator(height=6)
 
                 # 기계 섹션 — 전기 전용 모드에서 통째로 숨긴다
@@ -206,6 +210,16 @@ class MotorHUD:
         self._labels["i2i1"].text = f"{state.i2_over_i1:.4f}" + (f"   {LEVEL_LABEL.get(i2i1_level, i2i1_level)}" if i2i1_level else "")
         if i2i1_level:
             self._restyle("i2i1", self._labels["i2i1"], 18, self.level_colors.get(i2i1_level, 0xFFFFAA33))
+        i2in = getattr(state, "i2_over_in", None)
+        if "i2in" in self._labels:
+            self._labels["i2in"].text = "-" if i2in is None else f"{i2in:.4f}   (load-independent, not judged)"
+        src = getattr(state, "source", None) or {}
+        if "esrc" in self._labels and src:
+            if src.get("method") == "lut":
+                self._labels["esrc"].text = (f"basis: equivalent-circuit LUT (RMxprt v2 + MCCM) {src.get('lut_version', '')} "
+                                             f"- {src.get('status', '')}, FEM not verified")
+            else:
+                self._labels["esrc"].text = "basis: legacy analytic inverse (target I2/I1), not FEM"
 
     def update_thermal(self, temperatures: dict, stages: dict, labels: dict,
                        keys: list[str] | None = None, levels: dict | None = None) -> None:

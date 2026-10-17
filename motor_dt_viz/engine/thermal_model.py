@@ -100,10 +100,12 @@ class ThermalModel:
         self._duty_t = 0.0
 
     # ------------------------------------------------------------------ 손실
-    def losses(self, load: float, faults: list[str], winding_current_pu: float | None = None) -> np.ndarray:
+    def losses(self, load: float, faults: list[str], winding_current_pu: float | None = None,
+               extra_loss_W: dict[str, float] | None = None) -> np.ndarray:
         """부하율·결함·(통합모드) 전류로부터 부품별 손실 [W] 을 계산한다.
 
         winding_current_pu: 모듈 B 연동 시 권선 전류 비율(I/I_rated). None 이면 부하율로 근사.
+        extra_loss_W: {노드: W} 외부 추가 손실 — 모듈 B 의 ITSC 단락 루프 총손실(LUT P_loop_total) 등 (TASK A D4).
         """
         fcfg = self.cfg["faults"]
         load_mult = 1.0
@@ -140,6 +142,9 @@ class ThermalModel:
                 P[self.index[k]] *= float(mul)
             if tgt and "extra_loss_W" in fc:
                 P[self.index[tgt]] += float(fc["extra_loss_W"])
+        for k, w in (extra_loss_W or {}).items():
+            if k in self.index and w:
+                P[self.index[k]] += float(w)
         return P
 
     def r_ambient(self, faults: list[str]) -> np.ndarray:
@@ -181,8 +186,9 @@ class ThermalModel:
         faults: list[str] | None = None,
         winding_current_pu: float | None = None,
         use_duty_cycle: bool | None = None,
+        extra_loss_W: dict[str, float] | None = None,
     ) -> ThermalState:
-        """시뮬레이션 시간 dt_sim_s 만큼 전진한다 (시간 배속은 호출자가 곱해서 넘긴다)."""
+        """시뮬레이션 시간 dt_sim_s 만큼 전진한다 (시간 배속은 호출자가 곱해서 넘긴다). extra_loss_W: losses() 참조."""
         faults = faults or []
         if use_duty_cycle is None:
             use_duty_cycle = bool(self.cfg["duty_cycle"].get("enabled", False))
@@ -191,12 +197,12 @@ class ThermalModel:
         eff_load = load
         # dt_sim_s = 0 (전기 전용 모드에서 열을 정지시킬 때)에도 손실과 상태를 보고해야 한다.
         # 루프를 돌지 않으면 P 가 None 으로 남아 ThermalState 생성에서 깨진다.
-        P = self.losses(eff_load, faults, winding_current_pu)
+        P = self.losses(eff_load, faults, winding_current_pu, extra_loss_W)
         R = self.r_ambient(faults)
         while remaining > 1e-12:
             h = min(self.max_dt, remaining)
             eff_load = self._duty_load(load, h) if use_duty_cycle else load
-            P = self.losses(eff_load, faults, winding_current_pu)
+            P = self.losses(eff_load, faults, winding_current_pu, extra_loss_W)
             R = self.r_ambient(faults)
             G = self.conductance(faults)
             if self.method == "euler":

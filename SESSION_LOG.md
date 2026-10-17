@@ -751,3 +751,18 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - I₂/I₁ 정상 분포(≤500/모터): L-EF-04 0.028(95 % 0.039, 경고 이상 31 %), R-EF-05 0.026(23 %), L-SF-04 0.088(100 %, S상 10 % 큼), L-DSF-01 0.08(95 % 0.59 — 채널 탈락 파일 섞임), 55 kW 0.034/0.005. 상 불평형 경고(0.05) 이상: L-EF-04·R-EF-05 0~1.5 %, L-SF-04 88 %, L-DSF-01 100 %.
 - 결론: 3상이라 계산 가능하나 샘플 4대 한정·모터별 편차 커서 "모터별 정상 중앙값 대비"로만 참고 가능, 공통 경계 0.03 은 이 데이터로 정당화되지 않음. M1 이 지시서대로 3.5 kW 면 전체 zip 의 3.7 kW 급 5대(진동만, 미추출)가 더 가까운 후보.
 - `git diff -- motor_dt_viz/config motor_dt_viz/engine dashboard` = 0 줄 확인. 계산 스크립트는 스크래치에만.
+
+## 24. 전기 트랙 마무리 — Maxwell 경로 B LUT 를 디지털트윈에 연동 (2026-10-17, D0~D6 완료 · 정격 전류 결정 대기)
+
+지시(TASK A): 단계 0(M-fix, 권상모터_3D모델링 쪽) 뒤 D0 조사 → D1 LUT 가져오기·로더 → D2 electrical.yaml v2 → D3 신호 생성 교체(legacy 유지) → D4 I₂/I_n·손실 연결 → D5 대시보드 배지 → D6 검증 보고.
+승인 범위는 electrical.yaml 구조와 결함 신호 생성 코드만. thresholds.yaml·motors/*.yaml·판정 코드·포트·방화벽은 무변경(V8 git diff 로 확인).
+
+- **D0**: `target_i2i1` 은 `CurrentModel._calibrate_targets` 가 고장상 배율로 역산(고정 파형 아님) → 멈춤 조건 아님. 열 모델에 핫스팟 입력 없음(`extra_loss_W` 만). thresholds i2i1 에 source/status/mode 없음. 계산은 Isaac 안 `demo_integrated` 가 직접.
+- **D1**: `tools/electrical/import_lut.py`(sha256·provenance·멱등, `data/electrical/LUT_INDEX.md`), `engine/lut_source.py` LutSource(3축 보간, R_f log, 클램프 플래그, 각도는 최근접), `tests/test_lut_source.py` 6건.
+- **D2**: `config/electrical.yaml` v2 — `version 2, method lut, motor M1, rated_current_A 4.73, base_turns_per_phase 192, source{grade,status,fem_verified,lut,lut_sha256}, inherent{0.027, 0°}, transfer_to_other_motors false`, 7 케이스에 `lut:{turns,R_f_ohm}` 추가(legacy 필드 그대로). **rated_current_A 4.73 ≠ M1.yaml 5.0 (+5.7 %)** → 지시대로 보고(파형 크기 5.0 기준, I₂/I_n 분모 4.73 로 두고 진행).
+- **D3**: `engine/current_model.py` — `_phasors()` 가 lut 케이스는 I₁ + I₁(r·e^{jθ} + 0.027) 페이저 합성, 나머지·legacy 는 기존 식 그대로(위상 규약 동일). M1 외 모터·sha 불일치·파일 없음은 legacy 로 내려가고 이유 기록. legacy 회귀 0.104/0.269 ±0.1 % 통과(기본·M5·M1 legacy).
+- **D4**: `CurrentState.i2_over_in`(lut 일 때만)·`i2_angle_deg`·`source`; state JSON 에 `i2_over_in, electrical_source(+cases 7), p_loop_total_W, i2i1_marks` 덧붙임(schema 1 유지), CSV 끝에 `i2_over_in, electrical_method`. `ThermalModel.step/losses(extra_loss_W)` 훅 → 통합 모드에서 LUT P_loop_total(4턴 158 W, 12턴 977 W)을 권선 노드로. HUD 에 I2/In 줄·근거 줄(영문).
+- **D5**: 대시보드 `feed.ts`(선택 키 타입) · `livedata.ts toElecData`(눈금 덮어쓰기·source·i2_over_in 열) · `HUDElec`(근거 배지 "등가회로 LUT · provisional · FEM 미검증") · `I2I1Panel`(I₂/I_n 줄·7 케이스 근거 표) · `content/electrical.ts`(LUT 일 때 ITSC 두 장면 why/see/act 3줄) · elec.css. `npm run build` 통과, dist 갱신. WebSocket 구조 불변.
+- **D6**: `tools/electrical/verify_lut_integration.py` → `docs/electrical/lut_integration_report.md` (V1 LUT↔mccm ±1 %, V2 합성↔LUT ±1 %/±1°, V3 고유 비대칭 범위 4턴 0.021~0.075, V4 legacy, V5 부하 50 vs 100 %: I₂/I₁ +47 % vs I₂/I_n 0 %, V6 thresholds 판정표(4턴 SAFE~WARN, 8턴부터 DANGER), V7 라이브 10 s, V8 금지 파일 clean). `docs/judgment_basis.md` 신설(근거·임계값 만남·I₂/I_n 제안·핫스팟 노드 제안). 테스트: 엔진 113, 대시보드 63 통과.
+- 삽질: bash heredoc 으로 긴 파이썬 파일 쓰기 실패(따옴표 파싱) → Write 도구; LUT 0 % 행의 1e-10 잔차가 ±1 % 검사에서 +199 % 로 나와 0 처리; 12턴 P_loop_total 977 W 는 지시문의 "≈590 W" 보다 크다(R_f 손실 487 W + 단락 턴 동손 490 W 합 — μ·R1_hot 항 포함).
+- 결정 대기: ① rated_current_A 4.73(LUT) vs M1.yaml 5.0 — 어느 쪽을 I₂/I_n 분모·파형 기준으로 쓸지 ② 12턴 손실 977 W 를 권선 노드에 그대로 넣을지(끄기 `loop_loss_to_winding: false`) ③ safe_below 0.03 과 정상 0.027 의 여유 0.003 (제안만).

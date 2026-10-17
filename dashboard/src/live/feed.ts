@@ -34,11 +34,24 @@ export interface LiveState {
   faults: string[]; load: number; time_scale: number; slowmo: number; rpm: number;
   T: Record<string, number>; stage: Record<string, Stage>; loss_W?: Record<string, number>;
   Ia_rms: number; Ib_rms: number; Ic_rms: number; i2_over_i1: number; rated_line_A: number; current_status: string[];
+  // TASK A D4/D5 (2026-10-17) 추가 — 없는 옛 스트림도 동작한다
+  i2_over_in?: number | null;                 // I₂/I_n (electrical.yaml rated_current_A 기준, LUT 방식에서만) — 판정에 쓰지 않음
+  p_loop_total_W?: number;                    // ITSC 단락 루프 총손실 (LUT) → 권선 추가 손실
+  electrical_source?: ElecSource;             // 전류 신호 근거 배지
+  i2i1_marks?: { case: string; label: string; value: number }[];   // 현재 방식의 게이지 눈금 (정상/4턴/12턴)
   vibration_mms: number; iso_zone: string; bearing_kurtosis: number; bearing_hf_ratio: number;
   status: LiveStatus;
   narration_key: { mode: string; scene: string | null; reveal: "why" | "visible" | "result" | null };
   perf: { fps: number | null; vram_mb?: number | null; ram_mb?: number | null };
   host: { ip: string; ws: string; clients: number };
+}
+export interface ElecSourceCase { key: string; label: string; method: "lut" | "legacy"; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null; load: number }
+export interface ElecSource {
+  method: "lut" | "legacy"; grade: string; status: string; fem_verified: boolean; lut_version: string | null; lut_sha256: string | null;
+  motor: string; base_turns_per_phase: number | null; inherent_i2i1: number; reason: string; rated_current_A: number | null;
+  case?: string; case_method?: "lut" | "legacy"; expected_i2i1?: number | null; turns?: number; turn_frac?: number; R_f_ohm?: number; load_pct?: number;
+  lut_i2_over_i1?: number; lut_i2_over_in?: number; lut_i2_angle_deg?: number; i_f_A?: number; p_loop_total_W?: number; clamped?: boolean;
+  cases?: ElecSourceCase[];
 }
 export interface LiveAck { type: "ack"; id: string | null; name?: string; ok: boolean; applied?: Record<string, unknown>; reason?: string; t_wall: number }
 export interface LiveHeartbeat { type: "heartbeat"; t_wall: number; clients: number; schema?: number }

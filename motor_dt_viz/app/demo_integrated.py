@@ -189,6 +189,9 @@ HUD_TEMP_EN = {"bearing_de": "DE bearing", "winding": "Stator winding",
 
 i_line = cm.motor.rated_current("rated_line_A")
 i_phase = cm.motor.rated_current("rated_phase_A")
+# 전기 결함 신호의 근거 (TASK A D3/D4): lut(M1, 등가회로 LUT) | legacy(해석식 역산). 정격 전류 불일치는 보고만 한다.
+print(f"[demo] electrical method={cm.method} ({cm.method_reason})"
+      + (f"; rated_current_A {cm.rated_current_A} vs motor {i_line} A ({cm.rated_current_mismatch_pct:+.1f} %)" if cm.method == "lut" else ""), flush=True)
 RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"},
          "short_loop": i_phase}
 
@@ -436,7 +439,8 @@ writer = csv.writer(csv_file)
 writer.writerow(["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
                  *[f"T_{k}" for k in tm.node_keys], "Ia_rms", "Ib_rms", "Ic_rms",
                  "i2_over_i1", "vibration_mms", "iso_zone", "fps",
-                 "status", "cause_signal", "cause_component", "cause_value"])      # 끝 4열: Judge 판정 (R1, 기존 독자는 이름으로 읽는다)
+                 "status", "cause_signal", "cause_component", "cause_value",      # Judge 판정 (R1, 기존 독자는 이름으로 읽는다)
+                 "i2_over_in", "electrical_method"])                               # D4: 부하 무관 지표(LUT 방식만, 아니면 빈칸)·근거
 
 fs_a = cm.f0 * 256
 t_win = np.arange(0, 4 / cm.f0, 1 / fs_a)
@@ -690,9 +694,12 @@ while simulation_app.is_running():
     # ---------- 열 (통합 모드에서만 전류 연동) ----------
     with _prof("thermal"):
         if mode in ("mechanical", "integrated"):
+            # ITSC 단락 루프 총손실(LUT P_loop_total)을 권선 노드 추가 손실로 (D4, electrical.yaml coupling_to_thermal.loop_loss_to_winding)
+            _loop_W = cm.loop_loss_W(case) if mode == "integrated" else 0.0
             th = tm.step(dt_sim_s=dt_real * state.time_scale, load=state.load, faults=faults,
                          winding_current_pu=winding_pu if mode == "integrated" else None,
-                         use_duty_cycle=False)
+                         use_duty_cycle=False,
+                         extra_loss_W={"winding": _loop_W} if _loop_W > 0 else None)
         else:
             th = tm.step(dt_sim_s=0.0, load=state.load, faults=[], use_duty_cycle=False)
 
@@ -828,6 +835,11 @@ while simulation_app.is_running():
             "loss_W": {k: round(float(th.loss_W.get(k, 0.0)), 1) for k in tm.node_keys},        # 부품별 손실열 (대시보드 원인 패널)
             "Ia_rms": round(st_line.rms_A[0], 1), "Ib_rms": round(st_line.rms_A[1], 1), "Ic_rms": round(st_line.rms_A[2], 1),
             "i2_over_i1": round(st_line.i2_over_i1, 4), "rated_line_A": i_line, "current_status": list(st_line.status),
+            # D4/D5 추가 키 (schema 1 유지 — 기존 키·구조는 그대로, 아래는 덧붙임): 부하 무관 지표·근거 배지·단락 루프 손실·게이지 눈금
+            "i2_over_in": None if st_line.i2_over_in is None else round(st_line.i2_over_in, 4),
+            "electrical_source": {**cm.electrical_source(case), "cases": cm.cases_summary()},
+            "p_loop_total_W": round(cm.loop_loss_W(case), 1),
+            "i2i1_marks": cm.i2i1_marks(),
             "vibration_mms": round(vib, 2), "iso_zone": zone,
             "bearing_kurtosis": brg["bearing_kurtosis"], "bearing_hf_ratio": brg["bearing_hf_ratio"],
             "status": {"status": verdict.status, "label": verdict.label_ko, "cause_signal": verdict.cause_signal, "cause_component": verdict.cause_component,
@@ -874,7 +886,8 @@ while simulation_app.is_running():
                          *[round(th.temperature_C[k], 1) for k in tm.node_keys],
                          *[round(v, 1) for v in st_line.rms_A], round(st_line.i2_over_i1, 4),
                          round(vib, 2), zone, round(fps, 1),
-                         verdict.status, verdict.cause_signal, verdict.cause_component, round(verdict.value, 4)])
+                         verdict.status, verdict.cause_signal, verdict.cause_component, round(verdict.value, 4),
+                         "" if st_line.i2_over_in is None else round(st_line.i2_over_in, 4), cm.method])
         with open(status_path, "w", encoding="utf-8") as f:
             json.dump({"t": round(t_wall, 2), "t_real": round(t_real, 2), "t_session": round(t_session, 2),
                        "mode": mode, "case": case,

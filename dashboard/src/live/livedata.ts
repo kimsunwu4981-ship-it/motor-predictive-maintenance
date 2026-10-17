@@ -174,10 +174,15 @@ export function toElecData(base: ElecData, buf: LiveBuffer, index: FleetIndex | 
     phase_rms_A: { A: col((s) => ph(s, "A") / Math.sqrt(3)), B: col((s) => ph(s, "B") / Math.sqrt(3)), C: col((s) => ph(s, "C") / Math.sqrt(3)) },   // Δ결선 상전류 = 선전류/√3
     phasor_deg: { A: col((s) => deg(s, "A")), B: col((s) => deg(s, "B")), C: col((s) => deg(s, "C")) },                          // 케이스별 config 위상 (엔진 재계산 아님)
     case: col((s) => s.case),
+    i2_over_in: col((s) => (s.i2_over_in == null ? null : s.i2_over_in)),
     recompute_check: { method: "live (Isaac Sim 엔진 값 그대로)", max_rms_diff_A: 0, max_i2i1_diff: 0, max_i2i1_diff_from_log_rms: 0, pass: true },
   };
+  // 근거 배지·눈금 (D5): 마지막 state 의 electrical_source / i2i1_marks. LUT 방식(M1)이면 눈금이 0.027/0.071/0.264 로 바뀐다 — 녹화 데이터(legacy 0.006/0.104/0.269)와 다른 것이 정상
+  const last = S[S.length - 1];
+  const thresholds = last?.i2i1_marks?.length ? { ...base.thresholds, electrical: { ...base.thresholds.electrical, i2i1_marks: last.i2i1_marks } } : base.thresholds;
   const data: ElecData = {
-    ...base, scenarios: liveScenarios(base.scenarios, buf, base.scenarios.steps), timeseries: ts, events: liveEvents(buf, index, "electrical") as ElecData["events"],
+    ...base, thresholds, source: last?.electrical_source ?? null,
+    scenarios: liveScenarios(base.scenarios, buf, base.scenarios.steps), timeseries: ts, events: liveEvents(buf, index, "electrical") as ElecData["events"],
     live: (t) => elecLiveValues(data, t),
     timeNote: () => [{ label: "입자 흐름", value: `${base.thresholds.electrical.slowmo_x}배 느리게` }, { label: "모드", value: "LIVE" }],
   };

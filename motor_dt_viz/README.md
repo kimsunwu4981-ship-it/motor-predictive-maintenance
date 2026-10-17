@@ -288,6 +288,9 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
 - 턴간 단락(ITSC)은 실제로는 단락 루프의 순환 전류가 지배하고 선전류 불평형은 더 작다. 이
   MVP 는 화면에 목표 I₂/I₁ 을 재현하기 위해 크기 불평형으로 등가 표현했다.
 - 전류는 해석식 모델이다. Maxwell 2D 전자계 해석 결과를 쓰지 않았다 (AEDT 라이선스 부재).
+- **(2026-10-17) M1 의 ITSC 전류 신호는 등가회로 LUT 로 바꿨다**: `config/electrical.yaml` `method: lut` (되돌리기 `legacy`), LUT `data/electrical/M1_mccm_lut_v1.json`
+  (RMxprt v2 + 다중결합 회로, FEM 미검증 provisional — 4턴 I₂/I₁ 0.071, 12턴 0.264, 고유 비대칭 0.027 포함). 가져오기 `py -3.12 tools/electrical/import_lut.py`,
+  검증 `py -3.12 tools/electrical/verify_lut_integration.py` → `docs/electrical/lut_integration_report.md`. 근거·제안은 `docs/judgment_basis.md`. 다른 모터는 legacy 그대로.
 - 열 모델은 집중정수 9노드다. 국부 열점(hot spot)은 표현하지 못한다. 부품 하나는 한 가지
   색으로 칠하며, 부품 안에서 온도가 번지는 그라디언트를 쓰지 않았다. 노드가 부품당 하나뿐이라
   그라디언트를 그리면 모델에 없는 분포를 화면이 지어내는 셈이 되고, 그건 추정값을 측정값처럼

@@ -1,16 +1,39 @@
-# electrical.yaml — 모듈 B(전류 흐름) 파라미터
+# electrical.yaml — 모듈 B(전류 흐름) 파라미터 · 스키마 v2 (2026-10-17, TASK A D2)
 #
-# 데이터 소스 결정(Phase 0 사용자 승인): Maxwell npz 가 저장소에 없으므로
-#   1순위 npz 경로는 비활성, **해석식 3상 모델**을 기본 소스로 사용한다.
-#   기존 Isaac 데이터셋(sim/output/dataset_v03)도 선택적으로 재생 가능하다.
-# ⚠️ 정직성: 두 소스 모두 FEM/실측이 아닌 해석식 생성이다. HUD 에 항상 표시한다.
+# v2 변경: ITSC 결함 신호의 근거를 Maxwell 경로 B 등가회로 LUT(RMxprt v2 + MCCM)로 바꿨다.
+#   method: lut    → cases.*.lut 가 있는 케이스는 LUT 에서 I₂/I₁·I₂ 위상·I_f·단락 루프 손실을 읽어 페이저 합성
+#   method: legacy → 기존 방식(목표 I₂/I₁ 을 고장상 크기 배율로 역산) 그대로. 되돌리려면 이 한 줄만 바꾼다.
+#   LUT 는 M1 전용이다. 다른 모터(기준 M5 등)는 transfer_to_other_motors: false 라 자동으로 legacy 로 동작한다.
+# ⚠️ 정직성: LUT 도 FEM/실측이 아니라 등가회로 계산(grade 등가회로, status provisional, fem_verified false)이다. HUD·대시보드에 표시한다.
+version: 2
+method: lut                      # lut | legacy
+motor: M1                        # LUT 의 모터. motor_library 가 넘기는 motor_id 와 다르면 legacy 로 동작
+rated_current_A: 4.73            # LUT 기준 정격 선전류 I_n (HLP-2.2/4 카탈로그, Y 등가). I₂/I_n 의 분모.
+                                 # ⚠️ config/motors/M1.yaml 의 rated_line_current_a 5.0 (대표값 P/(√3·V·η·cosφ)) 과 다르다 — D2 보고 항목, 결정 전까지 LUT 값 유지
+base_turns_per_phase: 192        # 상당 직렬 턴수 N_ph (RMxprt v2). 턴 비율 = turns / 192
+transfer_to_other_motors: false  # M1 외 모터에 M1 곡선 차용 금지 (고정)
 
 source:
-  mode: analytic                 # analytic | npz
+  mode: analytic                 # analytic | npz  (파형 생성기 종류 — legacy 와 공통)
   npz_dir: "sim/output/dataset_v03"
   npz_available: false           # Maxwell 72 케이스 부재 (docs/npz_schema.md)
   honesty_label: "시뮬레이션 기반 추정값 (Simulation-based)"
   honesty_sub: "정격 기준: 22 kW 6극 크레인 권상 모터 도면값 · 전류는 해석식 생성"
+  # --- LUT 근거 (method: lut 일 때) ---
+  grade: "등가회로(RMxprt v2+MCCM)"
+  status: provisional
+  fem_verified: false
+  lut: "data/electrical/M1_mccm_lut_v1.json"      # tools/electrical/import_lut.py 가 만든 파일 (저장소 루트 기준 경로)
+  lut_sha256: "238315864fb4391e6b577a466aba8c5929c8af22de7e4e5d832abf2bc5bc5e0d"   # 위 파일의 sha256. 다르면 legacy 로 내려가고 경고
+  lut_note: "턴 비율 {0,1.04,2.08,4.17,6.25,8.33,12.5,16.7 %} × R_f {0.03,0.1,0.3,1.0 Ω} × 부하 {25~115 %} 160점, 3축 보간(R_f 는 log), 범위 밖 클램프·외삽 없음"
+
+# 고유 비대칭 (정상 모터·전원의 I₂/I₁ 바닥). AI Hub 2.2 kW 정상 2대 중앙값 0.026~0.028 (docs/aihub_spec_check.md) → 0.027.
+# 결함 I₂ 페이저에 더해 합성한다. 위상은 근거 없음 → 0° (결함 I₂ 와 같은 방향 = 최대 합) 로 두고 범위 |b−a|~a+b 를 문서에 기록.
+inherent:
+  enabled: true
+  i2i1: 0.027
+  angle_deg: 0.0
+  source: "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
 
 # 상(phase) 표시 이름 — 내부 키(A/B/C: 로그 컬럼 Ia/Ib/Ic, phase_scale 순서, 엔진 변수)는 그대로 두고
 # 화면·자막·HUD·문서에 보이는 이름만 여기서 정한다. 국내 현장 관례(전원 R·S·T)에 맞춘다 (2026-09-22 결정).
@@ -44,30 +67,36 @@ particles:
   size_m: 0.012
   speed_gain: 0.9                # 이동 속도 ∝ 순시 전류 (정규화 후 배율)
 
-# 시나리오별 전류 생성 규칙
-# ITSC: 고장상(내부 키 A = 표시 R상) 크기 불평형으로 목표 I₂/I₁ 을 역산해 부여한다.
+# 시나리오별 전류 생성 규칙 (7 케이스 — 키·순서는 v1 과 같다: live.yaml 허용 목록·대시보드가 이 키를 쓴다)
+#   lut:   { turns, R_f_ohm }  → method: lut 일 때 LUT 조회 (턴 0 = 정상 행, R_f 불필요). 부하는 load 를 쓴다.
+#   legacy 필드(phase_scale, phase_shift_deg, target_i2i1)는 그대로 남겨 method: legacy 로 되돌릴 수 있다.
+#   lut 가 없는 케이스(과부하·전압 불평형·결상·무부하)는 두 방식 모두 legacy 규칙으로 만든다 (LUT 범위 밖).
+#   inherent: true 인 균형 케이스는 method: lut 일 때 고유 비대칭을 더한다.
+# legacy ITSC 규칙: 고장상(내부 키 A = 표시 R상) 크기 불평형으로 목표 I₂/I₁ 을 역산.
 #   크기 불평형만 있을 때 I₂/I₁ = (k−1)/(k+2)  →  k = (1+2·ratio)/(1−ratio)
-#   ⚠️ 단순화 가정: 실제 ITSC 는 단락 루프 순환전류가 지배하고 선전류 불평형은 더 작다.
-#      본 MVP 는 화면에 목표 I₂/I₁ 을 재현하기 위해 크기 불평형으로 등가 표현한다.
+#   ⚠️ legacy 단순화: 실제 ITSC 는 단락 루프 순환전류가 지배하고 선전류 불평형은 더 작다 — LUT 가 이것을 바로잡는다(4턴 0.047, 12턴 0.240).
 cases:
   healthy:
     label: "정상 운전"
-    phase_scale: [1.0181, 1.0, 1.0]     # → I₂/I₁ ≈ 0.006
+    lut: { turns: 0 }                   # 0 % 행 (I₂ = 고유 비대칭만 → ≈ 0.027)
+    phase_scale: [1.0181, 1.0, 1.0]     # legacy → I₂/I₁ ≈ 0.006
     phase_shift_deg: [0.0, 0.0, 0.0]
-    target_i2i1: 0.006
+    target_i2i1: 0.006                  # legacy
     load: 1.0
   itsc_4turn:
     label: "턴간 단락 4턴 (초기)"
-    phase_scale: [1.3482, 1.0, 1.0]     # → I₂/I₁ ≈ 0.104
+    lut: { turns: 4, R_f_ohm: 0.1 }     # 2.08 % · 정격 부하 → LUT I₂/I₁ 0.047 (+고유 0.027 → 0.020~0.074)
+    phase_scale: [1.3482, 1.0, 1.0]     # legacy → I₂/I₁ ≈ 0.104
     phase_shift_deg: [-6.0, 0.0, 0.0]
-    target_i2i1: 0.104
+    target_i2i1: 0.104                  # legacy
     load: 1.0
-    short_loop: { turns: 4, current_pu: 3.5, pulse_hz: 1.2 }
+    short_loop: { turns: 4, current_pu: 3.5, pulse_hz: 1.2 }    # method: lut 에선 current_pu 를 LUT I_f/정격 상전류로 바꿔 쓴다
   itsc_12turn:
     label: "턴간 단락 12턴 (진행)"
-    phase_scale: [2.1040, 1.0, 1.0]     # → I₂/I₁ ≈ 0.269
+    lut: { turns: 12, R_f_ohm: 0.1 }    # 6.25 % → LUT I₂/I₁ 0.240
+    phase_scale: [2.1040, 1.0, 1.0]     # legacy → I₂/I₁ ≈ 0.269
     phase_shift_deg: [-14.0, 0.0, 0.0]
-    target_i2i1: 0.269
+    target_i2i1: 0.269                  # legacy
     load: 1.0
     short_loop: { turns: 12, current_pu: 7.0, pulse_hz: 1.8 }
   overload:
@@ -77,6 +106,7 @@ cases:
     phase_shift_deg: [0.0, 0.0, 0.0]
     target_i2i1: null
     load: 1.35
+    inherent: true
   voltage_unbalance:
     label: "공급전압 불평형"
     phase_scale: [1.08, 0.94, 0.98]
@@ -95,9 +125,13 @@ cases:
     phase_shift_deg: [0.0, 0.0, 0.0]
     target_i2i1: null
     load: 0.0
+    inherent: true
 
 # 모듈 A 연동: 상별 I_rms → 권선 동손 P_cu ∝ I²
 coupling_to_thermal:
   enabled: true
   node: winding
   p_cu_rated_W: 855.0            # thermal.yaml winding.loss_W_rated 와 일치
+  # method: lut 일 때 단락 루프 총손실 P_loop_total = I_f²(R_f + μ·R1_hot) [W] 를 권선 노드 추가 손실로 넣는다 (D4).
+  # 열회로에 핫스팟 노드가 없어 권선 평균 온도에 더해진다 — 국부 과열 표현은 docs/judgment_basis.md 제안 참고.
+  loop_loss_to_winding: true

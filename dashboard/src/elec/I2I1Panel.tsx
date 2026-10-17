@@ -79,8 +79,14 @@ export function I2I1Panel({ data, focus }: { data: ElecData; focus: boolean }) {
             <div className="g-x">{normal > 0 ? `정상(${normal})의 ${(v / normal).toFixed(1)}배` : ""}</div>
             {marks.filter((m) => m.case !== "healthy").map((m) => <div key={m.case} className={v >= m.value - 1e-9 ? "hit" : ""}>{m.label.replace("턴간 단락 ", "")} <b>{m.value}</b></div>)}
             <div className="dim">{hit ? `${hit.label.replace("턴간 단락 ", "")} 수준 이상` : "단락 눈금 아래"}</div>
+            {ts.i2_over_in?.[i] != null && <div className="dim" title="I₂ ÷ 정격 전류 I_n (electrical.yaml rated_current_A). 부하가 바뀌어도 덜 흔들리는 보조 지표 — 판정에는 쓰지 않는다 (D4)">I₂/I_n <b>{ts.i2_over_in[i]!.toFixed(3)}</b> <span>보조 · 판정 없음</span></div>}
           </div>
         </div>
+        {data.source?.cases && (
+          <div className="case-basis" title="케이스별 전류 신호 근거: lut = 등가회로 LUT(턴수/R_f) · legacy = 해석식(배율·위상). 값은 설계 I₂/I₁ (LUT 는 고유 비대칭 포함)">
+            {data.source.cases.map((c) => <span key={c.key} className={c.method}>{c.label} <b>{c.expected_i2i1 != null ? c.expected_i2i1.toFixed(3) : "—"}</b> <i>{c.method === "lut" ? `LUT ${c.turns}T${c.R_f_ohm != null ? `/${c.R_f_ohm}Ω` : ""}` : "legacy"}</i></span>)}
+          </div>
+        )}
         <div ref={elRef} className="chart i2i1-trend" />
       </div>
     </div>

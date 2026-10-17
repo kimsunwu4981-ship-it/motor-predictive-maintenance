@@ -54,6 +54,14 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
       {!present && <button className="b-cap" onClick={onCaptions} title="C 키: 영상 아래 자막 켜기/끄기">{captions ? "☑ 자막 C" : "☐ 자막 C"}</button>}
       {!present && <button className="b-theme" onClick={onTheme} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
       <button onClick={onPresent} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
+      {data.source && (
+        <span className={"basis-badge " + data.source.method}
+              title={data.source.method === "lut"
+                ? `전류 신호 근거: ${data.source.grade} · ${data.source.status} · FEM 검증 ${data.source.fem_verified ? "됨" : "안 됨"} · ${data.source.lut_version} (sha ${data.source.lut_sha256}) · 상당 턴수 ${data.source.base_turns_per_phase} · 고유 비대칭 I₂/I₁ ${data.source.inherent_i2i1} · I_n ${data.source.rated_current_A} A`
+                : `전류 신호 근거: ${data.source.grade} — ${data.source.reason}`}>
+          {data.source.method === "lut" ? <>근거 <b>등가회로 LUT</b> · {data.source.status} · FEM 미검증</> : <>근거 <b>해석식 역산</b> (legacy)</>}
+        </span>
+      )}
       <span className="honesty">
         <b>{th.honesty.label}</b>
         <span>{th.honesty.rating_basis}</span>

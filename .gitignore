@@ -57,7 +57,9 @@ desktop.ini
 .idea/
 
 # AI Hub 외부 데이터·변환본 (원본은 바탕화면 샘플 폴더, 산출물은 재생성 가능)
-motor_dt_viz/data/
+motor_dt_viz/data/*
+# 전기 LUT(112 KB)는 config/electrical.yaml 이 참조하므로 저장소에 둔다 (2026-10-17 TASK A D1)
+!motor_dt_viz/data/electrical/
 
 # AI Hub 전체 데이터 다운로드 (download_full.sh 기본 대상, 88~112 GB)
 aihub_full/
