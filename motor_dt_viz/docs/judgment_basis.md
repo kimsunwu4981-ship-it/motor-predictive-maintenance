@@ -58,5 +58,6 @@ legacy(해석식 역산) 와의 차이: 4턴 0.104 → 0.071 (−32 %), 12턴 0.
 
 - 정격 전류 불일치: electrical.yaml `rated_current_A` 4.73 A(LUT) vs `config/motors/M1.yaml` 5.0 A(대표값). 파형 크기는 M1.yaml(5.0 A) 기준, I₂/I_n 분모는 4.73 A — **사용자 결정 대기** (D2).
 - LUT 는 FEM 미검증(provisional). 정규 AEDT 라이선스에서 2D 과도 해석으로 I₂/I₁·I₂ 위상을 확인하면 `fem_verified: true` 로 올리고 `status` 를 바꾼다.
+- Z₂ 앵커: LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지) (2026-10-19 F7, 수치 불변).
 - 범위 밖(턴 > 16.7 %, R_f 밖, 부하 < 25 % 또는 > 115 %)은 끝값 클램프(`clamped` 플래그) — 외삽하지 않는다.
 - 검증 보고: `docs/electrical/lut_integration_report.md` (`tools/electrical/verify_lut_integration.py`).
