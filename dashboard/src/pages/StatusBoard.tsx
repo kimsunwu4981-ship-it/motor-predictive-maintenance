@@ -175,13 +175,14 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           <div className="panel st-detail">
             <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name}</span><span className="grow" />
               <span className={"dim" + (motor.spec.source === "nameplate" ? " st-np-on" : "")}>{motor.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[sel]?.entered_at ?? ""})` : "대표 사양 (명판 아님)"}</span>
+              <SourceIcons motor={motor} />
               {!present && <button className="b-np" onClick={() => setNpOpen(true)} title="이 모터의 명판값을 입력하면 출처가 nameplate 로 바뀐다">명판값 입력</button>}</div>
             <div className="panel-b">
               <div className="st-spec">
                 <span><i>용도</i>{motor.tags.hoist_ton ?? "-"} 호이스트{motor.tags.hoist_speed ? ` · 권상 ${motor.tags.hoist_speed}` : ""}</span>
                 <span><i>정격</i>{motor.spec.rated_power_kw} kW · {motor.spec.poles}극 · {motor.spec.rated_rpm} rpm (동기 {motor.spec.sync_rpm})</span>
-                <span><i>전원</i>{motor.spec.voltage_v} V {motor.spec.frequency_hz} Hz · {motor.spec.connection === "delta" ? "Δ결선" : motor.spec.connection}</span>
-                <span><i>정격 전류</i>선 <b>{motor.spec.rated_line_current_a} A</b> · 상 {motor.spec.rated_phase_current_a} A</span>
+                <span><i>전원</i>{motor.spec.voltage_v} V {motor.spec.frequency_hz} Hz · {connLabel(motor.spec.connection)}{srcIcon(motor, "connection")}</span>
+                <span><i>정격 전류</i>선 <b>{motor.spec.rated_line_current_a} A</b>{srcIcon(motor, "rated_line_current_a")} · 상 {motor.spec.rated_phase_current_a} A{srcIcon(motor, "rated_phase_current_a")}</span>
                 <span><i>프레임·베어링</i>{motor.spec.frame} · DE {motor.spec.bearing_de} / NDE {motor.spec.bearing_nde}</span>
                 <span><i>진동 규격</i><b>{motor.vibration.standard.split(" (")[0]}</b> · 경고 {motor.vibration.watch_mms} / 위험 {motor.vibration.act_mms} mm/s</span>
               </div>
@@ -355,20 +356,42 @@ function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Namepla
           {row("정격 출력", (m) => `${m.spec.rated_power_kw} kW`)}
           {row("극수 / 동기속도", (m) => `${m.spec.poles}극 / ${m.spec.sync_rpm} rpm`)}
           {row("정격 회전수", (m) => `${m.spec.rated_rpm} rpm (슬립 ${(m.derived.slip * 100).toFixed(1)} %)`)}
-          {row("전압 · 결선", (m) => `${m.spec.voltage_v} V ${m.spec.frequency_hz} Hz · ${m.spec.connection === "delta" ? "Δ" : m.spec.connection}`)}
-          {row("정격 선전류 / 상전류", (m) => `${m.spec.rated_line_current_a} A / ${m.spec.rated_phase_current_a} A`)}
-          {row("효율 / 역률 (대표)", (m) => `${m.spec.efficiency} / ${m.spec.power_factor}`)}
+          {row("전압 · 결선", (m) => <>{m.spec.voltage_v} V {m.spec.frequency_hz} Hz · {connLabel(m.spec.connection)}{srcIcon(m, "connection")}</>)}
+          {row("정격 선전류 / 상전류", (m) => <>{m.spec.rated_line_current_a} A{srcIcon(m, "rated_line_current_a")} / {m.spec.rated_phase_current_a} A{srcIcon(m, "rated_phase_current_a")}</>)}
+          {row("효율 / 역률", (m) => <>{m.spec.efficiency}{srcIcon(m, "efficiency")} / {m.spec.power_factor}{srcIcon(m, "power_factor")}</>)}
           {row("프레임 · 외형 스케일", (m) => `${m.spec.frame} · ×${m.spec.geometry_scale}`)}
           {row("베어링 DE / NDE", (m) => `${m.spec.bearing_de} / ${m.spec.bearing_nde}`)}
           {row("BPFO / BPFI (정격 rpm)", (m) => `${m.derived.bpfo_hz} / ${m.derived.bpfi_hz} Hz`)}
           {row("절연 / 듀티", (m) => `${m.spec.insulation_class}종 / ${m.spec.duty}`)}
           {row("진동 규격", (m) => `${m.vibration.standard.split(" (")[0]} (${m.vibration.watch_mms}/${m.vibration.act_mms})`)}
           {row("정상 수렴 권선 온도 (연속)", (m) => `${m.steady_C.winding} °C`)}
-          {row("출처", (m) => m.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[m.id]?.entered_at ?? ""}, YAML 반영 전)` : "대표값 (representative)")}
+          {row("출처", (m) => <>{m.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[m.id]?.entered_at ?? ""}, YAML 반영 전)` : "대표값 (representative)"}<SourceIcons motor={m} /></>)}
         </tbody>
       </table>
     </div>
   );
+}
+
+// 키별 출처 아이콘 (config/motors/<id>.yaml 의 {value, source, …} 래퍼): ✓ catalog·nameplate·measured / 🔴 assumed·estimated(현장 확인) / · representative
+const SRC_ICON: Record<string, string> = { catalog: "✓", nameplate: "✓", measured: "✓", assumed: "🔴", estimated: "🔴", representative: "·" };
+const SRC_LABEL: Record<string, string> = { catalog: "카탈로그", nameplate: "명판", measured: "실측", assumed: "가정 (현장 확인 필요)", estimated: "추정", representative: "대표값" };
+export function connLabel(c: string): string { return c === "delta" ? "Δ결선" : c === "star" ? "Y결선" : c; }
+function srcIcon(m: MotorInfo, key: string): React.ReactNode {
+  const fs = m.spec_source?.[key];
+  if (!fs) return null;
+  const tip = `${SRC_LABEL[fs.source] ?? fs.source}${fs.doc ? ` · ${fs.doc}` : ""}${fs.note ? ` · ${fs.note}` : ""}${fs.verify_on_site ? " · verify_on_site" : ""}`;
+  return <span className={"st-src st-src-" + fs.source} title={tip}>{SRC_ICON[fs.source] ?? "?"}</span>;
+}
+function SourceIcons({ motor }: { motor: MotorInfo }) {
+  const fs = motor.spec_source ?? {};
+  const keys = Object.keys(fs);
+  if (!keys.length) return null;
+  const groups: Record<string, string[]> = {};
+  for (const k of keys) (groups[fs[k].source] ??= []).push(k);
+  const name = (k: string) => NAMEPLATE_FIELDS.find((f) => f.key === k)?.label ?? (k === "connection" ? "결선" : k);
+  return <span className="dim st-src-list" title="키별 출처 — config/motors/<id>.yaml">
+    {Object.entries(groups).map(([src, ks]) => <span key={src} className={"st-src st-src-" + src}>{SRC_ICON[src] ?? "?"} {SRC_LABEL[src] ?? src}: {ks.map(name).join("·")}</span>)}
+  </span>;
 }
 
 // 명판값 입력 폼 (P5): 값을 넣고 저장하면 이 브라우저에 남고, YAML 조각을 복사해 config/motors/<id>.yaml 에 반영한다.

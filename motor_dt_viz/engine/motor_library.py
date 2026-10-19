@@ -74,6 +74,7 @@ class Motor:
     vibration: dict = field(default_factory=dict)   # {standard, watch_mms, plan_mms, act_mms}
     bearing_hf_baseline: dict = field(default_factory=dict)   # {rms_g, band_hz, source, note} 고주파 RMS 정상 기준선 (베어링 보조 지표 분모)
     tags: dict = field(default_factory=dict)        # 용도·톤수 등 표시용
+    field_sources: dict = field(default_factory=dict)   # 키별 출처 {key: {source, doc?, note?, verify_on_site?}} — YAML 의 {value, source, …} 래퍼에서 (2026-10-19)
 
     # ---- 파생값 ----
     @property
@@ -144,9 +145,10 @@ def validate(d: dict) -> None:
     pf = _num(d, "power_factor", 0.5, 1.0, mid)
     il = _num(d, "rated_line_current_a", 0.1, 2000.0, mid)
     ip = _num(d, "rated_phase_current_a", 0.1, 2000.0, mid)
-    if d["connection"] not in ("delta", "star"):
+    conn = val(d["connection"])
+    if conn not in ("delta", "star"):
         raise MotorLibraryError(f"{mid}: connection 은 delta | star")
-    expect_ip = il / math.sqrt(3) if d["connection"] == "delta" else il
+    expect_ip = il / math.sqrt(3) if conn == "delta" else il
     if abs(ip - expect_ip) / expect_ip > 0.03:
         raise MotorLibraryError(f"{mid}: 상전류 {ip} A 가 선전류/√3 = {expect_ip:.2f} A 와 3 % 넘게 다르다")
     calc_il = p * 1000.0 / (math.sqrt(3) * v * eta * pf)
@@ -189,8 +191,8 @@ def load_motor(mid: str) -> Motor:
         raw=d, id=d["id"], name=d["name"], source=d["source"],
         rated_power_kw=float(d["rated_power_kw"]), poles=int(d["poles"]), sync_rpm=float(d["sync_rpm"]),
         rated_rpm=float(d["rated_rpm"]), voltage_v=float(d["voltage_v"]), frequency_hz=float(d["frequency_hz"]),
-        connection=d["connection"], efficiency=float(d["efficiency"]), power_factor=float(d["power_factor"]),
-        rated_line_current_a=float(d["rated_line_current_a"]), rated_phase_current_a=float(d["rated_phase_current_a"]),
+        connection=str(val(d["connection"])), efficiency=float(val(d["efficiency"])), power_factor=float(val(d["power_factor"])),
+        rated_line_current_a=float(val(d["rated_line_current_a"])), rated_phase_current_a=float(val(d["rated_phase_current_a"])),   # {value, source, doc, note} 래퍼 허용 (2026-10-19)
         frame=str(d["frame"]), insulation_class=str(d["insulation_class"]), duty=str(d["duty"]),
         bearing_de=str(d["bearing_de"]), bearing_nde=str(d["bearing_nde"]),
         bpfo_mult=float(bm["bpfo"]), bpfi_mult=float(bm["bpfi"]),
@@ -199,7 +201,24 @@ def load_motor(mid: str) -> Motor:
         vibration={k: (float(v) if k in ("watch_mms", "plan_mms", "act_mms") else str(v)) for k, v in d["vibration"].items()},
         tags=dict(d.get("tags") or {}),
         bearing_hf_baseline=_hf_baseline(d),
+        field_sources=_field_sources(d),
     )
+
+
+FIELD_SOURCES = ("nameplate", "catalog", "representative", "assumed", "estimated", "measured")
+
+
+def _field_sources(d: dict) -> dict:
+    """{value, source, …} 래퍼로 적힌 키의 출처만 모은다 (표시용). 래퍼 없는 키는 모터 전체 source 를 따른다."""
+    mid = d.get("id", "?")
+    out = {}
+    for k, v in d.items():
+        if isinstance(v, dict) and "value" in v:
+            src = str(v.get("source", ""))
+            if src not in FIELD_SOURCES:
+                raise MotorLibraryError(f"{mid}: {k}.source 는 {'|'.join(FIELD_SOURCES)} 중 하나 (현재 {src!r})")
+            out[k] = {kk: vv for kk, vv in v.items() if kk != "value"}
+    return out
 
 
 def _hf_baseline(d: dict) -> dict:

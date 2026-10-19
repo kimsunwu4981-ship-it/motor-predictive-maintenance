@@ -162,6 +162,7 @@ def main():
         motors.append({
             "id": mid, "name": m.name, "tags": dict(m.tags or {}),
             "spec": {k: getattr(m, k) for k in SPEC_KEYS},
+            "spec_source": m.field_sources,     # 키별 출처 (catalog ✓ / assumed 🔴 …) — 래퍼로 적힌 키만
             "derived": {"slip": round(m.slip, 4), "rotor_freq_hz": round(m.rotor_freq_hz, 3), "torque_nm": round(m.torque_nm, 1),
                         "bpfo_hz": round(m.bpfo_hz(), 1), "bpfi_hz": round(m.bpfi_hz(), 1), "loss_w": round(m.loss_w)},
             "bearing_hf_baseline": m.bearing_hf_baseline,

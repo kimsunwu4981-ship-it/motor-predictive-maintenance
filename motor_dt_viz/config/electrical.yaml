@@ -9,7 +9,7 @@ version: 2
 method: lut                      # lut | legacy
 motor: M1                        # LUT 의 모터. motor_library 가 넘기는 motor_id 와 다르면 legacy 로 동작
 rated_current_A: 4.73            # LUT 기준 정격 선전류 I_n (HLP-2.2/4 카탈로그, Y 등가). I₂/I_n 의 분모.
-                                 # ⚠️ config/motors/M1.yaml 의 rated_line_current_a 5.0 (대표값 P/(√3·V·η·cosφ)) 과 다르다 — D2 보고 항목, 결정 전까지 LUT 값 유지
+                                 # 2026-10-19 결정 (A): config/motors/M1.yaml rated_line_current_a 도 카탈로그 4.73 A 로 통일 (Y, η 0.895, pf 0.79) — 파형 기준과 I₂/I_n 분모가 같다
 base_turns_per_phase: 192        # 상당 직렬 턴수 N_ph (RMxprt v2). 턴 비율 = turns / 192
 transfer_to_other_motors: false  # M1 외 모터에 M1 곡선 차용 금지 (고정)
 

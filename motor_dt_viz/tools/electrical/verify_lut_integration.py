@@ -91,7 +91,7 @@ def main() -> int:
                  f"grade {lut.provenance.get('grade')} · status {lut.provenance.get('status')} · fem_verified {lut.provenance.get('fem_verified')} · "
                  f"R_fe 보정 {lut.provenance.get('rfe_calibration')}")
     lines.append(f"- 정격 전류: electrical.yaml rated_current_A **{cm.rated_current_A} A** (LUT I_n) vs config/motors/M1.yaml rated_line_current_a **{cm.motor.rated_line_A} A** "
-                 f"→ 차이 {cm.rated_current_mismatch_pct:+.1f} % (**D2 보고 항목 — 결정 전까지 I₂/I_n 분모는 4.73 A**)")
+                 f"→ 차이 {cm.rated_current_mismatch_pct:+.1f} % (2026-10-19 결정 (A): M1.yaml 을 카탈로그 4.73 A·Y·η 0.895·pf 0.79 로 통일 → 0 % 여야 한다)")
     lines.append(f"- 고유 비대칭 inherent: enabled {cm.inherent_enabled}, I₂/I₁ {cm.inherent_i2i1}, 위상 {cm.inherent_angle_deg}° (AI Hub 정상 중앙값)\n")
 
     # ---------------- V1

@@ -46,9 +46,11 @@ legacy(해석식 역산) 와의 차이: 4턴 0.104 → 0.071 (−32 %), 12턴 0.
 
 ## 3. 단락 루프 손실 → 열 모델 (D4 연결)
 
+> **2026-10-19 결정**: `loop_loss_to_winding: true` 유지. HUD 근거 줄에 "hotspot not modeled (winding mean node)" 표기. `winding_hotspot` 노드는 아래 제안으로만 둔다. 정격 전류는 카탈로그 4.73 A 로 통일 — 결정 (A): M1.yaml 5항목(선·상전류 4.73 A, `connection: star`(assumed, 현장 확인), η 0.895, pf 0.79)을 카탈로그 기준 래퍼 `{value, source, doc, note}` 로 바꿈. 로더 검증 규칙은 그대로. I₂/I_n 분모와 파형 기준이 일치.
+
 - `coupling_to_thermal.loop_loss_to_winding: true` 일 때 통합 모드에서 LUT `P_loop_total_W` = I_f²(R_f + μ·R1_hot) 를 **권선 노드 추가 손실**로 넣는다
-  (`ThermalModel.step(extra_loss_W={"winding": W})`, D4). 4턴 158 W, 12턴 977 W. M1 권선 정격 동손은 136 W(M5 855 W 의 출력비 스케일)이므로
-  12턴은 정격 동손의 7배 — 권선 평균 온도가 빠르게 F종 한계를 넘는다 (의도: "ITSC → 권선 과열" 연쇄가 등가회로 값으로 재현됨).
+  (`ThermalModel.step(extra_loss_W={"winding": W})`, D4). 4턴 158 W, 12턴 977 W. M1 권선 정격 동손은 90 W(M5 855 W 의 손실비 P·(1−η)/η 스케일; η 0.85 때 136 W → 카탈로그 η 0.895 로 258 W/388 W 만큼 줄었다)이므로
+  12턴은 정격 동손의 11배 — 권선 평균 온도가 빠르게 F종 한계를 넘는다 (의도: "ITSC → 권선 과열" 연쇄가 등가회로 값으로 재현됨).
 - **핫스팟 제안**: 열회로에 권선 노드가 하나라 손실이 권선 전체 평균으로 퍼진다. 실제로는 단락 턴 몇 개에 집중된다.
   제안: `thermal.yaml` 에 `winding_hotspot` 노드(질량 = 단락 턴 구리 질량 ≈ 권선 질량 × μ, 권선 노드와 R_ij 결합)를 추가하고
   P_loop_total 을 그 노드로 보낸다. 지금은 열 config 를 건드리지 않고 권선 노드로 보내며, 끄려면 `loop_loss_to_winding: false`.
@@ -56,7 +58,7 @@ legacy(해석식 역산) 와의 차이: 4턴 0.104 → 0.071 (−32 %), 12턴 0.
 
 ## 4. 남은 전제·한계
 
-- 정격 전류 불일치: electrical.yaml `rated_current_A` 4.73 A(LUT) vs `config/motors/M1.yaml` 5.0 A(대표값). 파형 크기는 M1.yaml(5.0 A) 기준, I₂/I_n 분모는 4.73 A — **사용자 결정 대기** (D2).
+- 정격 전류: 2026-10-19 결정 (A)로 M1.yaml 을 카탈로그(현대일렉트릭 SSEN HLP-2.2/4 P2P2TC276, 380 V) 기준으로 통일 — 선전류 4.73 A(AI Hub L-SF-04 명판 4.7 A), 상전류 4.73 A(Y), `connection: star`(**assumed**: 380 V 전용형 내부 결선은 카탈로그에 없음, RMxprt·LUT 상전압 219.4 V 와 일치, `verify_on_site: true`), η 0.895, pf 0.79. 한 항목만 바꾸면 로더 규칙(상전류 = 선전류/√3 ±3 %, 선전류 = P/(√3·V·η·cosφ) ±5 %)에 걸려 함께 바꿨다. 열 모델 손실 스케일 P·(1−η)/η 가 388 → 258 W 로 줄어 M1 권선 정격 동손 136 → 90 W, 정상 운전 2 h 권선 온도 56.9 → 46.2 °C(연속 수렴 57.1 → 46.4 °C), 12턴 ITSC 2 h 201.7 → 190.6 °C(여전히 F종 한계 초과). 파형 RMS 는 5.4 % 감소, r·I₂/I₁ 은 불변, I₂/I_n 은 LUT 값 그대로(분모 일치).
 - LUT 는 FEM 미검증(provisional). 정규 AEDT 라이선스에서 2D 과도 해석으로 I₂/I₁·I₂ 위상을 확인하면 `fem_verified: true` 로 올리고 `status` 를 바꾼다.
 - Z₂ 앵커: LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지) (2026-10-19 F7, 수치 불변).
 - 범위 밖(턴 > 16.7 %, R_f 밖, 부하 < 25 % 또는 > 115 %)은 끝값 클램프(`clamped` 플래그) — 외삽하지 않는다.

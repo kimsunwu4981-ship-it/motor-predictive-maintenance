@@ -217,7 +217,7 @@ class MotorHUD:
         if "esrc" in self._labels and src:
             if src.get("method") == "lut":
                 self._labels["esrc"].text = (f"basis: equivalent-circuit LUT (RMxprt v2 + MCCM) {src.get('lut_version', '')} "
-                                             f"- {src.get('status', '')}, FEM not verified")
+                                             f"- {src.get('status', '')}, FEM not verified; hotspot not modeled (winding mean node)")
             else:
                 self._labels["esrc"].text = "basis: legacy analytic inverse (target I2/I1), not FEM"
 

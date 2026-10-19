@@ -1,6 +1,8 @@
 # M1.yaml — 1톤 호이스트 권상 모터 (2.2 kW 4극) · 대표 사양 (명판 아님)
 # source: representative — 국내 와이어로프 호이스트 표준 톤수의 권상 전동기를 동급 범용 3상 유도전동기 대표값으로 정리 (TASK_다중모터 §2).
-# 정격 전류 = P/(√3·V·η·cosφ) = 5.04 A (η·cosφ 대표값) → 표 값 5.0 A. 상전류 = 선전류/√3 (Δ).
+# 2026-10-19 결정 (A): 정격 전류·결선·효율·역률 5항목을 현대일렉트릭 SSEN HLP-2.2/4 카탈로그(P2P2TC276, 380 V) 기준으로 통일.
+#   검산: P/(√3·V·η·cosφ) = 2200/(√3·380·0.895·0.79) = 4.73 A (카탈로그 정격 전류와 일치). Y 결선 → 상전류 = 선전류.
+#   이전 대표값: 5.0 A / 2.9 A (Δ) / η 0.85 / pf 0.78 (출처 없음). 나머지 키·다른 모터는 그대로.
 # 모터를 추가하려면 이 파일을 복사해 값만 바꾼다. 코드에는 모터 숫자가 없다.
 id: M1
 name: "1톤 호이스트 권상 모터 (2.2 kW 4극)"
@@ -12,11 +14,30 @@ sync_rpm: 1800
 rated_rpm: 1730
 voltage_v: 380
 frequency_hz: 60
-connection: delta
-efficiency: 0.85                # representative
-power_factor: 0.78             # representative
-rated_line_current_a: 5.0
-rated_phase_current_a: 2.9
+connection:
+  value: star
+  source: assumed
+  note: "380 V 전용형 내부 결선은 카탈로그에 없음. RMxprt·LUT 모델(상전압 219.4 V)과 일치시킴"
+  verify_on_site: true
+efficiency:
+  value: 0.895
+  source: catalog
+  doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
+  note: "100 % 부하. 75/50 %: 0.894/0.880 은 P1 에서 추가"
+power_factor:
+  value: 0.79
+  source: catalog
+  doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
+rated_line_current_a:
+  value: 4.73
+  source: catalog
+  doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
+  note: "이전 대표값 5.0 A 대체. AI Hub L-SF-04 명판 4.7 A"
+rated_phase_current_a:
+  value: 4.73
+  source: catalog
+  doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
+  note: "Y 결선 기준 상전류 = 선전류"
 frame: 100L
 insulation_class: F
 duty: "S3 40% ED"

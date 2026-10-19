@@ -25,8 +25,10 @@ export interface MotorSpec {
   connection: string; efficiency: number; power_factor: number; rated_line_current_a: number; rated_phase_current_a: number;
   frame: string; insulation_class: string; duty: string; bearing_de: string; bearing_nde: string; geometry_scale: number; source: string;
 }
+export interface FieldSource { source: string; doc?: string; note?: string; verify_on_site?: boolean }
 export interface MotorInfo {
   id: string; name: string; tags: Record<string, string>; spec: MotorSpec;
+  spec_source?: Record<string, FieldSource>;   // 키별 출처 — YAML {value, source, …} 래퍼로 적힌 키만 (M1 2026-10-19 카탈로그)
   derived: { slip: number; rotor_freq_hz: number; torque_nm: number; bpfo_hz: number; bpfi_hz: number; loss_w: number };
   bearing_hf_baseline?: { rms_g?: number; band_hz?: number[]; source?: string; note?: string };
   vibration: VibSpec; steady_C: Record<string, number>; thermal_scaled_from: unknown;

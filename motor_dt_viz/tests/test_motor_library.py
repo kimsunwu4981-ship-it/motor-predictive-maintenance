@@ -37,7 +37,8 @@ def test_derived_values_match_hand_calculation(mid):
     assert m.sync_rpm == pytest.approx(120 * m.frequency_hz / m.poles)
     assert m.rotor_freq_hz == pytest.approx(m.rated_rpm / 60)
     assert m.slip == pytest.approx((m.sync_rpm - m.rated_rpm) / m.sync_rpm)
-    assert m.rated_phase_current_a == pytest.approx(m.rated_line_current_a / math.sqrt(3), rel=0.03)
+    expect_ip = m.rated_line_current_a / math.sqrt(3) if m.connection == "delta" else m.rated_line_current_a   # Y 결선(M1, 2026-10-19 카탈로그)은 상전류 = 선전류
+    assert m.rated_phase_current_a == pytest.approx(expect_ip, rel=0.03)
     assert m.bpfo_hz() == pytest.approx(m.bpfo_mult * m.rated_rpm / 60)
     assert m.bpfi_hz() == pytest.approx(m.bpfi_mult * m.rated_rpm / 60)
     calc = m.rated_power_kw * 1000 / (math.sqrt(3) * m.voltage_v * m.efficiency * m.power_factor)

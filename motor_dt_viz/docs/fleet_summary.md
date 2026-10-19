@@ -15,7 +15,7 @@
 
 | ID | 모터 | 권선 | 코어 | 로터 | 축 | DE 베어링 | 프레임 | 진동 규격 (경고/위험 mm/s) |
 |---|---|---|---|---|---|---|---|---|
-| M1 | 1톤 호이스트 권상 모터 (2.2 kW 4극) | 57.1 | 50.0 | 54.1 | 50.1 | 46.9 | 41.4 | ISO 20816-3 Group 2 (1.4/4.5) |
+| M1 | 1톤 호이스트 권상 모터 (2.2 kW 4극) | 46.4 | 41.6 | 44.3 | 41.7 | 39.6 | 35.9 | ISO 20816-3 Group 2 (1.4/4.5) |
 | M2 | 2.8톤 호이스트 권상 모터 (5.5 kW 4극) | 64.2 | 55.4 | 60.4 | 55.6 | 51.7 | 45.0 | ISO 20816-3 Group 2 (1.4/4.5) |
 | M3 | 5톤 호이스트 권상 모터 (7.5 kW 4극) | 73.7 | 62.8 | 69.0 | 63.1 | 58.3 | 49.8 | ISO 20816-3 Group 2 (1.4/4.5) |
 | M4 | 10톤 호이스트 권상 모터 (15.0 kW 6극) | 79.0 | 66.9 | 73.8 | 67.2 | 61.8 | 52.5 | ISO 20816-3 Group 2 (1.4/4.5) |
@@ -34,13 +34,13 @@
 | 1. 정상 운전 | M4 | 없음 | 없음 | - | 없음 | SAFE (-) | - |
 | 1. 정상 운전 | M5 | 없음 | 없음 | - | 없음 | SAFE (-) | - |
 | | | | | | | | |
-| 2. DE 베어링 열화 | M1 | 2.2 s (4.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 없음 | DANGER (bearing_kurtosis 50.0) | 2.00 s |
+| 2. DE 베어링 열화 | M1 | 3.2 s (6.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 없음 | DANGER (bearing_kurtosis 50.0) | 온도 경고 없음 |
 | 2. DE 베어링 열화 | M2 | 1.8 s (3.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 25.2 s (50.5 분) | DANGER (bearing_kurtosis 50.0) | 1.50 s |
 | 2. DE 베어링 열화 | M3 | 1.0 s (2.0 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 4.0 s (8.0 분) | DANGER (bearing_kurtosis 50.0) | 0.75 s |
 | 2. DE 베어링 열화 | M4 | 1.2 s (2.5 분) | 3.2 s (6.5 분) | bearing_kurtosis 50.0 | 3.5 s (7.0 분) | DANGER (bearing_kurtosis 50.0) | 1.00 s |
 | 2. DE 베어링 열화 | M5 | 1.0 s (2.0 분) | 2.5 s (5.0 분) | temperature/bearing_de 95.4 | 2.5 s (5.0 분) | DANGER (bearing_kurtosis 50.0) | 0.75 s |
 | | | | | | | | |
-| 3. 축 정렬 불량 | M1 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 없음 | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
+| 3. 축 정렬 불량 | M1 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 없음 | WARN (vibration 3.6) | 온도 경고 없음 |
 | 3. 축 정렬 불량 | M2 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
 | 3. 축 정렬 불량 | M3 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
 | 3. 축 정렬 불량 | M4 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | bearing_kurtosis 50.0 | 0.0 s (0.0 분) | WARN (vibration 3.6) | 이전 장면부터 온도 경고 |
@@ -52,13 +52,13 @@
 | 4. 냉각팬 고장 | M4 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (temperature/stator_core 79.1) | 이전 장면부터 온도 경고 |
 | 4. 냉각팬 고장 | M5 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (temperature/stator_core 86.6) | 이전 장면부터 온도 경고 |
 | | | | | | | | |
-| 5. 브레이크 끌림 | M1 | 3.2 s (6.5 분) | 없음 | - | 없음 | WARN (vibration 2.0) | 4.50 s |
+| 5. 브레이크 끌림 | M1 | 3.2 s (6.5 분) | 없음 | - | 없음 | WARN (vibration 2.0) | 온도 경고 없음 |
 | 5. 브레이크 끌림 | M2 | 2.0 s (4.0 분) | 없음 | - | 없음 | WARN (vibration 2.0) | 1.75 s |
 | 5. 브레이크 끌림 | M3 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (temperature/shaft 104.4) | 이전 장면부터 온도 경고 |
 | 5. 브레이크 끌림 | M4 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (temperature/shaft 109.9) | 이전 장면부터 온도 경고 |
 | 5. 브레이크 끌림 | M5 | 0.0 s (0.0 분) | 9.0 s (18.0 분) | temperature/shaft 110.0 | 9.0 s (18.0 분) | DANGER (temperature/shaft 121.1) | 이전 장면부터 온도 경고 |
 | | | | | | | | |
-| 6. 과부하 운전 (열 관점) | M1 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (vibration 2.2) | 이전 장면부터 온도 경고 |
+| 6. 과부하 운전 (열 관점) | M1 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (vibration 2.2) | 온도 경고 없음 |
 | 6. 과부하 운전 (열 관점) | M2 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (vibration 2.2) | 이전 장면부터 온도 경고 |
 | 6. 과부하 운전 (열 관점) | M3 | 0.0 s (0.0 분) | 없음 | - | 없음 | WARN (vibration 2.2) | 이전 장면부터 온도 경고 |
 | 6. 과부하 운전 (열 관점) | M4 | 0.0 s (0.0 분) | 0.0 s (0.0 분) | temperature/shaft 110.1 | 0.0 s (0.0 분) | WARN (vibration 2.2) | 이전 장면부터 온도 경고 |
@@ -78,12 +78,12 @@
 | 장면 | M1 | M2 | M3 | M4 | M5 |
 |---|---|---|---|---|---|
 | 1. 정상 (3상 균형) | SAFE (-) | SAFE (-) | SAFE (-) | SAFE (-) | SAFE (-) |
-| 2. 턴간 단락 초기 (4턴) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) |
+| 2. 턴간 단락 초기 (4턴) | WARN (i2i1 0.1) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) | DANGER (current_ratio/A 1.3) |
 | 3. 턴간 단락 진행 (12턴) | DANGER (i2i1 0.3) | DANGER (i2i1 0.3) | DANGER (i2i1 0.3) | DANGER (i2i1 0.3) | DANGER (i2i1 0.3) |
 | 4. 과부하 운전 | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) | DANGER (current_ratio/A 1.4) |
 | 5. 공급전압 불평형 | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) | WARN (i2i1 0.1) |
 | 6. 결상 (R상 끊김) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) | DANGER (current_ratio/A 0.0) |
-| 7. 무부하 (저전류) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) |
+| 7. 무부하 (저전류) | DANGER (current_ratio/B 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) | DANGER (current_ratio/A 0.3) |
 
 전기 결과가 5종에서 같은 등급으로 나오는 것은 정상이다: 전류 모델은 정격 대비 비율(케이스 배율)로 정의되고 판정도 비율 기준이라 모터가 바뀌면 암페어만 바뀐다.
 I₂/I₁ 목표값(0.006/0.104/0.269)은 M5 기준 해석식 등가값을 전 모터에 적용한 것이다 (§4.3).

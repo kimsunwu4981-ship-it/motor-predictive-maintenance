@@ -44,7 +44,7 @@ export function ThresholdTable({ mode, data }: { mode: Mode; data: ModeData }) {
   return (
     <div>
       <p className="muted" style={{ marginTop: 0 }}>
-        정격 대비 비율(r)로 판정하고 실제 암페어로 환산했습니다. 이 모터는 <b>{th.motor.connection === "delta" ? "Δ(델타)" : th.motor.connection}결선</b>이라
+        정격 대비 비율(r)로 판정하고 실제 암페어로 환산했습니다. 이 모터는 <b>{th.motor.connection === "delta" ? "Δ(델타)" : th.motor.connection === "star" ? "Y(스타)" : th.motor.connection}결선</b>이라
         케이블에는 선전류(정격 {e.rated_line_A} A), 권선 안에는 상전류(정격 {e.rated_phase_A} A)가 흐르므로 두 기준을 나눠 봅니다.
       </p>
       <table className="grid">
