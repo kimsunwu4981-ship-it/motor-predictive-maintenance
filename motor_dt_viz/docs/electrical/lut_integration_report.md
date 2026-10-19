@@ -1,4 +1,4 @@
-# LUT 연동 검증 보고 (TASK A D6) — 2026-10-19 13:34
+# LUT 연동 검증 보고 (TASK A D6) — 2026-10-19 14:33
 
 - electrical.yaml version 2 · method `lut` → M1 실제 동작 **lut** (LUT M1_mccm_lut_v2.json (등가회로(RMxprt v2+MCCM), provisional))
 - LUT `data\electrical\M1_mccm_lut_v2.json` sha256 `c6898c6e8d80…` · 원본 mccm_lut sha `7d7b1ac5147a…` · grade 등가회로(RMxprt v2+MCCM) · status provisional · fem_verified False · R_fe 보정 physical
