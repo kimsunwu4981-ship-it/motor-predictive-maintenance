@@ -20,12 +20,12 @@ source:
   honesty_label: "시뮬레이션 기반 추정값 (Simulation-based)"
   honesty_sub: "정격 기준: 22 kW 6극 크레인 권상 모터 도면값 · 전류는 해석식 생성"
   # --- LUT 근거 (method: lut 일 때) ---
-  grade: "등가회로(RMxprt v2+MCCM)"
+  grade: "등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite)"
   status: provisional
   fem_verified: false
-  lut: "data/electrical/M1_mccm_lut_v1.json"      # tools/electrical/import_lut.py 가 만든 파일 (저장소 루트 기준 경로)
-  lut_sha256: "238315864fb4391e6b577a466aba8c5929c8af22de7e4e5d832abf2bc5bc5e0d"   # 위 파일의 sha256. 다르면 legacy 로 내려가고 경고
-  lut_note: "턴 비율 {0,1.04,2.08,4.17,6.25,8.33,12.5,16.7 %} × R_f {0.03,0.1,0.3,1.0 Ω} × 부하 {25~115 %} 160점, 3축 보간(R_f 는 log), 범위 밖 클램프·외삽 없음"
+  lut: "data/electrical/M1_mccm_lut_v2.json"      # tools/electrical/import_lut.py 가 만든 파일 (v2: RMxprt v2m2 데이터시트 재질 M400-50A_user60, R_fe 데이터시트 철손, 2026-10-19)
+  lut_sha256: "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9"   # 위 파일의 sha256. 다르면 legacy 로 내려가고 경고
+  lut_note: "턴 비율 {0,1.04,2.08,4.17,6.25,8.33,12.5,16.7 %} × R_f {0.03,0.1,0.3,1.0 Ω} × 부하 {25~115 %} 160점, 3축 보간(R_f 는 log), 범위 밖 클램프·외삽 없음. 2026-10-19 S4: 2D lite FEM 파라미터(단락 턴 누설 9.5 mΩ, Z₂ 5.33 Ω 참고)로 재계산한 v3 와 7 케이스 변화 < 0.6 %(160점 최대 3.7 %) → v2 유지, 검증 통과"
 
 # 고유 비대칭 (정상 모터·전원의 I₂/I₁ 바닥). AI Hub 2.2 kW 정상 2대 중앙값 0.026~0.028 (docs/aihub_spec_check.md) → 0.027.
 # 결함 I₂ 페이저에 더해 합성한다. 위상은 근거 없음 → 0° (결함 I₂ 와 같은 방향 = 최대 합) 로 두고 범위 |b−a|~a+b 를 문서에 기록.

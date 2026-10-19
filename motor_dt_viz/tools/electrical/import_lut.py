@@ -60,7 +60,9 @@ def main() -> int:
         "source_path": src, "source_sha256": digest, "source_mtime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(src))),
         "imported_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "mccm_py": {"path": mccm_py, "sha256": sha256(mccm_py) if os.path.exists(mccm_py) else None, "git_hash": "n/a (권상모터_3D모델링 은 git 저장소가 아님)"},
-        "rmxprt_tag": "v2", "rfe_calibration": "physical" if cal.get("method") == "physical" else ("fitted_383" if cal else "unknown"),
+        "rmxprt_tag": params.get("source_tag", "v2"), "rmxprt_source": params.get("source"), "material": params.get("material", "M19_29G (×1.45 보정)"),
+        "iron_loss_factor": params.get("iron_loss_factor", 1.45),
+        "rfe_calibration": "physical" if cal.get("method") == "physical" else ("fitted_383" if cal else "unknown"),
         "calibration": {k: cal.get(k) for k in ("method", "Rfe", "R2p_hot", "R2p_scale", "I", "pf", "P_in_W")},
         "negative_sequence_impedance_ohm": params.get("Z_sc", 7.136), "base_turns_per_phase": lut.get("N_ph", 192), "rated_current_A": lut.get("I_n", 4.73),
         "axes": lut["axes"], "axis_definition": {"turn_ratio_pct": "n_short / base_turns_per_phase × 100 (상 A, 코일 1개 내)", "R_f": "단락 접촉 저항 [Ω]", "load": "부하 비율 (속도는 「해석 설정(3D)」 Kloss 표)"},
@@ -77,7 +79,7 @@ def main() -> int:
         with open(idx, "w", encoding="utf-8") as f:
             f.write("# LUT 버전 색인 (import_lut.py 가 기록)\n\n| 버전 | 가져온 날짜 | 원본 sha256 (앞 12) | R_fe 보정 | 점 수 | 비고 |\n|---|---|---|---|---|---|\n")
     with open(idx, "a", encoding="utf-8") as f:
-        f.write(f"| {name} | {prov['imported_at']} | {digest[:12]} | {prov['rfe_calibration']} | {len(rows)} | grade {prov['grade']}, provisional, FEM 미검증 |\n")
+        f.write(f"| {name} | {prov['imported_at']} | {digest[:12]} | {prov['rfe_calibration']} | {len(rows)} | grade {prov['grade']}, RMxprt {prov['rmxprt_tag']}, 재질 {prov['material']}, provisional, FEM 미검증 |\n")
     print(f"[import_lut] {name} 생성 ({len(rows)} rows, sha {digest[:12]}, R_fe {prov['rfe_calibration']})")
     return 0
 
