@@ -3,8 +3,8 @@
  "units": "mm",
  "axis": "+X",
  "origin": "stack center",
- "generated_s": 2.1,
- "triangles_total": 4964,
+ "generated_s": 2.5,
+ "triangles_total": 5276,
  "parts": {
   "Frame": {
    "material": "cast_iron",
@@ -23,9 +23,16 @@
   "EndShield_DE": {
    "material": "cast_iron",
    "group": "Housing",
+   "volume_mm3": 637307.413,
+   "triangles": 312,
+   "note": "IM B3 (플랜지 없음) 두께 25 visual_estimate, 어깨면 x 125.0"
+  },
+  "EndShield_DE_B35": {
+   "material": "cast_iron",
+   "group": "Housing",
    "volume_mm3": 1033600.476,
    "triangles": 952,
-   "note": "FF215 플랜지 P 250.0/N 180.0/M 215.0/n 4×ØS 15.0/LA 13.0/T 4.0 (카탈로그 B35 옵션), 두께·보스 visual_estimate"
+   "note": "IM B35: FF215 플랜지 P 250.0/N 180.0/M 215.0/n 4×ØS 15.0/LA 13.0/T 4.0 (카탈로그), 두께·보스 visual_estimate"
   },
   "EndShield_NDE": {
    "material": "cast_iron",
@@ -46,7 +53,7 @@
    "group": "Housing",
    "volume_mm3": 539927.793,
    "triangles": 172,
-   "note": "상면 HD 247.0(카탈로그), 크기 96.0×96.0 위치 x -25.0 visual_estimate, 커넥터 ØO 28.0 PF 0.75, AD verify"
+   "note": "상면 HD 247.0(카탈로그), 크기 96.0×96.0 위치 x -25.0 visual_estimate, 커넥터 ØO 28.0 PF 0.75, 전체 폭 196 ≤ AD 328(카탈로그)"
   },
   "Eyebolt": {
    "material": "steel",
@@ -68,5 +75,5 @@
   -80.0,
   80.0
  ],
- "cutaway_triangles": 3584
+ "cutaway_triangles": 2904
 }

@@ -106,8 +106,10 @@ def main():
         return prim
 
     def ref_variant(prim, key, part_name):
-        prim.GetReferences().ClearReferences()
         dst, _, mm = maps[key]
+        if part_name not in mm:                      # 절단으로 형상이 전부 사라진 부품(예: 절단 사분면 안의 아이볼트) → 이 variant 에서는 숨김
+            UsdGeom.Imageable(prim).MakeInvisible(); return
+        prim.GetReferences().ClearReferences()
         prim.GetReferences().AddReference(f"./{dst}", mm[part_name])
 
     # 하우징 (좌표 그대로: 발 바닥 z 0, 축 z H)
@@ -146,11 +148,25 @@ def main():
     vs.SetVariantSelection("windings_only")
     with vs.GetVariantEditContext():
         UsdGeom.Imageable(stator_prims["Stator_Core"]).MakeInvisible()
-        for n in ("Frame", "EndShield_DE", "EndShield_NDE", "FanCover", "TerminalBox", "Eyebolt"):
-            UsdGeom.Imageable(hou_prims[n]).MakeInvisible()
+        for n in ("Frame", "EndShield_DE", "EndShield_DE_B35", "EndShield_NDE", "FanCover", "TerminalBox", "Eyebolt"):
+            if n in hou_prims:
+                UsdGeom.Imageable(hou_prims[n]).MakeInvisible()
         UsdGeom.Imageable(stage.GetPrimAtPath("/M1/Rotor/Core")).MakeInvisible()
     vs.SetVariantSelection("full")
     root.GetPrim().SetCustomDataByKey("view_variants", "full | cutaway | windings_only")
+    # mount: B3(기본, 플랜지 없음) / B35(FF215 플랜지)
+    if "EndShield_DE_B35" in hou_prims:
+        vm = root.GetPrim().GetVariantSets().AddVariantSet("mount")
+        for v in ("B3", "B35"):
+            vm.AddVariant(v)
+        vm.SetVariantSelection("B3")
+        with vm.GetVariantEditContext():
+            UsdGeom.Imageable(hou_prims["EndShield_DE_B35"]).MakeInvisible()
+        vm.SetVariantSelection("B35")
+        with vm.GetVariantEditContext():
+            UsdGeom.Imageable(hou_prims["EndShield_DE"]).MakeInvisible()
+        vm.SetVariantSelection("B3")
+        root.GetPrim().SetCustomDataByKey("mount_variants", "B3 (기본) | B35")
     root.GetPrim().SetCustomDataByKey("rotor_xform", "/M1/Rotor xformOp:rotateX [deg] — 런타임이 rpm 을 적분해 설정")
     stage.GetRootLayer().Save()
     n_prims = sum(1 for _ in stage.Traverse())

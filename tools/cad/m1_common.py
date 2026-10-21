@@ -118,9 +118,13 @@ class PartSet:
                           for n, p in self.parts.items()}, **(extra or {})}
 
 
-def quarter_cutter(size=400.0):
-    """1/4 절단용 박스: Y<0 ∧ Z>0 사분면(각도 축 기준 90°, 기본 카메라(−Y, +Z 쪽)에서 절단면이 보이게)."""
-    return cq.Workplane("XY").box(size * 2, size, size, centered=(True, False, False)).translate((0, -size, 0))
+CUT_ROT_DEG = -45.0   # 절단 사분면 회전: Y<0∧Z>0 (θ −90~0°) 를 −45° 돌려 θ −45~+45° (슬롯 1 = +Z 가 절단면 가운데 노출, P4 후속 A4)
+
+
+def quarter_cutter(size=400.0, rot_deg=CUT_ROT_DEG):
+    """1/4 절단용 박스(각도 축 기준 90°): 기본 θ∈[−45°, +45°] — 슬롯 1(+Z)·Coil_01 이 노출된다. 축은 X."""
+    box = cq.Workplane("XY").box(size * 2, size, size, centered=(True, False, False)).translate((0, -size, 0))
+    return box.rotate((0, 0, 0), (1, 0, 0), rot_deg)
 
 
 def save_json(path: Path, data: dict):

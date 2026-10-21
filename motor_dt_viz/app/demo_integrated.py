@@ -61,6 +61,7 @@ ap.add_argument("--preset", default="", metavar="demo|full", help="config/render
 ap.add_argument("--m1_model", action="store_true", help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다")
 ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only"), help="--m1_model 의 USD variant view")
 ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
+ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model 의 USD variant mount (B3 발 장착 기본 / B35 플랜지)")
 args = ap.parse_args()
 PRESET = None
 if args.preset:
@@ -133,6 +134,16 @@ m1 = None
 if args.m1_model:
     from viz.m1_model import M1Model  # noqa: E402
     m1 = M1Model(stage, os.path.join(ROOT, "..", "assets", "motors", "M1"), view=args.view, shots_dir=args.m1_shots or None)
+    m1.set_mount(args.mount)
+
+
+def _player_for(mode_: str):
+    """M1 모델이면 config/scenarios_M1.yaml 의 모드 절(있을 때)로, 아니면 기존 모드별 파일."""
+    if m1:
+        cfg_ = M1Model.scenario_cfg(ROOT, mode_)
+        if cfg_:
+            return ScenarioPlayer(cfg_, name=f"scenarios_M1:{mode_}")
+    return ScenarioPlayer.for_mode(mode_)
 
 dome = UsdLux.DomeLight.Define(stage, "/World/DomeLight")
 dome.CreateIntensityAttr(380.0)
@@ -188,7 +199,7 @@ ecmap = ElectricalColormap()
 tm = ThermalModel(TH_CFG)
 cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR) if MOTOR else None)
 injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds if MOTOR else None)
-player = ScenarioPlayer.for_mode(args.mode)
+player = _player_for(args.mode)
 # 판정은 한 곳에서 (TASK 실시간 §5.2): fleet 배치·상태 보드와 같은 엔진. HUD 색·CSV 판정 열·라이브 state 가 모두 이 결과를 쓴다.
 from engine.thresholds import Judge, bearing_level  # noqa: E402
 from engine.fault_injector import bearing_signals  # noqa: E402
@@ -207,10 +218,13 @@ print(f"[demo] electrical method={cm.method} ({cm.method_reason})"
 RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"},
          "short_loop": i_phase}
 M1_PLOOP_MAX = cm.loop_loss_W("itsc_12turn") if m1 else 0.0        # Coil_01_short 발광 정규화 분모 (12턴 LUT 값)
+if m1:
+    _added = M1Model.register_extra_cases(cm, ROOT)                 # 8턴·16턴·저항성·반부하 — electrical.yaml 템플릿 복사(런타임), 파일 불변
+    print(f"[m1] extra cases {_added}: " + ", ".join(f"{k} I2/I1 {cm.expected_i2i1(k):.4f}" for k in _added), flush=True)
 if m1 and args.m1_shots:
     # 전기 시나리오(정상 0~20 s, 4턴 20~45, 12턴 45~75)에 맞춘 6장: 외형, cutaway 정상, cutaway 4턴(발광), cutaway 12턴, windings_only, 축단
-    m1.plan_shots([(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "close", "03_cutaway_itsc_4turn.png"),
-                   (62.0, "cutaway", "close", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")])
+    m1.plan_shots([(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "fault_focus", "03_cutaway_itsc_4turn.png"),
+                   (62.0, "cutaway", "fault_focus", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")])
 
 # ------------------------------------------------------------------ 회전 구동
 art = SingleArticulation(prim_path="/World/Motor", name="motor")
@@ -261,6 +275,8 @@ if args.live:
     except Exception as e:
         print("[live] bridge start failed - continuing without live:", e, flush=True)   # 콘솔이 cp949 라 ASCII 로
         bridge = None
+judge.set_stream("live" if bridge is not None else "simulation")     # P1: 실측 스트림이면 provisional 지표는 advisory (config judgment.provisional_policy)
+print(f"[judge] stream={judge.stream} policy={judge.policy.get(judge.stream)}", flush=True)
 LIVE_CFG = load("live")
 LIVE_THERMAL = set(LIVE_CFG["commands"]["inject_fault"]["thermal"])
 LIVE_ELECTRICAL = set(LIVE_CFG["commands"]["inject_fault"]["electrical"])
@@ -311,7 +327,7 @@ def hot_switch_motor(mid: str) -> dict:
     tm = ThermalModel(TH_CFG)
     cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR))
     injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds)
-    judge = Judge(motor=MOTOR)
+    judge = Judge(motor=MOTOR, stream=judge.stream)
     THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
     i_line = cm.motor.rated_current("rated_line_A"); i_phase = cm.motor.rated_current("rated_phase_A")
     RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"}, "short_loop": i_phase}
@@ -320,7 +336,7 @@ def hot_switch_motor(mid: str) -> dict:
     s_rated = float(V(mc["rating"]["slip"])); T_rated = float(V(mc["rating"]["torque_Nm"])); T_max = T_rated * 2.5
     CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
     set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
-    player = ScenarioPlayer.for_mode(state.mode)
+    player = _player_for(state.mode)
     state.playing_scenario = False; state.thermal_faults.clear(); state.electrical_case = "healthy"; state.dirty = True
     driver.reset_to_base()
     t_real = 0.0
@@ -631,7 +647,7 @@ while simulation_app.is_running():
     # ---------- 모드 전환: 이전 모드의 잔상을 모두 지운다 ----------
     if state.request_mode_reset:
         state.mode = normalize_mode(state.mode)
-        player = ScenarioPlayer.for_mode(state.mode)
+        player = _player_for(state.mode)
         tm.reset()
         judge.reset()
         driver.reset_to_base()                 # 발열 색·발광 제거
@@ -868,7 +884,9 @@ while simulation_app.is_running():
             "bearing_kurtosis": brg["bearing_kurtosis"], "bearing_hf_ratio": brg["bearing_hf_ratio"],
             "status": {"status": verdict.status, "label": verdict.label_ko, "cause_signal": verdict.cause_signal, "cause_component": verdict.cause_component,
                        "value": round(verdict.value, 4), "threshold": verdict.threshold, "levels": kind_worst,
-                       "signals": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4)} for s_ in verdict.signals]},
+                       "stream": verdict.stream, "provisional_in_status": verdict.provisional_in_status,
+                       "signals": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4), "status": s_.status, "advisory": s_.advisory} for s_ in verdict.signals],
+                       "advisory": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4)} for s_ in verdict.advisory]},
             "narration_key": {"mode": mode, "scene": frame.step_id if frame else None, "reveal": _reveal_stage(mode, frame)},
             "perf": {"fps": round(_fps_hist[-1], 1) if _fps_hist else None},
         }

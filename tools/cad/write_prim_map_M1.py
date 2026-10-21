@@ -23,7 +23,7 @@ groups = {
     "shaft": {"thermal": "shaft", "prims": ["/Rotor/Shaft"], "base_color": [0.58, 0.59, 0.61], "roughness": 0.35, "metallic": 0.9},
     "bearing_de": {"thermal": "bearing_de", "prims": ["/Bearings/DE"], "base_color": [0.62, 0.63, 0.65], "roughness": 0.3, "metallic": 0.9},
     "bearing_nde": {"thermal": "bearing_nde", "prims": ["/Bearings/NDE"], "base_color": [0.62, 0.63, 0.65], "roughness": 0.3, "metallic": 0.9},
-    "endshield_de": {"thermal": "endshield_de", "prims": ["/Housing/EndShield_DE"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
+    "endshield_de": {"thermal": "endshield_de", "prims": ["/Housing/EndShield_DE", "/Housing/EndShield_DE_B35"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
     "endshield_nde": {"thermal": "endshield_nde", "prims": ["/Housing/EndShield_NDE"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
     "frame": {"thermal": "frame", "prims": ["/Housing/Frame", "/Housing/Foot", "/Housing/TerminalBox", "/Housing/FanCover", "/Housing/Eyebolt"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
 }

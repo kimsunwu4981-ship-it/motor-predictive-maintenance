@@ -8,9 +8,9 @@
  "mesh_counts": {
   "int_full": 72,
   "int_cut": 72,
-  "hou_full": 7,
-  "hou_cut": 7
+  "hou_full": 8,
+  "hou_cut": 6
  },
- "prims": 105,
+ "prims": 106,
  "H_mm": 100.0
 }

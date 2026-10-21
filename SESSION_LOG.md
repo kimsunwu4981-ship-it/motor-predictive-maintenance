@@ -799,3 +799,13 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 
 ### ⑥ 산출
 - 스크린샷 6장 `docs/assets/screenshots/M1/`(외형, cutaway 정상, cutaway 4턴 발광, cutaway 12턴, windings_only, 축단), `docs/assets/M1_model.md`, `docs/glossary.md`(USD variant·불리언 절단·로프트/스윕), `motor_dt_viz/README.md` 실행 3줄, 커밋 `assets: M1 full 3D model (housing + internals) + Isaac Sim scene`.
+
+## 16. P4 후속 (파트 A, 2026-10-21) — 엔드턴 정본·AD·M1 시나리오 4장면·fault_focus·mount variant
+
+- 엔드턴 정본 = `--end-path geometry_check`(기본값; RMxprt 자동 엔드코일 체적에서 역산한 경로 106.9 mm, 축 돌출 28.3 mm) → 코일 1개 10,234 mm³ = Maxwell(0.00 %), 코일 체적 테스트 ±2 % 복귀(6 passed). 시트 l_end 121.5 mm 는 `docs/assets/M1_model.md` 에 "시트 추정(참고)".
+- AD 328: `housing_params.yaml` `source: catalog`, note "치수선 정의 = 프레임 측면~단자함 끝 전체 폭(플랜지형 175)". 끝면도 전체 폭(196) ≤ AD 구속을 스크립트가 assert. AC 는 visual_estimate 유지.
+- `motor_dt_viz/config/scenarios_M1.yaml`(신규): 기존 7 장면 + 8턴·16턴·저항성(4턴 R_f 1.0)·반부하(4턴 50 %). 추가 케이스는 electrical.yaml 의 itsc_4turn 템플릿을 런타임에 복사해 lut {turns, R_f_ohm}·load 만 바꿔 등록(`M1Model.register_extra_cases`) — electrical.yaml·LUT 불변. 장면 HUD 값 = 엔진 설계값(LUT + 고유 0.027): 8턴 0.1676, 16턴 0.3625, 저항성 0.0324, 반부하 0.0953(I₂/I_n 0.0476) — 11 장면 모두 일치(`check_m1_scene`).
+- cutaway 절단면을 θ −45~+45°(슬롯 1 = +Z 노출)로 회전, 카메라 프리셋 `fault_focus`(Coil_01_short DE 엔드턴 근접) → 03/04 스크린샷 재촬영. 단락 코일 발광은 UsdPreviewSurface emissiveColor 로 세기를 줘(×6) 표현 — 화면에서는 작게 보인다.
+- 온도 색: 열 모델이 전기 전용 모드에서는 dt=0 으로 돌지 않아 **기계·통합 모드에서만** 적용 — 문서화.
+- 플랜지: USD variant `mount` = B3(기본, EndShield_DE 플랜지 없음) / B35(EndShield_DE_B35, FF215). `--mount` 인자. 절단으로 형상이 사라진 부품(아이볼트)은 cutaway variant 에서 숨김 처리(USD 빌더).
+- FPS(11 장면, 스크린샷 포함 실행): 평균 46 · 최소 39 — 30 FPS 충족.

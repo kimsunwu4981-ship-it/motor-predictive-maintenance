@@ -68,16 +68,10 @@ def test_cage_volume(ctx):
     assert r["pass"], r
 
 
-def test_coil_volume_by_declared_rule(ctx):
-    rows = [r for r in volume_rows(ctx)[2:] if r.get("gate")]
-    assert rows, "코일 규칙 행 없음"
-    assert rows[0]["pass"], rows[0]
-
-
-def test_coil_volume_vs_geometry_check_info(ctx):
+def test_coil_volume_vs_geometry_check(ctx):
+    """코일 합 vs Maxwell geometry_check ±2 % — 엔드턴 정본 = geometry_check (2026-10-21 결정). 시트 l_end 행은 참고."""
     r = volume_rows(ctx)[2]
-    if not r["gate"]:
-        pytest.skip(f"엔드턴 규칙이 시트 l_end 라 geometry_check 와 {r['dev_pct']:+.2f} % — 결정 대기 (docs/assets/M1_model.md)")
+    assert ctx["im"]["coil_end_path_rule"].startswith("geometry_check"), ctx["im"]["coil_end_path_rule"]
     assert r["pass"], r
 
 
@@ -121,7 +115,7 @@ def housing_rows(c) -> list[dict]:
     solids_h = hs.solids().vals(); solids_i = ins.solids().vals()
     def by_name_like(solids, pred):
         return [s for s in solids if pred(s)]
-    # Foot: 얇은 판(두께 < 30) 중 가장 낮은 솔리드 (z_min = 0). (플랜지 P 250 은 축 높이 100 보다 커서 발 바닥 아래 −25 까지 내려온다 → 두께로 거른다)
+    # Foot: 얇은 판(두께 < 30) 중 가장 낮은 솔리드 (z_min = 0). (B35 플랜지 P 250 은 축 높이 100 보다 커서 발 바닥 아래 −25 까지 내려온다 → 두께로 거른다)
     foot = min([s for s in solids_h if (s.BoundingBox().zmax - s.BoundingBox().zmin) < 30], key=lambda s: s.BoundingBox().zmin)
     bb_f = foot.BoundingBox()
     # 발 구멍: 반지름 ≈ K/2 원통면 중심
@@ -133,10 +127,13 @@ def housing_rows(c) -> list[dict]:
                 cen = f.Center(); holes.append((round(cen.x, 2), round(cen.y, 2)))
     xs = sorted({h[0] for h in holes}); ys = sorted({h[1] for h in holes})
     A_m = ys[-1] - ys[0] if len(ys) >= 2 else float("nan"); B_m = xs[-1] - xs[0] if len(xs) >= 2 else float("nan")
-    # 축 어깨: 하우징 솔리드 중 x 가 가장 큰 평면(스피곳 제외 → 플랜지 면). 플랜지 판 = 반지름 P/2 원통면을 가진 솔리드
-    de = max(solids_h, key=lambda s: s.BoundingBox().xmax)
+    # 축 어깨: B3 엔드쉴드(축 통과 구멍 반지름 D/2+3 원통면을 갖고 플랜지 P/2 원통면이 없는 솔리드)의 +X 바깥 평면
+    def has_cyl(s, r):
+        return any(f.geomType() == "CYLINDER" and abs(f._geomAdaptor().Cylinder().Radius() - r) < 0.05 for f in s.Faces())
+    fl = c["ds"]["catalog_frame_100L"]["flange_FF215"]
+    de = next(s for s in solids_h if has_cyl(s, fo["D"] / 2 + 3) and not has_cyl(s, fl["P"] / 2))
     planes_x = sorted({round(f.Center().x, 3) for f in de.Faces() if f.geomType() == "PLANE" and abs(f.normalAt().x) > 0.99}, reverse=True)
-    shoulder = planes_x[1] if len(planes_x) > 1 else planes_x[0]        # 가장 바깥은 스피곳 끝(T), 그 다음이 플랜지 면
+    shoulder = planes_x[0]
     C_m = shoulder - xs[-1]
     # 축: 내부 STEP 에서 x_max 가 가장 큰 솔리드, 축단 원통 반지름
     shaft = max(solids_i, key=lambda s: s.BoundingBox().xmax)

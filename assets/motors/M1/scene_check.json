@@ -1,11 +1,11 @@
 {
- "run_csv": "motor_dt_viz\\logs\\m1_model\\demo_20261021_110742.csv",
+ "run_csv": "motor_dt_viz\\logs\\m1_model\\demo_20261021_113507.csv",
  "fleet_csv": "motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv",
  "steps": [
   {
    "step": "healthy",
    "case": "healthy",
-   "t_run": 19.902,
+   "t_run": 19.827,
    "t_fleet": 19.75,
    "Ia_rms": [
     4.9,
@@ -45,7 +45,7 @@
   {
    "step": "itsc_4turn",
    "case": "itsc_4turn",
-   "t_run": 44.899,
+   "t_run": 44.93,
    "t_fleet": 45.0,
    "Ia_rms": [
     5.0,
@@ -85,7 +85,7 @@
   {
    "step": "itsc_12turn",
    "case": "itsc_12turn",
-   "t_run": 74.775,
+   "t_run": 74.837,
    "t_fleet": 75.0,
    "Ia_rms": [
     5.9,
@@ -125,7 +125,7 @@
   {
    "step": "overload",
    "case": "overload",
-   "t_run": 94.878,
+   "t_run": 94.779,
    "t_fleet": 95.0,
    "Ia_rms": [
     6.6,
@@ -165,7 +165,7 @@
   {
    "step": "voltage_unbalance",
    "case": "voltage_unbalance",
-   "t_run": 119.925,
+   "t_run": 119.787,
    "t_fleet": 120.0,
    "Ia_rms": [
     5.1,
@@ -205,7 +205,7 @@
   {
    "step": "single_phasing",
    "case": "single_phasing",
-   "t_run": 144.969,
+   "t_run": 144.894,
    "t_fleet": 144.75,
    "Ia_rms": [
     0.2,
@@ -245,7 +245,7 @@
   {
    "step": "no_load",
    "case": "no_load",
-   "t_run": 164.831,
+   "t_run": 164.949,
    "t_fleet": 164.75,
    "Ia_rms": [
     1.6,
@@ -283,14 +283,117 @@
    "match": true
   }
  ],
+ "extra_steps": [
+  {
+   "step": "itsc_8turn",
+   "case": "itsc_8turn",
+   "t_run": 184.776,
+   "i2_over_i1": [
+    0.1676,
+    0.1676,
+    2.7471304652637585e-05
+   ],
+   "Ia_rms": [
+    5.4,
+    5.4,
+    0.046812549028317996
+   ],
+   "i2_over_in": [
+    "0.1676",
+    0.1676
+   ],
+   "status": [
+    "DANGER",
+    "(엔진 설계값, fleet 없음)"
+   ],
+   "ref": "engine expected_i2i1 (LUT v2 + inherent)",
+   "match": true
+  },
+  {
+   "step": "itsc_16turn",
+   "case": "itsc_16turn",
+   "t_run": 204.833,
+   "i2_over_i1": [
+    0.3625,
+    0.3625,
+    3.338830478383237e-05
+   ],
+   "Ia_rms": [
+    6.3,
+    6.3,
+    0.043409420466792525
+   ],
+   "i2_over_in": [
+    "0.3625",
+    0.3625
+   ],
+   "status": [
+    "DANGER",
+    "(엔진 설계값, fleet 없음)"
+   ],
+   "ref": "engine expected_i2i1 (LUT v2 + inherent)",
+   "match": true
+  },
+  {
+   "step": "itsc_4turn_resistive",
+   "case": "itsc_4turn_resistive",
+   "t_run": 224.963,
+   "i2_over_i1": [
+    0.0324,
+    0.0324,
+    3.82554799774823e-05
+   ],
+   "Ia_rms": [
+    4.9,
+    4.9,
+    0.01768701423797392
+   ],
+   "i2_over_in": [
+    "0.0324",
+    0.0324
+   ],
+   "status": [
+    "WARN",
+    "(엔진 설계값, fleet 없음)"
+   ],
+   "ref": "engine expected_i2i1 (LUT v2 + inherent)",
+   "match": true
+  },
+  {
+   "step": "itsc_4turn_halfload",
+   "case": "itsc_4turn_halfload",
+   "t_run": 244.961,
+   "i2_over_i1": [
+    0.0953,
+    0.0953,
+    5.713209452876122e-06
+   ],
+   "Ia_rms": [
+    2.6,
+    2.6,
+    0.04669976372953277
+   ],
+   "i2_over_in": [
+    "0.0476",
+    0.0476
+   ],
+   "status": [
+    "DANGER",
+    "(엔진 설계값, fleet 없음)"
+   ],
+   "ref": "engine expected_i2i1 (LUT v2 + inherent)",
+   "match": true
+  }
+ ],
  "all_match": true,
  "n_steps": 7,
+ "n_extra": 4,
  "fps": {
-  "mean": 58.4,
-  "min": 47.2,
-  "full_0_12s": 50.3,
-  "cutaway_12_66s": 56.5,
-  "windings_only_66_70s": 58.5,
-  "full_70s_": 60.1
+  "mean": 46.3,
+  "min": 38.8,
+  "full_0_12s": 40.3,
+  "cutaway_12_66s": 45.4,
+  "windings_only_66_70s": 47.2,
+  "full_70s_": 46.8
  }
 }

@@ -109,11 +109,13 @@ flange_FF215:
     source: catalog
     where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
 AD:
-  value_foot_table: 328
+  value: 328
+  source: catalog
   value_flange_table: 175
-  source: verify
-  note: 발 장착(IM B3) 표의 AD 328 은 그림 B(90–200Fr) 끝면도에서 프레임 측면~단자함 끝까지의 전체 폭 치수로 그려져 있다(축 중심~단자함 상면이 아님). 플랜지(FF215) 표의 AD 175 는 플랜지 그림 기준으로 정의가 다르다. 두 값 모두 카탈로그 원문
-    그대로 보관하고, 하우징 모델은 HD 247(단자함 상면 높이)만 구속으로 쓴다.
+  note: '카탈로그 치수선 정의 = 프레임 측면~단자함 끝 전체 폭(플랜지형 175). 모델 구속: 끝면도 전체 폭(프레임 왼쪽 끝~단자함 오른쪽 끝) ≤ AD — 현재 196 mm. AC(프레임 외경)는 visual_estimate 유지'
+mount_variants:
+  B3: 기본 — EndShield_DE (플랜지 없음)
+  B35: EndShield_DE_B35 (FF215 플랜지, 카탈로그 B35 옵션 치수)
 visual_estimate:
   AC_frame_od_mm:
     value: 196.0

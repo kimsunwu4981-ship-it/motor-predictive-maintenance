@@ -3,8 +3,8 @@
  "units": "mm",
  "axis": "+X",
  "origin": "stack center",
- "generated_s": 13.1,
- "triangles_total": 106708,
+ "generated_s": 14.2,
+ "triangles_total": 127908,
  "parts": {
   "Stator_Core": {
    "material": "silicon_steel",
@@ -16,260 +16,260 @@
   "Coil_01": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 8104.525,
-   "triangles": 2072,
+   "volume_mm3": 7686.82,
+   "triangles": 2424,
    "note": "슬롯 1 상층 ↔ 9 하층, 상 A, 안쪽 75 % (healthy)"
   },
   "Coil_01_short": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 2701.11,
-   "triangles": 4496,
+   "volume_mm3": 2561.842,
+   "triangles": 5328,
    "note": "Coil_01 바깥 균일 오프셋 셸 25 % (ITSC 단락 턴 표시용)"
   },
   "Coil_02": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2864,
    "note": "슬롯 2 상층 ↔ 10 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_03": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2316,
+   "volume_mm3": 10248.661,
+   "triangles": 2896,
    "note": "슬롯 3 상층 ↔ 11 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_04": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2372,
+   "volume_mm3": 10248.661,
+   "triangles": 2852,
    "note": "슬롯 4 상층 ↔ 12 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_05": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2348,
+   "volume_mm3": 10248.661,
+   "triangles": 2944,
    "note": "슬롯 5 상층 ↔ 13 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_06": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2352,
+   "volume_mm3": 10248.661,
+   "triangles": 2932,
    "note": "슬롯 6 상층 ↔ 14 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_07": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2332,
+   "volume_mm3": 10248.661,
+   "triangles": 2936,
    "note": "슬롯 7 상층 ↔ 15 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_08": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2980,
    "note": "슬롯 8 상층 ↔ 16 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_09": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2340,
+   "volume_mm3": 10248.661,
+   "triangles": 2988,
    "note": "슬롯 9 상층 ↔ 17 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_10": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2392,
+   "volume_mm3": 10248.661,
+   "triangles": 2872,
    "note": "슬롯 10 상층 ↔ 18 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_11": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2864,
    "note": "슬롯 11 상층 ↔ 19 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_12": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2316,
+   "volume_mm3": 10248.661,
+   "triangles": 2896,
    "note": "슬롯 12 상층 ↔ 20 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_13": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2372,
+   "volume_mm3": 10248.661,
+   "triangles": 2852,
    "note": "슬롯 13 상층 ↔ 21 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_14": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2348,
+   "volume_mm3": 10248.661,
+   "triangles": 2944,
    "note": "슬롯 14 상층 ↔ 22 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_15": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2352,
+   "volume_mm3": 10248.661,
+   "triangles": 2932,
    "note": "슬롯 15 상층 ↔ 23 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_16": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2332,
+   "volume_mm3": 10248.661,
+   "triangles": 2936,
    "note": "슬롯 16 상층 ↔ 24 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_17": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2980,
    "note": "슬롯 17 상층 ↔ 25 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_18": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2340,
+   "volume_mm3": 10248.661,
+   "triangles": 2988,
    "note": "슬롯 18 상층 ↔ 26 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_19": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2392,
+   "volume_mm3": 10248.661,
+   "triangles": 2872,
    "note": "슬롯 19 상층 ↔ 27 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_20": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2864,
    "note": "슬롯 20 상층 ↔ 28 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_21": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2316,
+   "volume_mm3": 10248.661,
+   "triangles": 2896,
    "note": "슬롯 21 상층 ↔ 29 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_22": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2372,
+   "volume_mm3": 10248.661,
+   "triangles": 2852,
    "note": "슬롯 22 상층 ↔ 30 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_23": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2348,
+   "volume_mm3": 10248.661,
+   "triangles": 2944,
    "note": "슬롯 23 상층 ↔ 31 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_24": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2352,
+   "volume_mm3": 10248.661,
+   "triangles": 2932,
    "note": "슬롯 24 상층 ↔ 32 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_25": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2332,
+   "volume_mm3": 10248.661,
+   "triangles": 2936,
    "note": "슬롯 25 상층 ↔ 33 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_26": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2980,
    "note": "슬롯 26 상층 ↔ 34 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_27": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2340,
+   "volume_mm3": 10248.661,
+   "triangles": 2988,
    "note": "슬롯 27 상층 ↔ 35 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_28": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2392,
+   "volume_mm3": 10248.661,
+   "triangles": 2872,
    "note": "슬롯 28 상층 ↔ 36 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_29": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2864,
    "note": "슬롯 29 상층 ↔ 1 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_30": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2316,
+   "volume_mm3": 10248.661,
+   "triangles": 2896,
    "note": "슬롯 30 상층 ↔ 2 하층, 상 A, 엔드턴 visual_estimate"
   },
   "Coil_31": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2372,
+   "volume_mm3": 10248.661,
+   "triangles": 2852,
    "note": "슬롯 31 상층 ↔ 3 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_32": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2348,
+   "volume_mm3": 10248.661,
+   "triangles": 2944,
    "note": "슬롯 32 상층 ↔ 4 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_33": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2352,
+   "volume_mm3": 10248.661,
+   "triangles": 2932,
    "note": "슬롯 33 상층 ↔ 5 하층, 상 C, 엔드턴 visual_estimate"
   },
   "Coil_34": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2332,
+   "volume_mm3": 10248.661,
+   "triangles": 2936,
    "note": "슬롯 34 상층 ↔ 6 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_35": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2344,
+   "volume_mm3": 10248.661,
+   "triangles": 2980,
    "note": "슬롯 35 상층 ↔ 7 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Coil_36": {
    "material": "copper",
    "group": "Stator",
-   "volume_mm3": 10805.634,
-   "triangles": 2340,
+   "volume_mm3": 10248.661,
+   "triangles": 2988,
    "note": "슬롯 36 상층 ↔ 8 하층, 상 B, 엔드턴 visual_estimate"
   },
   "Rotor_Core": {
@@ -512,9 +512,9 @@
   }
  },
  "coil_area_mm2": 21.1525,
- "coil_end_path_rule": "시트 l_end 121.53 mm (설계값 §6 엔드권선 도체 길이, 편측)",
- "coil_end_path_mm": 121.53095706762899,
- "coil_end_overhang_mm": 39.64830609201053,
+ "coil_end_path_rule": "geometry_check 코일 체적 10234.005 / 단면 21.1525 / 2 − L = 106.91 mm (정본, 2026-10-21 결정; 시트 l_end 121.53 mm 는 참고)",
+ "coil_end_path_mm": 106.91005791277624,
+ "coil_end_overhang_mm": 28.287115929697585,
  "coil_layer_center_r_mm": {
   "top": 54.70367312621355,
   "bottom": 61.913514241167256
@@ -538,10 +538,10 @@
  "coil_count": 36,
  "quick": false,
  "sums": {
-  "coils_mm3": 389002.8381040071,
+  "coils_mm3": 368951.8081425025,
   "bars_mm3": 296821.109724097,
   "rings_mm3": 116716.45026616802,
-  "coil01_full_mm3": 10805.634391777963
+  "coil01_full_mm3": 10248.661337291736
  },
- "cutaway_triangles": 84348
+ "cutaway_triangles": 97204
 }

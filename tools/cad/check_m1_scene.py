@@ -11,6 +11,7 @@ import glob
 import json
 import os
 import statistics
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +38,22 @@ def main():
                 out[r["step"]] = r
         return out
     a, b = last_per_step(run), last_per_step(fleet)
+    # fleet 로그에 없는 M1 전용 장면(8턴·16턴·저항성·반부하)은 엔진 설계값(expected_i2i1 = LUT + 고유 비대칭)과 비교
+    sys.path.insert(0, str(VIZ))
+    from engine import motor_library as ml
+    from engine.current_model import CurrentModel
+    from viz.m1_model import M1Model
+    m = ml.load_motor("M1"); cm = CurrentModel(ml.electrical_cfg(m), ml.motor_spec(m)); M1Model.register_extra_cases(cm, str(VIZ))
+    extra = []
+    for step, ra in a.items():
+        if step in b or ra["case"] not in cm.cases:
+            continue
+        exp = cm.expected_i2i1(ra["case"]); st = cm.evaluate_case(ra["case"])
+        d = {"step": step, "case": ra["case"], "t_run": float(ra["t_real_s"]), "i2_over_i1": [float(ra["i2_over_i1"]), round(exp, 4), abs(float(ra["i2_over_i1"]) - exp)],
+             "Ia_rms": [float(ra["Ia_rms"]), round(st.rms_A[0], 1), abs(float(ra["Ia_rms"]) - st.rms_A[0])], "i2_over_in": [ra.get("i2_over_in"), round(st.i2_over_in, 4) if st.i2_over_in is not None else None],
+             "status": [ra.get("status"), "(엔진 설계값, fleet 없음)"], "ref": "engine expected_i2i1 (LUT v2 + inherent)"}
+        d["match"] = d["i2_over_i1"][2] <= 0.0006 and d["Ia_rms"][2] <= 0.15
+        extra.append(d)
     table = []
     for step in a:
         if step not in b:
@@ -54,10 +71,12 @@ def main():
     def seg(lo, hi):
         v = [float(r["fps"]) for r in run if lo <= float(r["t_real_s"]) < hi and float(r["fps"]) > 0]
         return round(statistics.mean(v), 1) if v else None
-    out = {"run_csv": os.path.relpath(runs[-1], ROOT), "fleet_csv": "motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv", "steps": table,
-           "all_match": all(d["match"] for d in table), "n_steps": len(table),
+    out = {"run_csv": os.path.relpath(runs[-1], ROOT), "fleet_csv": "motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv", "steps": table, "extra_steps": extra,
+           "all_match": all(d["match"] for d in table + extra), "n_steps": len(table), "n_extra": len(extra),
            "fps": {"mean": round(statistics.mean(fps), 1) if fps else None, "min": round(min(fps), 1) if fps else None, "full_0_12s": seg(6, 12), "cutaway_12_66s": seg(14, 66), "windings_only_66_70s": seg(66, 70), "full_70s_": seg(70, 1e9)}}
     (ROOT / "assets" / "motors" / "M1" / "scene_check.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    for d in extra:
+        print(f"{d['step']:22s} run/engine Ia {d['Ia_rms'][0]:.1f}/{d['Ia_rms'][1]:.1f} I2/I1 {d['i2_over_i1'][0]:.4f}/{d['i2_over_i1'][1]:.4f} I2/In {d['i2_over_in'][0]}/{d['i2_over_in'][1]} {'✓' if d['match'] else '✗'}")
     for d in table:
         print(f"{d['step']:18s} run/fleet Ia {d['Ia_rms'][0]:.1f}/{d['Ia_rms'][1]:.1f} I2/I1 {d['i2_over_i1'][0]:.4f}/{d['i2_over_i1'][1]:.4f} status {d['status'][0]}/{d['status'][1]} {'✓' if d['match'] else '✗'}")
     print("fps", out["fps"], "all_match", out["all_match"])

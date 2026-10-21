@@ -73,17 +73,20 @@ def build():
             foot = foot.cut(cq.Workplane("XY").circle(K / 2).extrude(HA + 2).translate((xh, yh, -1)))
     ps.add("Foot", foot, "cast_iron", "Housing", f"BB {BB}×AB {AB}×HA {HA}, 구멍 ØK {K} @A {A}/B {B}, C {C} (카탈로그)", tol=0.2, ang=0.5)
 
-    # ---- EndShield_DE: 베어링 보스 + FF215 플랜지 (B35 옵션 치수: P/N/M/n/S/LA/T) — 어깨면 x = sh_x
+    # ---- EndShield_DE: 두 벌 — B3(기본, 플랜지 없음, 어깨면 x = sh_x) / B35(FF215 플랜지 P/N/M/n/S/LA/T). USD variant mount 로 선택
     es_t = VIS["endshield_t_mm"]
+    boss = yz(fl_len / 2 - 5).circle(VIS["bearing_boss_od_mm"] / 2).extrude(VIS["bearing_boss_len_mm"])
+    bore = yz(fl_len / 2 - 10).circle(D / 2 + 3).extrude(60)
+    de_b3 = yz(fl_len / 2).circle(VIS["endshield_od_mm"] / 2).extrude(sh_x - fl_len / 2).union(boss).cut(bore)
+    ps.add("EndShield_DE", de_b3, "cast_iron", "Housing", f"IM B3 (플랜지 없음) 두께 {sh_x - fl_len / 2:.0f} visual_estimate, 어깨면 x {sh_x}", tol=0.2, ang=0.5)
     de = yz(fl_len / 2).circle(VIS["endshield_od_mm"] / 2).extrude(sh_x - fl_len / 2 - LA)        # 몸통
     flange = yz(sh_x - LA).circle(P / 2).extrude(LA)                                                # 플랜지 판 두께 LA, 바깥면 = 어깨
     spigot = yz(sh_x).circle(N / 2).extrude(T)                                                      # 스피곳 N × T
     for i in range(int(n_fl)):
         a = math.radians(45 + 360 / n_fl * i)
         flange = flange.cut(yz(sh_x - LA - 1).center(M / 2 * math.sin(a), M / 2 * math.cos(a)).circle(S / 2).extrude(LA + 2))
-    boss = yz(fl_len / 2 - 5).circle(VIS["bearing_boss_od_mm"] / 2).extrude(VIS["bearing_boss_len_mm"])
-    de = de.union(flange).union(spigot).union(boss).cut(yz(fl_len / 2 - 10).circle(D / 2 + 3).extrude(60))   # 축 통과 구멍
-    ps.add("EndShield_DE", de, "cast_iron", "Housing", f"FF215 플랜지 P {P}/N {N}/M {M}/n {int(n_fl)}×ØS {S}/LA {LA}/T {T} (카탈로그 B35 옵션), 두께·보스 visual_estimate", tol=0.2, ang=0.5)
+    de = de.union(flange).union(spigot).union(boss).cut(bore)
+    ps.add("EndShield_DE_B35", de, "cast_iron", "Housing", f"IM B35: FF215 플랜지 P {P}/N {N}/M {M}/n {int(n_fl)}×ØS {S}/LA {LA}/T {T} (카탈로그), 두께·보스 visual_estimate", tol=0.2, ang=0.5)
 
     # ---- EndShield_NDE
     nde = yz(-sh_x).circle(VIS["endshield_od_mm"] / 2).extrude(es_t).union(yz(-fl_len / 2 - VIS["bearing_boss_len_mm"] + 5).circle(VIS["bearing_boss_od_mm"] / 2).extrude(VIS["bearing_boss_len_mm"]))
@@ -105,7 +108,10 @@ def build():
     tb = cq.Workplane("XY").box(VIS["tbox_l_mm"], VIS["tbox_w_mm"], z_top - z_base, centered=(True, True, False)).translate((VIS["tbox_center_x_mm"], 0, z_base))
     hole = cq.Workplane("XZ", origin=(VIS["tbox_center_x_mm"], 0, (z_top + z_base) / 2)).circle(O_tbox / 2).extrude(VIS["tbox_w_mm"], both=True)   # 커넥터 구멍(양측 관통, 시각)
     tb = tb.cut(hole)
-    ps.add("TerminalBox", tb, "cast_iron", "Housing", f"상면 HD {HD}(카탈로그), 크기 {VIS['tbox_l_mm']}×{VIS['tbox_w_mm']} 위치 x {VIS['tbox_center_x_mm']} visual_estimate, 커넥터 ØO {O_tbox} PF {PF}, AD verify", tol=0.2, ang=0.5)
+    AD = float(fo["AD"])
+    overall_w = max(VIS["AC_frame_od_mm"] / 2, VIS["tbox_w_mm"] / 2) + VIS["AC_frame_od_mm"] / 2    # 끝면도 전체 폭: 프레임 왼쪽 끝 ~ 단자함(또는 프레임) 오른쪽 끝
+    assert overall_w <= AD + 1e-6, f"단자함 끝이 카탈로그 AD {AD} 를 넘는다: {overall_w}"
+    ps.add("TerminalBox", tb, "cast_iron", "Housing", f"상면 HD {HD}(카탈로그), 크기 {VIS['tbox_l_mm']}×{VIS['tbox_w_mm']} 위치 x {VIS['tbox_center_x_mm']} visual_estimate, 커넥터 ØO {O_tbox} PF {PF}, 전체 폭 {overall_w:.0f} ≤ AD {AD:.0f}(카탈로그)", tol=0.2, ang=0.5)
 
     # ---- Eyebolt: 상단 z = HC (카탈로그), 링 치수 visual_estimate
     rd = VIS["eyebolt_ring_d_mm"]; R = (VIS["eyebolt_ring_od_mm"] - rd) / 2
@@ -120,7 +126,7 @@ def build():
     ps.export_step(out / "housing_100L.step"); ps.export_obj(out / "housing.obj"); ps.export_glb(out / "housing.glb")
     man = ps.manifest({"axis_height_H_mm": Z, "shoulder_x_mm": sh_x, "shaft_end_x_mm": sh_x + E, "fancover_back_x_mm": x_back, "foot_holes_x_mm": x_holes, "foot_holes_y_mm": [-A / 2, A / 2]})
     save_json(out / "housing_parts.json", man)
-    cutter = quarter_cutter().translate((0, 0, Z))
+    cutter = quarter_cutter().translate((0, 0, Z))      # θ −45~+45° (내부와 같은 회전)
     pc = PartSet("M1_housing_cutaway")
     for n_, p in ps.parts.items():
         pc.add(n_, p["shape"].cut(cutter), p["material"], p["group"], p["note"], tol=0.2, ang=0.5)
@@ -131,7 +137,9 @@ def build():
     params = {"meta": {"generator": "tools/cad/build_housing_100L.py", "frame": "IEC 100L (현대 SSEN HLP-2.2/4, IM B3 + FF215 B35 옵션 플랜지)", "coords": "축 +X, 발 바닥 Z 0, 축 중심 Z H, 적층 중심 X 0, mm"},
               "catalog": {k: {"value": fo[k], "source": "catalog", "where": f"카탈로그 KS 형식 치수표 100L 행 (PDF {cat['foot_mount_page']}쪽)"} for k in ("H", "A", "AA", "AB", "HA", "B1", "BB", "C", "K", "HC", "HD", "L", "D", "E", "F", "GE", "key", "O", "PF")},
               "flange_FF215": {k: {"value": fl[k], "source": "catalog", "where": f"카탈로그 KS 플랜지 치수표 100L 행 (PDF {cat['flange_page']}쪽)"} for k in ("M", "N", "P", "n", "S", "LA", "T")},
-              "AD": {"value_foot_table": fo["AD"], "value_flange_table": fl["AD"], "source": "verify", "note": cat["AD_note"]},
+              "AD": {"value": fo["AD"], "source": "catalog", "value_flange_table": fl["AD"],
+                     "note": "카탈로그 치수선 정의 = 프레임 측면~단자함 끝 전체 폭(플랜지형 175). 모델 구속: 끝면도 전체 폭(프레임 왼쪽 끝~단자함 오른쪽 끝) ≤ AD — 현재 " + f"{overall_w:.0f} mm. AC(프레임 외경)는 visual_estimate 유지"},
+              "mount_variants": {"B3": "기본 — EndShield_DE (플랜지 없음)", "B35": "EndShield_DE_B35 (FF215 플랜지, 카탈로그 B35 옵션 치수)"},
               "visual_estimate": {k: {"value": v, "source": "visual_estimate"} for k, v in VIS.items()},
               "layout": {k: {"value": v, "source": "visual_estimate" if k != "bearing_6206" else "standard"} for k, v in LAYOUT.items()},
               "unused_catalog": {"AA": "발 측면 폭 — 시각 모델에서 직접 쓰지 않음(발 판은 AB 폭)", "F_GE_key": "키홈은 내부 모델 Shaft 에 적용"}}

@@ -183,6 +183,7 @@ groups:
     thermal: endshield_de
     prims:
     - /Housing/EndShield_DE
+    - /Housing/EndShield_DE_B35
     base_color:
     - 0.36
     - 0.4

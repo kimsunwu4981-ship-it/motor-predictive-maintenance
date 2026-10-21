@@ -29,6 +29,7 @@ class M1Model:
     CAM_WIDE = ([-0.55, -0.78, 0.42], [0.0, 0.0, 0.11])
     CAM_CLOSE = ([0.33, -0.42, 0.30], [0.06, 0.0, 0.12])      # 단락 루프(Coil_01, DE 쪽 엔드턴)
     CAM_SHAFT = ([0.58, -0.36, 0.20], [0.19, 0.0, 0.10])      # 축단
+    CAM_FAULT = ([0.21, -0.11, 0.25], [0.085, 0.0, 0.165])    # fault_focus: 슬롯 1(+Z) Coil_01_short DE 쪽 엔드턴 근접 (절단면 θ −45~+45° 안, 적층 끝 x 67.5 + 돌출 28 mm)
 
     def __init__(self, stage, asset_dir: str, view: str = "full", hide=("/World/Motor", "/World/CurrentPaths"), shots_dir: str | None = None):
         self.stage = stage
@@ -80,6 +81,40 @@ class M1Model:
             vs.SetVariantSelection(view)
         self.view = view
 
+    def set_mount(self, mount: str) -> None:
+        vs = self.prim.GetVariantSet("mount")
+        if vs and mount in vs.GetVariantNames():
+            vs.SetVariantSelection(mount)
+
+    # ------------------------------------------------------------- M1 전용 시나리오·추가 케이스 (electrical.yaml 불변)
+    @staticmethod
+    def scenario_cfg(viz_root: str, mode: str):
+        """config/scenarios_M1.yaml 의 <mode> 절 (없으면 None)."""
+        p = os.path.join(viz_root, "config", "scenarios_M1.yaml")
+        if not os.path.exists(p):
+            return None
+        d = yaml.safe_load(open(p, encoding="utf-8"))
+        return d.get(mode)
+
+    @staticmethod
+    def register_extra_cases(cm, viz_root: str) -> list[str]:
+        """scenarios_M1.yaml extra_cases: electrical.yaml 의 템플릿 케이스를 복사해 lut {turns, R_f_ohm}·load·label 만 바꿔 런타임 등록 (파일은 건드리지 않음)."""
+        p = os.path.join(viz_root, "config", "scenarios_M1.yaml")
+        if not os.path.exists(p):
+            return []
+        d = yaml.safe_load(open(p, encoding="utf-8")); added = []
+        for key, spec in (d.get("extra_cases") or {}).items():
+            if key in cm.cases:
+                continue
+            tpl = dict(cm.cases[spec["template"]])
+            tpl["label"] = spec["label"]; tpl["lut"] = {"turns": spec["turns"], "R_f_ohm": spec["R_f_ohm"]}; tpl["load"] = float(spec.get("load", 1.0))
+            tpl["target_i2i1"] = None
+            if "short_loop" in tpl:
+                tpl["short_loop"] = {**tpl["short_loop"], "turns": spec["turns"]}
+            cm.cases[key] = tpl; cm._lut_cache.pop(key, None) if hasattr(cm, "_lut_cache") else None
+            added.append(key)
+        return added
+
     def step_rotation(self, w_rad_s: float, dt_s: float) -> float:
         self.angle_deg = (self.angle_deg + math.degrees(w_rad_s * dt_s)) % 360.0
         if self.rot_attr:
@@ -100,7 +135,7 @@ class M1Model:
             else:
                 diffuse = base; em = [0.0, 0.0, 0.0]
             if cfg.get("short_loop"):
-                em = [em[i] + c * k_loop * 2.0 for i, c in enumerate((1.0, 0.18, 0.05))]
+                em = [em[i] + c * k_loop * 6.0 for i, c in enumerate((1.0, 0.18, 0.05))]     # UsdPreviewSurface emissiveColor 는 강도 입력이 없어 색으로 세기를 준다
             sh.GetInput("diffuseColor").Set(Gf.Vec3f(*diffuse))
             sh.GetInput("emissiveColor").Set(Gf.Vec3f(*em))
 
@@ -116,7 +151,7 @@ class M1Model:
             return None
         self._shot_i += 1
         self.set_view(view)
-        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT}[cam]
+        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT}[cam]
         set_camera_view(eye=eye, target=tgt)
         for _ in range(8):
             render()

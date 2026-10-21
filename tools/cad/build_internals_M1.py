@@ -191,7 +191,7 @@ def build(end_path: str, n_seg: int, quick: bool) -> dict:
     if end_path == "sheet":
         target = l_end; rule = f"시트 l_end {l_end:.2f} mm (설계값 §6 엔드권선 도체 길이, 편측)"
     else:
-        target = full["coil_volume_mm3"] / coil_area / 2 - L; rule = f"geometry_check 코일 체적 {full['coil_volume_mm3']} / 단면 {coil_area} / 2 − L = {target:.2f} mm"
+        target = full["coil_volume_mm3"] / coil_area / 2 - L; rule = f"geometry_check 코일 체적 {full['coil_volume_mm3']} / 단면 {coil_area} / 2 − L = {target:.2f} mm (정본, 2026-10-21 결정; 시트 l_end {l_end:.2f} mm 는 참고)"
     overhang = solve_overhang(target, Lh, rc_t, 0.0, rc_b, th_pitch, LAYOUT["end_exit_mm"], LAYOUT["end_bulge_mm"], n_seg)
     P_chk = end_path_points(Lh, rc_t, 0.0, rc_b, th_pitch, overhang, LAYOUT["end_exit_mm"], LAYOUT["end_bulge_mm"], n_seg)
     log(f"코일 단면 {coil_area} mm² · 상층 중심 r {rc_t:.2f} / 하층 r {rc_b:.2f} · 엔드턴 경로 {path_length(P_chk):.2f} mm (목표 {target:.2f}, 축 돌출 {overhang:.2f} mm, 규칙: {rule})")
@@ -281,7 +281,8 @@ def build(end_path: str, n_seg: int, quick: bool) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--end-path", choices=["sheet", "geometry_check"], default="sheet", help="엔드턴 경로 길이 규칙 (기본: 시트 l_end)")
+    ap.add_argument("--end-path", choices=["sheet", "geometry_check"], default="geometry_check",
+                    help="엔드턴 경로 길이 규칙 (기본 geometry_check = Maxwell RMxprt 자동 엔드코일 체적에서 역산 106.9 mm — 2026-10-21 결정; sheet = 시트 l_end 121.5 mm 참고)")
     ap.add_argument("--end-segments", type=int, default=10, help="엔드턴 스플라인 분할 수")
     ap.add_argument("--quick", action="store_true", help="코일 2개만 (개발용)")
     a = ap.parse_args()

@@ -1,0 +1,179 @@
+# scenarios_M1.yaml — M1(현대 HLP-2.2/4) 전용 시나리오 (P4 후속 A3, 2026-10-21). 기존 scenario_electrical.yaml(22 kW 공용)은 불변.
+#
+# electrical: 기존 7 장면(정상·4턴·12턴·과부하·불평형·결상·무부하) + 4 장면(8턴·16턴·저항성 4턴 R_f 1.0 Ω·반부하 4턴 50 %).
+# extra_cases: electrical.yaml 에 없는 케이스는 electrical.yaml 의 템플릿(itsc_4turn)을 런타임에 복사해 lut {turns, R_f_ohm}·load·label 만 바꿔 등록한다
+#   (viz/m1_model.M1Model.register_extra_cases). electrical.yaml·LUT 는 건드리지 않는다. 값은 LUT 격자(턴 0~16.7 %, R_f 0.03~1.0 Ω, 부하 25~115 %) 안.
+# 설계 I₂/I₁ 참고(LUT v2 + 고유 비대칭 0.027, 위상 0° 합): 8턴 ≈ 0.171, 16턴 ≈ 0.365, 4턴 R_f 1.0 ≈ 0.034, 4턴 50 % ≈ 0.102 — 실제 값은 장면 실행 로그(check_m1_scene)로 확인.
+
+extra_cases:
+  itsc_8turn:
+    template: itsc_4turn
+    label: "턴간 단락 8턴 (확실 탐지 시작)"
+    turns: 8
+    R_f_ohm: 0.1
+    load: 1.0
+  itsc_16turn:
+    template: itsc_4turn
+    label: "턴간 단락 16턴 (코일 전체)"
+    turns: 16
+    R_f_ohm: 0.1
+    load: 1.0
+  itsc_4turn_resistive:
+    template: itsc_4turn
+    label: "턴간 단락 4턴 저항성 (R_f 1.0 Ω)"
+    turns: 4
+    R_f_ohm: 1.0
+    load: 1.0
+  itsc_4turn_halfload:
+    template: itsc_4turn
+    label: "턴간 단락 4턴 반부하 (50 %)"
+    turns: 4
+    R_f_ohm: 0.1
+    load: 0.5
+
+electrical:
+  steps:
+    - id: healthy
+      label: "1. 정상 (3상 균형)"
+      subtitle: "세 상이 같은 크기, I₂/I₁ 은 고유 비대칭 0.027 뿐"
+      subtitle_en: "Three balanced phases - I2/I1 is only the inherent 0.027"
+      source: "등가회로 LUT (RMxprt v2m2 + MCCM) + 고유 비대칭"
+      source_en: "Equivalent-circuit LUT (RMxprt v2m2 + MCCM) + inherent asymmetry"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: healthy
+      faults: []
+      load: 1.0
+    - id: itsc_4turn
+      label: "2. 턴간 단락 초기 (4턴)"
+      subtitle: "Coil_01 의 4턴(2.1 %)이 단락 — 단락 루프 전류 34 A, I₂/I₁ 0.073 (경계 0.05 바로 위)"
+      subtitle_en: "4 turns (2.1 %) of Coil_01 shorted - loop current 34 A, I2/I1 0.073 (just above 0.05)"
+      source: "등가회로 LUT + 2D 와전류 정합 (I_f ±5 %)"
+      source_en: "Equivalent-circuit LUT + 2D eddy-current match (I_f within 5 %)"
+      duration_s: 25
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_4turn
+      faults: []
+      load: 1.0
+      highlight: true
+    - id: itsc_12turn
+      label: "3. 턴간 단락 진행 (12턴)"
+      subtitle: "12턴(6.3 %) 단락 — 루프 전류 70 A, 손실 977 W, I₂/I₁ 0.27 (위험)"
+      subtitle_en: "12 turns (6.3 %) shorted - loop current 70 A, 977 W, I2/I1 0.27 (danger)"
+      source: "등가회로 LUT"
+      source_en: "Equivalent-circuit LUT"
+      duration_s: 30
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_12turn
+      faults: []
+      load: 1.0
+      highlight: true
+    - id: overload
+      label: "4. 과부하 운전"
+      subtitle: "세 상이 고르게 함께 늘어난다 — 균형이 유지되므로 I₂/I₁ 은 고유 비대칭 그대로"
+      subtitle_en: "All three phases rise together - balance holds, I2/I1 stays at the inherent level"
+      source: "해석식 3상 모델"
+      source_en: "Analytic 3-phase model"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: overload
+      faults: []
+      load: 1.35
+    - id: voltage_unbalance
+      label: "5. 공급전압 불평형"
+      subtitle: "크기는 아직 정상 범위지만 I₂/I₁ 이 0.060 으로 오른다 — 크기보다 균형이 먼저 무너진다"
+      subtitle_en: "Magnitudes still look normal, but I2/I1 rises to 0.060 - balance breaks before magnitude"
+      source: "해석식 3상 모델"
+      source_en: "Analytic 3-phase model"
+      duration_s: 25
+      time_scale: 60
+      mode: electrical
+      electrical_case: voltage_unbalance
+      faults: []
+      load: 1.0
+    - id: single_phasing
+      label: "6. 결상 (R상 끊김)"
+      subtitle: "끊긴 상은 파랑, 남은 두 상이 그 몫까지 떠안아 빨강이 된다"
+      subtitle_en: "The lost phase turns blue; the remaining two carry its share and turn red"
+      source: "해석식 3상 모델"
+      source_en: "Analytic 3-phase model"
+      duration_s: 25
+      time_scale: 60
+      mode: electrical
+      electrical_case: single_phasing
+      faults: []
+      load: 1.0
+    - id: no_load
+      label: "7. 무부하 (저전류)"
+      subtitle: "부하가 없으면 자화전류만 흘러 세 상이 모두 파랗다"
+      subtitle_en: "With no load only the magnetizing current flows - all three phases go blue"
+      source: "해석식 3상 모델"
+      source_en: "Analytic 3-phase model"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: no_load
+      faults: []
+      load: 0.0
+    - id: itsc_8turn
+      label: "8. 턴간 단락 8턴 (확실 탐지 시작)"
+      subtitle: "8턴(4.2 %) — 고유 비대칭 위상과 무관하게 I₂/I₁ 최소값이 위험 경계 0.10 을 넘는다"
+      subtitle_en: "8 turns (4.2 %) - I2/I1 exceeds the 0.10 danger line regardless of inherent phase"
+      source: "등가회로 LUT (격자점 4.17 %)"
+      source_en: "Equivalent-circuit LUT (grid point 4.17 %)"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_8turn
+      faults: []
+      load: 1.0
+      highlight: true
+    - id: itsc_16turn
+      label: "9. 턴간 단락 16턴 (코일 전체)"
+      subtitle: "코일 1개(16턴, 8.3 %) 전체 단락 — 루프 전류 81 A, 손실 1.5 kW"
+      subtitle_en: "One whole coil (16 turns, 8.3 %) shorted - loop current 81 A, 1.5 kW"
+      source: "등가회로 LUT (격자점 8.33 %)"
+      source_en: "Equivalent-circuit LUT (grid point 8.33 %)"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_16turn
+      faults: []
+      load: 1.0
+      highlight: true
+    - id: itsc_4turn_resistive
+      label: "10. 저항성 단락 (4턴, R_f 1.0 Ω)"
+      subtitle: "절연 열화 초기 — 루프 전류 4 A 뿐이라 전류 지표로는 거의 보이지 않는다 (온도·진동 지표 필요)"
+      subtitle_en: "Early insulation degradation - only 4 A loop current, nearly invisible in current indices"
+      source: "등가회로 LUT (R_f 1.0 Ω)"
+      source_en: "Equivalent-circuit LUT (R_f 1.0 ohm)"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_4turn_resistive
+      faults: []
+      load: 1.0
+    - id: itsc_4turn_halfload
+      label: "11. 반부하 단락 (4턴, 50 %)"
+      subtitle: "같은 4턴이라도 부하가 절반이면 I₂/I₁ 은 커진다 — I₂/I_n 은 부하 무관"
+      subtitle_en: "Same 4 turns at half load - I2/I1 grows while I2/In stays put"
+      source: "등가회로 LUT (부하 50 %)"
+      source_en: "Equivalent-circuit LUT (load 50 %)"
+      duration_s: 20
+      time_scale: 60
+      mode: electrical
+      electrical_case: itsc_4turn_halfload
+      faults: []
+      load: 0.5
+
+  manual_defaults:
+    mode: electrical
+    load: 1.0
+    time_scale: 60
+    slowmo_factor: 0.016667
+    electrical_case: healthy
+    faults: []
