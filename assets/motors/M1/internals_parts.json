@@ -1,0 +1,547 @@
+{
+ "tag": "M1_internals",
+ "units": "mm",
+ "axis": "+X",
+ "origin": "stack center",
+ "generated_s": 13.1,
+ "triangles_total": 106708,
+ "parts": {
+  "Stator_Core": {
+   "material": "silicon_steel",
+   "group": "Stator",
+   "volume_mm3": 1072843.335,
+   "triangles": 4860,
+   "note": "D_so 155/D_si 98/L 135, 슬롯 36 (RMxprt type 2: Hs0 0.5 Hs1 1.5 Hs2 10.8103 Bs0 2.0 Bs1 4.86197 Bs2 7.39398)"
+  },
+  "Coil_01": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 8104.525,
+   "triangles": 2072,
+   "note": "슬롯 1 상층 ↔ 9 하층, 상 A, 안쪽 75 % (healthy)"
+  },
+  "Coil_01_short": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 2701.11,
+   "triangles": 4496,
+   "note": "Coil_01 바깥 균일 오프셋 셸 25 % (ITSC 단락 턴 표시용)"
+  },
+  "Coil_02": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 2 상층 ↔ 10 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_03": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2316,
+   "note": "슬롯 3 상층 ↔ 11 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_04": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2372,
+   "note": "슬롯 4 상층 ↔ 12 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_05": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2348,
+   "note": "슬롯 5 상층 ↔ 13 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_06": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2352,
+   "note": "슬롯 6 상층 ↔ 14 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_07": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2332,
+   "note": "슬롯 7 상층 ↔ 15 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_08": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 8 상층 ↔ 16 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_09": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2340,
+   "note": "슬롯 9 상층 ↔ 17 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_10": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2392,
+   "note": "슬롯 10 상층 ↔ 18 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_11": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 11 상층 ↔ 19 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_12": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2316,
+   "note": "슬롯 12 상층 ↔ 20 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_13": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2372,
+   "note": "슬롯 13 상층 ↔ 21 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_14": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2348,
+   "note": "슬롯 14 상층 ↔ 22 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_15": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2352,
+   "note": "슬롯 15 상층 ↔ 23 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_16": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2332,
+   "note": "슬롯 16 상층 ↔ 24 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_17": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 17 상층 ↔ 25 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_18": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2340,
+   "note": "슬롯 18 상층 ↔ 26 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_19": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2392,
+   "note": "슬롯 19 상층 ↔ 27 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_20": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 20 상층 ↔ 28 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_21": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2316,
+   "note": "슬롯 21 상층 ↔ 29 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_22": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2372,
+   "note": "슬롯 22 상층 ↔ 30 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_23": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2348,
+   "note": "슬롯 23 상층 ↔ 31 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_24": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2352,
+   "note": "슬롯 24 상층 ↔ 32 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_25": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2332,
+   "note": "슬롯 25 상층 ↔ 33 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_26": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 26 상층 ↔ 34 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_27": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2340,
+   "note": "슬롯 27 상층 ↔ 35 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_28": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2392,
+   "note": "슬롯 28 상층 ↔ 36 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_29": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 29 상층 ↔ 1 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_30": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2316,
+   "note": "슬롯 30 상층 ↔ 2 하층, 상 A, 엔드턴 visual_estimate"
+  },
+  "Coil_31": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2372,
+   "note": "슬롯 31 상층 ↔ 3 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_32": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2348,
+   "note": "슬롯 32 상층 ↔ 4 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_33": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2352,
+   "note": "슬롯 33 상층 ↔ 5 하층, 상 C, 엔드턴 visual_estimate"
+  },
+  "Coil_34": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2332,
+   "note": "슬롯 34 상층 ↔ 6 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_35": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2344,
+   "note": "슬롯 35 상층 ↔ 7 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Coil_36": {
+   "material": "copper",
+   "group": "Stator",
+   "volume_mm3": 10805.634,
+   "triangles": 2340,
+   "note": "슬롯 36 상층 ↔ 8 하층, 상 B, 엔드턴 visual_estimate"
+  },
+  "Rotor_Core": {
+   "material": "silicon_steel",
+   "group": "Rotor",
+   "volume_mm3": 571634.951,
+   "triangles": 5464,
+   "note": "D_ro 97.4/D_shaft 36/L 135, 닫힌 슬롯 28 (브리지 Hs0 0.8), 스큐 10° (1 고정자 슬롯피치)"
+  },
+  "Bar_01": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_02": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_03": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_04": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_05": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_06": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_07": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_08": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_09": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_10": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_11": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_12": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_13": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_14": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_15": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_16": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_17": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_18": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_19": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_20": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_21": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_22": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_23": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_24": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_25": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_26": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_27": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "Bar_28": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 10600.754,
+   "triangles": 176,
+   "note": "RMxprt type 1 Bs1 4.5 Bs2 2.4 Hs2 19.8, 트위스트 10°"
+  },
+  "EndRing_DE": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 58358.225,
+   "triangles": 504,
+   "note": "D_er 77.4 h_er 20 w_er 12"
+  },
+  "EndRing_NDE": {
+   "material": "aluminum",
+   "group": "Rotor",
+   "volume_mm3": 58358.225,
+   "triangles": 504,
+   "note": "D_er 77.4 h_er 20 w_er 12"
+  },
+  "Shaft": {
+   "material": "steel",
+   "group": "Rotor",
+   "volume_mm3": 264781.554,
+   "triangles": 1040,
+   "note": "로터부 Ø36(시트), 베어링부 Ø30.0(6206 내경, 표준), DE 축단 Ø28×60 키 8x7x45(카탈로그), NDE Ø25.0 visual_estimate"
+  },
+  "Bearing_DE": {
+   "material": "steel",
+   "group": "Bearings",
+   "volume_mm3": 36995.395,
+   "triangles": 336,
+   "note": "6206 내경 30.0 외경 62.0 폭 16.0 (규격), 위치 x 108.0 visual_estimate"
+  },
+  "Bearing_NDE": {
+   "material": "steel",
+   "group": "Bearings",
+   "volume_mm3": 36995.395,
+   "triangles": 336,
+   "note": "6206 내경 30.0 외경 62.0 폭 16.0 (규격), 위치 x -108.0 visual_estimate"
+  }
+ },
+ "coil_area_mm2": 21.1525,
+ "coil_end_path_rule": "시트 l_end 121.53 mm (설계값 §6 엔드권선 도체 길이, 편측)",
+ "coil_end_path_mm": 121.53095706762899,
+ "coil_end_overhang_mm": 39.64830609201053,
+ "coil_layer_center_r_mm": {
+  "top": 54.70367312621355,
+  "bottom": 61.913514241167256
+ },
+ "coil01_short_offset_mm": 0.3066250451207755,
+ "skew_deg": 10,
+ "layout_visual_estimate": {
+  "shoulder_x_mm": 125.0,
+  "bearing_x_mm": 108.0,
+  "bearing_6206": {
+   "id": 30.0,
+   "od": 62.0,
+   "w": 16.0
+  },
+  "shaft_nde_end_x_mm": -150.0,
+  "shaft_nde_d_mm": 25.0,
+  "coil_clearance_mm": 0.3,
+  "end_exit_mm": 3.0,
+  "end_bulge_mm": 3.0
+ },
+ "coil_count": 36,
+ "quick": false,
+ "sums": {
+  "coils_mm3": 389002.8381040071,
+  "bars_mm3": 296821.109724097,
+  "rings_mm3": 116716.45026616802,
+  "coil01_full_mm3": 10805.634391777963
+ },
+ "cutaway_triangles": 84348
+}

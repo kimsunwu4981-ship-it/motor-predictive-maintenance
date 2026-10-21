@@ -57,6 +57,10 @@ ap.add_argument("--live", action="store_true",
                 help="라이브 모드: WebSocket 브리지(config/live.yaml)로 state 송신·명령 수신. 없으면 기존 동작과 완전히 같다")
 ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
 ap.add_argument("--preset", default="", metavar="demo|full", help="config/render_demo.yaml 프리셋 (해상도·RTX 모드·물리 서브스텝·입자·뷰포트). --low 보다 우선")
+# P4 (2026-10-21): M1 전체 3D 모델 장면 — 22 kW USD 는 숨기고(물리는 그대로 rpm 생성) assets/motors/M1/M1.usd 에 상태 JSON 값만 색·회전으로 매핑 (viz/m1_model.py)
+ap.add_argument("--m1_model", action="store_true", help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다")
+ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only"), help="--m1_model 의 USD variant view")
+ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
 args = ap.parse_args()
 PRESET = None
 if args.preset:
@@ -125,6 +129,10 @@ open_stage(os.path.join(ROOT, "assets", "motor_physics.usd"))
 world = World(stage_units_in_meters=1.0, physics_dt=1 / 240, rendering_dt=1 / 60,
               physics_prim_path="/physicsScene")
 stage = get_current_stage()
+m1 = None
+if args.m1_model:
+    from viz.m1_model import M1Model  # noqa: E402
+    m1 = M1Model(stage, os.path.join(ROOT, "..", "assets", "motors", "M1"), view=args.view, shots_dir=args.m1_shots or None)
 
 dome = UsdLux.DomeLight.Define(stage, "/World/DomeLight")
 dome.CreateIntensityAttr(380.0)
@@ -149,6 +157,8 @@ def _scaled(cam):
     return ([t + (e - t) / GEOM_SCALE for e, t in zip(eye, tgt)], list(tgt))
 CAM_WIDE0, CAM_CLOSE0 = CAM_WIDE, CAM_CLOSE          # 스케일 전 기준값 (핫 모터 스위치가 다시 쓴다)
 CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
+if m1:                                                 # M1 모델은 실치수(370 mm)라 전용 카메라
+    CAM_WIDE, CAM_CLOSE = m1.CAM_WIDE, m1.CAM_CLOSE
 set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
 world.reset()
 if PRESET and PRESET.get("single_viewport") and args.gui:
@@ -170,6 +180,8 @@ builder.build_all()
 particles = CurrentParticles(stage, builder, per_path=PARTICLES_PER_PATH)
 tracks = builder.names("cable") + builder.names("winding") + ["short_loop"]
 particles.attach(tracks)
+if m1:
+    m1.hide_prims(["/World/CurrentPaths"])      # 22 kW 기하에 맞춘 전류 경로·입자는 M1 장면에서 숨김 (HUD 숫자는 그대로)
 ecmap = ElectricalColormap()
 
 # ------------------------------------------------------------------ 엔진
@@ -194,6 +206,11 @@ print(f"[demo] electrical method={cm.method} ({cm.method_reason})"
       + (f"; rated_current_A {cm.rated_current_A} vs motor {i_line} A ({cm.rated_current_mismatch_pct:+.1f} %)" if cm.method == "lut" else ""), flush=True)
 RATED = {**{f"cable_{p}": i_line for p in "ABC"}, **{f"winding_{p}": i_phase for p in "ABC"},
          "short_loop": i_phase}
+M1_PLOOP_MAX = cm.loop_loss_W("itsc_12turn") if m1 else 0.0        # Coil_01_short 발광 정규화 분모 (12턴 LUT 값)
+if m1 and args.m1_shots:
+    # 전기 시나리오(정상 0~20 s, 4턴 20~45, 12턴 45~75)에 맞춘 6장: 외형, cutaway 정상, cutaway 4턴(발광), cutaway 12턴, windings_only, 축단
+    m1.plan_shots([(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "close", "03_cutaway_itsc_4turn.png"),
+                   (62.0, "cutaway", "close", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")])
 
 # ------------------------------------------------------------------ 회전 구동
 art = SingleArticulation(prim_path="/World/Motor", name="motor")
@@ -752,6 +769,13 @@ while simulation_app.is_running():
     with _prof("particles"):
         if show_current:
             particles.update(dt_real, cur, stt, t_real, RATED)
+
+    # ---------- M1 전체 모델: 회전(ω 적분)·열 색·단락 루프 발광 — 새 계산 없음 ----------
+    if m1:
+        m1.step_rotation(w, dt_real)
+        m1.update(th.temperature_C, th.stage, t_real, THRESHOLDS, cm.loop_loss_W(case), M1_PLOOP_MAX, mode)
+        m1.hide_prims(["/World/CurrentPaths"])      # 경로 set_visible(MakeVisible)이 매 프레임 조상을 다시 보이게 하므로 뒤에서 다시 숨긴다
+        m1.run_shots(t_session, set_camera_view, world.render)
 
     # ---------- 카메라 ----------
     if state.highlight_short_loop:

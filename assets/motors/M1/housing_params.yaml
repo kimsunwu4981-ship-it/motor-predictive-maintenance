@@ -1,0 +1,217 @@
+meta:
+  generator: tools/cad/build_housing_100L.py
+  frame: IEC 100L (현대 SSEN HLP-2.2/4, IM B3 + FF215 B35 옵션 플랜지)
+  coords: 축 +X, 발 바닥 Z 0, 축 중심 Z H, 적층 중심 X 0, mm
+catalog:
+  H:
+    value: 100
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  A:
+    value: 160
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  AA:
+    value: 43
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  AB:
+    value: 196
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  HA:
+    value: 13
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  B1:
+    value: 140
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  BB:
+    value: 166
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  C:
+    value: 63
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  K:
+    value: 12
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  HC:
+    value: 211
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  HD:
+    value: 247
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  L:
+    value: 370
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  D:
+    value: 28
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  E:
+    value: 60
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  F:
+    value: 8
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  GE:
+    value: 4
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  key:
+    value: 8x7x45
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  O:
+    value: 28
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+  PF:
+    value: 0.75
+    source: catalog
+    where: 카탈로그 KS 형식 치수표 100L 행 (PDF 5쪽)
+flange_FF215:
+  M:
+    value: 215
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  N:
+    value: 180
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  P:
+    value: 250
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  n:
+    value: 4
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  S:
+    value: 15
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  LA:
+    value: 13
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+  T:
+    value: 4
+    source: catalog
+    where: 카탈로그 KS 플랜지 치수표 100L 행 (PDF 6쪽)
+AD:
+  value_foot_table: 328
+  value_flange_table: 175
+  source: verify
+  note: 발 장착(IM B3) 표의 AD 328 은 그림 B(90–200Fr) 끝면도에서 프레임 측면~단자함 끝까지의 전체 폭 치수로 그려져 있다(축 중심~단자함 상면이 아님). 플랜지(FF215) 표의 AD 175 는 플랜지 그림 기준으로 정의가 다르다. 두 값 모두 카탈로그 원문
+    그대로 보관하고, 하우징 모델은 HD 247(단자함 상면 높이)만 구속으로 쓴다.
+visual_estimate:
+  AC_frame_od_mm:
+    value: 196.0
+    source: visual_estimate
+  frame_body_od_mm:
+    value: 172.0
+    source: visual_estimate
+  frame_len_mm:
+    value: 200.0
+    source: visual_estimate
+  fin_count:
+    value: 28
+    source: visual_estimate
+  fin_h_mm:
+    value: 12.0
+    source: visual_estimate
+  fin_t_mm:
+    value: 3.0
+    source: visual_estimate
+  fin_len_mm:
+    value: 180.0
+    source: visual_estimate
+  endshield_t_mm:
+    value: 25.0
+    source: visual_estimate
+  endshield_od_mm:
+    value: 180.0
+    source: visual_estimate
+  bearing_boss_od_mm:
+    value: 85.0
+    source: visual_estimate
+  bearing_boss_len_mm:
+    value: 30.0
+    source: visual_estimate
+  fancover_od_mm:
+    value: 190.0
+    source: visual_estimate
+  fancover_t_mm:
+    value: 1.5
+    source: visual_estimate
+  fancover_len_mm:
+    value: 60.0
+    source: visual_estimate
+  fancover_slots:
+    value: 24
+    source: visual_estimate
+  tbox_w_mm:
+    value: 96.0
+    source: visual_estimate
+  tbox_l_mm:
+    value: 96.0
+    source: visual_estimate
+  tbox_center_x_mm:
+    value: -25.0
+    source: visual_estimate
+  tbox_base_h_mm:
+    value: 14.0
+    source: visual_estimate
+  eyebolt_ring_od_mm:
+    value: 40.0
+    source: visual_estimate
+  eyebolt_ring_d_mm:
+    value: 8.0
+    source: visual_estimate
+  eyebolt_x_mm:
+    value: 55.0
+    source: visual_estimate
+  foot_pad_len_mm:
+    value: 150.0
+    source: visual_estimate
+layout:
+  shoulder_x_mm:
+    value: 125.0
+    source: visual_estimate
+  bearing_x_mm:
+    value: 108.0
+    source: visual_estimate
+  bearing_6206:
+    value:
+      id: 30.0
+      od: 62.0
+      w: 16.0
+    source: standard
+  shaft_nde_end_x_mm:
+    value: -150.0
+    source: visual_estimate
+  shaft_nde_d_mm:
+    value: 25.0
+    source: visual_estimate
+  coil_clearance_mm:
+    value: 0.3
+    source: visual_estimate
+  end_exit_mm:
+    value: 3.0
+    source: visual_estimate
+  end_bulge_mm:
+    value: 3.0
+    source: visual_estimate
+unused_catalog:
+  AA: 발 측면 폭 — 시각 모델에서 직접 쓰지 않음(발 판은 AB 폭)
+  F_GE_key: 키홈은 내부 모델 Shaft 에 적용

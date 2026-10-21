@@ -1,0 +1,67 @@
+# -*- coding: utf-8 -*-
+"""check_m1_scene.py — M1 장면 실행 로그(logs/m1_model/demo_*.csv) ↔ 대시보드 fleet 로그(logs/fleet/M1/electrical/demo_fleet.csv) 비교 + FPS 집계 → assets/motors/M1/scene_check.json
+
+HUD 숫자(I₂/I₁·전류·상태)는 같은 엔진·같은 LUT 에서 나오므로 장면 끝 시점 값이 같아야 한다. 새 계산 없음 — 로그를 읽어 비교만 한다.
+  py -3.12 -X utf8 tools/cad/check_m1_scene.py
+"""
+from __future__ import annotations
+
+import csv
+import glob
+import json
+import os
+import statistics
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+VIZ = ROOT / "motor_dt_viz"
+
+
+def rows(p):
+    return list(csv.DictReader(open(p, encoding="utf-8", newline="")))
+
+
+def main():
+    runs = sorted(glob.glob(str(VIZ / "logs" / "m1_model" / "demo_*.csv")), key=lambda p: (sum(1 for _ in open(p, encoding="utf-8")), os.path.getmtime(p)))   # 가장 긴(전체 시나리오) 실행
+    if not runs:
+        raise SystemExit("logs/m1_model/demo_*.csv 없음 — 먼저 --m1_model --log_subdir m1_model 로 실행")
+    run = rows(runs[-1]); fleet = rows(VIZ / "logs" / "fleet" / "M1" / "electrical" / "demo_fleet.csv")
+    fleet_status = rows(VIZ / "logs" / "fleet" / "M1" / "electrical" / "status_fleet.csv")      # 판정은 status_fleet.csv 에 있다 (t_real_s 로 맞춤)
+    st_by_t = {round(float(r["t_real_s"]), 2): r["status"] for r in fleet_status}
+    for r in fleet:
+        r["status"] = st_by_t.get(round(float(r["t_real_s"]), 2)) or r.get("status")
+    def last_per_step(rs):
+        out = {}
+        for r in rs:
+            if r["step"] != "manual":
+                out[r["step"]] = r
+        return out
+    a, b = last_per_step(run), last_per_step(fleet)
+    table = []
+    for step in a:
+        if step not in b:
+            continue
+        ra, rb = a[step], b[step]
+        d = {"step": step, "case": ra["case"], "t_run": float(ra["t_real_s"]), "t_fleet": float(rb["t_real_s"])}
+        for k in ("Ia_rms", "Ib_rms", "Ic_rms", "i2_over_i1", "rpm"):
+            va, vb = float(ra[k]), float(rb[k]); d[k] = [va, vb, abs(va - vb)]
+        d["i2_over_in"] = [ra.get("i2_over_in"), rb.get("i2_over_in")]
+        d["status"] = [ra.get("status"), rb.get("status")]
+        d["match"] = all(d[k][2] <= (0.0006 if k == "i2_over_i1" else 0.15 if k != "rpm" else 30.0) for k in ("Ia_rms", "Ib_rms", "Ic_rms", "i2_over_i1", "rpm")) and d["status"][0] == d["status"][1]
+        table.append(d)
+    fps = [float(r["fps"]) for r in run if float(r["fps"]) > 0 and float(r["t_s"]) > 5]
+    # 변형별(스크린샷 계획: 0~12 full, 12~66 cutaway, 66~70 windings_only, 70~ full)
+    def seg(lo, hi):
+        v = [float(r["fps"]) for r in run if lo <= float(r["t_real_s"]) < hi and float(r["fps"]) > 0]
+        return round(statistics.mean(v), 1) if v else None
+    out = {"run_csv": os.path.relpath(runs[-1], ROOT), "fleet_csv": "motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv", "steps": table,
+           "all_match": all(d["match"] for d in table), "n_steps": len(table),
+           "fps": {"mean": round(statistics.mean(fps), 1) if fps else None, "min": round(min(fps), 1) if fps else None, "full_0_12s": seg(6, 12), "cutaway_12_66s": seg(14, 66), "windings_only_66_70s": seg(66, 70), "full_70s_": seg(70, 1e9)}}
+    (ROOT / "assets" / "motors" / "M1" / "scene_check.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    for d in table:
+        print(f"{d['step']:18s} run/fleet Ia {d['Ia_rms'][0]:.1f}/{d['Ia_rms'][1]:.1f} I2/I1 {d['i2_over_i1'][0]:.4f}/{d['i2_over_i1'][1]:.4f} status {d['status'][0]}/{d['status'][1]} {'✓' if d['match'] else '✗'}")
+    print("fps", out["fps"], "all_match", out["all_match"])
+
+
+if __name__ == "__main__":
+    main()

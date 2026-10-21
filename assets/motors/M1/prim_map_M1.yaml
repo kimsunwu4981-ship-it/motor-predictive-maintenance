@@ -1,0 +1,215 @@
+meta:
+  usd: assets/motors/M1/M1.usd
+  root_in_scene: /World/M1
+  rotor_xform: /World/M1/Rotor xformOp:rotateX
+  thermal_nodes:
+  - winding
+  - stator_core
+  - rotor
+  - shaft
+  - bearing_de
+  - bearing_nde
+  - endshield_de
+  - endshield_nde
+  - frame
+  note: 값은 상태 JSON(T, stage, p_loop_total_W, rpm)에서만 온다. 색 램프는 config/colors.yaml ThermalColormap 그대로. 코일 상 배치는 datasheet_v4.yaml winding_table
+groups:
+  winding_A:
+    thermal: winding
+    prims:
+    - /Stator/Coils/Coil_01
+    - /Stator/Coils/Coil_02
+    - /Stator/Coils/Coil_03
+    - /Stator/Coils/Coil_10
+    - /Stator/Coils/Coil_11
+    - /Stator/Coils/Coil_12
+    - /Stator/Coils/Coil_19
+    - /Stator/Coils/Coil_20
+    - /Stator/Coils/Coil_21
+    - /Stator/Coils/Coil_28
+    - /Stator/Coils/Coil_29
+    - /Stator/Coils/Coil_30
+    base_color:
+    - 0.95
+    - 0.85
+    - 0.2
+    roughness: 0.4
+    metallic: 0.6
+    note: A상 코일 (권선 배치표) — 권선 온도 색 램프
+  winding_B:
+    thermal: winding
+    prims:
+    - /Stator/Coils/Coil_07
+    - /Stator/Coils/Coil_08
+    - /Stator/Coils/Coil_09
+    - /Stator/Coils/Coil_16
+    - /Stator/Coils/Coil_17
+    - /Stator/Coils/Coil_18
+    - /Stator/Coils/Coil_25
+    - /Stator/Coils/Coil_26
+    - /Stator/Coils/Coil_27
+    - /Stator/Coils/Coil_34
+    - /Stator/Coils/Coil_35
+    - /Stator/Coils/Coil_36
+    base_color:
+    - 0.2
+    - 0.85
+    - 0.95
+    roughness: 0.4
+    metallic: 0.6
+  winding_C:
+    thermal: winding
+    prims:
+    - /Stator/Coils/Coil_04
+    - /Stator/Coils/Coil_05
+    - /Stator/Coils/Coil_06
+    - /Stator/Coils/Coil_13
+    - /Stator/Coils/Coil_14
+    - /Stator/Coils/Coil_15
+    - /Stator/Coils/Coil_22
+    - /Stator/Coils/Coil_23
+    - /Stator/Coils/Coil_24
+    - /Stator/Coils/Coil_31
+    - /Stator/Coils/Coil_32
+    - /Stator/Coils/Coil_33
+    base_color:
+    - 0.85
+    - 0.35
+    - 0.95
+    roughness: 0.4
+    metallic: 0.6
+  winding_short:
+    thermal: winding
+    prims:
+    - /Stator/Coils/Coil_01_short
+    base_color:
+    - 1.0
+    - 0.1
+    - 0.05
+    roughness: 0.4
+    metallic: 0.6
+    short_loop: true
+    note: Coil_01_short 발광 = p_loop_total_W / p_loop(12턴)
+  stator_core:
+    thermal: stator_core
+    prims:
+    - /Stator/Core
+    base_color:
+    - 0.3
+    - 0.31
+    - 0.34
+    roughness: 0.6
+    metallic: 0.3
+  rotor_core:
+    thermal: rotor
+    prims:
+    - /Rotor/Core
+    base_color:
+    - 0.3
+    - 0.31
+    - 0.34
+    roughness: 0.6
+    metallic: 0.3
+  rotor_cage:
+    thermal: rotor
+    prims:
+    - /Rotor/Bars/Bar_01
+    - /Rotor/Bars/Bar_02
+    - /Rotor/Bars/Bar_03
+    - /Rotor/Bars/Bar_04
+    - /Rotor/Bars/Bar_05
+    - /Rotor/Bars/Bar_06
+    - /Rotor/Bars/Bar_07
+    - /Rotor/Bars/Bar_08
+    - /Rotor/Bars/Bar_09
+    - /Rotor/Bars/Bar_10
+    - /Rotor/Bars/Bar_11
+    - /Rotor/Bars/Bar_12
+    - /Rotor/Bars/Bar_13
+    - /Rotor/Bars/Bar_14
+    - /Rotor/Bars/Bar_15
+    - /Rotor/Bars/Bar_16
+    - /Rotor/Bars/Bar_17
+    - /Rotor/Bars/Bar_18
+    - /Rotor/Bars/Bar_19
+    - /Rotor/Bars/Bar_20
+    - /Rotor/Bars/Bar_21
+    - /Rotor/Bars/Bar_22
+    - /Rotor/Bars/Bar_23
+    - /Rotor/Bars/Bar_24
+    - /Rotor/Bars/Bar_25
+    - /Rotor/Bars/Bar_26
+    - /Rotor/Bars/Bar_27
+    - /Rotor/Bars/Bar_28
+    - /Rotor/EndRing_DE
+    - /Rotor/EndRing_NDE
+    base_color:
+    - 0.8
+    - 0.81
+    - 0.83
+    roughness: 0.4
+    metallic: 0.9
+  shaft:
+    thermal: shaft
+    prims:
+    - /Rotor/Shaft
+    base_color:
+    - 0.58
+    - 0.59
+    - 0.61
+    roughness: 0.35
+    metallic: 0.9
+  bearing_de:
+    thermal: bearing_de
+    prims:
+    - /Bearings/DE
+    base_color:
+    - 0.62
+    - 0.63
+    - 0.65
+    roughness: 0.3
+    metallic: 0.9
+  bearing_nde:
+    thermal: bearing_nde
+    prims:
+    - /Bearings/NDE
+    base_color:
+    - 0.62
+    - 0.63
+    - 0.65
+    roughness: 0.3
+    metallic: 0.9
+  endshield_de:
+    thermal: endshield_de
+    prims:
+    - /Housing/EndShield_DE
+    base_color:
+    - 0.36
+    - 0.4
+    - 0.44
+    roughness: 0.7
+    metallic: 0.3
+  endshield_nde:
+    thermal: endshield_nde
+    prims:
+    - /Housing/EndShield_NDE
+    base_color:
+    - 0.36
+    - 0.4
+    - 0.44
+    roughness: 0.7
+    metallic: 0.3
+  frame:
+    thermal: frame
+    prims:
+    - /Housing/Frame
+    - /Housing/Foot
+    - /Housing/TerminalBox
+    - /Housing/FanCover
+    - /Housing/Eyebolt
+    base_color:
+    - 0.36
+    - 0.4
+    - 0.44
+    roughness: 0.7
+    metallic: 0.3

@@ -297,3 +297,9 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
   보이게 만드는 일이다.
 - Δ결선이라 케이블은 선전류(정격 43.7 A), 권선은 상전류(정격 25.2 A) 기준이다. 두 기준을
   섞지 않도록 `config/motor.yaml` 에 나눠 두었다.
+
+## M1 전체 3D 모델 (100L 하우징 + 내부) — P4, 2026-10-21
+
+1. `py -3.12 -X utf8 tools/cad/datasheet_to_yaml.py && py -3.12 -X utf8 tools/cad/build_internals_M1.py && py -3.12 -X utf8 tools/cad/build_housing_100L.py` (저장소 루트, CadQuery) → `assets/motors/M1/*.step|.obj|.glb`
+2. `py -3.12 -X utf8 -m pytest tests/test_m1_model.py -q` → `py -3.12 -X utf8 tools/cad/write_model_doc.py` (`docs/assets/M1_model.md`)
+3. `C:\ISSACS~1\python.bat tools\cad\build_usd_M1.py` (USD 반입·조립) → `cd motor_dt_viz ; C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --m1_model [--view cutaway]`

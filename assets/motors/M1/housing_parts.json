@@ -1,0 +1,72 @@
+{
+ "tag": "M1_housing_100L",
+ "units": "mm",
+ "axis": "+X",
+ "origin": "stack center",
+ "generated_s": 2.1,
+ "triangles_total": 4964,
+ "parts": {
+  "Frame": {
+   "material": "cast_iron",
+   "group": "Housing",
+   "volume_mm3": 1848781.679,
+   "triangles": 948,
+   "note": "원통 Ø172.0+핀 28개(끝 Ø196.0) visual_estimate"
+  },
+  "Foot": {
+   "material": "cast_iron",
+   "group": "Housing",
+   "volume_mm3": 417086.939,
+   "triangles": 444,
+   "note": "BB 166.0×AB 196.0×HA 13.0, 구멍 ØK 12.0 @A 160.0/B 140.0, C 63.0 (카탈로그)"
+  },
+  "EndShield_DE": {
+   "material": "cast_iron",
+   "group": "Housing",
+   "volume_mm3": 1033600.476,
+   "triangles": 952,
+   "note": "FF215 플랜지 P 250.0/N 180.0/M 215.0/n 4×ØS 15.0/LA 13.0/T 4.0 (카탈로그 B35 옵션), 두께·보스 visual_estimate"
+  },
+  "EndShield_NDE": {
+   "material": "cast_iron",
+   "group": "Housing",
+   "volume_mm3": 644729.425,
+   "triangles": 312,
+   "note": "visual_estimate"
+  },
+  "FanCover": {
+   "material": "steel",
+   "group": "Housing",
+   "volume_mm3": 88734.002,
+   "triangles": 684,
+   "note": "Ø190.0×60 visual_estimate, 뒷면 x -185 (L 370.0 = E 60.0 + 어깨~뒷면)"
+  },
+  "TerminalBox": {
+   "material": "cast_iron",
+   "group": "Housing",
+   "volume_mm3": 539927.793,
+   "triangles": 172,
+   "note": "상면 HD 247.0(카탈로그), 크기 96.0×96.0 위치 x -25.0 visual_estimate, 커넥터 ØO 28.0 PF 0.75, AD verify"
+  },
+  "Eyebolt": {
+   "material": "steel",
+   "group": "Housing",
+   "volume_mm3": 7409.432,
+   "triangles": 1452,
+   "note": "상단 z = HC 211.0(카탈로그), 링 Ø40.0 visual_estimate"
+  }
+ },
+ "axis_height_H_mm": 100.0,
+ "shoulder_x_mm": 125.0,
+ "shaft_end_x_mm": 185.0,
+ "fancover_back_x_mm": -185.0,
+ "foot_holes_x_mm": [
+  62.0,
+  -78.0
+ ],
+ "foot_holes_y_mm": [
+  -80.0,
+  80.0
+ ],
+ "cutaway_triangles": 3584
+}

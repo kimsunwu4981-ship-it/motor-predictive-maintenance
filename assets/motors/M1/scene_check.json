@@ -1,0 +1,296 @@
+{
+ "run_csv": "motor_dt_viz\\logs\\m1_model\\demo_20261021_110742.csv",
+ "fleet_csv": "motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv",
+ "steps": [
+  {
+   "step": "healthy",
+   "case": "healthy",
+   "t_run": 19.902,
+   "t_fleet": 19.75,
+   "Ia_rms": [
+    4.9,
+    4.9,
+    0.0
+   ],
+   "Ib_rms": [
+    4.7,
+    4.7,
+    0.0
+   ],
+   "Ic_rms": [
+    4.7,
+    4.7,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.027,
+    0.027,
+    0.0
+   ],
+   "rpm": [
+    1714.4,
+    1730.0,
+    15.599999999999909
+   ],
+   "i2_over_in": [
+    "0.027",
+    null
+   ],
+   "status": [
+    "SAFE",
+    "SAFE"
+   ],
+   "match": true
+  },
+  {
+   "step": "itsc_4turn",
+   "case": "itsc_4turn",
+   "t_run": 44.899,
+   "t_fleet": 45.0,
+   "Ia_rms": [
+    5.0,
+    5.0,
+    0.0
+   ],
+   "Ib_rms": [
+    4.7,
+    4.7,
+    0.0
+   ],
+   "Ic_rms": [
+    4.5,
+    4.5,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.0726,
+    0.0726,
+    0.0
+   ],
+   "rpm": [
+    1714.4,
+    1730.0,
+    15.599999999999909
+   ],
+   "i2_over_in": [
+    "0.0726",
+    null
+   ],
+   "status": [
+    "WARN",
+    "WARN"
+   ],
+   "match": true
+  },
+  {
+   "step": "itsc_12turn",
+   "case": "itsc_12turn",
+   "t_run": 74.775,
+   "t_fleet": 75.0,
+   "Ia_rms": [
+    5.9,
+    5.9,
+    0.0
+   ],
+   "Ib_rms": [
+    4.8,
+    4.8,
+    0.0
+   ],
+   "Ic_rms": [
+    3.7,
+    3.7,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.2696,
+    0.2696,
+    0.0
+   ],
+   "rpm": [
+    1714.4,
+    1730.0,
+    15.599999999999909
+   ],
+   "i2_over_in": [
+    "0.2696",
+    null
+   ],
+   "status": [
+    "DANGER",
+    "DANGER"
+   ],
+   "match": true
+  },
+  {
+   "step": "overload",
+   "case": "overload",
+   "t_run": 94.878,
+   "t_fleet": 95.0,
+   "Ia_rms": [
+    6.6,
+    6.6,
+    0.0
+   ],
+   "Ib_rms": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "Ic_rms": [
+    6.3,
+    6.3,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.027,
+    0.027,
+    0.0
+   ],
+   "rpm": [
+    1690.1,
+    1705.5,
+    15.400000000000091
+   ],
+   "i2_over_in": [
+    "0.0364",
+    null
+   ],
+   "status": [
+    "DANGER",
+    "DANGER"
+   ],
+   "match": true
+  },
+  {
+   "step": "voltage_unbalance",
+   "case": "voltage_unbalance",
+   "t_run": 119.925,
+   "t_fleet": 120.0,
+   "Ia_rms": [
+    5.1,
+    5.1,
+    0.0
+   ],
+   "Ib_rms": [
+    4.4,
+    4.4,
+    0.0
+   ],
+   "Ic_rms": [
+    4.6,
+    4.6,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.0595,
+    0.0595,
+    0.0
+   ],
+   "rpm": [
+    1714.4,
+    1730.0,
+    15.599999999999909
+   ],
+   "i2_over_in": [
+    "0.0595",
+    null
+   ],
+   "status": [
+    "WARN",
+    "WARN"
+   ],
+   "match": true
+  },
+  {
+   "step": "single_phasing",
+   "case": "single_phasing",
+   "t_run": 144.969,
+   "t_fleet": 144.75,
+   "Ia_rms": [
+    0.2,
+    0.2,
+    0.0
+   ],
+   "Ib_rms": [
+    6.0,
+    6.0,
+    0.0
+   ],
+   "Ic_rms": [
+    6.0,
+    6.0,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.4792,
+    0.4792,
+    0.0
+   ],
+   "rpm": [
+    1714.4,
+    1730.0,
+    15.599999999999909
+   ],
+   "i2_over_in": [
+    "0.414",
+    null
+   ],
+   "status": [
+    "DANGER",
+    "DANGER"
+   ],
+   "match": true
+  },
+  {
+   "step": "no_load",
+   "case": "no_load",
+   "t_run": 164.831,
+   "t_fleet": 164.75,
+   "Ia_rms": [
+    1.6,
+    1.6,
+    0.0
+   ],
+   "Ib_rms": [
+    1.5,
+    1.5,
+    0.0
+   ],
+   "Ic_rms": [
+    1.5,
+    1.5,
+    0.0
+   ],
+   "i2_over_i1": [
+    0.027,
+    0.027,
+    0.0
+   ],
+   "rpm": [
+    1783.8,
+    1800.0,
+    16.200000000000045
+   ],
+   "i2_over_in": [
+    "0.0089",
+    null
+   ],
+   "status": [
+    "DANGER",
+    "DANGER"
+   ],
+   "match": true
+  }
+ ],
+ "all_match": true,
+ "n_steps": 7,
+ "fps": {
+  "mean": 58.4,
+  "min": 47.2,
+  "full_0_12s": 50.3,
+  "cutaway_12_66s": 56.5,
+  "windings_only_66_70s": 58.5,
+  "full_70s_": 60.1
+ }
+}

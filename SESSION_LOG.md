@@ -766,3 +766,36 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **D6**: `tools/electrical/verify_lut_integration.py` → `docs/electrical/lut_integration_report.md` (V1 LUT↔mccm ±1 %, V2 합성↔LUT ±1 %/±1°, V3 고유 비대칭 범위 4턴 0.021~0.075, V4 legacy, V5 부하 50 vs 100 %: I₂/I₁ +47 % vs I₂/I_n 0 %, V6 thresholds 판정표(4턴 SAFE~WARN, 8턴부터 DANGER), V7 라이브 10 s, V8 금지 파일 clean). `docs/judgment_basis.md` 신설(근거·임계값 만남·I₂/I_n 제안·핫스팟 노드 제안). 테스트: 엔진 113, 대시보드 63 통과.
 - 삽질: bash heredoc 으로 긴 파이썬 파일 쓰기 실패(따옴표 파싱) → Write 도구; LUT 0 % 행의 1e-10 잔차가 ±1 % 검사에서 +199 % 로 나와 0 처리; 12턴 P_loop_total 977 W 는 지시문의 "≈590 W" 보다 크다(R_f 손실 487 W + 단락 턴 동손 490 W 합 — μ·R1_hot 항 포함).
 - 결정 대기: ① rated_current_A 4.73(LUT) vs M1.yaml 5.0 — 어느 쪽을 I₂/I_n 분모·파형 기준으로 쓸지 ② 12턴 손실 977 W 를 권선 노드에 그대로 넣을지(끄기 `loop_loss_to_winding: false`) ③ safe_below 0.03 과 정상 0.027 의 여유 0.003 (제안만).
+
+## 15. M1(현대 HLP-2.2/4) 전체 3D 모델 — 100L 하우징 + 내부 재구성 → Isaac Sim 연결 (P4, 2026-10-21)
+
+지시: Maxwell 저장소(읽기 전용)의 데이터시트·geometry_check 로 M1 내부(고정자·권선·로터)와 100L 하우징을 CadQuery 로 재구성, 검증(체적 ±2 %·치수 ±0.5 mm·분할비·삼각형), USD 조립(variant 3종), M1 전용 장면에서 회전·발광·온도 색을 상태 JSON 값으로만 표시. 승인 범위 `tools/cad/`, `assets/motors/M1/`, `tests/`, M1 장면·경로 매핑 추가. `config/`·`engine/`·판정 코드·22 kW USD 불변, 새 계산 없음.
+
+### D0 환경
+- Python 3.12 + CadQuery 2.8.0(기존) + trimesh 5.1.1(설치). Isaac Sim 4.5 headless 로 `omni.kit.asset_converter` OBJ→USD 성공; `omni.kit.converter.cad`(STEP)는 서비스형이라 스크립트 직접 호출 불가 → OBJ 경로 채택.
+- 기존 장면: 회전 = `/World/Motor` 아티큘레이션 토크 루프(`demo_integrated.py` 709~715행, rpm = 조인트 속도), 색 = `viz/material_driver.MaterialDriver.update` + `viz/colormap.ThermalColormap`, 상태 JSON 826~845행(`rpm`, `T{9노드}`, `stage`, `i2_over_i1`, `i2_over_in`, `p_loop_total_W`).
+- 입력 복사 `assets/motors/M1/inputs/` + `PROVENANCE.md`(sha256). **지시서의 `datasheet_v4.yaml` 은 Maxwell 저장소에 없다** — v4 데이터시트는 xlsx 라 `tools/cad/datasheet_to_yaml.py` 가 키 이름으로 풀어 yaml 을 만든다(165 기호, 숫자 수기 입력 없음). Maxwell 3D 는 RMxprt v2 오버라이드 치수(로터 브리지 0.8, 개구 2.0, 쐐기 1.5, 바 19.8/4.5/2.4, N_c 16)로 만들어졌으므로 `rmxprt_v2m2.json` 을 4번째 입력으로 복사(yaml `maxwell_model` 절) — 체적 동일성 기준.
+- 카탈로그 PDF 치수표(KS 형식·플랜지, 100L 행)를 pypdf 로 읽어 yaml 에 그대로 넣음. **AD 328 확인**: 발 장착 표에 328 로 인쇄(90L 263 → 112M 348), 플랜지 표는 175. 그림 B 끝면도에서 AD 는 프레임 측면~단자함 끝 전체 폭 치수선이라 정의가 통상(축 중심~단자함 상면)과 다름 → HD 247·HC 211 만 구속, AD 는 `verify`.
+
+### ① 내부 `tools/cad/build_internals_M1.py`
+- 좌표 축 +X, 적층 중심 원점, mm. Stator_Core(치+요크 단일, RMxprt type 2 슬롯 36 컷), Coil_01…36(슬롯 안 사다리꼴 21.1525 mm² = Maxwell CoilTerm 단면, 피치 8, 엔드턴 = 3D 스플라인 스윕 `visual_estimate`, 경로 길이 = 시트 l_end 121.53 mm 에 맞춤 → 축 돌출 39.65 mm), Coil_01_short(안쪽 균일 오프셋 0.307 mm 셸, 체적비 25.00 %), Rotor_Core(닫힌 슬롯 28, 브리지 0.8), Bar_01…28(twistExtrude 10°), EndRing_DE/NDE(D_er 77.4, 20×12), Shaft(Ø36 → Ø30 베어링부 → DE Ø28×60 + 키홈 8×7×45, NDE Ø25), Bearing_DE/NDE(6206). 재질 태그 json. 출력 STEP(27 MB, `.gitignore` *.step 이라 미추적 — 스크립트로 재생성)·OBJ(그룹=부품)·GLB·cutaway(Y>0∧Z>0 사분면 절단, 고정자·하우징만). 삼각형 106,708(cutaway 80,694), 11.7 s.
+- 체적: 치+요크 1,072,843 vs 1,077,645 (−0.45 %), 케이지 413,538 vs 409,740 (+0.93 %) — ±2 % 안. **코일 1개 10,806 vs 10,234 (+5.6 %)**: 지시 규칙(시트 엔드권선 길이)과 검증 기준(Maxwell RMxprt 자동 엔드코일 체적)이 동시에 만족되지 않음 → 기본은 시트 규칙, `--end-path geometry_check`(경로 106.9 mm)면 Maxwell 체적에 맞음. 결정 대기(docs/assets/M1_model.md §5).
+
+### ② 하우징 `tools/cad/build_housing_100L.py`
+- 카탈로그 구속: H A AA AB HA B1 BB C K HC HD L D E F GE 키 O PF + FF215(M N P n S LA T, B35 옵션으로 DE 엔드쉴드에 포함 — P 250 > 2H 라 발 바닥 아래 25 mm). visual_estimate: AC 196, 핀 28, 엔드쉴드 25, 팬커버 Ø190×60, 단자함 96×96(상면 HD 247), 아이볼트(상단 HC 211), 배치(어깨 x 125, 베어링 x ±108). `housing_params.yaml` 항목마다 source. 삼각형 4,956.
+
+### ③ 검증 `tests/test_m1_model.py` — 6 passed, 1 skipped
+- 체적(코어·케이지) PASS, 코일 합(시트 규칙 기준) PASS / geometry_check 기준은 skip(+5.59 %, 결정 대기), 슬롯 36·바 28·스큐 10.00°(GLB 양 끝단 중심각)·분할비 25.00 % PASS, 하우징 7치수 STEP 재판독(H 100·A 160·B 140·C 63·D 28·E 60·L 370) 모두 ±0.5 mm PASS, 삼각형 111,664 ≤ 300k PASS. 결과 표 `docs/assets/M1_model.md`(`tools/cad/write_model_doc.py`).
+- 삽질: cadquery importStep 은 이름을 잃는다 → 발은 "두께 < 30 인 가장 낮은 솔리드", 축 어깨는 DE 엔드쉴드의 +X 평면 중 바깥에서 두 번째(스피곳 T 4 제외)로 찾음.
+
+### ④ USD `tools/cad/build_usd_M1.py` (Isaac python)
+- OBJ 4개 → M1_internals(_cutaway).usd(메시 72)·M1_housing(_cutaway).usd(7) → `M1.usd` 조립 105 prim: /M1(스케일 0.001) /Housing /Stator(Core, Coils/Coil_01…36, Coil_01_short) /Rotor(xformOp:rotateX; Core, Bars, EndRing, Shaft) /Bearings /Looks(재질 9종: 구리·알루미늄·규소강·주철·강·상 A/B/C·단락). variantSet `view` full/cutaway/windings_only(참조 교체·가시성). 적층 중심 x 0, 축 z 100 mm.
+- 삽질(중요): 참조 대상이 Mesh 인데 자리 prim 을 `UsdGeom.Xform.Define` 으로 만들면 로컬 typeName(Xform)이 이겨 **메시가 렌더되지 않는다** → 타입 없는 `DefinePrim` 으로 바꿔 해결.
+
+### ⑤ 장면 `motor_dt_viz/viz/m1_model.py` + `demo_integrated.py --m1_model [--view] [--m1_shots DIR]`
+- /World/M1 에 M1.usd 참조, 22 kW 모델(/World/Motor)·전류 경로(/World/CurrentPaths)는 숨김(물리 조인트는 그대로 rpm 생성). 회전 = ω 적분 → /World/M1/Rotor rotateX. 색 = `assets/motors/M1/prim_map_M1.yaml`(열 노드 9개 ↔ prim 그룹 13, 코일은 권선 배치표 상별 색) × 기존 ThermalColormap. Coil_01_short 발광 = p_loop_total_W / p_loop(12턴 LUT). `config/prim_map.yaml` 불변.
+- 7 장면 HUD ↔ 대시보드 fleet 로그: 장면 끝 Ia/Ib/Ic·I₂/I₁·판정 **7/7 일치**(같은 엔진·LUT; `tools/cad/check_m1_scene.py` → `assets/motors/M1/scene_check.json`). FPS: 1600×900 평균 58.4, 최소 47.2 (full 50 / cutaway 57 / windings_only 59) — 30 FPS 충족, 엔드턴 분할 수 조정 불필요.
+- 제한: 전기 시나리오의 7 장면은 DT 의 정상·4턴·12턴·과부하·불평형·결상·무부하이고, 지시서의 8·16턴·저항성·반부하는 `config/electrical.yaml` 케이스가 아니라(config 불변) 장면에서 재생할 수 없다 — LUT 격자값은 Maxwell 수치표(시트 5)에 있음. 전류 입자·케이블은 22 kW 기하 전용이라 M1 장면에서 숨긴다(HUD 숫자는 그대로).
+
+### ⑥ 산출
+- 스크린샷 6장 `docs/assets/screenshots/M1/`(외형, cutaway 정상, cutaway 4턴 발광, cutaway 12턴, windings_only, 축단), `docs/assets/M1_model.md`, `docs/glossary.md`(USD variant·불리언 절단·로프트/스윕), `motor_dt_viz/README.md` 실행 3줄, 커밋 `assets: M1 full 3D model (housing + internals) + Isaac Sim scene`.

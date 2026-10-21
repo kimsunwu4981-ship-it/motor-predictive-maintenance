@@ -1,0 +1,227 @@
+{
+ "tag": "v2m2_material60",
+ "date": "2026-10-19 11:37",
+ "design_sheet_file": "C:\\Users\\sunwu\\AEDT_work\\M1_HLP2.2-4\\M1_HLP2.2-4.aedtresults\\M1_RMxprt_v2m2.results\\DV132_SOL54_V126.MExportData\\0.res",
+ "design": "M1_RMxprt_v2m2",
+ "base_tag": "v2m",
+ "material": {
+  "name": "M400-50A_user60",
+  "based_on": "M400-50A_user",
+  "core_loss_refit": {
+   "Kh": 179.4535782027329,
+   "Kc": 0.46599564212550576,
+   "Ke": 6.3447028254218525,
+   "fit_points": "50 Hz 18점 + 60 Hz 1.5 T 1점, 상대오차 가중 최소제곱",
+   "rel_rms_pct": 8.066758282166111,
+   "rel_max_pct": 12.533356324617081,
+   "check_60Hz_1p5T": {
+    "fit": 4.339999999999999,
+    "datasheet": 4.34,
+    "dev_pct": -2.220446049250313e-14
+   },
+   "check_50Hz_1p5T": {
+    "fit": 3.497501091489882,
+    "datasheet": 3.57,
+    "dev_pct": -2.03078175098369
+   },
+   "check_50Hz_1p0T": {
+    "fit": 1.6079037937253287,
+    "datasheet": 1.49,
+    "dev_pct": 7.913006290290525
+   },
+   "ratio_vs_M19_29G_60Hz_1p5T": 1.3030293932206438
+  },
+  "refit_within_3pct_60Hz": true,
+  "core_loss_correction_factor": 1.0
+ },
+ "inputs": {
+  "N_c": 16,
+  "conductors_per_slot": 32,
+  "Q_s": 36,
+  "Q_r": 28,
+  "slot_type_s": 2,
+  "slot_type_r": 1,
+  "Bs0_s": 2.0,
+  "Hs0_s": 0.5,
+  "Hs1_s": 1.5,
+  "Hs2_s": 10.8103,
+  "Bs1_s": 4.86197,
+  "Bs2_s": 7.39398,
+  "rotor": {
+   "type": 1,
+   "Bs0": 1.0,
+   "Hs0": 0.8,
+   "Hs01": 0.8,
+   "Bs1": 4.5,
+   "Bs2": 2.4,
+   "Hs2": 19.8,
+   "cast": true,
+   "end_ring_w": 12.0,
+   "end_ring_h": 20.0,
+   "end_length": 0.0
+  },
+  "skew_rotor_pitch": 0.777778,
+  "wire_d": 0.9,
+  "wire_wrap": 0.08,
+  "strands": 2,
+  "coil_pitch": 8,
+  "parallel": 1,
+  "steel": "M400-50A_user60"
+ },
+ "results": {
+  "I_rated": 4.67029,
+  "pf": 0.790916,
+  "eff": 89.5818,
+  "slip": 0.0249453,
+  "rpm": 1755.1,
+  "T_rated": 11.9695,
+  "I_st_ratio": 8.2404,
+  "T_st_ratio": 3.08651,
+  "T_max_ratio": 4.15753,
+  "I_st_A": 38.4851,
+  "T_st_Nm": 36.944,
+  "T_max_Nm": 49.7636,
+  "s_max": 0.3,
+  "I_max_A": 26.9364,
+  "I_m": 2.12923,
+  "I_fe": 0.0920697,
+  "I_2p": 3.70262,
+  "R1": 1.60973,
+  "R1_20C": 1.24388,
+  "R2p": 1.37589,
+  "X1": 2.00296,
+  "X2p": 10.2834,
+  "Xm": 97.5666,
+  "Rfe": 2256.35,
+  "X_end": 0.256712,
+  "X_skew": 0.49597,
+  "P_cu1": 105.333,
+  "P_cu2": 56.5878,
+  "P_fe": 57.3801,
+  "P_mech": 11.9666,
+  "P_stray": 24.5806,
+  "P_total": 255.847,
+  "P_in_kW": 2.45577,
+  "P_out_kW": 2.19992,
+  "fill_rmxprt_pct": 70.0746,
+  "J_cu": 3.67062,
+  "J_bar": 1.83435,
+  "J_ring": 1.3481,
+  "B_g": 0.608495,
+  "B_tooth_s": 1.45856,
+  "B_yoke_s": 1.28657,
+  "B_tooth_r": 1.55315,
+  "B_yoke_r": 0.677719,
+  "slot_area_gross": 93.861,
+  "slot_area_net": 87.7145,
+  "tooth_top_w": 4.04464,
+  "tooth_bot_w": 3.40662,
+  "N_ph": 192.0,
+  "k_w": 0.945214,
+  "half_turn_len": 230.896,
+  "LR_X1": 1.62626,
+  "leakage_breakdown": {
+   "X1_slot": 1.17725,
+   "X1_end": 0.256712,
+   "X1_harmonic": 0.569004,
+   "X2_slot": 7.70096,
+   "X2_end": 0.224954,
+   "X2_differential": 1.8615,
+   "X1_end_2": 0.256712,
+   "X1_diff_2": 0.569004,
+   "X2_skew": 0.49597,
+   "locked_rotor": {
+    "R1": 1.60973,
+    "R2": 1.67684,
+    "note": "Locked-Rotor Stator/Rotor Leakage Reactance 는 .res 에서 두 줄로 나뉘어 자동 파싱 불가 → design_sheet 참조",
+    "X1": 1.62626,
+    "X2": 3.18023
+   }
+  }
+ },
+ "judge": {
+  "targets": {
+   "I_n": 4.73,
+   "pf": 0.79,
+   "eff": 0.895
+  },
+  "I_dev_pct": -1.2623678646934589,
+  "pf_dev": 0.0009159999999999169,
+  "eff_dev_pt": 0.0008179999999999854,
+  "pass_I_5pct": true,
+  "pass_pf_0p03": true,
+  "pass_eff_1p5pt": true,
+  "adopt": true
+ },
+ "adopt": true,
+ "diff_vs_v2m": {
+  "I_rated": {
+   "v2m": 4.67583,
+   "v2m2": 4.67029,
+   "dev_pct": -0.11848163855402438
+  },
+  "pf": {
+   "v2m": 0.791468,
+   "v2m2": 0.790916,
+   "dev_pct": -0.069743817817014
+  },
+  "eff": {
+   "v2m": 89.4269,
+   "v2m2": 89.5818,
+   "dev_pct": 0.17321410000794568
+  },
+  "P_fe": {
+   "v2m": 61.395,
+   "v2m2": 57.3801,
+   "dev_pct": -6.539457610554611
+  },
+  "I_m": {
+   "v2m": 2.12893,
+   "v2m2": 2.12923,
+   "dev_pct": 0.014091585914055571
+  },
+  "Xm": {
+   "v2m": 97.5751,
+   "v2m2": 97.5666,
+   "dev_pct": -0.008711238830405588
+  },
+  "Rfe": {
+   "v2m": 2108.57,
+   "v2m2": 2256.35,
+   "dev_pct": 7.00854133370008
+  },
+  "P_total": {
+   "v2m": 260.136,
+   "v2m2": 255.847,
+   "dev_pct": -1.648752959990163
+  },
+  "slip": {
+   "v2m": 0.0249511,
+   "v2m2": 0.0249453,
+   "dev_pct": -0.023245468135679737
+  },
+  "rpm": {
+   "v2m": 1755.09,
+   "v2m2": 1755.1,
+   "dev_pct": 0.0005697713507668567
+  }
+ },
+ "missing": [],
+ "swap_3d": {
+  "M1_3D_quarter": [
+   "Stator_Yoke",
+   "Rotor_Core",
+   "Stator_Teeth"
+  ],
+  "M1_3D_full": [
+   "Stator_Yoke",
+   "Rotor_Core",
+   "Stator_Teeth"
+  ],
+  "M1_3D_full_ITSC": [
+   "Stator_Yoke",
+   "Rotor_Core",
+   "Stator_Teeth"
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "files": {
+  "int_full": "M1_internals.usd",
+  "int_cut": "M1_internals_cutaway.usd",
+  "hou_full": "M1_housing.usd",
+  "hou_cut": "M1_housing_cutaway.usd"
+ },
+ "mesh_counts": {
+  "int_full": 72,
+  "int_cut": 72,
+  "hou_full": 7,
+  "hou_cut": 7
+ },
+ "prims": 105,
+ "H_mm": 100.0
+}

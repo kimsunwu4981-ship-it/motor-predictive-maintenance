@@ -1,0 +1,2788 @@
+meta:
+  generator: tools/cad/datasheet_to_yaml.py
+  xlsx: Maxwell_M1_HLP2.2-4_전체데이터시트_v4.xlsx
+  xlsx_sha256: 3e9298af7839477a9f1d05937e18dc5954e86f90f30fd25448e2e8e6c450dd62
+  rmxprt_json: rmxprt_v2m2.json
+  units: mm, deg, W, A, V (시트 단위 열 참조)
+  rule: 숫자 수기 입력 없음 — 전부 파일에서 읽음
+design_sections:
+  1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행):
+    P:
+      name: 정격 출력
+      value: 2200
+      unit: W
+      grade: 카탈로그
+      basis: null
+    V_L:
+      name: 선간 전압
+      value: 380
+      unit: V
+      grade: 카탈로그
+      basis: null
+    I_n:
+      name: 정격 전류 (380 V)
+      value: 4.73
+      unit: A
+      grade: 카탈로그
+      basis: null
+    η:
+      name: 효율 (100 % 부하)
+      value: 0.895
+      unit: '-'
+      grade: 카탈로그
+      basis: null
+    cosφ:
+      name: 역률
+      value: 0.79
+      unit: '-'
+      grade: 카탈로그
+      basis: null
+    f:
+      name: 주파수
+      value: 60
+      unit: Hz
+      grade: 카탈로그
+      basis: null
+    2p:
+      name: 극수
+      value: 4
+      unit: '-'
+      grade: 카탈로그
+      basis: null
+    n_n:
+      name: 정격 회전수
+      value: 1760
+      unit: rpm
+      grade: 카탈로그
+      basis: null
+    T_st/T_n:
+      name: 기동 토크비
+      value: 2.1
+      unit: '-'
+      grade: 카탈로그
+      basis: 210 %
+    T_max/T_n:
+      name: 최대 토크비
+      value: 2.5
+      unit: '-'
+      grade: 카탈로그
+      basis: 250 %
+    I_st/I_n:
+      name: 기동 전류비
+      value: 6.5
+      unit: '-'
+      grade: 카탈로그
+      basis: 650 %
+    GD²:
+      name: Rotor GD² (카탈로그 열 이름)
+      value: 0.008
+      unit: kg·m²
+      grade: 카탈로그
+      basis: '§9 검산: 로터 치수에서 계산한 J와 비교하면 이 값은 사실상 J'
+    m:
+      name: 중량
+      value: 41
+      unit: kg
+      grade: 카탈로그
+      basis: null
+    베어링 DE / NDE:
+      name: 베어링 DE / NDE
+      value: 6206ZZC3 / 6206ZZC3
+      unit: '-'
+      grade: 카탈로그
+      basis: null
+    절연 / 온도상승 / SF:
+      name: 절연 / 온도상승 / SF
+      value: F / B / 1.15
+      unit: '-'
+      grade: 카탈로그
+      basis: null
+    허용 진동:
+      name: 허용 진동
+      value: 2.8
+      unit: mm/s
+      grade: 카탈로그
+      basis: null
+  2. 기본 계산 (가정 없음):
+    p:
+      name: 극쌍수
+      value: 2
+      unit: '-'
+      grade: 계산
+      basis: null
+    n_s:
+      name: 동기속도
+      value: 1800
+      unit: rpm
+      grade: 계산
+      basis: null
+    s:
+      name: 정격 슬립
+      value: 0.0222222222222222
+      unit: '-'
+      grade: 계산
+      basis: null
+    V_ph:
+      name: 상전압 (Y, 220/380 겸용형 380 V 기준)
+      value: 219.393102292058
+      unit: V
+      grade: 계산
+      basis: 380 V 전용형 결선은 명판 확인
+    P_in:
+      name: 입력 전력
+      value: 2458.10055865922
+      unit: W
+      grade: 계산
+      basis: null
+    ΣP_loss:
+      name: 총손실 (카탈로그)
+      value: 258.100558659218
+      unit: W
+      grade: 계산
+      basis: null
+    T_n:
+      name: 정격 토크
+      value: 11.93625
+      unit: N·m
+      grade: 계산
+      basis: 카탈로그 1.22 kg·m = 11.96 N·m
+    I·sinφ:
+      name: 무효 전류
+      value: 2.8999953637894
+      unit: A
+      grade: 계산
+      basis: null
+    I_st:
+      name: 기동 전류
+      value: 30.745
+      unit: A
+      grade: 계산
+      basis: null
+    Z_sc:
+      name: 기동 임피던스 (Y 기준)
+      value: 7.13589534207376
+      unit: Ω
+      grade: 계산
+      basis: null
+    J:
+      name: 로터 관성 (GD² 열을 J로 해석)
+      value: 0.008
+      unit: kg·m²
+      grade: 계산
+      basis: §9 치수 검산과 일치 (GD²/4 = 0.002 는 적층 29 mm 가 되어 비현실)
+  3. 코어·공극 — 표준값 + 계산:
+    D_so:
+      name: 고정자 외경
+      value: 155
+      unit: mm
+      grade: 표준
+      basis: IEC 프레임 100 TEFC 주철 코어 외경 표준 (≈1.55·H)
+    D_si/D_so:
+      name: 내외경비
+      value: 0.63
+      unit: '-'
+      grade: 표준
+      basis: 'Boldea & Nasar Table 15.2, 2p=4: 0.61–0.66'
+    D_si:
+      name: 고정자 내경
+      value: 98
+      unit: mm
+      grade: 계산
+      basis: null
+    δ:
+      name: 공극 (Pyrhönen 식)
+      value: 0.310352787510734
+      unit: mm
+      grade: 계산
+      basis: 'Pyrhönen Eq.(6.24): 0.18+0.006·P^0.4'
+    g:
+      name: 공극 (채택)
+      value: 0.3
+      unit: mm
+      grade: 표준
+      basis: 0.05 단위 가공 표준으로 반올림
+    D_ro:
+      name: 로터 외경
+      value: 97.4
+      unit: mm
+      grade: 계산
+      basis: null
+    L:
+      name: 적층 길이
+      value: 135
+      unit: mm
+      grade: 설계선택
+      basis: 효율 89.5 % 정합 스윕(더블체크 §9) 최초 도달값. §9 관성 검산으로 확인
+    k_Fe:
+      name: 적층 계수
+      value: 0.96
+      unit: '-'
+      grade: 표준
+      basis: 0.5 mm 전기강판
+    전기강판:
+      name: 전기강판
+      value: M400-50A (50PN400)
+      unit: '-'
+      grade: 표준
+      basis: IE3 손실 예산
+    D_shaft:
+      name: 로터 코어 안착부 축경
+      value: 36
+      unit: mm
+      grade: 표준
+      basis: 6206 내경 30 + 베어링 턱 d_a,min 35.6
+  4. 슬롯 수·권선·스큐 — 확정 설계:
+    Q_s:
+      name: 고정자 슬롯 수
+      value: 36
+      unit: '-'
+      grade: 표준
+      basis: q = 3 (100L 4극 표준)
+    q:
+      name: 매극매상 슬롯수
+      value: 3
+      unit: '-'
+      grade: 계산
+      basis: null
+    Q_r:
+      name: 로터 슬롯 수 (스큐 설계 최적)
+      value: 28
+      unit: '-'
+      grade: 설계선택
+      basis: 후보 {26,28,44,46} 중 스큐 1슬롯 전제에서 28 선정 — 「로터슬롯 선정근거」 시트
+    로터 스큐:
+      name: 로터 스큐
+      value: 1
+      unit: 고정자 슬롯피치
+      grade: 설계선택
+      basis: 1 고정자 슬롯피치 (양산 표준)
+    권선 층수:
+      name: 권선 층수
+      value: 2
+      unit: '-'
+      grade: 표준
+      basis: 2층 중권(Lap)
+    y:
+      name: 코일 피치
+      value: 8
+      unit: 슬롯
+      grade: 표준
+      basis: 극피치 9슬롯의 8/9 단절 (5·7차 동시 저감)
+    a:
+      name: 병렬 회로 수
+      value: 1
+      unit: '-'
+      grade: 설계선택
+      basis: 2.2 kW 4극 표준. 현장 확인 항목
+    n_w:
+      name: 소선 병렬 가닥수
+      value: 2
+      unit: 가닥
+      grade: 설계선택
+      basis: null
+    d_w:
+      name: 소선 지름 (나동선)
+      value: 0.9
+      unit: mm
+      grade: 설계선택
+      basis: IEC 60317 R20 표준 지름
+    B_g:
+      name: 실 공극 자속밀도
+      value: 0.709787179771595
+      unit: T
+      grade: 계산
+      basis: null
+    k_E:
+      name: E/V 비
+      value: 0.97
+      unit: '-'
+      grade: 계산
+      basis: Boldea Eq.(15.1)
+    α_s:
+      name: 슬롯 전기각
+      value: 0.349065850398866
+      unit: rad
+      grade: 계산
+      basis: 20° 전기각
+    k_d:
+      name: 분포 계수
+      value: 0.959795080523939
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_p:
+      name: 단절 계수
+      value: 0.984807753012208
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_w:
+      name: 권선 계수
+      value: 0.945213636602952
+      unit: '-'
+      grade: 계산
+      basis: null
+    τ_p:
+      name: 극 피치
+      value: 76.9690200129499
+      unit: mm
+      grade: 계산
+      basis: null
+    τ_s:
+      name: 고정자 슬롯 피치
+      value: 8.55211333477221
+      unit: mm
+      grade: 계산
+      basis: null
+    E:
+      name: 유기 기전력
+      value: 212.811309223296
+      unit: V
+      grade: 계산
+      basis: null
+    Φ:
+      name: 실 극당 자속
+      value: 0.0046952421941891
+      unit: Wb
+      grade: 계산
+      basis: null
+    N_ph:
+      name: 상당 직렬 턴수 (채택)
+      value: 180
+      unit: turn
+      grade: 계산
+      basis: null
+    상당 코일 수 (2층):
+      name: 상당 코일 수 (2층)
+      value: 12
+      unit: 개
+      grade: 계산
+      basis: null
+    N_c:
+      name: 코일당 턴수 (정수화) ★ITSC 기준
+      value: 15
+      unit: turn
+      grade: 계산
+      basis: null
+    z_Q:
+      name: 슬롯당 도체수
+      value: 30
+      unit: 본
+      grade: 계산
+      basis: null
+    A:
+      name: 전기 장하
+      value: 16.5923900263396
+      unit: kA/m
+      grade: 계산
+      basis: 소형 4극 TEFC 15–25
+  5. 고정자 슬롯 치수 (RMxprt Slot Type 3):
+    B_t:
+      name: 치 자속밀도 목표
+      value: 1.6
+      unit: T
+      grade: 표준
+      basis: Boldea 1.5–1.65
+    B_y:
+      name: 요크 자속밀도 목표
+      value: 1.45
+      unit: T
+      grade: 표준
+      basis: Boldea 1.4–1.6
+    Hs0:
+      name: 슬롯 개구 높이
+      value: 0.5
+      unit: mm
+      grade: 표준
+      basis: null
+    Hs1:
+      name: 쐐기 높이
+      value: 1
+      unit: mm
+      grade: 표준
+      basis: null
+    Bs0:
+      name: 슬롯 개구 폭
+      value: 2.5
+      unit: mm
+      grade: 표준
+      basis: ≥ 2×소선 외경 + 여유
+    목표 점적률 (나동선):
+      name: 목표 점적률 (나동선)
+      value: 0.42
+      unit: '-'
+      grade: 표준
+      basis: 기계 삽입 2층 0.40–0.45
+    b_t:
+      name: 치 폭
+      value: 3.95194036782228
+      unit: mm
+      grade: 계산
+      basis: null
+    h_y:
+      name: 요크 높이
+      value: 12.4926622876466
+      unit: mm
+      grade: 계산
+      basis: null
+    h_s:
+      name: 슬롯 전체 깊이
+      value: 16.0073377123534
+      unit: mm
+      grade: 계산
+      basis: null
+    D_1:
+      name: 슬롯 상부(쐐기 하단) 직경
+      value: 101
+      unit: mm
+      grade: 계산
+      basis: null
+    D_2:
+      name: 슬롯 바닥 직경
+      value: 130.014675424707
+      unit: mm
+      grade: 계산
+      basis: null
+    Bs1:
+      name: 슬롯 상부 폭
+      value: 4.86197235474909
+      unit: mm
+      grade: 계산
+      basis: null
+    Bs2:
+      name: 슬롯 하부 폭
+      value: 7.39398044254217
+      unit: mm
+      grade: 계산
+      basis: null
+    h_s2:
+      name: 슬롯 유효 깊이
+      value: 14.5073377123534
+      unit: mm
+      grade: 계산
+      basis: null
+    Hs2:
+      name: RMxprt Hs2 (직선부) = h_s2 − Bs2/2
+      value: 10.8103474910823
+      unit: mm
+      grade: 계산
+      basis: null
+    A_slot:
+      name: 슬롯 면적
+      value: 87.7147848844603
+      unit: mm²
+      grade: 계산
+      basis: null
+    a_cu:
+      name: 소선 단면 (가닥 합)
+      value: 1.27234502470387
+      unit: mm²
+      grade: 계산
+      basis: null
+    실 점적률:
+      name: 실 점적률
+      value: 0.435164388664861
+      unit: '-'
+      grade: 계산
+      basis: 0.40–0.45 확인
+    J:
+      name: 고정자 전류밀도
+      value: 3.71754509049217
+      unit: A/mm²
+      grade: 계산
+      basis: IE3 TEFC 3.5–4.5
+  6. 엔드권선·저항·손실 예산 (효율 정합 검증):
+    손실 기준 온도:
+      name: 손실 기준 온도
+      value: 95
+      unit: °C
+      grade: 표준
+      basis: IEC 60034-2-1 B종
+    ρ_cu:
+      name: 구리 저항률 (95 °C)
+      value: 0.02232149
+      unit: Ω·mm²/m
+      grade: 계산
+      basis: null
+    ρ_al:
+      name: 다이캐스팅 Al 저항률 (95 °C)
+      value: 0.03679
+      unit: Ω·mm²/m
+      grade: 계산
+      basis: null
+    l_ew:
+      name: 코일 단부 직선부 (편측)
+      value: 15
+      unit: mm
+      grade: 표준
+      basis: Pyrhönen 소형기 10–20
+    D_m:
+      name: 슬롯 평균 직경
+      value: 114.007337712353
+      unit: mm
+      grade: 계산
+      basis: null
+    W:
+      name: 코일 폭
+      value: 79.5921365805467
+      unit: mm
+      grade: 계산
+      basis: null
+    l_end:
+      name: 엔드권선 도체 길이 (편측)
+      value: 121.530957067629
+      unit: mm
+      grade: 계산
+      basis: null
+    엔드권선 축방향 돌출 (편측, 3D용):
+      name: 엔드권선 축방향 돌출 (편측, 3D용)
+      value: 45.78760800518
+      unit: mm
+      grade: 설계선택
+      basis: 100L 급 40–50
+    l_turn:
+      name: 1턴 평균 길이
+      value: 513.061914135257
+      unit: mm
+      grade: 계산
+      basis: null
+    R_1:
+      name: 고정자 상저항 (95 °C)
+      value: 1.62016992986236
+      unit: Ω
+      grade: 계산
+      basis: null
+    P_cu1:
+      name: 고정자 동손
+      value: 108.743699471453
+      unit: W
+      grade: 계산
+      basis: null
+    P_mech:
+      name: 기계손
+      value: 12
+      unit: W
+      grade: 설계선택
+      basis: TEFC 100L @1760 rpm 10–15
+    표류부하손 비율 (P_in 기준):
+      name: 표류부하손 비율 (P_in 기준)
+      value: 0.01
+      unit: '-'
+      grade: 설계선택
+      basis: IE3 소형 0.5–1.2 %
+    P_stray:
+      name: 표류부하손
+      value: 24.5810055865922
+      unit: W
+      grade: 계산
+      basis: null
+    P_gap:
+      name: 공극 전력
+      value: 2287.4123920772
+      unit: W
+      grade: 계산
+      basis: null
+    P_cu2:
+      name: 로터 동손 (슬립이 결정)
+      value: 50.8313864906044
+      unit: W
+      grade: 계산
+      basis: null
+    강판 비철손 W15/50:
+      name: 강판 비철손 W15/50
+      value: 4
+      unit: W/kg
+      grade: 표준
+      basis: M400-50A 상한
+    60 Hz 철손 보정:
+      name: 60 Hz 철손 보정
+      value: 1.28
+      unit: '-'
+      grade: 표준
+      basis: null
+    요크 가공 계수:
+      name: 요크 가공 계수
+      value: 1.4
+      unit: '-'
+      grade: 표준
+      basis: null
+    치 가공 계수:
+      name: 치 가공 계수
+      value: 1.8
+      unit: '-'
+      grade: 표준
+      basis: null
+    요크 단면:
+      name: 요크 단면
+      value: 5592.96497163805
+      unit: mm²
+      grade: 계산
+      basis: null
+    치 단면 합:
+      name: 치 단면 합
+      value: 2575.52968687598
+      unit: mm²
+      grade: 계산
+      basis: null
+    요크 질량:
+      name: 요크 질량
+      value: 5.54508919148083
+      unit: kg
+      grade: 계산
+      basis: null
+    치 질량:
+      name: 치 질량
+      value: 2.55348315275632
+      unit: kg
+      grade: 계산
+      basis: null
+    P_fe:
+      name: 철손
+      value: 63.9167610948834
+      unit: W
+      grade: 계산
+      basis: null
+    ΣP:
+      name: 총손실 (계산)
+      value: 260.072852643533
+      unit: W
+      grade: 계산
+      basis: null
+    η_calc:
+      name: 효율 (계산)
+      value: 0.894282459007641
+      unit: '-'
+      grade: 계산
+      basis: 카탈로그 89.5 % 와 비교
+    Δη:
+      name: 효율 오차
+      value: -0.0007175409923591
+      unit: '%p'
+      grade: 계산
+      basis: ±0.3 %p 이내면 정합
+  7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형):
+    τ_r:
+      name: 로터 슬롯 피치
+      value: 10.9282544449874
+      unit: mm
+      grade: 계산
+      basis: null
+    K_I:
+      name: 역률 보정
+      value: 0.832
+      unit: '-'
+      grade: 계산
+      basis: Boldea Ch.15
+    I_b:
+      name: 바 전류
+      value: 143.476300424898
+      unit: A
+      grade: 계산
+      basis: null
+    I_er:
+      name: 엔드링 전류
+      value: 322.388320671585
+      unit: A
+      grade: 계산
+      basis: null
+    R_be:
+      name: 바 환산 등가 저항 (슬립 조건)
+      value: 88.1888308319835
+      unit: μΩ
+      grade: 계산
+      basis: null
+    h_er:
+      name: 엔드링 높이
+      value: 20
+      unit: mm
+      grade: 설계선택
+      basis: null
+    w_er:
+      name: 엔드링 폭
+      value: 12
+      unit: mm
+      grade: 설계선택
+      basis: J_er ≈ 0.75·J_b
+    A_er:
+      name: 엔드링 단면
+      value: 240
+      unit: mm²
+      grade: 계산
+      basis: null
+    D_er:
+      name: 엔드링 평균 직경
+      value: 77.4
+      unit: mm
+      grade: 계산
+      basis: null
+    l_er:
+      name: 엔드링 세그먼트 길이
+      value: 8.68425969242322
+      unit: mm
+      grade: 계산
+      basis: null
+    R_er:
+      name: 세그먼트 저항
+      value: 1.33122464201771
+      unit: μΩ
+      grade: 계산
+      basis: null
+    바 환산 링 저항:
+      name: 바 환산 링 저항
+      value: 13.4424863557652
+      unit: μΩ
+      grade: 계산
+      basis: null
+    R_b:
+      name: 바 저항
+      value: 74.7463444762183
+      unit: μΩ
+      grade: 계산
+      basis: null
+    l_b:
+      name: 바 길이 (링 매입 5 mm 양측)
+      value: 145
+      unit: mm
+      grade: 계산
+      basis: null
+    A_b:
+      name: 요구 바 단면 ★
+      value: 71.3687075586321
+      unit: mm²
+      grade: 계산
+      basis: 슬립 2.22 % 정합 조건
+    Hs0:
+      name: 로터 브리지 높이
+      value: 0.5
+      unit: mm
+      grade: 표준
+      basis: 반폐 다이캐스팅
+    Bs0:
+      name: 로터 개구 폭
+      value: 1
+      unit: mm
+      grade: 표준
+      basis: null
+    h_r:
+      name: 로터 슬롯 전체 깊이
+      value: 20
+      unit: mm
+      grade: 설계선택
+      basis: 표피효과(기동토크) 확보
+    Bs1:
+      name: 로터 슬롯 상부 원 지름
+      value: 5.4
+      unit: mm
+      grade: 설계선택
+      basis: null
+    Bs2:
+      name: 로터 슬롯 하부 원 지름
+      value: 2
+      unit: mm
+      grade: 설계선택
+      basis: null
+    Hs2:
+      name: 로터 슬롯 직선부 깊이
+      value: 15.8
+      unit: mm
+      grade: 계산
+      basis: null
+    A_r:
+      name: 로터 슬롯 면적 (= 바 단면)
+      value: 71.4819015491297
+      unit: mm²
+      grade: 계산
+      basis: A_b 와 ±3 % 확인
+    슬롯 면적 − 요구 단면:
+      name: 슬롯 면적 − 요구 단면
+      value: 0.00158604512215104
+      unit: '-'
+      grade: 계산
+      basis: null
+    J_b:
+      name: 바 전류밀도
+      value: 2.00716960958693
+      unit: A/mm²
+      grade: 계산
+      basis: IE3 Al 1.5–3
+    J_er:
+      name: 엔드링 전류밀도
+      value: 1.34328466946494
+      unit: A/mm²
+      grade: 계산
+      basis: null
+    로터 상부 원 중심 직경:
+      name: 로터 상부 원 중심 직경
+      value: 91
+      unit: mm
+      grade: 계산
+      basis: null
+    b_tr:
+      name: 로터 치 폭 (상부)
+      value: 4.81017612416683
+      unit: mm
+      grade: 계산
+      basis: null
+    B_tr:
+      name: 로터 치 자속밀도
+      value: 1.67975807566313
+      unit: T
+      grade: 계산
+      basis: 1.5–1.7
+    h_yr:
+      name: 로터 요크 높이
+      value: 10.7
+      unit: mm
+      grade: 계산
+      basis: null
+    B_yr:
+      name: 로터 요크 자속밀도 (적층만)
+      value: 1.69293087075585
+      unit: T
+      grade: 계산
+      basis: 축이 일부 분담 → 1.6–1.8 허용
+    ξ:
+      name: 기동 시 바 표피 깊이비
+      value: 1.78400836808498
+      unit: '-'
+      grade: 계산
+      basis: null
+    K_R:
+      name: 기동 바 저항 증가비
+      value: 1.6546367488242
+      unit: '-'
+      grade: 계산
+      basis: 기동토크 210 % 정합 지표
+  '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)':
+    θ_m:
+      name: 스큐 기계각
+      value: 10
+      unit: °
+      grade: 계산
+      basis: 1 슬롯피치
+    θ_e:
+      name: 스큐 전기각
+      value: 20
+      unit: °
+      grade: 계산
+      basis: null
+    Δ:
+      name: 로터 표면 접선 어긋남 (양단 간)
+      value: 8.49975345721239
+      unit: mm
+      grade: 계산
+      basis: null
+    바 기울기 (축 기준):
+      name: 바 기울기 (축 기준)
+      value: 3.60265199925777
+      unit: °
+      grade: 계산
+      basis: '3D 모델: 로터 바를 이 각도로 트위스트'
+    k_sk(1):
+      name: 스큐 계수 — 기본파
+      value: 0.994930770045299
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_sk(5):
+      name: 스큐 계수 — 5차
+      value: 0.877822270203338
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_sk(7):
+      name: 스큐 계수 — 7차
+      value: 0.769148874437427
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_sk(13):
+      name: 스큐 계수 — 13차 (36/28 동기토크 성분)
+      value: 0.337623950078207
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_sk(17):
+      name: 스큐 계수 — 고정자 슬롯 고조파 Q_s/p−1
+      value: 0.0585253394144295
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_sk(19):
+      name: 스큐 계수 — 고정자 슬롯 고조파 Q_s/p+1
+      value: -0.0523647773708051
+      unit: '-'
+      grade: 계산
+      basis: r=4 힘파 ~95 % 감쇠 근거
+    1−k_sk(1):
+      name: 기본파 토크 손실
+      value: 0.00506922995470138
+      unit: '-'
+      grade: 계산
+      basis: null
+  9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교):
+    고정자 Carter γ:
+      name: 고정자 Carter γ
+      value: 5.20833333333333
+      unit: '-'
+      grade: 계산
+      basis: null
+    고정자 Carter 계수:
+      name: 고정자 Carter 계수
+      value: 1.22354598533038
+      unit: '-'
+      grade: 계산
+      basis: null
+    로터 Carter γ:
+      name: 로터 Carter γ
+      value: 1.33333333333333
+      unit: '-'
+      grade: 계산
+      basis: null
+    로터 Carter 계수:
+      name: 로터 Carter 계수
+      value: 1.0379930027423
+      unit: '-'
+      grade: 계산
+      basis: null
+    k_C:
+      name: 총 Carter 계수
+      value: 1.27003217130636
+      unit: '-'
+      grade: 계산
+      basis: null
+    g_e:
+      name: 유효 공극
+      value: 0.381009651391908
+      unit: mm
+      grade: 계산
+      basis: null
+    k_sat:
+      name: 포화 계수
+      value: 1.4
+      unit: '-'
+      grade: 설계선택
+      basis: 소형 4극 1.3–1.5
+    F_g:
+      name: 공극 MMF (극당)
+      value: 215.2059446808
+      unit: A
+      grade: 계산
+      basis: null
+    I_m:
+      name: 자화 전류
+      value: 2.6225479144322
+      unit: A
+      grade: 계산
+      basis: 카탈로그 무효전류 이하
+    X_m:
+      name: 자화 리액턴스
+      value: 81.1467764047969
+      unit: Ω
+      grade: 계산
+      basis: null
+    X_sk:
+      name: 스큐 누설 리액턴스 (근사)
+      value: 0.820618103151448
+      unit: Ω
+      grade: 계산
+      basis: X_m·(1−k_sk²)
+    I_2':
+      name: 로터 환산 전류
+      value: 3.93536
+      unit: A
+      grade: 계산
+      basis: null
+    R_2':
+      name: 로터 환산 저항 (95 °C)
+      value: 1.09406157943397
+      unit: Ω
+      grade: 계산
+      basis: null
+    s_max:
+      name: 최대토크 슬립 (Kloss)
+      value: 0.106473063277287
+      unit: '-'
+      grade: 계산
+      basis: null
+    X_1+X_2':
+      name: 누설 리액턴스 합 (비포화)
+      value: 10.2754776255916
+      unit: Ω
+      grade: 계산
+      basis: null
+    J_calc:
+      name: 로터 관성 (치수 검산)
+      value: 0.00859647630974911
+      unit: kg·m²
+      grade: 계산
+      basis: 중공 원통 근사, 축·팬 제외
+    관성 오차 (계산 − 카탈로그)/카탈로그:
+      name: 관성 오차 (계산 − 카탈로그)/카탈로그
+      value: 0.0745595387186386
+      unit: '-'
+      grade: 계산
+      basis: ±20 % 이내면 L 정합
+  10. 현장 확인 항목 (값은 가정 — 명판·분해로 교체):
+    Q_r:
+      name: 로터 슬롯 수 실측
+      value: null
+      unit: '-'
+      grade: 현장확인
+      basis: 로터 바 수 세기 또는 전류 RSH (28→761/881 Hz, 26→703/823, 32→879/999)
+    로터 스큐 실측:
+      name: 로터 스큐 실측
+      value: null
+      unit: 슬롯
+      grade: 현장확인
+      basis: 로터 표면 바 자국 양단 어긋남
+    380 V 전용형 결선:
+      name: 380 V 전용형 결선
+      value: null
+      unit: '-'
+      grade: 현장확인
+      basis: 명판. Δ면 N_c·√3, 소선 1×Ø0.95
+    N_c:
+      name: 코일당 턴수
+      value: null
+      unit: turn
+      grade: 현장확인
+      basis: 코일 1개 풀어 계수. ITSC 비율 정의로 영향 제거
+    a:
+      name: 병렬 회로 수
+      value: null
+      unit: '-'
+      grade: 현장확인
+      basis: 결선도 또는 코일군 점퍼 관찰
+    베어링 번호 (실물):
+      name: 베어링 번호 (실물)
+      value: null
+      unit: '-'
+      grade: 현장확인
+      basis: 카탈로그 6206ZZC3 확인
+design:
+  P:
+    name: 정격 출력
+    value: 2200
+    unit: W
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  V_L:
+    name: 선간 전압
+    value: 380
+    unit: V
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  I_n:
+    name: 정격 전류 (380 V)
+    value: 4.73
+    unit: A
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  η:
+    name: 효율 (100 % 부하)
+    value: 0.895
+    unit: '-'
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  cosφ:
+    name: 역률
+    value: 0.79
+    unit: '-'
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  f:
+    name: 주파수
+    value: 60
+    unit: Hz
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  2p:
+    name: 극수
+    value: 4
+    unit: '-'
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  n_n:
+    name: 정격 회전수
+    value: 1760
+    unit: rpm
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  T_st/T_n:
+    name: 기동 토크비
+    value: 2.1
+    unit: '-'
+    grade: 카탈로그
+    basis: 210 %
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  T_max/T_n:
+    name: 최대 토크비
+    value: 2.5
+    unit: '-'
+    grade: 카탈로그
+    basis: 250 %
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  I_st/I_n:
+    name: 기동 전류비
+    value: 6.5
+    unit: '-'
+    grade: 카탈로그
+    basis: 650 %
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  GD²:
+    name: Rotor GD² (카탈로그 열 이름)
+    value: 0.008
+    unit: kg·m²
+    grade: 카탈로그
+    basis: '§9 검산: 로터 치수에서 계산한 J와 비교하면 이 값은 사실상 J'
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  m:
+    name: 중량
+    value: 41
+    unit: kg
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  베어링 DE / NDE:
+    name: 베어링 DE / NDE
+    value: 6206ZZC3 / 6206ZZC3
+    unit: '-'
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  절연 / 온도상승 / SF:
+    name: 절연 / 온도상승 / SF
+    value: F / B / 1.15
+    unit: '-'
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  허용 진동:
+    name: 허용 진동
+    value: 2.8
+    unit: mm/s
+    grade: 카탈로그
+    basis: null
+    section: 1. 카탈로그 입력 (현대 SSEN 카탈로그 HLP-2.2/4, 380 V 행)
+  p:
+    name: 극쌍수
+    value: 2
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  n_s:
+    name: 동기속도
+    value: 1800
+    unit: rpm
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  s:
+    name: 정격 슬립
+    value: 0.0222222222222222
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  V_ph:
+    name: 상전압 (Y, 220/380 겸용형 380 V 기준)
+    value: 219.393102292058
+    unit: V
+    grade: 계산
+    basis: 380 V 전용형 결선은 명판 확인
+    section: 2. 기본 계산 (가정 없음)
+  P_in:
+    name: 입력 전력
+    value: 2458.10055865922
+    unit: W
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  ΣP_loss:
+    name: 총손실 (카탈로그)
+    value: 258.100558659218
+    unit: W
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  T_n:
+    name: 정격 토크
+    value: 11.93625
+    unit: N·m
+    grade: 계산
+    basis: 카탈로그 1.22 kg·m = 11.96 N·m
+    section: 2. 기본 계산 (가정 없음)
+  I·sinφ:
+    name: 무효 전류
+    value: 2.8999953637894
+    unit: A
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  I_st:
+    name: 기동 전류
+    value: 30.745
+    unit: A
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  Z_sc:
+    name: 기동 임피던스 (Y 기준)
+    value: 7.13589534207376
+    unit: Ω
+    grade: 계산
+    basis: null
+    section: 2. 기본 계산 (가정 없음)
+  J:
+    name: 로터 관성 (GD² 열을 J로 해석)
+    value: 0.008
+    unit: kg·m²
+    grade: 계산
+    basis: §9 치수 검산과 일치 (GD²/4 = 0.002 는 적층 29 mm 가 되어 비현실)
+    section: 2. 기본 계산 (가정 없음)
+  D_so:
+    name: 고정자 외경
+    value: 155
+    unit: mm
+    grade: 표준
+    basis: IEC 프레임 100 TEFC 주철 코어 외경 표준 (≈1.55·H)
+    section: 3. 코어·공극 — 표준값 + 계산
+  D_si/D_so:
+    name: 내외경비
+    value: 0.63
+    unit: '-'
+    grade: 표준
+    basis: 'Boldea & Nasar Table 15.2, 2p=4: 0.61–0.66'
+    section: 3. 코어·공극 — 표준값 + 계산
+  D_si:
+    name: 고정자 내경
+    value: 98
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 3. 코어·공극 — 표준값 + 계산
+  δ:
+    name: 공극 (Pyrhönen 식)
+    value: 0.310352787510734
+    unit: mm
+    grade: 계산
+    basis: 'Pyrhönen Eq.(6.24): 0.18+0.006·P^0.4'
+    section: 3. 코어·공극 — 표준값 + 계산
+  g:
+    name: 공극 (채택)
+    value: 0.3
+    unit: mm
+    grade: 표준
+    basis: 0.05 단위 가공 표준으로 반올림
+    section: 3. 코어·공극 — 표준값 + 계산
+  D_ro:
+    name: 로터 외경
+    value: 97.4
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 3. 코어·공극 — 표준값 + 계산
+  L:
+    name: 적층 길이
+    value: 135
+    unit: mm
+    grade: 설계선택
+    basis: 효율 89.5 % 정합 스윕(더블체크 §9) 최초 도달값. §9 관성 검산으로 확인
+    section: 3. 코어·공극 — 표준값 + 계산
+  k_Fe:
+    name: 적층 계수
+    value: 0.96
+    unit: '-'
+    grade: 표준
+    basis: 0.5 mm 전기강판
+    section: 3. 코어·공극 — 표준값 + 계산
+  전기강판:
+    name: 전기강판
+    value: M400-50A (50PN400)
+    unit: '-'
+    grade: 표준
+    basis: IE3 손실 예산
+    section: 3. 코어·공극 — 표준값 + 계산
+  D_shaft:
+    name: 로터 코어 안착부 축경
+    value: 36
+    unit: mm
+    grade: 표준
+    basis: 6206 내경 30 + 베어링 턱 d_a,min 35.6
+    section: 3. 코어·공극 — 표준값 + 계산
+  Q_s:
+    name: 고정자 슬롯 수
+    value: 36
+    unit: '-'
+    grade: 표준
+    basis: q = 3 (100L 4극 표준)
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  q:
+    name: 매극매상 슬롯수
+    value: 3
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  Q_r:
+    name: 로터 슬롯 수 (스큐 설계 최적)
+    value: 28
+    unit: '-'
+    grade: 설계선택
+    basis: 후보 {26,28,44,46} 중 스큐 1슬롯 전제에서 28 선정 — 「로터슬롯 선정근거」 시트
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  로터 스큐:
+    name: 로터 스큐
+    value: 1
+    unit: 고정자 슬롯피치
+    grade: 설계선택
+    basis: 1 고정자 슬롯피치 (양산 표준)
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  권선 층수:
+    name: 권선 층수
+    value: 2
+    unit: '-'
+    grade: 표준
+    basis: 2층 중권(Lap)
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  y:
+    name: 코일 피치
+    value: 8
+    unit: 슬롯
+    grade: 표준
+    basis: 극피치 9슬롯의 8/9 단절 (5·7차 동시 저감)
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  a:
+    name: 병렬 회로 수
+    value: 1
+    unit: '-'
+    grade: 설계선택
+    basis: 2.2 kW 4극 표준. 현장 확인 항목
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  n_w:
+    name: 소선 병렬 가닥수
+    value: 2
+    unit: 가닥
+    grade: 설계선택
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  d_w:
+    name: 소선 지름 (나동선)
+    value: 0.9
+    unit: mm
+    grade: 설계선택
+    basis: IEC 60317 R20 표준 지름
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  B_g:
+    name: 실 공극 자속밀도
+    value: 0.709787179771595
+    unit: T
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  k_E:
+    name: E/V 비
+    value: 0.97
+    unit: '-'
+    grade: 계산
+    basis: Boldea Eq.(15.1)
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  α_s:
+    name: 슬롯 전기각
+    value: 0.349065850398866
+    unit: rad
+    grade: 계산
+    basis: 20° 전기각
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  k_d:
+    name: 분포 계수
+    value: 0.959795080523939
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  k_p:
+    name: 단절 계수
+    value: 0.984807753012208
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  k_w:
+    name: 권선 계수
+    value: 0.945213636602952
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  τ_p:
+    name: 극 피치
+    value: 76.9690200129499
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  τ_s:
+    name: 고정자 슬롯 피치
+    value: 8.55211333477221
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  E:
+    name: 유기 기전력
+    value: 212.811309223296
+    unit: V
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  Φ:
+    name: 실 극당 자속
+    value: 0.0046952421941891
+    unit: Wb
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  N_ph:
+    name: 상당 직렬 턴수 (채택)
+    value: 180
+    unit: turn
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  상당 코일 수 (2층):
+    name: 상당 코일 수 (2층)
+    value: 12
+    unit: 개
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  N_c:
+    name: 코일당 턴수 (정수화) ★ITSC 기준
+    value: 15
+    unit: turn
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  z_Q:
+    name: 슬롯당 도체수
+    value: 30
+    unit: 본
+    grade: 계산
+    basis: null
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  A:
+    name: 전기 장하
+    value: 16.5923900263396
+    unit: kA/m
+    grade: 계산
+    basis: 소형 4극 TEFC 15–25
+    section: 4. 슬롯 수·권선·스큐 — 확정 설계
+  B_t:
+    name: 치 자속밀도 목표
+    value: 1.6
+    unit: T
+    grade: 표준
+    basis: Boldea 1.5–1.65
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  B_y:
+    name: 요크 자속밀도 목표
+    value: 1.45
+    unit: T
+    grade: 표준
+    basis: Boldea 1.4–1.6
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Hs0:
+    name: 슬롯 개구 높이
+    value: 0.5
+    unit: mm
+    grade: 표준
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Hs1:
+    name: 쐐기 높이
+    value: 1
+    unit: mm
+    grade: 표준
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Bs0:
+    name: 슬롯 개구 폭
+    value: 2.5
+    unit: mm
+    grade: 표준
+    basis: ≥ 2×소선 외경 + 여유
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  목표 점적률 (나동선):
+    name: 목표 점적률 (나동선)
+    value: 0.42
+    unit: '-'
+    grade: 표준
+    basis: 기계 삽입 2층 0.40–0.45
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  b_t:
+    name: 치 폭
+    value: 3.95194036782228
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  h_y:
+    name: 요크 높이
+    value: 12.4926622876466
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  h_s:
+    name: 슬롯 전체 깊이
+    value: 16.0073377123534
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  D_1:
+    name: 슬롯 상부(쐐기 하단) 직경
+    value: 101
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  D_2:
+    name: 슬롯 바닥 직경
+    value: 130.014675424707
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Bs1:
+    name: 슬롯 상부 폭
+    value: 4.86197235474909
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Bs2:
+    name: 슬롯 하부 폭
+    value: 7.39398044254217
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  h_s2:
+    name: 슬롯 유효 깊이
+    value: 14.5073377123534
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  Hs2:
+    name: RMxprt Hs2 (직선부) = h_s2 − Bs2/2
+    value: 10.8103474910823
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  A_slot:
+    name: 슬롯 면적
+    value: 87.7147848844603
+    unit: mm²
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  a_cu:
+    name: 소선 단면 (가닥 합)
+    value: 1.27234502470387
+    unit: mm²
+    grade: 계산
+    basis: null
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  실 점적률:
+    name: 실 점적률
+    value: 0.435164388664861
+    unit: '-'
+    grade: 계산
+    basis: 0.40–0.45 확인
+    section: 5. 고정자 슬롯 치수 (RMxprt Slot Type 3)
+  손실 기준 온도:
+    name: 손실 기준 온도
+    value: 95
+    unit: °C
+    grade: 표준
+    basis: IEC 60034-2-1 B종
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  ρ_cu:
+    name: 구리 저항률 (95 °C)
+    value: 0.02232149
+    unit: Ω·mm²/m
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  ρ_al:
+    name: 다이캐스팅 Al 저항률 (95 °C)
+    value: 0.03679
+    unit: Ω·mm²/m
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  l_ew:
+    name: 코일 단부 직선부 (편측)
+    value: 15
+    unit: mm
+    grade: 표준
+    basis: Pyrhönen 소형기 10–20
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  D_m:
+    name: 슬롯 평균 직경
+    value: 114.007337712353
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  W:
+    name: 코일 폭
+    value: 79.5921365805467
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  l_end:
+    name: 엔드권선 도체 길이 (편측)
+    value: 121.530957067629
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  엔드권선 축방향 돌출 (편측, 3D용):
+    name: 엔드권선 축방향 돌출 (편측, 3D용)
+    value: 45.78760800518
+    unit: mm
+    grade: 설계선택
+    basis: 100L 급 40–50
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  l_turn:
+    name: 1턴 평균 길이
+    value: 513.061914135257
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  R_1:
+    name: 고정자 상저항 (95 °C)
+    value: 1.62016992986236
+    unit: Ω
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_cu1:
+    name: 고정자 동손
+    value: 108.743699471453
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_mech:
+    name: 기계손
+    value: 12
+    unit: W
+    grade: 설계선택
+    basis: TEFC 100L @1760 rpm 10–15
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  표류부하손 비율 (P_in 기준):
+    name: 표류부하손 비율 (P_in 기준)
+    value: 0.01
+    unit: '-'
+    grade: 설계선택
+    basis: IE3 소형 0.5–1.2 %
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_stray:
+    name: 표류부하손
+    value: 24.5810055865922
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_gap:
+    name: 공극 전력
+    value: 2287.4123920772
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_cu2:
+    name: 로터 동손 (슬립이 결정)
+    value: 50.8313864906044
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  강판 비철손 W15/50:
+    name: 강판 비철손 W15/50
+    value: 4
+    unit: W/kg
+    grade: 표준
+    basis: M400-50A 상한
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  60 Hz 철손 보정:
+    name: 60 Hz 철손 보정
+    value: 1.28
+    unit: '-'
+    grade: 표준
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  요크 가공 계수:
+    name: 요크 가공 계수
+    value: 1.4
+    unit: '-'
+    grade: 표준
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  치 가공 계수:
+    name: 치 가공 계수
+    value: 1.8
+    unit: '-'
+    grade: 표준
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  요크 단면:
+    name: 요크 단면
+    value: 5592.96497163805
+    unit: mm²
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  치 단면 합:
+    name: 치 단면 합
+    value: 2575.52968687598
+    unit: mm²
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  요크 질량:
+    name: 요크 질량
+    value: 5.54508919148083
+    unit: kg
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  치 질량:
+    name: 치 질량
+    value: 2.55348315275632
+    unit: kg
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  P_fe:
+    name: 철손
+    value: 63.9167610948834
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  ΣP:
+    name: 총손실 (계산)
+    value: 260.072852643533
+    unit: W
+    grade: 계산
+    basis: null
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  η_calc:
+    name: 효율 (계산)
+    value: 0.894282459007641
+    unit: '-'
+    grade: 계산
+    basis: 카탈로그 89.5 % 와 비교
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  Δη:
+    name: 효율 오차
+    value: -0.0007175409923591
+    unit: '%p'
+    grade: 계산
+    basis: ±0.3 %p 이내면 정합
+    section: 6. 엔드권선·저항·손실 예산 (효율 정합 검증)
+  τ_r:
+    name: 로터 슬롯 피치
+    value: 10.9282544449874
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  K_I:
+    name: 역률 보정
+    value: 0.832
+    unit: '-'
+    grade: 계산
+    basis: Boldea Ch.15
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  I_b:
+    name: 바 전류
+    value: 143.476300424898
+    unit: A
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  I_er:
+    name: 엔드링 전류
+    value: 322.388320671585
+    unit: A
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  R_be:
+    name: 바 환산 등가 저항 (슬립 조건)
+    value: 88.1888308319835
+    unit: μΩ
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  h_er:
+    name: 엔드링 높이
+    value: 20
+    unit: mm
+    grade: 설계선택
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  w_er:
+    name: 엔드링 폭
+    value: 12
+    unit: mm
+    grade: 설계선택
+    basis: J_er ≈ 0.75·J_b
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  A_er:
+    name: 엔드링 단면
+    value: 240
+    unit: mm²
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  D_er:
+    name: 엔드링 평균 직경
+    value: 77.4
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  l_er:
+    name: 엔드링 세그먼트 길이
+    value: 8.68425969242322
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  R_er:
+    name: 세그먼트 저항
+    value: 1.33122464201771
+    unit: μΩ
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  바 환산 링 저항:
+    name: 바 환산 링 저항
+    value: 13.4424863557652
+    unit: μΩ
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  R_b:
+    name: 바 저항
+    value: 74.7463444762183
+    unit: μΩ
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  l_b:
+    name: 바 길이 (링 매입 5 mm 양측)
+    value: 145
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  A_b:
+    name: 요구 바 단면 ★
+    value: 71.3687075586321
+    unit: mm²
+    grade: 계산
+    basis: 슬립 2.22 % 정합 조건
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  h_r:
+    name: 로터 슬롯 전체 깊이
+    value: 20
+    unit: mm
+    grade: 설계선택
+    basis: 표피효과(기동토크) 확보
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  A_r:
+    name: 로터 슬롯 면적 (= 바 단면)
+    value: 71.4819015491297
+    unit: mm²
+    grade: 계산
+    basis: A_b 와 ±3 % 확인
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  슬롯 면적 − 요구 단면:
+    name: 슬롯 면적 − 요구 단면
+    value: 0.00158604512215104
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  J_b:
+    name: 바 전류밀도
+    value: 2.00716960958693
+    unit: A/mm²
+    grade: 계산
+    basis: IE3 Al 1.5–3
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  J_er:
+    name: 엔드링 전류밀도
+    value: 1.34328466946494
+    unit: A/mm²
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  로터 상부 원 중심 직경:
+    name: 로터 상부 원 중심 직경
+    value: 91
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  b_tr:
+    name: 로터 치 폭 (상부)
+    value: 4.81017612416683
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  B_tr:
+    name: 로터 치 자속밀도
+    value: 1.67975807566313
+    unit: T
+    grade: 계산
+    basis: 1.5–1.7
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  h_yr:
+    name: 로터 요크 높이
+    value: 10.7
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  B_yr:
+    name: 로터 요크 자속밀도 (적층만)
+    value: 1.69293087075585
+    unit: T
+    grade: 계산
+    basis: 축이 일부 분담 → 1.6–1.8 허용
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  ξ:
+    name: 기동 시 바 표피 깊이비
+    value: 1.78400836808498
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  K_R:
+    name: 기동 바 저항 증가비
+    value: 1.6546367488242
+    unit: '-'
+    grade: 계산
+    basis: 기동토크 210 % 정합 지표
+    section: 7. 로터 바·엔드링·슬롯 치수 (RMxprt Slot Type 2, 반폐 배형)
+  θ_m:
+    name: 스큐 기계각
+    value: 10
+    unit: °
+    grade: 계산
+    basis: 1 슬롯피치
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  θ_e:
+    name: 스큐 전기각
+    value: 20
+    unit: °
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  Δ:
+    name: 로터 표면 접선 어긋남 (양단 간)
+    value: 8.49975345721239
+    unit: mm
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  바 기울기 (축 기준):
+    name: 바 기울기 (축 기준)
+    value: 3.60265199925777
+    unit: °
+    grade: 계산
+    basis: '3D 모델: 로터 바를 이 각도로 트위스트'
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(1):
+    name: 스큐 계수 — 기본파
+    value: 0.994930770045299
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(5):
+    name: 스큐 계수 — 5차
+    value: 0.877822270203338
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(7):
+    name: 스큐 계수 — 7차
+    value: 0.769148874437427
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(13):
+    name: 스큐 계수 — 13차 (36/28 동기토크 성분)
+    value: 0.337623950078207
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(17):
+    name: 스큐 계수 — 고정자 슬롯 고조파 Q_s/p−1
+    value: 0.0585253394144295
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  k_sk(19):
+    name: 스큐 계수 — 고정자 슬롯 고조파 Q_s/p+1
+    value: -0.0523647773708051
+    unit: '-'
+    grade: 계산
+    basis: r=4 힘파 ~95 % 감쇠 근거
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  1−k_sk(1):
+    name: 기본파 토크 손실
+    value: 0.00506922995470138
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: '8. 스큐 사양 (확정: 로터 1 고정자 슬롯피치)'
+  고정자 Carter γ:
+    name: 고정자 Carter γ
+    value: 5.20833333333333
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  고정자 Carter 계수:
+    name: 고정자 Carter 계수
+    value: 1.22354598533038
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  로터 Carter γ:
+    name: 로터 Carter γ
+    value: 1.33333333333333
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  로터 Carter 계수:
+    name: 로터 Carter 계수
+    value: 1.0379930027423
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  k_C:
+    name: 총 Carter 계수
+    value: 1.27003217130636
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  g_e:
+    name: 유효 공극
+    value: 0.381009651391908
+    unit: mm
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  k_sat:
+    name: 포화 계수
+    value: 1.4
+    unit: '-'
+    grade: 설계선택
+    basis: 소형 4극 1.3–1.5
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  F_g:
+    name: 공극 MMF (극당)
+    value: 215.2059446808
+    unit: A
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  I_m:
+    name: 자화 전류
+    value: 2.6225479144322
+    unit: A
+    grade: 계산
+    basis: 카탈로그 무효전류 이하
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  X_m:
+    name: 자화 리액턴스
+    value: 81.1467764047969
+    unit: Ω
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  X_sk:
+    name: 스큐 누설 리액턴스 (근사)
+    value: 0.820618103151448
+    unit: Ω
+    grade: 계산
+    basis: X_m·(1−k_sk²)
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  I_2':
+    name: 로터 환산 전류
+    value: 3.93536
+    unit: A
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  R_2':
+    name: 로터 환산 저항 (95 °C)
+    value: 1.09406157943397
+    unit: Ω
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  s_max:
+    name: 최대토크 슬립 (Kloss)
+    value: 0.106473063277287
+    unit: '-'
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  X_1+X_2':
+    name: 누설 리액턴스 합 (비포화)
+    value: 10.2754776255916
+    unit: Ω
+    grade: 계산
+    basis: null
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  J_calc:
+    name: 로터 관성 (치수 검산)
+    value: 0.00859647630974911
+    unit: kg·m²
+    grade: 계산
+    basis: 중공 원통 근사, 축·팬 제외
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  관성 오차 (계산 − 카탈로그)/카탈로그:
+    name: 관성 오차 (계산 − 카탈로그)/카탈로그
+    value: 0.0745595387186386
+    unit: '-'
+    grade: 계산
+    basis: ±20 % 이내면 L 정합
+    section: 9. 등가회로 목표값·검산 (RMxprt/Maxwell 결과와 비교)
+  로터 스큐 실측:
+    name: 로터 스큐 실측
+    value: null
+    unit: 슬롯
+    grade: 현장확인
+    basis: 로터 표면 바 자국 양단 어긋남
+    section: 10. 현장 확인 항목 (값은 가정 — 명판·분해로 교체)
+  380 V 전용형 결선:
+    name: 380 V 전용형 결선
+    value: null
+    unit: '-'
+    grade: 현장확인
+    basis: 명판. Δ면 N_c·√3, 소선 1×Ø0.95
+    section: 10. 현장 확인 항목 (값은 가정 — 명판·분해로 교체)
+  베어링 번호 (실물):
+    name: 베어링 번호 (실물)
+    value: null
+    unit: '-'
+    grade: 현장확인
+    basis: 카탈로그 6206ZZC3 확인
+    section: 10. 현장 확인 항목 (값은 가정 — 명판·분해로 교체)
+catalog_direct:
+- item: 항목
+  value: 값
+  unit: 단위
+  note: 비고
+- item: 형식 / 카탈로그 번호
+  value: HLP-2.2/4 / P2P2TC276 (380 V)
+  unit: '-'
+  note: '220/380 V: P2P2TC226, 440 V: P2P2TC216'
+- item: 정격 출력 / 극수 / 프레임
+  value: 2.2 kW / 4P / 100L
+  unit: '-'
+  note: null
+- item: 정격 회전수
+  value: '1760'
+  unit: rpm
+  note: null
+- item: 정격 전압
+  value: 220/380, 380, 440
+  unit: V
+  note: 3상 60 Hz
+- item: 정격 전류 220 / 380 / 440 V
+  value: 8.17 / 4.73 / 4.08
+  unit: A
+  note: null
+- item: 효율 100 / 75 / 50 %
+  value: 89.5 / 89.4 / 88.0
+  unit: '%'
+  note: KS C 4202 프리미엄
+- item: 역률
+  value: '0.79'
+  unit: '-'
+  note: null
+- item: 기동 전류 / 기동 토크 / 최대 토크
+  value: 650 % / 210 % / 250 %
+  unit: '-'
+  note: null
+- item: 정격 토크
+  value: '1.22'
+  unit: kg·m
+  note: ≒ 11.96 N·m
+- item: Rotor GD² / 중량 / 소음
+  value: 0.0080 / 41 / 60
+  unit: kg·m² / kg / dB(A)
+  note: null
+- item: 베어링 DE / NDE
+  value: 6206ZZC3 / 6206ZZC3
+  unit: '-'
+  note: null
+- item: 절연 / 온도상승 / SF
+  value: F / B / 1.15
+  unit: '-'
+  note: null
+- item: 외함 / 냉각 / 보호
+  value: TEFC / IC411 / IP55
+  unit: '-'
+  note: null
+- item: 회전자 / 권선
+  value: Al 다이캐스팅 / 구리 에나멜선
+  unit: '-'
+  note: null
+- item: 설계 / 효율기준
+  value: NEMA B · IEC N / IE3
+  unit: '-'
+  note: null
+- item: 허용 진동
+  value: '2.8'
+  unit: mm/s RMS
+  note: null
+- item: 치수 H / A / B1 / C
+  value: 100 / 160 / 140 / 63
+  unit: mm
+  note: null
+- item: 치수 HC / HD / L
+  value: 211 / 247 / 370
+  unit: mm
+  note: null
+- item: 축단 D / E / F / GE, 키
+  value: 28 / 60 / 8 / 4, 8×7×45
+  unit: mm
+  note: j6
+- item: 플랜지 FF215 M / N / P
+  value: 215 / 180 / 250
+  unit: mm
+  note: null
+winding_table:
+- slot: 1
+  top: A+
+  bottom: A+ (코일 29)
+  coil: 1
+  phase: A
+  winding: PhaseA
+  fault: '★ 결함 코일 (Coil_1: 슬롯 1 상층 ↔ 슬롯 9 하층)'
+- slot: 2
+  top: A+
+  bottom: A+ (코일 30)
+  coil: 2
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 3
+  top: A+
+  bottom: C- (코일 31)
+  coil: 3
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 4
+  top: C-
+  bottom: C- (코일 32)
+  coil: 4
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 5
+  top: C-
+  bottom: C- (코일 33)
+  coil: 5
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 6
+  top: C-
+  bottom: B+ (코일 34)
+  coil: 6
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 7
+  top: B+
+  bottom: B+ (코일 35)
+  coil: 7
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 8
+  top: B+
+  bottom: B+ (코일 36)
+  coil: 8
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 9
+  top: B+
+  bottom: A- (코일 1)
+  coil: 9
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 10
+  top: A-
+  bottom: A- (코일 2)
+  coil: 10
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 11
+  top: A-
+  bottom: A- (코일 3)
+  coil: 11
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 12
+  top: A-
+  bottom: C+ (코일 4)
+  coil: 12
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 13
+  top: C+
+  bottom: C+ (코일 5)
+  coil: 13
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 14
+  top: C+
+  bottom: C+ (코일 6)
+  coil: 14
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 15
+  top: C+
+  bottom: B- (코일 7)
+  coil: 15
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 16
+  top: B-
+  bottom: B- (코일 8)
+  coil: 16
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 17
+  top: B-
+  bottom: B- (코일 9)
+  coil: 17
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 18
+  top: B-
+  bottom: A+ (코일 10)
+  coil: 18
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 19
+  top: A+
+  bottom: A+ (코일 11)
+  coil: 19
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 20
+  top: A+
+  bottom: A+ (코일 12)
+  coil: 20
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 21
+  top: A+
+  bottom: C- (코일 13)
+  coil: 21
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 22
+  top: C-
+  bottom: C- (코일 14)
+  coil: 22
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 23
+  top: C-
+  bottom: C- (코일 15)
+  coil: 23
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 24
+  top: C-
+  bottom: B+ (코일 16)
+  coil: 24
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 25
+  top: B+
+  bottom: B+ (코일 17)
+  coil: 25
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 26
+  top: B+
+  bottom: B+ (코일 18)
+  coil: 26
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 27
+  top: B+
+  bottom: A- (코일 19)
+  coil: 27
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 28
+  top: A-
+  bottom: A- (코일 20)
+  coil: 28
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 29
+  top: A-
+  bottom: A- (코일 21)
+  coil: 29
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 30
+  top: A-
+  bottom: C+ (코일 22)
+  coil: 30
+  phase: A
+  winding: PhaseA
+  fault: null
+- slot: 31
+  top: C+
+  bottom: C+ (코일 23)
+  coil: 31
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 32
+  top: C+
+  bottom: C+ (코일 24)
+  coil: 32
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 33
+  top: C+
+  bottom: B- (코일 25)
+  coil: 33
+  phase: C
+  winding: PhaseC
+  fault: null
+- slot: 34
+  top: B-
+  bottom: B- (코일 26)
+  coil: 34
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 35
+  top: B-
+  bottom: B- (코일 27)
+  coil: 35
+  phase: B
+  winding: PhaseB
+  fault: null
+- slot: 36
+  top: B-
+  bottom: A+ (코일 28)
+  coil: 36
+  phase: B
+  winding: PhaseB
+  fault: null
+itsc_cases:
+- case: 케이스
+  turns: 단락 턴 수
+  ratio: 상 턴수 비율
+  coil_basis: 코일 기준
+  R_f: 단락 저항 R_f
+  load: 부하
+  equiv: 등가모델 대응
+  note: 비고
+- case: C0 정상
+  turns: 0
+  ratio: 0
+  coil_basis: '-'
+  R_f: 0.1 Ω
+  load: 정격
+  equiv: I₂/I₁ ≈ 0.006 (평형 전원)
+  note: 기준선
+- case: C1 초기
+  turns: 4
+  ratio: 0.0222222222222222
+  coil_basis: 코일 1개 내 4턴
+  R_f: 0.1 Ω (금속 접촉)
+  load: 정격
+  equiv: 등가모델 4턴 (0.104)
+  note: 등가모델의 턴 비율로 환산해 대응
+- case: C2 진행
+  turns: 8
+  ratio: 0.0444444444444444
+  coil_basis: 코일 1개 내 8턴
+  R_f: 0.1 Ω
+  load: 정격
+  equiv: '-'
+  note: null
+- case: C3 심화
+  turns: 12
+  ratio: 0.0666666666666667
+  coil_basis: 코일 1개 내 12턴
+  R_f: 0.1 Ω
+  load: 정격
+  equiv: 등가모델 12턴 (0.269)
+  note: null
+- case: C4 코일 전체
+  turns: 15
+  ratio: 0.0833333333333333
+  coil_basis: 코일 1개 전체 (코일 간 절연 파괴형)
+  R_f: 0.1 Ω
+  load: 정격
+  equiv: '-'
+  note: N_c 턴
+- case: C5 2코일
+  turns: 30
+  ratio: 0.166666666666667
+  coil_basis: 인접 2코일 직렬
+  R_f: 0.1 Ω
+  load: 정격
+  equiv: '-'
+  note: null
+- case: C1-L 경부하
+  turns: 4
+  ratio: 0.0222222222222222
+  coil_basis: 코일 1개 내 4턴
+  R_f: 0.1 Ω
+  load: 50 %
+  equiv: '-'
+  note: 부하 의존성
+- case: C1-R 저항성
+  turns: 4
+  ratio: 0.0222222222222222
+  coil_basis: 코일 1개 내 4턴
+  R_f: 1.0 Ω (절연 열화 초기)
+  load: 정격
+  equiv: '-'
+  note: 저항 의존성
+load_speed_table:
+- load: 0.25
+  slip: 0.00533702926128236
+  rpm: 1790.4
+- load: 0.5
+  slip: 0.0107559636255975
+  rpm: 1780.6
+- load: 0.75
+  slip: 0.0163474477404531
+  rpm: 1770.6
+- load: 1
+  slip: 0.0222222222222222
+  rpm: 1760
+- load: 1.15
+  slip: 0.0259426444180334
+  rpm: 1753.3
+catalog_frame_100L:
+  available: true
+  sha256: 8afee7697616c713d42684a14c9cf9ddb1b3295c522b4aad3b6d3610f998e75a
+  foot_mount_IM_B3:
+    frame: 100L
+    H: 100
+    poles: 2~8
+    A: 160
+    AA: 43
+    AB: 196
+    HA: 13
+    B1: 140
+    B2: '-'
+    B3: '-'
+    BB: 166
+    C: 63
+    K: 12
+    N_holes: 4
+    HC: 211
+    HD: 247
+    L: 370
+    D: 28
+    E: 60
+    F: 8
+    GE: 4
+    key: 8x7x45
+    AD: 328
+    O: 28
+    PF: 0.75
+  foot_mount_page: 5
+  flange_FF215:
+    frame: 100L
+    poles: 2~8
+    flange: FF215
+    M: 215
+    N: 180
+    P: 250
+    n: 4
+    S: 15
+    LA: 13
+    T: 4
+    AC_table: 343
+    L: 392
+    D: 28
+    E: 60
+    F: 8
+    GE: 4
+    key: 8x7x45
+    AD: 175
+    O: 22
+    PF: 0.5
+  flange_page: 6
+  AD_note: 발 장착(IM B3) 표의 AD 328 은 그림 B(90–200Fr) 끝면도에서 프레임 측면~단자함 끝까지의 전체 폭 치수로 그려져 있다(축 중심~단자함 상면이 아님). 플랜지(FF215) 표의 AD 175 는 플랜지 그림 기준으로 정의가 다르다. 두 값 모두 카탈로그 원문 그대로 보관하고, 하우징 모델은 HD 247(단자함 상면 높이)만
+    구속으로 쓴다.
+  columns_foot:
+  - frame
+  - H
+  - poles
+  - A
+  - AA
+  - AB
+  - HA
+  - B1
+  - B2
+  - B3
+  - BB
+  - C
+  - K
+  - N_holes
+  - HC
+  - HD
+  - L
+  - D
+  - E
+  - F
+  - GE
+  - key
+  - AD
+  - O
+  - PF
+  columns_flange:
+  - frame
+  - poles
+  - flange
+  - M
+  - N
+  - P
+  - n
+  - S
+  - LA
+  - T
+  - AC_table
+  - L
+  - D
+  - E
+  - F
+  - GE
+  - key
+  - AD
+  - O
+  - PF
+maxwell_model:
+  tag: v2m2_material60
+  design: M1_RMxprt_v2m2
+  sha256: 07736423faa11165c2e64cad06a26db9e753dd5d6fc999dc86494256435cfc62
+  stator:
+    slot_type: 2
+    Hs0: 0.5
+    Hs1: 1.5
+    Hs2: 10.8103
+    Bs0: 2.0
+    Bs1: 4.86197
+    Bs2: 7.39398
+    Q_s: 36
+    N_c: 16
+    conductors_per_slot: 32
+    coil_pitch: 8
+    parallel: 1
+    wire_d: 0.9
+    wire_wrap: 0.08
+    strands: 2
+    slot_area_gross: 93.861
+    slot_area_net: 87.7145
+    N_ph: 192.0
+    half_turn_len: 230.896
+    steel: M400-50A_user60
+  rotor:
+    slot_type: 1
+    Hs0: 0.8
+    Hs01: 0.8
+    Bs0: 1.0
+    Bs1: 4.5
+    Bs2: 2.4
+    Hs2: 19.8
+    Q_r: 28
+    cast: true
+    end_ring_w: 12.0
+    end_ring_h: 20.0
+    end_length: 0.0
+    skew_rotor_pitch: 0.777778
+    bar_area: null
+  note: 'Maxwell 3D(M1_3D_full)·2D 모델이 실제로 쓴 치수 = 데이터시트 §5·§7 기본값에 RMxprt v2 오버라이드(①~④·⑥: 로터 브리지 0.8, 고정자 개구 2.0, 쐐기 1.5, 로터 바 19.8/4.5/2.4, N_c 16)를 적용한 값. geometry_check_v2.json 의 체적은 이 치수로 만든 모델의 측정값이므로
+    동일성 검증은 이 절을 기준으로 한다.'

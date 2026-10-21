@@ -1,0 +1,325 @@
+{
+ "tag": "v1 (v2 미확정 — A1 ⑤)",
+ "date": "2026-10-16 22:52",
+ "designs": {
+  "M1_3D_quarter": {
+   "dimension_table": [
+    [
+     "D_so",
+     155.0,
+     155.0,
+     0.0,
+     true
+    ],
+    [
+     "D_si (UDP DiaGap)",
+     98.0,
+     98.0,
+     0.0,
+     true
+    ],
+    [
+     "L (Rotor_Core z 길이)",
+     135.0,
+     135.0,
+     0.0,
+     true
+    ],
+    [
+     "D_ro",
+     97.4,
+     97.4,
+     0.0,
+     true
+    ],
+    [
+     "air gap g (= D_band − D_ro, Band 가 공극 중앙)",
+     0.3,
+     0.3,
+     0.0,
+     true
+    ],
+    [
+     "bar area A_r (V/L, 스큐 보정) [기준: RMxprt 슬롯 면적]",
+     78.5241,
+     78.0034,
+     -0.663,
+     true
+    ],
+    [
+     "bar area (V/L, 보정 없음) [기준: RMxprt 슬롯 면적]",
+     78.5241,
+     78.1579,
+     -0.466,
+     true
+    ],
+    [
+     "coil solid section (CoilTerm area) vs 나동선 16턴 합",
+     20.3575,
+     21.1525,
+     3.905,
+     null
+    ],
+    [
+     "coil solid section vs 슬롯 1층 (A_slot/2, 참고)",
+     43.8574,
+     21.1525,
+     -51.77,
+     null
+    ],
+    [
+     "end ring axial width (End Ring Width + End Length)",
+     12.0,
+     12.0,
+     0.0,
+     true
+    ]
+   ],
+   "udp_stator": {
+    "DiaGap": "98mm",
+    "DiaYoke": "155mm",
+    "Length": "135mm",
+    "Slots": "36",
+    "SlotType": "2",
+    "Skew": "0deg"
+   },
+   "udp_rotor": {
+    "DiaGap": "97.4mm",
+    "DiaYoke": "36mm",
+    "Length": "135mm",
+    "Slots": "28",
+    "SlotType": "1",
+    "Skew": "rotorSkew"
+   },
+   "skew_check": {
+    "end_face_angles": [
+     [
+      -67.5,
+      40.00000000000001
+     ],
+     [
+      67.5,
+      49.99999967035174
+     ]
+    ],
+    "delta_deg": 10.0,
+    "expected_deg": 10.0
+   },
+   "teeth_yoke": {
+    "D2_mm": 130.014675424707,
+    "V_core": 269411.297,
+    "V_teeth": 81776.078,
+    "V_yoke": 187635.219,
+    "sum_diff_pct": 0.0
+   },
+   "cage": {
+    "bars": 7,
+    "rings": [
+     "EndRing_NDE",
+     "EndRing_DE"
+    ],
+    "volume_after": 102435.129,
+    "volume_diff_pct": -0.0
+   },
+   "coil_volume_mm3": 10234.005,
+   "symmetry_multiplier": 4
+  },
+  "M1_3D_full": {
+   "dimension_table": [
+    [
+     "D_so",
+     155.0,
+     155.0,
+     0.0,
+     true
+    ],
+    [
+     "D_si (UDP DiaGap)",
+     98.0,
+     98.0,
+     0.0,
+     true
+    ],
+    [
+     "L (Rotor_Core z 길이)",
+     135.0,
+     135.0,
+     0.0,
+     true
+    ],
+    [
+     "D_ro",
+     97.4,
+     97.4,
+     0.0,
+     true
+    ],
+    [
+     "air gap g (= D_band − D_ro, Band 가 공극 중앙)",
+     0.3,
+     0.3,
+     0.0,
+     true
+    ],
+    [
+     "bar area A_r (V/L, 스큐 보정) [기준: RMxprt 슬롯 면적]",
+     78.5241,
+     78.0034,
+     -0.663,
+     true
+    ],
+    [
+     "bar area (V/L, 보정 없음) [기준: RMxprt 슬롯 면적]",
+     78.5241,
+     78.1579,
+     -0.466,
+     true
+    ],
+    [
+     "coil solid section (CoilTerm area) vs 나동선 16턴 합",
+     20.3575,
+     21.1525,
+     3.905,
+     null
+    ],
+    [
+     "coil solid section vs 슬롯 1층 (A_slot/2, 참고)",
+     43.8574,
+     21.1525,
+     -51.77,
+     null
+    ],
+    [
+     "end ring axial width (End Ring Width + End Length)",
+     12.0,
+     12.0,
+     0.0,
+     true
+    ],
+    [
+     "end ring radial height (체적→내경 환산)",
+     20.0,
+     20.0,
+     0.0,
+     true
+    ]
+   ],
+   "udp_stator": {
+    "DiaGap": "98mm",
+    "DiaYoke": "155mm",
+    "Length": "135mm",
+    "Slots": "36",
+    "SlotType": "2",
+    "Skew": "0deg"
+   },
+   "udp_rotor": {
+    "DiaGap": "97.4mm",
+    "DiaYoke": "36mm",
+    "Length": "135mm",
+    "Slots": "28",
+    "SlotType": "1",
+    "Skew": "rotorSkew"
+   },
+   "skew_check": {
+    "end_face_angles": [
+     [
+      -67.5,
+      181.42857142857142
+     ],
+     [
+      67.5,
+      191.4285710889921
+     ]
+    ],
+    "delta_deg": 10.0,
+    "expected_deg": 10.0
+   },
+   "teeth_yoke": {
+    "D2_mm": 130.014675424707,
+    "V_core": 1077645.189,
+    "V_teeth": 327104.313,
+    "V_yoke": 750540.876,
+    "sum_diff_pct": 0.0
+   },
+   "cage": {
+    "bars": 28,
+    "rings": [
+     "EndRing_NDE",
+     "EndRing_DE"
+    ],
+    "volume_after": 409740.48,
+    "volume_diff_pct": -0.0
+   },
+   "coil_volume_mm3": 10234.005,
+   "symmetry_multiplier": 1
+  },
+  "M1_3D_full_ITSC": {
+   "split": {
+    "short": 2560.399,
+    "healthy": 7673.606,
+    "sum": 10234.005,
+    "original": 10234.005,
+    "short_ratio": 0.25019,
+    "sum_diff_pct": 0.0
+   },
+   "target_ratio": 0.25,
+   "split_method": "Coil_01 복제 후 전체 면 균일 오프셋(OffsetFaces, −t) → 안쪽 = healthy, 원본−안쪽 = 바깥 껍질 = short (코일 루프 전체를 따라 일정 두께)",
+   "pieces_connectivity": {
+    "Coil_01_short": 1,
+    "Coil_01_healthy": 1
+   },
+   "symmetry_multiplier": 1,
+   "validation": {
+    "result": false,
+    "log_unique": [
+     "[error] Ansys Electronics Desktop Student does not support Maxwell Transient solution.",
+     "[info] Verify conduction path: Conduction path validate success."
+    ]
+   }
+  }
+ },
+ "coil01_terminal_direction": {
+  "original_PhA_0": {
+   "normal": [
+    -0.0,
+    -0.0,
+    -1.0
+   ],
+   "point_out": false,
+   "effective_dir": [
+    -0.0,
+    -0.0,
+    -1.0
+   ]
+  },
+  "PhA_0_healthy": {
+   "normal": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "point_out": true,
+   "effective_dir": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "same_as_original": true
+  },
+  "PhA_0_short": {
+   "normal": [
+    -0.0,
+    -0.0,
+    1.0
+   ],
+   "point_out": true,
+   "effective_dir": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "same_as_original": true
+  },
+  "note": "코일 경로: 슬롯 1 변은 ±z 방향 직선. 원본 터미널의 유효 전류 방향(−z)과 두 새 터미널의 유효 방향이 같으면 전류 부호 유지. 면 법선은 PyAEDT 꼭짓점 순서로 계산한 값이라 GUI 화살표로 최종 확인 권장."
+ }
+}
