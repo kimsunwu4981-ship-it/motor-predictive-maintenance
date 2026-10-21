@@ -13,6 +13,8 @@ Isaac Sim 4.5 파이썬으로 실행 (경로에 공백·한글이 있으니 .bat
     /M1/Bearings/{DE, NDE}
     /M1/Looks/{copper, aluminum, silicon_steel, cast_iron, steel, phase_A/B/C, coil_short}
   variantSet "view": full | cutaway(하우징·고정자 1/4 절단 메시로 교체) | windings_only(코어 숨김)
+                     | half_translucent(top: 위 반 _T 반투명 UsdPreviewSurface opacity, 아래 반 _B 불투명) | half_translucent_front(front: 카메라 쪽 _F 반투명, _R 불투명)
+    반투명 재질 /M1/Looks/translucent_housing(주철 색, opacity 0.20) · translucent_core(규소강 색, 0.35) — 런타임은 /rtx/raytracing/fractionalCutoutOpacity 를 켠다 (viz/m1_model.py)
 배치: 적층 중심 = 프레임 길이 중심(x 0), 축 중심 z 100 mm (하우징 좌표: 발 바닥 z 0). 새 계산 없음.
 """
 import asyncio
@@ -34,6 +36,11 @@ mgr = omni.kit.app.get_app().get_extension_manager(); mgr.set_extension_enabled_
 MAT_COLOR = {"copper": (0.72, 0.45, 0.20), "aluminum": (0.80, 0.81, 0.83), "silicon_steel": (0.30, 0.31, 0.34), "cast_iron": (0.36, 0.40, 0.44), "steel": (0.58, 0.59, 0.61),
              "phase_A": (0.85, 0.25, 0.20), "phase_B": (0.95, 0.75, 0.15), "phase_C": (0.20, 0.45, 0.90), "coil_short": (1.00, 0.10, 0.05)}
 MAT_ROUGH = {"copper": 0.35, "aluminum": 0.4, "silicon_steel": 0.6, "cast_iron": 0.7, "steel": 0.35, "phase_A": 0.4, "phase_B": 0.4, "phase_C": 0.4, "coil_short": 0.4}
+# 반투명 재질 (H2): 색은 원 재질 그대로, opacity 만 — UsdPreviewSurface opacity(+ opacityThreshold 0) 는 RTX 에서 fractionalCutoutOpacity 가 켜져 있을 때 부분 불투명으로 그려진다
+TRANSLUCENT = {"translucent_housing": {"color": MAT_COLOR["cast_iron"], "opacity": 0.20, "roughness": 0.7},
+               "translucent_core": {"color": MAT_COLOR["silicon_steel"], "opacity": 0.35, "roughness": 0.6}}
+HALF_VARIANTS = {"half_translucent": ("top", "T", "B", "hou_half_top", "int_half_top"),
+                 "half_translucent_front": ("front", "F", "R", "hou_half_front", "int_half_front")}
 
 
 def log(*a):
@@ -64,7 +71,9 @@ def main():
     H_mm = float(man_h["axis_height_H_mm"])
     phase_of = {w["coil"]: w["phase"] for w in ds["winding_table"]}
     files = {"int_full": ("internals.obj", "M1_internals.usd"), "int_cut": ("internals_cutaway.obj", "M1_internals_cutaway.usd"),
-             "hou_full": ("housing.obj", "M1_housing.usd"), "hou_cut": ("housing_cutaway.obj", "M1_housing_cutaway.usd")}
+             "hou_full": ("housing.obj", "M1_housing.usd"), "hou_cut": ("housing_cutaway.obj", "M1_housing_cutaway.usd"),
+             "hou_half_top": ("housing_half_top.obj", "M1_housing_half_top.usd"), "hou_half_front": ("housing_half_front.obj", "M1_housing_half_front.usd"),
+             "int_half_top": ("internals_half_top.obj", "M1_internals_half_top.usd"), "int_half_front": ("internals_half_front.obj", "M1_internals_half_front.usd")}
     maps = {}
     loop = asyncio.get_event_loop()
     for key, (src, dst) in files.items():
@@ -94,12 +103,34 @@ def main():
         sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0, 0, 0))
         m.CreateSurfaceOutput().ConnectToSource(sh.ConnectableAPI(), "surface")
         mats[name] = m
+    for name, t in TRANSLUCENT.items():
+        m = UsdShade.Material.Define(stage, f"/M1/Looks/{name}")
+        sh = UsdShade.Shader.Define(stage, f"/M1/Looks/{name}/Shader"); sh.CreateIdAttr("UsdPreviewSurface")
+        sh.CreateInput("diffuseColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(*t["color"]))
+        sh.CreateInput("roughness", Sdf.ValueTypeNames.Float).Set(float(t["roughness"]))
+        sh.CreateInput("metallic", Sdf.ValueTypeNames.Float).Set(0.3)
+        sh.CreateInput("opacity", Sdf.ValueTypeNames.Float).Set(float(t["opacity"]))
+        sh.CreateInput("opacityThreshold", Sdf.ValueTypeNames.Float).Set(0.0)
+        sh.CreateInput("emissiveColor", Sdf.ValueTypeNames.Color3f).Set(Gf.Vec3f(0, 0, 0))
+        m.CreateSurfaceOutput().ConnectToSource(sh.ConnectableAPI(), "surface")
+        mats[name] = m
 
     def place(prim_path, key, part_name, material, z_offset_mm=0.0):
         """Xform prim + 변환 USD 의 메시를 참조(variant 밖 = full)."""
         # 타입 없는 def — 참조된 Mesh 의 typeName 이 그대로 와야 렌더된다 (Xform.Define 으로 만들면 로컬 typeName 이 이겨 메시가 안 보인다, 실측)
         prim = stage.DefinePrim(prim_path)
         dst, _, mm = maps[key]
+        prim.GetReferences().AddReference(f"./{dst}", mm[part_name])
+        UsdShade.MaterialBindingAPI.Apply(prim).Bind(mats[material])
+        prim.SetCustomDataByKey("material", material)
+        return prim
+
+    def half_prim(prim_path, key, part_name, material):
+        """variant 안에서만 존재하는 반투명 조각 prim (형제 prim — 런타임 그룹 재질 바인딩(strongerThanDescendants)의 영향을 받지 않는다)."""
+        dst, _, mm = maps[key]
+        if part_name not in mm:                      # 빈 조각(예: top 분할의 아이볼트 _B) → 만들지 않음
+            return None
+        prim = stage.DefinePrim(prim_path)
         prim.GetReferences().AddReference(f"./{dst}", mm[part_name])
         UsdShade.MaterialBindingAPI.Apply(prim).Bind(mats[material])
         prim.SetCustomDataByKey("material", material)
@@ -152,8 +183,23 @@ def main():
             if n in hou_prims:
                 UsdGeom.Imageable(hou_prims[n]).MakeInvisible()
         UsdGeom.Imageable(stage.GetPrimAtPath("/M1/Rotor/Core")).MakeInvisible()
+    # half_translucent(top) / half_translucent_front (H2): 불투명 반은 원 prim 이 _B/_R 메시를 참조, 반투명 반은 형제 prim <이름>_T/_F (variant 안에서만 정의)
+    half_prims = {}
+    for vname, (split, tr, op, hkey, ikey) in HALF_VARIANTS.items():
+        vs.AddVariant(vname); vs.SetVariantSelection(vname); half_prims[vname] = []
+        with vs.GetVariantEditContext():
+            for n, pr in hou_prims.items():
+                if n == "Foot":
+                    continue                           # 발은 나누지 않는다 (불투명 그대로)
+                ref_variant(pr, hkey, f"{n}_{op}")
+                if half_prim(f"/M1/Housing/{n}_{tr}", hkey, f"{n}_{tr}", "translucent_housing") is not None:
+                    half_prims[vname].append(f"/M1/Housing/{n}_{tr}")
+            ref_variant(stator_prims["Stator_Core"], ikey, f"Stator_Core_{op}")
+            if half_prim(f"/M1/Stator/Core_{tr}", ikey, f"Stator_Core_{tr}", "translucent_core") is not None:
+                half_prims[vname].append(f"/M1/Stator/Core_{tr}")
+        log(f"variant {vname}: 반투명 조각 {len(half_prims[vname])} (split {split})")
     vs.SetVariantSelection("full")
-    root.GetPrim().SetCustomDataByKey("view_variants", "full | cutaway | windings_only")
+    root.GetPrim().SetCustomDataByKey("view_variants", "full | cutaway | windings_only | half_translucent | half_translucent_front")
     # mount: B3(기본, 플랜지 없음) / B35(FF215 플랜지)
     if "EndShield_DE_B35" in hou_prims:
         vm = root.GetPrim().GetVariantSets().AddVariantSet("mount")
@@ -162,16 +208,22 @@ def main():
         vm.SetVariantSelection("B3")
         with vm.GetVariantEditContext():
             UsdGeom.Imageable(hou_prims["EndShield_DE_B35"]).MakeInvisible()
+            for tr in ("T", "F"):                      # half variant 의 반투명 조각도 같이 숨김 (over — 그 variant 가 아닐 때는 prim 이 없어 무해)
+                UsdGeom.Imageable(stage.OverridePrim(f"/M1/Housing/EndShield_DE_B35_{tr}")).MakeInvisible()
         vm.SetVariantSelection("B35")
         with vm.GetVariantEditContext():
             UsdGeom.Imageable(hou_prims["EndShield_DE"]).MakeInvisible()
+            for tr in ("T", "F"):
+                UsdGeom.Imageable(stage.OverridePrim(f"/M1/Housing/EndShield_DE_{tr}")).MakeInvisible()
         vm.SetVariantSelection("B3")
         root.GetPrim().SetCustomDataByKey("mount_variants", "B3 (기본) | B35")
     root.GetPrim().SetCustomDataByKey("rotor_xform", "/M1/Rotor xformOp:rotateX [deg] — 런타임이 rpm 을 적분해 설정")
     stage.GetRootLayer().Save()
     n_prims = sum(1 for _ in stage.Traverse())
     log(f"M1.usd prims {n_prims} · 하우징 {len(hou_prims)} · 고정자 {len(stator_prims)} · 로터 {1 + sum(1 for n in man_i['parts'] if n.startswith('Bar_')) + 3}")
-    json.dump({"files": {k: v[0] for k, v in maps.items()}, "mesh_counts": {k: len(v[2]) for k, v in maps.items()}, "prims": n_prims, "H_mm": H_mm},
+    json.dump({"files": {k: v[0] for k, v in maps.items()}, "mesh_counts": {k: len(v[2]) for k, v in maps.items()}, "prims": n_prims, "H_mm": H_mm,
+               "view_variants": ["full", "cutaway", "windings_only"] + list(HALF_VARIANTS), "half_translucent": {v: {"split": s[0], "translucent": s[1], "opaque": s[2], "prims": half_prims[v]} for v, s in HALF_VARIANTS.items()},
+               "translucent_materials": TRANSLUCENT, "translucent_method": "UsdPreviewSurface opacity (+ /rtx/raytracing/fractionalCutoutOpacity at runtime)"},
               open(os.path.join(ASSET, "usd_build.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
 

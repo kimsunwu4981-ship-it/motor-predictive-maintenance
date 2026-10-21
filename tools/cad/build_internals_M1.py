@@ -22,7 +22,7 @@ from pathlib import Path
 import cadquery as cq
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from m1_common import ASSET, INP, PartSet, load_ds, dsv, pol, rot_x, quarter_cutter, save_json, solid_volume  # noqa: E402
+from m1_common import ASSET, HALF_SPLITS, INP, PartSet, load_ds, dsv, pol, rot_x, quarter_cutter, save_json, solid_volume, split_parts  # noqa: E402
 
 # 시각 추정(visual_estimate) 배치 상수 — 카탈로그·시트에 없는 값. 어떤 체적·치수 검증에도 쓰지 않는다. 하우징 스크립트가 housing_params.yaml 에 같은 값을 기록한다.
 LAYOUT = {
@@ -148,7 +148,7 @@ def coil_solids(pts_top, pts_bot, th_pitch_deg, Lh, overhang, exit_mm, bulge, n_
 
 
 # ----------------------------------------------------------------------------- 본체
-def build(end_path: str, n_seg: int, quick: bool) -> dict:
+def build(end_path: str, n_seg: int, quick: bool, half_splits=tuple(HALF_SPLITS)) -> dict:
     ds = load_ds(); mx = ds["maxwell_model"]; st, ro = mx["stator"], mx["rotor"]
     gc = json.loads((INP / "geometry_check_v2.json").read_text(encoding="utf-8"))
     full = gc["designs"]["M1_3D_full"]
@@ -275,6 +275,14 @@ def build(end_path: str, n_seg: int, quick: bool) -> dict:
     pc.export_obj(out / "internals_cutaway.obj"); pc.export_glb(out / "internals_cutaway.glb")
     man["cutaway_triangles"] = pc.triangles()
     save_json(out / "internals_parts.json", man)
+    # ---- 반 분할 (H1): 고정자 코어만 (권선·로터·축·베어링·엔드링은 나누지 않는다). 평면은 축(원점)을 지난다
+    man["half_split"] = {}
+    for split in half_splits:
+        ph, tab = split_parts(ps, ["Stator_Core"], split, f"M1_internals_half_{split}", z_axis=0.0, tol=0.10, ang=0.30)
+        ph.export_obj(out / f"internals_half_{split}.obj"); ph.export_glb(out / f"internals_half_{split}.glb")
+        man["half_split"][split] = tab
+        log(f"half {split}: Stator_Core 조각 {len(ph.parts)} · 삼각형 {tab['triangles']:,} · 체적 합 편차 {tab['parts']['Stator_Core']['dev_pct']:.4f} %")
+    save_json(out / "internals_parts.json", man)
     log(f"삼각형 {ps.triangles():,} (cutaway {pc.triangles():,}) · 코일 합 {man['sums']['coils_mm3']:.0f} · 바 합 {man['sums']['bars_mm3']:.0f} · 링 {man['sums']['rings_mm3']:.0f} mm³ · {man['generated_s']} s")
     return man
 
@@ -285,8 +293,9 @@ def main():
                     help="엔드턴 경로 길이 규칙 (기본 geometry_check = Maxwell RMxprt 자동 엔드코일 체적에서 역산 106.9 mm — 2026-10-21 결정; sheet = 시트 l_end 121.5 mm 참고)")
     ap.add_argument("--end-segments", type=int, default=10, help="엔드턴 스플라인 분할 수")
     ap.add_argument("--quick", action="store_true", help="코일 2개만 (개발용)")
+    ap.add_argument("--half-split", nargs="*", choices=list(HALF_SPLITS), default=list(HALF_SPLITS), help="고정자 코어 반 분할 평면 (기본: top front 둘 다)")
     a = ap.parse_args()
-    build(a.end_path, a.end_segments, a.quick)
+    build(a.end_path, a.end_segments, a.quick, tuple(a.half_split))
 
 
 if __name__ == "__main__":

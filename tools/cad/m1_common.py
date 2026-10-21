@@ -129,3 +129,38 @@ def quarter_cutter(size=400.0, rot_deg=CUT_ROT_DEG):
 
 def save_json(path: Path, data: dict):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+# ----------------------------------------------------------------------------- 반 분할 (H1, 2026-10-21): 자르지 않고 두 조각으로 — 체적 합 = 원본
+HALF_SPLITS = {"top": ("T", "B"), "front": ("F", "R")}   # top: 수평면 Z=축 중심 (T 위 / B 아래), front: 수직면 Y=0 (F = Y<0 카메라 쪽 / R 반대)
+
+
+def half_cutters(split: str, size: float = 400.0) -> dict[str, cq.Workplane]:
+    """조각 이름 → 그 조각을 만들 때 **빼는** 반공간 박스 (축 +X 를 지나는 평면, 원점 기준 — 하우징은 translate(0,0,Z) 로 축 높이에 맞춘다)."""
+    if split == "top":
+        below = cq.Workplane("XY").box(size * 2, size * 2, size, centered=(True, True, False)).translate((0, 0, -size))   # Z ∈ [−size, 0]
+        above = cq.Workplane("XY").box(size * 2, size * 2, size, centered=(True, True, False))                            # Z ∈ [0, size]
+        return {"T": below, "B": above}
+    if split == "front":
+        pos = cq.Workplane("XY").box(size * 2, size, size * 2, centered=(True, False, True))                              # Y ∈ [0, size]
+        neg = cq.Workplane("XY").box(size * 2, size, size * 2, centered=(True, False, True)).translate((0, -size, 0))     # Y ∈ [−size, 0]
+        return {"F": pos, "R": neg}
+    raise ValueError(split)
+
+
+def split_parts(ps: "PartSet", names: list[str], split: str, tag: str, z_axis: float = 0.0, tol=0.2, ang=0.5) -> tuple["PartSet", dict]:
+    """ps 의 부품 names 를 두 조각(<이름>_T/_B 또는 _F/_R)으로 나눈 PartSet 과 체적 대조표.
+    빈 조각(예: top 분할에서 전부 위에 있는 아이볼트의 _B)은 메시를 만들지 않고 체적 0 으로 적는다 — 합은 그대로 원본과 같아야 한다."""
+    cutters = {k: c.translate((0, 0, z_axis)) for k, c in half_cutters(split).items()}
+    out = PartSet(tag); table = {}
+    for n in names:
+        p = ps.parts[n]; vols = {}
+        for suffix, cutter in cutters.items():
+            piece = p["shape"].cut(cutter)
+            v = solid_volume(piece)
+            vols[suffix] = v
+            if v > 1e-6:
+                out.add(f"{n}_{suffix}", piece, p["material"], p["group"], f"{p['note']} — half {split} {suffix}", tol=tol, ang=ang)
+        s = sum(vols.values()); dev = (s / p["volume_mm3"] - 1) * 100 if p["volume_mm3"] > 0 else 0.0
+        table[n] = {"pieces_mm3": {k: round(v, 3) for k, v in vols.items()}, "sum_mm3": round(s, 3), "original_mm3": round(p["volume_mm3"], 3), "dev_pct": round(dev, 4)}
+    return out, {"split": split, "plane": "Z = axis" if split == "top" else "Y = 0", "triangles": out.triangles(), "parts": table}

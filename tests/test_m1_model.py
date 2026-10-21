@@ -162,3 +162,78 @@ def test_triangle_budget(ctx):
     n = ctx["im"]["triangles_total"] + ctx["hm"]["triangles_total"]
     assert n <= 300_000, n
     assert ctx["im"]["triangles_total"] <= 200_000, ctx["im"]["triangles_total"]
+
+
+# ----------------------------------------------------------------------------- 반 분할 · 반투명 variant (H1~H3, 2026-10-21)
+HALF_SPLITS = {"top": ("T", "B"), "front": ("F", "R")}
+
+
+def half_rows(c) -> list[dict]:
+    """체적 합 = 원본 ±0.1 % (아무것도 제거되지 않았음의 증명). 빈 조각(체적 0)은 허용 — 예: top 분할의 아이볼트 _B."""
+    rows = []
+    for tag, man in (("housing", c["hm"]), ("internals", c["im"])):
+        hs = man.get("half_split") or {}
+        for split, tab in hs.items():
+            for n, r in tab["parts"].items():
+                rows.append({"item": f"{tag} {split} {n}", "sum": r["sum_mm3"], "orig": r["original_mm3"], "dev_pct": r["dev_pct"],
+                             "empty": [k for k, v in r["pieces_mm3"].items() if v == 0], "pass": abs(r["dev_pct"]) <= 0.1})
+    return rows
+
+
+def test_half_split_volume_sums(ctx):
+    rows = half_rows(ctx)
+    assert rows, "half_split 매니페스트 없음 — build_housing_100L.py / build_internals_M1.py 를 다시 실행"
+    assert set(ctx["hm"]["half_split"]) == set(HALF_SPLITS) == set(ctx["im"]["half_split"])
+    bad = [r for r in rows if not r["pass"]]
+    assert not bad, bad
+    assert "Foot" not in ctx["hm"]["half_split"]["top"]["parts"]                      # 발은 나누지 않는다
+    assert list(ctx["im"]["half_split"]["top"]["parts"]) == ["Stator_Core"]          # 내부는 고정자 코어만 (권선·로터·베어링 불투명 유지)
+    for split, (a, b) in HALF_SPLITS.items():
+        for n, r in ctx["hm"]["half_split"][split]["parts"].items():
+            assert set(r["pieces_mm3"]) == {a, b}, (split, n)
+
+
+def test_half_meshes_present_in_glb():
+    import trimesh
+    for split, (a, b) in HALF_SPLITS.items():
+        names_h = set(trimesh.load(ASSET / f"housing_half_{split}.glb").geometry)
+        names_i = set(trimesh.load(ASSET / f"internals_half_{split}.glb").geometry)
+        assert {f"Frame_{a}", f"Frame_{b}", f"EndShield_DE_{a}", f"EndShield_DE_{b}", f"FanCover_{a}", f"FanCover_{b}"} <= names_h, (split, names_h)
+        assert not any(n.startswith("Foot") for n in names_h)
+        assert names_i == {f"Stator_Core_{a}", f"Stator_Core_{b}"}, names_i
+
+
+def test_usd_view_variants_four_plus_one():
+    """M1.usd variantSet view = 기존 3 + half_translucent + half_translucent_front. 반투명 조각 prim 은 그 variant 에서만 있고 translucent 재질(opacity 0.20/0.35)이 바인딩된다."""
+    from pxr import Usd, UsdShade
+    st = Usd.Stage.Open(str(ASSET / "M1.usd"))
+    root = st.GetPrimAtPath("/M1"); vs = root.GetVariantSet("view")
+    assert set(vs.GetVariantNames()) == {"full", "cutaway", "windings_only", "half_translucent", "half_translucent_front"}
+    def opacity_of(prim):
+        mat, _ = UsdShade.MaterialBindingAPI(prim).ComputeBoundMaterial()
+        sh = UsdShade.Shader(st.GetPrimAtPath(str(mat.GetPath()) + "/Shader"))
+        return str(mat.GetPath()), sh.GetInput("opacity").Get()
+    for v, tr in (("half_translucent", "T"), ("half_translucent_front", "F")):
+        vs.SetVariantSelection(v)
+        frame_t = st.GetPrimAtPath(f"/M1/Housing/Frame_{tr}"); core_t = st.GetPrimAtPath(f"/M1/Stator/Core_{tr}")
+        assert frame_t.IsValid() and core_t.IsValid(), v
+        assert opacity_of(frame_t) == ("/M1/Looks/translucent_housing", pytest.approx(0.20))
+        assert opacity_of(core_t) == ("/M1/Looks/translucent_core", pytest.approx(0.35))
+        assert st.GetPrimAtPath("/M1/Housing/Foot").IsValid() and not st.GetPrimAtPath(f"/M1/Housing/Foot_{tr}").IsValid()
+        for p in ("/M1/Rotor/Shaft", "/M1/Bearings/DE", "/M1/Stator/Coils/Coil_01"):       # 불투명 유지 부품은 그대로
+            assert opacity_of(st.GetPrimAtPath(p))[1] in (None, 1.0), p
+    for v in ("full", "cutaway", "windings_only"):
+        vs.SetVariantSelection(v)
+        assert not st.GetPrimAtPath("/M1/Housing/Frame_T").IsValid() and not st.GetPrimAtPath("/M1/Stator/Core_F").IsValid(), v
+        assert opacity_of(st.GetPrimAtPath("/M1/Housing/Frame"))[1] in (None, 1.0)
+    vs.SetVariantSelection("full")
+
+
+def test_half_triangle_budget(ctx):
+    """한 번에 올라가는 메시(전체 + 반 분할 한 쌍) ≤ 300k, 분할 쌍은 원본 대비 소폭 증가만."""
+    base = ctx["im"]["triangles_total"] + ctx["hm"]["triangles_total"]
+    for split in HALF_SPLITS:
+        half = ctx["hm"]["half_split"][split]["triangles"] + ctx["im"]["half_split"][split]["triangles"]
+        assert base + half <= 300_000, (split, base, half)
+        orig = sum(ctx["hm"]["parts"][n]["triangles"] for n in ctx["hm"]["parts"] if n != "Foot") + ctx["im"]["parts"]["Stator_Core"]["triangles"]
+        assert half <= orig * 1.6, (split, half, orig)

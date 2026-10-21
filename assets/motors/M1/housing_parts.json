@@ -3,7 +3,7 @@
  "units": "mm",
  "axis": "+X",
  "origin": "stack center",
- "generated_s": 2.5,
+ "generated_s": 2.8,
  "triangles_total": 5276,
  "parts": {
   "Frame": {
@@ -75,5 +75,147 @@
   -80.0,
   80.0
  ],
- "cutaway_triangles": 2904
+ "cutaway_triangles": 2904,
+ "half_split": {
+  "top": {
+   "split": "top",
+   "plane": "Z = axis",
+   "triangles": 4976,
+   "parts": {
+    "Frame": {
+     "pieces_mm3": {
+      "T": 502929.923,
+      "B": 1345851.756
+     },
+     "sum_mm3": 1848781.679,
+     "original_mm3": 1848781.679,
+     "dev_pct": -0.0
+    },
+    "EndShield_DE": {
+     "pieces_mm3": {
+      "T": 318653.706,
+      "B": 318653.706
+     },
+     "sum_mm3": 637307.413,
+     "original_mm3": 637307.413,
+     "dev_pct": 0.0
+    },
+    "EndShield_DE_B35": {
+     "pieces_mm3": {
+      "T": 516800.238,
+      "B": 516800.238
+     },
+     "sum_mm3": 1033600.476,
+     "original_mm3": 1033600.476,
+     "dev_pct": 0.0
+    },
+    "EndShield_NDE": {
+     "pieces_mm3": {
+      "T": 322364.713,
+      "B": 322364.713
+     },
+     "sum_mm3": 644729.425,
+     "original_mm3": 644729.425,
+     "dev_pct": -0.0
+    },
+    "FanCover": {
+     "pieces_mm3": {
+      "T": 44367.001,
+      "B": 44367.001
+     },
+     "sum_mm3": 88734.002,
+     "original_mm3": 88734.002,
+     "dev_pct": 0.0
+    },
+    "TerminalBox": {
+     "pieces_mm3": {
+      "T": 539927.793,
+      "B": 0
+     },
+     "sum_mm3": 539927.793,
+     "original_mm3": 539927.793,
+     "dev_pct": 0.0
+    },
+    "Eyebolt": {
+     "pieces_mm3": {
+      "T": 7409.432,
+      "B": 0
+     },
+     "sum_mm3": 7409.432,
+     "original_mm3": 7409.432,
+     "dev_pct": 0.0
+    }
+   }
+  },
+  "front": {
+   "split": "front",
+   "plane": "Y = 0",
+   "triangles": 5160,
+   "parts": {
+    "Frame": {
+     "pieces_mm3": {
+      "F": 924390.839,
+      "R": 924390.839
+     },
+     "sum_mm3": 1848781.679,
+     "original_mm3": 1848781.679,
+     "dev_pct": -0.0
+    },
+    "EndShield_DE": {
+     "pieces_mm3": {
+      "F": 318653.706,
+      "R": 318653.706
+     },
+     "sum_mm3": 637307.413,
+     "original_mm3": 637307.413,
+     "dev_pct": 0.0
+    },
+    "EndShield_DE_B35": {
+     "pieces_mm3": {
+      "F": 516800.238,
+      "R": 516800.238
+     },
+     "sum_mm3": 1033600.476,
+     "original_mm3": 1033600.476,
+     "dev_pct": 0.0
+    },
+    "EndShield_NDE": {
+     "pieces_mm3": {
+      "F": 322364.713,
+      "R": 322364.713
+     },
+     "sum_mm3": 644729.425,
+     "original_mm3": 644729.425,
+     "dev_pct": -0.0
+    },
+    "FanCover": {
+     "pieces_mm3": {
+      "F": 44367.001,
+      "R": 44367.001
+     },
+     "sum_mm3": 88734.002,
+     "original_mm3": 88734.002,
+     "dev_pct": 0.0
+    },
+    "TerminalBox": {
+     "pieces_mm3": {
+      "F": 269963.896,
+      "R": 269963.896
+     },
+     "sum_mm3": 539927.793,
+     "original_mm3": 539927.793,
+     "dev_pct": 0.0
+    },
+    "Eyebolt": {
+     "pieces_mm3": {
+      "F": 3704.716,
+      "R": 3704.716
+     },
+     "sum_mm3": 7409.432,
+     "original_mm3": 7409.432,
+     "dev_pct": 0.0
+    }
+   }
+  }
+ }
 }

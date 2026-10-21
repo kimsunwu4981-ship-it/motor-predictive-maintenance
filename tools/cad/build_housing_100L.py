@@ -5,11 +5,14 @@
 카탈로그에 없는 값(프레임 외경 AC, 핀, 엔드쉴드 두께, 팬 커버, 단자함 크기·위치, 아이볼트)은 visual_estimate — 어떤 계산에도 쓰지 않는다.
 AD: 카탈로그 발 장착 표 328 / 플랜지 표 175 (정의가 다름) → verify. 단자함은 HD(상면 높이)만 맞춘다.
 좌표: 축 +X, 발 바닥 Z 0, 축 중심 Z H(=100), 적층 중심 X 0 (내부 모델과 같은 X). 단위 mm.
-출력: assets/motors/M1/housing_100L.step, housing.obj/.glb, housing_cutaway.obj/.glb, housing_parts.json, housing_params.yaml
+출력: assets/motors/M1/housing_100L.step, housing.obj/.glb, housing_cutaway.obj/.glb, housing_half_{top,front}.obj/.glb, housing_parts.json, housing_params.yaml
 
-  py -3.12 -X utf8 tools/cad/build_housing_100L.py
+  py -3.12 -X utf8 tools/cad/build_housing_100L.py [--half-split top front]
+반 분할(H1, 2026-10-21): 축 +X 를 지나는 평면으로 Foot 을 뺀 하우징 전 부품을 두 조각(_T/_B 또는 _F/_R)으로 — 자르지 않고 나눈다(체적 합 = 원본 ±0.1 %, 테스트).
 """
 from __future__ import annotations
+
+import argparse
 
 import math
 import sys
@@ -20,7 +23,7 @@ import cadquery as cq
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from m1_common import ASSET, PartSet, load_ds, quarter_cutter, save_json  # noqa: E402
+from m1_common import ASSET, HALF_SPLITS, PartSet, load_ds, quarter_cutter, save_json, split_parts  # noqa: E402
 from build_internals_M1 import LAYOUT  # noqa: E402
 
 VIS = {   # visual_estimate — 카탈로그·시트에 없음
@@ -36,7 +39,7 @@ VIS = {   # visual_estimate — 카탈로그·시트에 없음
 }
 
 
-def build():
+def build(half_splits=tuple(HALF_SPLITS)):
     ds = load_ds(); cat = ds["catalog_frame_100L"]; fo = cat["foot_mount_IM_B3"]; fl = cat["flange_FF215"]
     H, A, AA, AB, HA, B, BB, C, K = (float(fo[k]) for k in ("H", "A", "AA", "AB", "HA", "B1", "BB", "C", "K"))
     HC, HD, L_total, D, E, F, GE = (float(fo[k]) for k in ("HC", "HD", "L", "D", "E", "F", "GE"))
@@ -132,6 +135,15 @@ def build():
         pc.add(n_, p["shape"].cut(cutter), p["material"], p["group"], p["note"], tol=0.2, ang=0.5)
     pc.export_obj(out / "housing_cutaway.obj"); pc.export_glb(out / "housing_cutaway.glb")
     man["cutaway_triangles"] = pc.triangles(); save_json(out / "housing_parts.json", man)
+    # ---- 반 분할 (H1): Foot 제외 전 부품, 평면은 축 중심(top: Z = H, front: Y = 0)
+    man["half_split"] = {}
+    for split in half_splits:
+        ph, tab = split_parts(ps, [n_ for n_ in ps.parts if n_ != "Foot"], split, f"M1_housing_half_{split}", z_axis=Z, tol=0.2, ang=0.5)
+        ph.export_obj(out / f"housing_half_{split}.obj"); ph.export_glb(out / f"housing_half_{split}.glb")
+        man["half_split"][split] = tab
+        worst = max(abs(r["dev_pct"]) for r in tab["parts"].values())
+        log(f"half {split}: 조각 {len(ph.parts)} · 삼각형 {tab['triangles']:,} · 체적 합 편차 최대 {worst:.4f} %")
+    save_json(out / "housing_parts.json", man)
 
     # ---- housing_params.yaml: 항목마다 source
     params = {"meta": {"generator": "tools/cad/build_housing_100L.py", "frame": "IEC 100L (현대 SSEN HLP-2.2/4, IM B3 + FF215 B35 옵션 플랜지)", "coords": "축 +X, 발 바닥 Z 0, 축 중심 Z H, 적층 중심 X 0, mm"},
@@ -149,4 +161,7 @@ def build():
 
 
 if __name__ == "__main__":
-    build()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--half-split", nargs="*", choices=list(HALF_SPLITS), default=list(HALF_SPLITS), help="반 분할 평면 (기본: top front 둘 다)")
+    a = ap.parse_args()
+    build(tuple(a.half_split))

@@ -3,14 +3,82 @@
   "int_full": "M1_internals.usd",
   "int_cut": "M1_internals_cutaway.usd",
   "hou_full": "M1_housing.usd",
-  "hou_cut": "M1_housing_cutaway.usd"
+  "hou_cut": "M1_housing_cutaway.usd",
+  "hou_half_top": "M1_housing_half_top.usd",
+  "hou_half_front": "M1_housing_half_front.usd",
+  "int_half_top": "M1_internals_half_top.usd",
+  "int_half_front": "M1_internals_half_front.usd"
  },
  "mesh_counts": {
   "int_full": 72,
   "int_cut": 72,
   "hou_full": 8,
-  "hou_cut": 6
+  "hou_cut": 6,
+  "hou_half_top": 12,
+  "hou_half_front": 14,
+  "int_half_top": 2,
+  "int_half_front": 2
  },
- "prims": 106,
- "H_mm": 100.0
+ "prims": 110,
+ "H_mm": 100.0,
+ "view_variants": [
+  "full",
+  "cutaway",
+  "windings_only",
+  "half_translucent",
+  "half_translucent_front"
+ ],
+ "half_translucent": {
+  "half_translucent": {
+   "split": "top",
+   "translucent": "T",
+   "opaque": "B",
+   "prims": [
+    "/M1/Housing/Frame_T",
+    "/M1/Housing/EndShield_DE_T",
+    "/M1/Housing/EndShield_DE_B35_T",
+    "/M1/Housing/EndShield_NDE_T",
+    "/M1/Housing/FanCover_T",
+    "/M1/Housing/TerminalBox_T",
+    "/M1/Housing/Eyebolt_T",
+    "/M1/Stator/Core_T"
+   ]
+  },
+  "half_translucent_front": {
+   "split": "front",
+   "translucent": "F",
+   "opaque": "R",
+   "prims": [
+    "/M1/Housing/Frame_F",
+    "/M1/Housing/EndShield_DE_F",
+    "/M1/Housing/EndShield_DE_B35_F",
+    "/M1/Housing/EndShield_NDE_F",
+    "/M1/Housing/FanCover_F",
+    "/M1/Housing/TerminalBox_F",
+    "/M1/Housing/Eyebolt_F",
+    "/M1/Stator/Core_F"
+   ]
+  }
+ },
+ "translucent_materials": {
+  "translucent_housing": {
+   "color": [
+    0.36,
+    0.4,
+    0.44
+   ],
+   "opacity": 0.2,
+   "roughness": 0.7
+  },
+  "translucent_core": {
+   "color": [
+    0.3,
+    0.31,
+    0.34
+   ],
+   "opacity": 0.35,
+   "roughness": 0.6
+  }
+ },
+ "translucent_method": "UsdPreviewSurface opacity (+ /rtx/raytracing/fractionalCutoutOpacity at runtime)"
 }

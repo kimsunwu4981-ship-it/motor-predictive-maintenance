@@ -3,7 +3,7 @@
  "units": "mm",
  "axis": "+X",
  "origin": "stack center",
- "generated_s": 14.2,
+ "generated_s": 18.4,
  "triangles_total": 127908,
  "parts": {
   "Stator_Core": {
@@ -543,5 +543,39 @@
   "rings_mm3": 116716.45026616802,
   "coil01_full_mm3": 10248.661337291736
  },
- "cutaway_triangles": 97204
+ "cutaway_triangles": 97204,
+ "half_split": {
+  "top": {
+   "split": "top",
+   "plane": "Z = axis",
+   "triangles": 4880,
+   "parts": {
+    "Stator_Core": {
+     "pieces_mm3": {
+      "T": 536421.668,
+      "B": 536421.668
+     },
+     "sum_mm3": 1072843.335,
+     "original_mm3": 1072843.335,
+     "dev_pct": 0.0
+    }
+   }
+  },
+  "front": {
+   "split": "front",
+   "plane": "Y = 0",
+   "triangles": 4504,
+   "parts": {
+    "Stator_Core": {
+     "pieces_mm3": {
+      "F": 536421.668,
+      "R": 536421.668
+     },
+     "sum_mm3": 1072843.335,
+     "original_mm3": 1072843.335,
+     "dev_pct": 0.0
+    }
+   }
+  }
+ }
 }

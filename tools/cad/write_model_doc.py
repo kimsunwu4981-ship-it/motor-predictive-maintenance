@@ -80,6 +80,19 @@ def main():
           f"- 내부 {im['triangles_total']:,} 삼각형 (cutaway {im['cutaway_triangles']:,}) · 하우징 {hm['triangles_total']:,} (cutaway {hm['cutaway_triangles']:,}) · 합 {im['triangles_total'] + hm['triangles_total']:,} ≤ 300k. 엔드턴 스플라인 분할 `--end-segments`(기본 10), 메시 허용오차는 스크립트 `tol/ang`.",
           "- `assets/motors/M1/`: internals.step(보관, 27 MB) · internals.obj/.glb · internals_cutaway.obj/.glb · internals_parts.json(재질·체적·삼각형) · housing_100L.step · housing.obj/.glb · housing_cutaway.* · housing_parts.json · housing_params.yaml",
           f"- USD: M1_internals.usd / M1_internals_cutaway.usd / M1_housing.usd / M1_housing_cutaway.usd (omni.kit.asset_converter) → M1.usd 조립 (prim {ub.get('prims', '—')}, 메시 {ub.get('mesh_counts', '—')})",
+          "", "## 4b. view variant 4+1종 · 반절 반투명 (H1~H3, 2026-10-21)", "",
+          "| variant | 하우징·고정자 코어 | 그 밖(권선·로터·축·베어링) | 메시 파일 | 용도 |", "|---|---|---|---|---|",
+          "| `full` | 원형 | 원형 | housing.obj / internals.obj | 외형 |",
+          "| `cutaway` | θ −45~+45° 1/4 절단 | 원형 | *_cutaway.obj | 슬롯 1·Coil_01 노출 |",
+          "| `windings_only` | 숨김 | 코일만 | internals.obj | 권선 배치 |",
+          "| `half_translucent` | 위 반(`_T`, Z > 축 중심) 반투명 / 아래 반(`_B`) 불투명 | 원형(불투명) | housing_half_top.obj / internals_half_top.obj | 외형 유지 + 내부 비침 (기본) |",
+          "| `half_translucent_front` | 카메라 쪽 반(`_F`, Y < 0) 반투명 / 반대(`_R`) 불투명 | 원형(불투명) | *_half_front.obj | 측면 카메라용 |", "",
+          "- 반 분할은 **자르지 않고 나눈다**: 조각 체적 합 = 원본 ±0.1 %(`tests/test_m1_model.py::test_half_split_volume_sums`). 대상은 Foot 을 뺀 하우징 전 부품 + Stator_Core. "
+          + " · ".join(f"{s_}: 하우징 {hm['half_split'][s_]['triangles']:,} + 코어 {im['half_split'][s_]['triangles']:,} 삼각형, 체적 편차 최대 {max(abs(r['dev_pct']) for r in list(hm['half_split'][s_]['parts'].values()) + list(im['half_split'][s_]['parts'].values())):.4f} %" for s_ in hm.get("half_split", {})) + ". 빈 조각(top 분할의 아이볼트 `_B`)은 메시를 만들지 않는다.",
+          f"- 재질: `/M1/Looks/translucent_housing`(주철 색, opacity {ub.get('translucent_materials', {}).get('translucent_housing', {}).get('opacity', 0.20)}) · `translucent_core`(규소강 색, opacity {ub.get('translucent_materials', {}).get('translucent_core', {}).get('opacity', 0.35)}) — **UsdPreviewSurface `opacity`**(+ `opacityThreshold` 0) 채택. 기존 파이프라인이 UsdPreviewSurface 라 같은 방식이 가장 단순하고, RTX 실시간에서 부분 불투명도 설정만 켜면 블렌딩 순서 문제(겹침·검은 테두리) 없이 그려졌다. OmniGlass `thin_walled` 는 대안으로만 둔다(MDL 의존·굴절 없음).",
+          "- 렌더 설정 한 줄: `/rtx/raytracing/fractionalCutoutOpacity = true` — `viz/m1_model.M1Model.set_view()` 가 half_translucent* 선택 시 켜고 다른 variant 로 돌아가면 원래 값으로 복귀. Coil_01_short 발광은 반투명 껍질 너머로 보이도록 표시 세기 ×1.5(`HALF_GLOW`, 값 아님).",
+          "- 반투명 조각은 variant 안에서만 정의되는 형제 prim(`/M1/Housing/Frame_T` 등)이라 런타임 온도 색(그룹 재질, 불투명 반에 바인딩)의 영향을 받지 않는다. 분할선(평면 가장자리)은 그대로 둔다.",
+          "- 스크린샷 `docs/assets/screenshots/M1_half/`(정상 측면·등각, 4턴 fault_focus, DE 베어링), FPS 는 SESSION_LOG 해당 장.",
           "", "## 5. 결정 대기·한계", "",
           f"- **코일 엔드턴 길이(결정 2026-10-21)**: 정본 = `--end-path geometry_check`(Maxwell RMxprt 자동 엔드코일 체적에서 역산한 경로 {im['coil_end_path_mm']:.1f} mm, 축 돌출 {im['coil_end_overhang_mm']:.1f} mm). 시트 l_end {T.dsv(ds, 'l_end', '6.'):.2f} mm 는 **시트 추정(참고)** — 그 규칙이면 코일 1개 {2 * im['coil_area_mm2'] * (T.dsv(ds, 'L', '3.') + T.dsv(ds, 'l_end', '6.')):,.0f} mm³(+{(2 * im['coil_area_mm2'] * (T.dsv(ds, 'L', '3.') + T.dsv(ds, 'l_end', '6.')) / gc['coil_volume_mm3'] - 1) * 100:.1f} %).",
           f"- **AD 328(카탈로그)**: {hp['AD']['note']}",
@@ -93,7 +106,7 @@ def main():
           "2. `py -3.12 -X utf8 -m pytest tests/test_m1_model.py -q` (체적·치수·개수·삼각형)",
           "3. `C:\\ISSACS~1\\python.bat tools\\cad\\build_usd_M1.py` (저장소 루트에서, 상대 경로) → `assets/motors/M1/M1.usd`",
           "4. 장면: `cd motor_dt_viz ; C:\\ISSACS~1\\python.bat app\\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --m1_model [--view cutaway|windings_only]` — 22 kW 물리 모델은 숨긴 채 rpm·온도·전류 상태만 M1 USD 에 매핑한다(`motor_dt_viz/config` 변경 없음, 매핑은 `assets/motors/M1/prim_map_M1.yaml`).",
-          "5. USD 계층: /M1(스케일 0.001 = mm→m) /Housing(EndShield_DE = B3, EndShield_DE_B35) /Stator(Core, Coils/Coil_01…36, Coils/Coil_01_short) /Rotor(xformOp:rotateX 회전 대상: Core, Bars, EndRing_DE/NDE, Shaft) /Bearings(DE, NDE) /Looks. variantSet `view` = full | cutaway(θ −45~+45° 절단, 슬롯 1 노출) | windings_only, `mount` = B3 | B35.",
+          "5. USD 계층: /M1(스케일 0.001 = mm→m) /Housing(EndShield_DE = B3, EndShield_DE_B35) /Stator(Core, Coils/Coil_01…36, Coils/Coil_01_short) /Rotor(xformOp:rotateX 회전 대상: Core, Bars, EndRing_DE/NDE, Shaft) /Bearings(DE, NDE) /Looks. variantSet `view` = full | cutaway(θ −45~+45° 절단, 슬롯 1 노출) | windings_only | half_translucent | half_translucent_front, `mount` = B3 | B35.",
           "6. M1 전용 전기 시나리오 `motor_dt_viz/config/scenarios_M1.yaml`(기존 7 + 8턴·16턴·저항성 4턴 R_f 1.0·반부하 4턴 50 %): `--m1_model` 이면 자동 사용, 추가 케이스는 electrical.yaml 의 itsc_4turn 템플릿에 lut {turns, R_f_ohm}·load 만 바꿔 런타임 등록(electrical.yaml 불변). 카메라 프리셋 `fault_focus`(Coil_01_short 근접) — 스크린샷 03/04."]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text("\n".join(L) + "\n", encoding="utf-8")

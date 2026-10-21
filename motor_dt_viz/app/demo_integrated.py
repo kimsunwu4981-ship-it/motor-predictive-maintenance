@@ -60,7 +60,8 @@ ap.add_argument("--preset", default="", metavar="demo|full", help="config/render
 # P4 (2026-10-21): M1 전체 3D 모델 장면 — 22 kW USD 는 숨기고(물리는 그대로 rpm 생성) assets/motors/M1/M1.usd 에 상태 JSON 값만 색·회전으로 매핑 (viz/m1_model.py)
 ap.add_argument("--m1_model", action="store_true", default=None, help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다 (--motor M1 이면 기본 켜짐)")
 ap.add_argument("--no_m1_model", action="store_true", help="M1 모델을 쓰지 않고 22 kW USD 그대로 (이력 비교용)")
-ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only"), help="--m1_model 의 USD variant view")
+ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only", "half_translucent", "half_translucent_front"),
+                help="--m1_model 의 USD variant view (half_translucent*: 한쪽 반을 반투명으로 — 자르지 않음, H2)")
 ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
 ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model 의 USD variant mount (B3 발 장착 기본 / B35 플랜지)")
 args = ap.parse_args()
@@ -237,6 +238,11 @@ if m1 and args.m1_shots:
         "integrated": [(14.0, "full", "wide", "01_int_normal.png"), (58.0, "cutaway", "bearing_de", "02_int_bearing_de.png"), (92.0, "cutaway", "fault_focus", "03_int_itsc_4turn.png"),
                        (135.0, "cutaway", "fault_focus", "04_int_itsc_12turn.png")],
     }
+    if args.view.startswith("half_translucent"):
+        # H3: 반투명 뷰 4장 — 정상 측면·정상 등각(통합 0~30 s), DE 베어링(30~70), 4턴 fault_focus(70~105)
+        _v = args.view
+        _SHOT_PLANS = {m_: [(14.0, _v, "side", "01_half_side_normal.png"), (18.0, _v, "wide", "02_half_iso_normal.png"),
+                            (58.0, _v, "bearing_de", "04_half_bearing_de.png"), (92.0, _v, "fault_focus", "03_half_itsc_4turn.png")] for m_ in ("integrated", "mechanical", "electrical")}
     m1.plan_shots(_SHOT_PLANS.get(args.mode, _SHOT_PLANS["electrical"]))
 
 # ------------------------------------------------------------------ 회전 구동
@@ -768,8 +774,8 @@ while simulation_app.is_running():
         xray_on = state.highlight_short_loop or (
             mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
         driver.set_opacity(["endshield_de"], 0.40 if xray_on else 1.0)
-        if m1:                                      # M1 모델: 하우징 투시 대신 cutaway variant (런타임 섹션 없이 절단 메시로)
-            m1.set_view("cutaway" if xray_on else args.view)
+        if m1:                                      # M1 모델: 하우징 투시 대신 cutaway variant (런타임 섹션 없이 절단 메시로). half_translucent* 는 이미 안이 비치므로 그대로 둔다
+            m1.set_view("cutaway" if (xray_on and not args.view.startswith("half_translucent")) else args.view)
         if state.highlight_short_loop:
             driver.housing_transparent(True, opacity=0.25)
         elif mode in ("electrical", "integrated"):

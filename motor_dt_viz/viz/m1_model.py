@@ -6,7 +6,7 @@
   - 색: 열 노드 9개 → 부품 그룹 (assets/motors/M1/prim_map_M1.yaml). 색 램프는 기존 ThermalColormap(config/colors.yaml) 그대로
   - Coil_01_short 발광 = p_loop_total_W / p_loop(12턴) (0 → 꺼짐, 12턴 값 → 최대)
   - 정상 기본 재질: 코일은 상별 색(A/B/C), 나머지는 재질색
-  - variantSet view: full | cutaway | windings_only
+  - variantSet view: full | cutaway | windings_only | half_translucent | half_translucent_front (H2: 반투명 반은 /rtx/raytracing/fractionalCutoutOpacity 를 켜야 부분 불투명으로 그려진다)
 기존 22 kW 모델(/World/Motor)·전류 경로(/World/CurrentPaths)는 숨기기만 한다(물리 조인트는 그대로 rpm 을 만든다).
 """
 from __future__ import annotations
@@ -31,6 +31,9 @@ class M1Model:
     CAM_SHAFT = ([0.58, -0.36, 0.20], [0.19, 0.0, 0.10])      # 축단
     CAM_FAULT = ([0.21, -0.11, 0.25], [0.085, 0.0, 0.165])    # fault_focus: 슬롯 1(+Z) Coil_01_short DE 쪽 엔드턴 근접 (절단면 θ −45~+45° 안, 적층 끝 x 67.5 + 돌출 28 mm)
     CAM_BEARING = ([0.30, -0.16, 0.26], [0.105, 0.0, 0.10])   # bearing_de: 절단면 위에서 DE 베어링(/M1/Bearings/DE, 축 중심 z≈0.10, 엔드실드 안쪽 x≈0.10) 근접 (파트 C S2 기계 장면)
+    CAM_SIDE = ([0.02, -0.95, 0.13], [0.02, 0.0, 0.11])        # side: −Y 에서 본 측면 (half_translucent 의 위 반이 비치는 각도)
+    FCO_KEY = "/rtx/raytracing/fractionalCutoutOpacity"       # Render Settings → Translucency → Fractional Cutout Opacity
+    HALF_GLOW = 1.5                                           # half_translucent 에서 Coil_01_short 발광 표시 세기 배율 (값이 아니라 표시 세기)
 
     def __init__(self, stage, asset_dir: str, view: str = "full", hide=("/World/Motor", "/World/CurrentPaths"), shots_dir: str | None = None):
         self.stage = stage
@@ -41,6 +44,8 @@ class M1Model:
         self.prim = prim
         self.cmap = ThermalColormap(load("colors"))
         self.angle_deg = 0.0
+        self.view = None
+        self._fco_orig = None          # half_translucent 로 바꾸기 전의 fractionalCutoutOpacity 값 (다른 variant 로 돌아가면 복귀)
         self.set_view(view)
         for p in hide:
             pr = stage.GetPrimAtPath(p)
@@ -77,10 +82,30 @@ class M1Model:
 
     # ------------------------------------------------------------- view / rotation
     def set_view(self, view: str) -> None:
+        if view == self.view:
+            return
         vs = self.prim.GetVariantSet("view")
         if vs and view in vs.GetVariantNames():
             vs.SetVariantSelection(view)
         self.view = view
+        self._apply_render_settings(view)
+
+    def _apply_render_settings(self, view: str) -> None:
+        """half_translucent* 이면 부분 불투명도(fractionalCutoutOpacity)를 켜고, 다른 variant 로 가면 원래 값으로 되돌린다. carb 가 없으면(테스트) 건너뛴다."""
+        try:
+            import carb
+            s = carb.settings.get_settings()
+            if view.startswith("half_translucent"):
+                if self._fco_orig is None:
+                    self._fco_orig = bool(s.get(self.FCO_KEY) or False)
+                if not s.get(self.FCO_KEY):
+                    s.set(self.FCO_KEY, True)
+                    print("[m1] render: fractionalCutoutOpacity on (half_translucent)", flush=True)
+            elif self._fco_orig is not None and bool(s.get(self.FCO_KEY)) != self._fco_orig:
+                s.set(self.FCO_KEY, self._fco_orig)
+                print(f"[m1] render: fractionalCutoutOpacity restored to {self._fco_orig}", flush=True)
+        except Exception as e:  # noqa: BLE001
+            print("[m1] render setting skipped:", e, flush=True)
 
     def set_mount(self, mount: str) -> None:
         vs = self.prim.GetVariantSet("mount")
@@ -136,7 +161,8 @@ class M1Model:
             else:
                 diffuse = base; em = [0.0, 0.0, 0.0]
             if cfg.get("short_loop"):
-                em = [em[i] + c * k_loop * 6.0 for i, c in enumerate((1.0, 0.18, 0.05))]     # UsdPreviewSurface emissiveColor 는 강도 입력이 없어 색으로 세기를 준다
+                glow = 6.0 * (self.HALF_GLOW if (self.view or "").startswith("half_translucent") else 1.0)   # 반투명 껍질 너머로도 보이게 표시 세기만 올린다
+                em = [em[i] + c * k_loop * glow for i, c in enumerate((1.0, 0.18, 0.05))]     # UsdPreviewSurface emissiveColor 는 강도 입력이 없어 색으로 세기를 준다
             sh.GetInput("diffuseColor").Set(Gf.Vec3f(*diffuse))
             sh.GetInput("emissiveColor").Set(Gf.Vec3f(*em))
 
@@ -152,7 +178,7 @@ class M1Model:
             return None
         self._shot_i += 1
         self.set_view(view)
-        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT, "bearing_de": self.CAM_BEARING}[cam]
+        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT, "bearing_de": self.CAM_BEARING, "side": self.CAM_SIDE}[cam]
         set_camera_view(eye=eye, target=tgt)
         for _ in range(8):
             render()
