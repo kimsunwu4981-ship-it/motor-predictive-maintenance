@@ -53,11 +53,14 @@ def _narration_cfg() -> dict:
 
 
 # ----------------------------------------------------------------- 엔진 재계산
+ENGINE = {"tm": None, "cm": None}      # export_dashboard_data 가 --source fleet 이면 M1 라이브러리 엔진(LUT)을 주입한다 (D 후속 2, 2026-10-21)
+
+
 class CaseTable:
     """케이스별 정확값 (엔진 1회 계산, 캐시)."""
 
     def __init__(self):
-        self.cm = CurrentModel()
+        self.cm = ENGINE["cm"] or CurrentModel()
         self.i_line = self.cm.motor.rated_current("rated_line_A")
         self.i_phase = self.cm.motor.rated_current("rated_phase_A")
         self.f0 = self.cm.f0
@@ -118,7 +121,9 @@ def recompute(ts: dict, sc: dict, tab: CaseTable) -> dict:
             "method": f"engine CurrentModel per case, rms_tol_A={RMS_TOL_A}, i2i1_tol={I2I1_TOL}",
             "max_rms_diff_A": round(float(max_rms), 3), "max_i2i1_diff": round(float(max_i2), 4),
             "max_i2i1_diff_from_log_rms": round(float(max_i2_sym), 4),
-            "pass": bool(max_rms <= RMS_TOL_A and max_i2 <= I2I1_TOL and max_i2_sym <= I2I1_TOL * 2),
+            # 로그 RMS 는 0.1 A 로 반올림돼 있다 → 그 값으로 다시 계산한 I₂/I₁ 의 오차 한계 ≈ 0.05 A / I₁ (M1 4.7 A 면 0.011; 22 kW 43 A 면 0.001). 허용은 이 반올림 한계를 더한다 (D 후속 2)
+            "log_rms_rounding_bound": round(0.05 / max(float(tab.i_line), 1e-9), 4),
+            "pass": bool(max_rms <= RMS_TOL_A and max_i2 <= I2I1_TOL and max_i2_sym <= I2I1_TOL * 2 + 0.05 / max(float(tab.i_line), 1e-9)),
         },
     }
 

@@ -1,6 +1,6 @@
 # 검증 요약 (verification summary) — 발표·문서가 인용할 단 하나의 출처
 
-생성 2026-10-21 17:03:23 · `motor_dt_viz/tools/docs/verification_summary.py` · 수기 숫자 없음(입력: analysis_reference.json, sim_vs_analysis.json, M1.yaml, thresholds.yaml, baselines, aihub_spec_check.md, housing_params.yaml). 핵심값 JSON: `docs/verification_summary.json`.
+생성 2026-10-21 17:49:31 · `motor_dt_viz/tools/docs/verification_summary.py` · 수기 숫자 없음(입력: analysis_reference.json, sim_vs_analysis.json, M1.yaml, thresholds.yaml, baselines, aihub_spec_check.md, housing_params.yaml). 핵심값 JSON: `docs/verification_summary.json`.
 
 ## 1. 항목별 출처 등급
 
@@ -10,7 +10,7 @@
 | 결선 (Y, 상전류 = 선전류) | **현장확인 대기** | M1.yaml connection source=assumed, verify_on_site=True — 380 V 전용형 내부 결선은 카탈로그에 없음. RMxprt·LUT 모델(상전압 219.4 V)과 일치시킴 |
 | 기동 특성 (잠김 전류·토크비) | **2D FEM(보정) / 카탈로그** | 카탈로그 6.5×/2.1× · RMxprt 8.24×/3.09× · FEM+F2 7.43×/2.34× (IEC I_st ≤ 7.8) |
 | 등가회로 상수 (R1·R2′·X1·X2′·Xm·Z₂) | **RMxprt 정합 / 2D FEM** | R1 1.24388/1.60973 Ω(20/95 °C), Xm RMxprt 97.6 vs FEM X_total 95.6 Ω, Z₂ 앵커 7.136 vs FEM 5.33/5.97 Ω |
-| ITSC 전류 곡선 (I₂/I₁·I_f·손실 LUT) | **등가회로 (2D FEM 검증, provisional)** | 등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite) · status provisional · FEM 검증 False · I_f 4턴 MCCM 34.35 vs FEM 35.16 A (+2.4 %) |
+| ITSC 전류 곡선 (I₂/I₁·I_f·손실 LUT) | **등가회로 (2D FEM 검증, provisional)** | 등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite) · status provisional · FEM 검증 2D-eddy-lite (I_f ±3 %, Xm −3.7 %, locked-rotor IEC 안) · I_f 4턴 MCCM 34.35 vs FEM 35.16 A (+2.4 %) |
 | 3D 형상 (하우징·내부) | **카탈로그 + 시각 추정 (Maxwell 체적 ±2 % 검증)** | 카탈로그 치수 19+7개(KS 치수표 100L), visual_estimate 23개(핀·엔드쉴드·팬커버·단자함), 내부 체적 vs Maxwell geometry_check ±2 % PASS (확인) |
 | 열 모델 (9노드 집중정수) | **가정 (22 kW 보정값 스케일)** | thermal.yaml 22 kW 보정값을 손실비·치수비로 스케일 — 실측 온도 없음, M1 에서 낙관적일 수 있음(정격 상승 ≈21 K vs B종 80 K) |
 | 진동·베어링 임계값 | **표준 / 참고 데이터셋** | 진동 ISO 10816-1 Class I (< 15 kW, 강성 지지) 경고 1.8 / 위험 4.5 mm/s(표준); 베어링 kurtosis·고주파 배율 = AI Hub 참고(provisional) |
@@ -34,7 +34,7 @@
 - 품질 게이트 **부적합**(창 77 < 500) → `reference_baseline.value 0.1005` 는 **참고 등급**(판정 기준 아님), `baseline: null` 유지. 전체 AI Hub Training zip(88~112 GB)은 미다운로드라 보강 못 함(D5 건너뜀).
 - 정책: 시뮬레이션 스트림 = provisional 지표 포함 + 라벨 / 실측(live) 스트림 = advisory(참고)만, 종합 판정은 confirmed 지표(온도·진동)로. 온도 채널 없음 → 열 모델(22 kW 스케일)은 M1 에서 낙관적일 수 있어 실측 전 보정 불가.
 
-WARN 0.03 → **0.05** 적용 전후 판정(엔진 stateless, 시뮬레이션 정책; D3 I₁ 규약 반영):
+WARN 0.03 → **0.05** 적용 전후 판정(엔진 stateless, 시뮬레이션 정책; D3 I₁ 규약·경부하 참고 규칙(2026-10-21 승인, `docs/verification/light_load_rule.md`) 반영 — '종합 전' 열은 WARN 0.03 기준이되 현재 규칙):
 
 | 케이스 | I₂/I₁ | I₁ [A] | r R상 | i2i1 전(0.03) | 후(0.05) | 종합 전 | 종합 후 (원인) |
 |---|---|---|---|---|---|---|---|
@@ -48,18 +48,20 @@ WARN 0.03 → **0.05** 적용 전후 판정(엔진 stateless, 시뮬레이션 �
 | overload | 0.027 | 6.385 | 1.386 | SAFE | SAFE | DANGER | DANGER (current_ratio) |
 | voltage_unbalance | 0.0595 | 4.727 | 1.08 | WARN | WARN | WARN | WARN (i2i1) |
 | single_phasing | 0.4792 | 4.087 | 0.036 | DANGER | DANGER | DANGER | DANGER (current_ratio) |
-| no_load | 0.027 | 1.561 | 0.339 | SAFE | SAFE | DANGER | DANGER (current_ratio) |
+| no_load | 0.027 | 1.561 | 0.339 | SAFE | SAFE | SAFE | SAFE (-) +경부하 참고 |
 
-건전 모터 I₂/I₁ 분포 (AI Hub 샘플, 전류 파일이 있는 모터만 — `docs/aihub_spec_check.md`):
+건전 모터 I₂/I₁ 분포 — **창별 정상성 게이트 적용**(창 I₁ 중앙값 ±5 %, 기본파/전체 RMS ≥ 0.95, 상별 RMS/평균 0.8~1.25; `docs/aihub_baseline_gated.md`, 샘플 zip 범위):
 
-| 모터 | n | 상별 RMS 평균 [A] | I₂/I₁ 중앙값 | p95 | 최대 | 불평형 중앙값 |
-|---|---|---|---|---|---|---|
-| L-EF-04 (2.2 kW) | 500 | 3.12 / 3.20 / 3.04 | 0.028 | 0.039 | 0.042 | 0.033 |
-| R-EF-05 (2.2 kW) | 65 | 2.07 / 2.15 / 2.05 | 0.026 | 0.039 | 0.040 | 0.031 |
-| L-SF-04 (2.2 kW) | 77 | 3.08 / 3.40 / 3.11 | 0.088 | 0.101 | 0.105 | 0.066 |
-| L-DSF-01 (2.2 kW) | 97 | 1.90 / 1.76 / 2.08 | 0.080 | 0.586 | 0.964 | 0.091 |
-| L-PAHU-03S (55 kW, VVVF) | 97 | 58.8 / 58.8 / 58.1 | 0.034 | 0.051 | 0.270 | 0.008 |
-| R-PAHU-04S (55 kW, VVVF) | 59 | 53.2 / 52.6 / 52.7 | 0.005 | 0.007 | 0.007 | 0.007 |
+| 모터 | 파일 | 통과 창 | 제외 창 (사유) | I₁ 중앙값 [A] | I₂/I₁ 중앙값 / p95 / 최대 | 불평형 중앙값 | 상별 RMS 비 R:S:T |
+|---|---|---|---|---|---|---|---|
+| L-DSF-01 (2.2kW) | 97 | 80 | 17 (I1_dev 17, fund_over_rms 17, phase_ratio 14) | 2.255 | 0.0792 / 0.0835 / 0.0879 | 0.089 | 0.995 : 0.916 : 1.089 |
+| L-EF-04 (2.2kW) | 667 | 415 | 252 (I1_dev 252, fund_over_rms 2) | 3.189 | 0.028 / 0.0393 / 0.042 | 0.0341 | 1.01 : 1.025 : 0.966 |
+| L-SF-04 (2.2kW) | 77 | 77 | 0 (—) | 3.173 | 0.0879 / 0.1005 / 0.1052 | 0.0655 | 0.964 : 1.065 : 0.972 |
+| R-EF-05 (2.2kW) | 65 | 63 | 2 (I1_dev 1, fund_over_rms 1) | 2.069 | 0.0263 / 0.0392 / 0.0396 | 0.0305 | 0.992 : 1.031 : 0.98 |
+| L-PAHU-03S (55kW) | 97 | 0 | 97 (fund_over_rms 97, I1_dev 51) | — | — / — / — | — | — (60 Hz 게이트 전부 제외: 인버터 49.6 Hz) |
+| R-PAHU-04S (55kW) | 59 | 59 | 0 (—) | 52.406 | 0.0054 / 0.0065 / 0.0071 | 0.0073 | 1.007 : 0.995 : 0.997 |
+
+L-SF-04 S상 RMS 비 1.065(날짜별 1.05~1.069, 창 표준편차 0.0095) — 전 구간 일정 → **센서 채널 게인 차이 가설**이 우세하나 전압 채널이 없어 가설로만 둔다(보정 없음). 게이트 뒤에도 L-SF-04 는 77/77 통과, 값 불변.
 
 ## 4. 함의 (실증 가이드라인 '전압 센서 필수' 결정의 수치 근거)
 
@@ -96,10 +98,10 @@ WARN 0.03 → **0.05** 적용 전후 판정(엔진 stateless, 시뮬레이션 �
 | temp_sweep | `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\rmxprt_temp_sweep.json` | `21fe315328ce824e` |
 | magcurve | `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\magnetizing_curve_2d.json` | `b0f93df33e1b6605` |
 | inductance | `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\inductance_matrix_2d.json` | `a36126216cd3ec6c` |
-| analysis_tables_xlsx | `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\analysis_tables.xlsx` | `ff09681845fb95e0` |
-| electrical_yaml | `motor_dt_viz/config/electrical.yaml` | `296249cc9133f5d0` |
+| analysis_tables_xlsx | `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\analysis_tables.xlsx` | `cfda1af0f9b13b4d` |
+| electrical_yaml | `motor_dt_viz/config/electrical.yaml` | `69266c21fed85b6c` |
 | lut_dt | `motor_dt_viz/data/electrical/M1_mccm_lut_v2.json` | `c6898c6e8d801f49` |
-| thresholds_yaml | `motor_dt_viz/config/thresholds.yaml` | `9158581eb3d8c5a8` |
+| thresholds_yaml | `motor_dt_viz/config/thresholds.yaml` | `92a7e9fb6043903e` |
 | m1_yaml | `motor_dt_viz/config/motors/M1.yaml` | `2d8ca5614eaf3e17` |
 | thermal_yaml | `motor_dt_viz/config/thermal.yaml` | `fe1e7d4e4c2a848f` |
 | lut_report | `motor_dt_viz/docs/electrical/lut_integration_report.md` | `29f1e11329955caf` |

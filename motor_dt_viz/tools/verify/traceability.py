@@ -24,7 +24,7 @@ def main():
     chain_mccm = "mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전류 ±5 % 정합"
     rows = [
         {"display": "I₂/I₁ (HUD I2/I1, 상태 보드 게이지, 대시보드 추세)", "engine": "engine/current_model.CurrentModel.waveform→analyze (phasors_from_waveform·symmetrical_components); LUT 결함 I₂ + 고유 비대칭 페이저 합",
-         "inputs": [f("lut_dt"), f("electrical_yaml")], "analysis_chain": chain_mccm, "grade": "등가회로 LUT + 2D FEM 검증 (provisional, fem_verified false) + 고유 비대칭(참고 데이터셋)"},
+         "inputs": [f("lut_dt"), f("electrical_yaml")], "analysis_chain": chain_mccm, "grade": "등가회로 LUT + 2D FEM lite 검증(I_f ±3 %, Xm −3.7 %, 잠김 IEC 안; provisional) + 고유 비대칭(참고 데이터셋)"},
         {"display": "I₂/I_n (HUD I2/In, 부하 무관 보조 지표)", "engine": "CurrentModel.analyze → i2_over_in = |I₂|/I_n (I_n = electrical.yaml rated_current_A 4.73)",
          "inputs": [f("lut_dt"), f("electrical_yaml"), f("m1_yaml")], "analysis_chain": chain_mccm + "; 시뮬은 I₁ 을 정격×부하로 고정하는 규약이라 LUT I₂/I_n(LUT I₁ 기준)과 분모가 다르다", "grade": "등가회로 LUT (표시 전용, 판정 없음)"},
         {"display": "상별 RMS Ia/Ib/Ic·전류/정격 비율·상태색", "engine": "CurrentModel._phasors (I₁ 피크 = √2·I_n·부하, I₂ = I₁·(r·e^{jθ}+h)) → waveform → analyze.rms_A/ratio/status",

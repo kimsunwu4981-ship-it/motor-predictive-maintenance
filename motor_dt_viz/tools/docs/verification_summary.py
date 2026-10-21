@@ -54,6 +54,8 @@ def main():
     bl = yaml.safe_load(open(os.path.join(VIZ, "config", "baselines", "M1_AIHUB_LSF04_REFERENCE.yaml"), encoding="utf-8"))
     hp = yaml.safe_load(open(os.path.join(REPO, "assets", "motors", "M1", "housing_params.yaml"), encoding="utf-8"))
     aihub = aihub_healthy_table(os.path.join(VIZ, "docs", "aihub_spec_check.md"))
+    gated_p = os.path.join(VIZ, "docs", "aihub_baseline_gated.json")                     # D 후속 4: 창별 정상성 게이트 적용 분포 (있으면 이것을 표로)
+    gated = json.load(open(gated_p, encoding="utf-8")) if os.path.exists(gated_p) else None
     m1_model_md = open(os.path.join(REPO, "docs", "assets", "M1_model.md"), encoding="utf-8").read()
     S = ref["scenarios"]; I_n = ref["I_n_A"]; h = ref["inherent_i2i1"]
     ns = th["current"]["negative_sequence"]; rb = ns["reference_baseline"]
@@ -89,7 +91,8 @@ def main():
         sig = {"current_ratio": {p: st.rms_A[i] / I_n for i, p in enumerate("ABC")}, "i2i1": st.i2_over_i1}
         vo, vn = Judge(c_old, motor=m).stateless(sig), Judge(c_new, motor=m).stateless(sig)
         lo = next(s for s in vo.signals if s.kind == "i2i1").level; ln_ = next(s for s in vn.signals if s.kind == "i2i1").level
-        before_after.append({"case": case, "i2i1": round(st.i2_over_i1, 4), "i1_A": round(st.i1_A, 3), "r_R": round(st.rms_A[0] / I_n, 3), "i2i1_before": lo, "i2i1_after": ln_, "overall_before": vo.status, "overall_after": vn.status, "cause_after": vn.cause_signal})
+        adv = "+경부하 참고" if any(s.note.startswith("경부하") for s in vn.advisory) else ""
+        before_after.append({"case": case, "i2i1": round(st.i2_over_i1, 4), "i1_A": round(st.i1_A, 3), "r_R": round(st.rms_A[0] / I_n, 3), "i2i1_before": lo, "i2i1_after": ln_, "overall_before": vo.status, "overall_after": vn.status, "cause_after": vn.cause_signal, "advisory": adv})
     # ---- 함의: 기준선 배수 모드 (보정 없음)
     p95 = float(bl["i2_over_i1"]["p95"]); wm, dm = float(ns["warn_multiple"]), float(ns["danger_multiple"])
     thr_w, thr_d = p95 * wm, p95 * dm
@@ -116,7 +119,7 @@ def main():
            "lsf04_median": round(float(bl["i2_over_i1"]["median"]), 4), "lsf04_p95": round(p95, 4), "lsf04_n": n_win, "reference_baseline": rb["value"], "sim_vs_analysis_pass": sva["summary"]["pass"], "sim_vs_analysis_total": sva["summary"]["total"],
            "lut_max_dev_pct": round(lut_max, 3), "recompute_max_dev_pct": round(rc_max, 4), "delay_4turn_s": d4, "delay_12turn_s": d12, "r_fault_phase": r_fault, "halfload_I1_A": half_i1, "angle180_4turn": sens180["i2i1_composite"] if sens180 else None,
            "baseline_multiple_warn": round(thr_w, 4), "baseline_multiple_danger": round(thr_d, 4), "baseline_multiple_detect": detect, "generated": time.strftime("%Y-%m-%d %H:%M:%S")}
-    json.dump({"key": key, "grades": [{"item": a, "grade": b, "basis": c} for a, b, c in grade_rows], "before_after_0p03_0p05": before_after, "aihub_healthy": aihub, "inputs_sha": ref["inputs"]},
+    json.dump({"key": key, "grades": [{"item": a, "grade": b, "basis": c} for a, b, c in grade_rows], "before_after_0p03_0p05": before_after, "aihub_healthy": aihub, "aihub_gated": gated["rows"] if gated else None, "inputs_sha": ref["inputs"]},
               open(OUT_JSON, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
     # ---- Markdown
@@ -137,12 +140,24 @@ def main():
           "- S상 RMS 가 다른 상보다 약 +10 %(메타 RMS 3.10/3.46/3.16 A) → 전압 채널이 없어 **센서 채널 게인 차이인지 공급 불평형인지 구분 불가**.",
           f"- 품질 게이트 **부적합**(창 {n_win} < {gate_n}) → `reference_baseline.value {rb['value']}` 는 **참고 등급**(판정 기준 아님), `baseline: null` 유지. 전체 AI Hub Training zip(88~112 GB)은 미다운로드라 보강 못 함(D5 건너뜀).",
           f"- 정책: 시뮬레이션 스트림 = provisional 지표 포함 + 라벨 / 실측(live) 스트림 = advisory(참고)만, 종합 판정은 confirmed 지표(온도·진동)로. 온도 채널 없음 → 열 모델(22 kW 스케일)은 M1 에서 낙관적일 수 있어 실측 전 보정 불가.",
-          "", f"WARN 0.03 → **{key['i2i1_warn']}** 적용 전후 판정(엔진 stateless, 시뮬레이션 정책; D3 I₁ 규약 반영):", "",
+          "", f"WARN 0.03 → **{key['i2i1_warn']}** 적용 전후 판정(엔진 stateless, 시뮬레이션 정책; D3 I₁ 규약·경부하 참고 규칙(2026-10-21 승인, `docs/verification/light_load_rule.md`) 반영 — '종합 전' 열은 WARN 0.03 기준이되 현재 규칙):", "",
           "| 케이스 | I₂/I₁ | I₁ [A] | r R상 | i2i1 전(0.03) | 후(0.05) | 종합 전 | 종합 후 (원인) |", "|---|---|---|---|---|---|---|---|"]
     for b in before_after:
-        L.append(f"| {b['case']} | {b['i2i1']} | {b['i1_A']} | {b['r_R']} | {b['i2i1_before']} | {b['i2i1_after']} | {b['overall_before']} | {b['overall_after']} ({b['cause_after']}) |")
-    L += ["", "건전 모터 I₂/I₁ 분포 (AI Hub 샘플, 전류 파일이 있는 모터만 — `docs/aihub_spec_check.md`):", "", "| 모터 | n | 상별 RMS 평균 [A] | I₂/I₁ 중앙값 | p95 | 최대 | 불평형 중앙값 |", "|---|---|---|---|---|---|---|"]
-    L += [f"| {r['motor']} | {r['n']} | {r['rms_A']} | {r['i2i1_median']} | {r['i2i1_p95']} | {r['i2i1_max']} | {r['unb_median']} |" for r in aihub]
+        L.append(f"| {b['case']} | {b['i2i1']} | {b['i1_A']} | {b['r_R']} | {b['i2i1_before']} | {b['i2i1_after']} | {b['overall_before']} | {b['overall_after']} ({b['cause_after']}){(' ' + b['advisory']) if b.get('advisory') else ''} |")
+    if gated:
+        g = gated["gate"]
+        L += ["", f"건전 모터 I₂/I₁ 분포 — **창별 정상성 게이트 적용**(창 I₁ 중앙값 ±{g['I1_dev_max']*100:.0f} %, 기본파/전체 RMS ≥ {g['fund_over_rms_min']}, 상별 RMS/평균 {g['phase_ratio_range'][0]}~{g['phase_ratio_range'][1]}; `docs/aihub_baseline_gated.md`, 샘플 zip 범위):", "",
+              "| 모터 | 파일 | 통과 창 | 제외 창 (사유) | I₁ 중앙값 [A] | I₂/I₁ 중앙값 / p95 / 최대 | 불평형 중앙값 | 상별 RMS 비 R:S:T |", "|---|---|---|---|---|---|---|---|"]
+        for r in gated["rows"]:
+            ex = ", ".join(f"{k} {v}" for k, v in r["excluded_by_reason"].items()) or "—"
+            L.append(f"| {r['motor']} ({r['kw']}) | {r['n_files']} | {r['n_kept']} | {r['n_excluded']} ({ex}) | {r['I1']['median'] if r['I1'] else '—'} | {r['i2i1']['median'] if r['i2i1'] else '—'} / {r['i2i1']['p95'] if r['i2i1'] else '—'} / {r['i2i1']['max'] if r['i2i1'] else '—'} | {r['unbalance']['median'] if r['unbalance'] else '—'} | {' : '.join(str(x) for x in r['phase_ratio_median_RST']) if r['phase_ratio_median_RST'] else '— (60 Hz 게이트 전부 제외: 인버터 49.6 Hz)'} |")
+        lsf = next((r for r in gated["rows"] if r["motor"] == "L-SF-04"), None)
+        if lsf:
+            sv = [v[1] for v in lsf["phase_ratio_by_date"].values()]
+            L.append(""); L.append(f"L-SF-04 S상 RMS 비 {lsf['phase_ratio_median_RST'][1]}(날짜별 {min(sv)}~{max(sv)}, 창 표준편차 {lsf['phase_ratio_std_RST'][1]}) — 전 구간 일정 → **센서 채널 게인 차이 가설**이 우세하나 전압 채널이 없어 가설로만 둔다(보정 없음). 게이트 뒤에도 L-SF-04 는 77/77 통과, 값 불변.")
+    else:
+        L += ["", "건전 모터 I₂/I₁ 분포 (AI Hub 샘플, 전류 파일이 있는 모터만 — `docs/aihub_spec_check.md`):", "", "| 모터 | n | 상별 RMS 평균 [A] | I₂/I₁ 중앙값 | p95 | 최대 | 불평형 중앙값 |", "|---|---|---|---|---|---|---|"]
+        L += [f"| {r['motor']} | {r['n']} | {r['rms_A']} | {r['i2i1_median']} | {r['i2i1_p95']} | {r['i2i1_max']} | {r['unb_median']} |" for r in aihub]
     L += ["", "## 4. 함의 (실증 가이드라인 '전압 센서 필수' 결정의 수치 근거)", "",
           f"절대 임계값 {key['i2i1_warn']}/{key['i2i1_danger']} 은 전압 불평형이 보정된 깨끗한 기준선을 전제한다. L-SF-04 처럼 건전 모터가 {key['lsf04_median']} 을 보이는 현장에서는 (1) 전압 채널로 V₂/V₁ 보정(`voltage_unbalance_compensation`)을 켜거나 (2) 기준선 배수 모드(`mode: baseline_multiple`)로 가야 한다. "
           f"보정 없는 기준선 배수 모드에서는 경고 = p95 {key['lsf04_p95']} × {wm:g} = **{thr_w:.3f}**, 위험 = × {dm:g} = {thr_d:.3f} 이므로 4턴(합성 {c4:.3f})·8턴({c8:.3f})급 결함은 구분되지 않고 **12턴({c12:.3f})~16턴({c16:.3f})급부터** 잡힌다 "

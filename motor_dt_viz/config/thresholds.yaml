@@ -35,6 +35,10 @@ current_ratio:
   safe_high: 1.10
   danger_over: 1.25           # r > 1.25 위험 과전류   (1.10 < r ≤ 1.25 경고)
   danger_under: 0.50          # r < 0.50 위험 저전류(결상 의심) (0.50 ≤ r < 0.85 경고)
+  # 2026-10-21 승인(판정 규칙 변경 1건): 세 상이 **함께** r < 0.50 이고 상 불평형 < unbalance_gate 이며 I₂/I₁ 이 경고 미만이면 '경부하(참고)' —
+  # 종합(worst-of)에 넣지 않고 advisory 로만 출력(호이스트 무부하 운전 빈도, 자화 전류로 r ≈ 0.33~0.5). 한 상만 저전류이거나 저전류+불평형 ≥ gate 또는 I₂/I₁ ≥ 위험이면 기존대로 결상 의심 DANGER.
+  # 상한(1.10/1.25)·히스테리시스·지속 3 s 는 그대로. engine/thresholds.Judge._light_load_policy.
+  low_current_policy: { light_load_advisory: true, unbalance_gate: 0.05 }
 
 # ── I₂/I₁ (역상분 비율, 전압 불평형 보정 전 값) — 숫자의 정본은 아래 current.negative_sequence.warn/danger (엔진이 그쪽을 우선 읽고, 이 블록은 호환용 동일값)
 i2i1:

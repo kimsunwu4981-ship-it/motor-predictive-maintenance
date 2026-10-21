@@ -45,8 +45,11 @@ def window_features(chs, fs, f0=60.0, vchs=None):
     big, small = (i1, i2) if i1 >= i2 else (i2, i1)
     rms = [float(np.sqrt(np.mean((c - c.mean()) ** 2))) for c in chs]
     unb = max(abs(r - np.mean(rms)) for r in rms) / np.mean(rms) if np.mean(rms) > 0 else float("nan")
+    fund_rms = [float(abs(p) / np.sqrt(2)) for p in ph]                       # 기본파 RMS (창별 정상성 게이트: 기본파/전체 RMS)
     out = {"I1_A": float(big / np.sqrt(2)), "I2_A": float(small / np.sqrt(2)), "i2_over_i1": float(small / big) if big > 0 else float("nan"),
-           "unbalance": float(unb), "f0_hz": float(f_est), "seq": "abc" if i1 >= i2 else "acb", "rms_A": rms}
+           "unbalance": float(unb), "f0_hz": float(f_est), "seq": "abc" if i1 >= i2 else "acb", "rms_A": rms,
+           "fund_over_rms": float(min(fr / r if r > 0 else 0.0 for fr, r in zip(fund_rms, rms))),
+           "phase_ratio": [float(r / np.mean(rms)) if np.mean(rms) > 0 else float("nan") for r in rms]}
     if vchs is not None:
         vp, _ = fundamental_phasors(vchs, fs, f0); v1, v2 = sym(vp)
         out["V1_V"] = float(v1 / np.sqrt(2)); out["V2_V"] = float(v2 / np.sqrt(2)); out["v2_v1"] = float(v2 / v1) if v1 > 0 else float("nan")
@@ -103,6 +106,11 @@ def main():
     ap.add_argument("--f0", type=float, default=60.0)
     ap.add_argument("--min-windows", type=int, default=500); ap.add_argument("--max-cv", type=float, default=0.10)
     ap.add_argument("--apply-reference", action="store_true", help="grade=reference 일 때 thresholds.yaml reference_baseline.value 에 p95 를 기록")
+    # 창별 정상성 게이트 (D 후속 4, 2026-10-21): 통과한 창만 통계에 쓴다. 제외 창 수·사유는 window_gate 에 기록
+    ap.add_argument("--gate-i1-dev", type=float, default=0.05, help="창 I₁ 이 전체 중앙값에서 벗어난 비율 상한 (≈ I₁ CV ≤ 5 %)")
+    ap.add_argument("--gate-fund", type=float, default=0.95, help="기본파 RMS / 전체 RMS 하한 (세 상 중 최소)")
+    ap.add_argument("--gate-ratio", type=float, nargs=2, default=(0.8, 1.25), help="상별 RMS / 세 상 평균 허용 범위")
+    ap.add_argument("--no-window-gate", action="store_true")
     a = ap.parse_args()
 
     feats = []; meta_first = None; files = []
@@ -120,6 +128,29 @@ def main():
         src = {"kind": "csv", "path": a.csv, "fs": a.fs}
     else:
         raise SystemExit("--aihub-dir 또는 --csv")
+    n_all = len(feats)
+    gate = {"enabled": not a.no_window_gate, "i1_dev_max": a.gate_i1_dev, "fund_over_rms_min": a.gate_fund, "phase_ratio_range": list(a.gate_ratio),
+            "n_total": n_all, "n_kept": n_all, "excluded": {"I1_dev": 0, "fund_over_rms": 0, "phase_ratio": 0}, "excluded_windows": []}
+    if not a.no_window_gate and feats:
+        med = float(np.median([f["I1_A"] for f in feats]))
+        kept = []
+        for k, f in enumerate(feats):
+            why = []
+            if med > 0 and abs(f["I1_A"] - med) / med > a.gate_i1_dev:
+                why.append("I1_dev")
+            if f["fund_over_rms"] < a.gate_fund:
+                why.append("fund_over_rms")
+            if any(not (a.gate_ratio[0] <= x <= a.gate_ratio[1]) for x in f["phase_ratio"]):
+                why.append("phase_ratio")
+            if why:
+                for w in why:
+                    gate["excluded"][w] += 1
+                gate["excluded_windows"].append({"index": k, "file": os.path.basename(files[k]) if k < len(files) else None, "reasons": why,
+                                                 "I1_A": round(f["I1_A"], 4), "fund_over_rms": round(f["fund_over_rms"], 4), "phase_ratio": [round(x, 4) for x in f["phase_ratio"]]})
+            else:
+                kept.append(f)
+        gate["n_kept"] = len(kept); gate["I1_median_all"] = round(med, 4)
+        feats = kept
     n = len(feats)
     i1 = stats([f["I1_A"] for f in feats]); r = stats([f["i2_over_i1"] for f in feats]); unb = stats([f["unbalance"] for f in feats])
     f0s = stats([f["f0_hz"] for f in feats]); seqs = {s: sum(1 for f in feats if f["seq"] == s) for s in ("abc", "acb")}
@@ -132,7 +163,9 @@ def main():
            "window_s": 1.0, "fundamental_hz": f0s, "phase_sequence_counts": seqs,
            "I1_A": i1, "i2_over_i1": r, "unbalance": unb,
            "v2_v1": stats([f["v2_v1"] for f in feats]) if has_v else {"n": 0, "note": "전압 채널 없음 → 전압 불평형 보정 불가(compensation enabled 금지)"},
-           "quality": quality,
+           "quality": quality, "window_gate": gate,
+           "phase_rms_ratio": {"median": [round(float(np.median([f["phase_ratio"][k] for f in feats])), 4) for k in range(3)] if feats else None,
+                               "note": "상별 RMS / 세 상 평균 (R:S:T) — 전 창에서 일정하면 센서 게인 가설, 변동하면 공급 불평형 가설 (결론은 가설로만)"},
            "note": ("참고 등급: 같은 용량대 다른 모터(공조기) 정상 데이터 — 실모터 기준선이 아니며 confirmed 조건이 되지 않는다. " if a.grade == "reference" else "실모터 실측 기준선 후보. ")
                    + "2 kHz 샘플은 60 Hz 기본파 대칭 성분 추출에 충분(나이퀴스트 1 kHz, 1 s 창 분해능 1 Hz + 피크 보간).",
            "thresholds_diff": {}}

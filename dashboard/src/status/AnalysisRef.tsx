@@ -12,7 +12,7 @@ type Src = { file?: string; sha256?: string; grade?: string; grade_key?: string;
 export interface AnalysisReference {
   generated: string; motor: string; I_n_A: number; inherent_i2i1: number;
   thresholds: { i2i1_warn: number; i2i1_danger: number; persistence_s: number };
-  lut: { dt_file: string; dt_sha256: string; sha_match: boolean; grade: string; status: string; fem_verified: boolean };
+  lut: { dt_file: string; dt_sha256: string; sha_match: boolean; grade: string; status: string; fem_verified: boolean | string };
   grades: Record<string, string>;
   inputs: Record<string, { path: string; sha256: string }>;
   scenarios: Record<string, {

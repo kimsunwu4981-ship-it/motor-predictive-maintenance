@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-21 16:09:37",
+ "generated": "2026-10-21 17:47:39",
  "generator": "motor_dt_viz/tools/verify/traceability.py",
  "reference_json": "motor_dt_viz/data/electrical/analysis_reference.json",
  "rows": [
@@ -8,17 +8,17 @@
    "engine": "engine/current_model.CurrentModel.waveform→analyze (phasors_from_waveform·symmetrical_components); LUT 결함 I₂ + 고유 비대칭 페이저 합",
    "inputs": [
     "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json (c6898c6e8d80)",
-    "motor_dt_viz/config/electrical.yaml (296249cc9133)"
+    "motor_dt_viz/config/electrical.yaml (69266c21fed8)"
    ],
    "analysis_chain": "mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전류 ±5 % 정합",
-   "grade": "등가회로 LUT + 2D FEM 검증 (provisional, fem_verified false) + 고유 비대칭(참고 데이터셋)"
+   "grade": "등가회로 LUT + 2D FEM lite 검증(I_f ±3 %, Xm −3.7 %, 잠김 IEC 안; provisional) + 고유 비대칭(참고 데이터셋)"
   },
   {
    "display": "I₂/I_n (HUD I2/In, 부하 무관 보조 지표)",
    "engine": "CurrentModel.analyze → i2_over_in = |I₂|/I_n (I_n = electrical.yaml rated_current_A 4.73)",
    "inputs": [
     "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json (c6898c6e8d80)",
-    "motor_dt_viz/config/electrical.yaml (296249cc9133)",
+    "motor_dt_viz/config/electrical.yaml (69266c21fed8)",
     "motor_dt_viz/config/motors/M1.yaml (2d8ca5614eaf)"
    ],
    "analysis_chain": "mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전류 ±5 % 정합; 시뮬은 I₁ 을 정격×부하로 고정하는 규약이라 LUT I₂/I_n(LUT I₁ 기준)과 분모가 다르다",
@@ -30,7 +30,7 @@
    "inputs": [
     "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json (c6898c6e8d80)",
     "motor_dt_viz/config/motors/M1.yaml (2d8ca5614eaf)",
-    "motor_dt_viz/config/electrical.yaml (296249cc9133)"
+    "motor_dt_viz/config/electrical.yaml (69266c21fed8)"
    ],
    "analysis_chain": "LUT 의 I₂/I₁·위상(θ vs I₁) 만 쓰고 크기는 정격 규약 — LUT 자체 I_a/I_b/I_c(결함 시 I₁ 상승)와는 다름",
    "grade": "등가회로 LUT + 카탈로그 정격"
@@ -49,7 +49,7 @@
    "engine": "CurrentModel.loop_loss_W → LUT p_loop_total_W → ThermalModel.step(extra_loss_W={winding})",
    "inputs": [
     "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json (c6898c6e8d80)",
-    "motor_dt_viz/config/electrical.yaml (296249cc9133)"
+    "motor_dt_viz/config/electrical.yaml (69266c21fed8)"
    ],
    "analysis_chain": "I_f²·(R_f + μ·R1_hot) + 단락 턴 동손 (MCCM)",
    "grade": "등가회로 MCCM"
@@ -68,7 +68,7 @@
    "display": "판정 SAFE/WARN/DANGER·원인 신호·advisory",
    "engine": "engine/thresholds.Judge.update (worst-of, 히스테리시스 5 %, 지속 3 s, provisional 정책)",
    "inputs": [
-    "motor_dt_viz/config/thresholds.yaml (9158581eb3d8)"
+    "motor_dt_viz/config/thresholds.yaml (92a7e9fb6043)"
    ],
    "analysis_chain": "I₂/I₁ 0.05/0.10(참고 데이터셋 provisional), 전류/정격 0.85~1.10/1.25·0.50, 온도 F종·그리스, 진동 ISO 10816-1 Class I",
    "grade": "임계값(표준·참고 데이터셋) — 해석값 아님"
@@ -114,7 +114,7 @@
    "engine": "engine/fault_injector (결함별 상수) + thermal.yaml faults(손실 배율·열저항)",
    "inputs": [
     "motor_dt_viz/config/thermal.yaml (fe1e7d4e4c2a)",
-    "motor_dt_viz/config/thresholds.yaml (9158581eb3d8)"
+    "motor_dt_viz/config/thresholds.yaml (92a7e9fb6043)"
    ],
    "analysis_chain": "Maxwell 근거 없음 — 진동 상수(시나리오), ISO 10816-1 Class I(표준), 베어링 지표 AI Hub 참고 데이터셋",
    "grade": "표준 / 참고 데이터셋 / 시나리오 상수 (해석값 아님)"

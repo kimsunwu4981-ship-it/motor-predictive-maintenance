@@ -1,0 +1,146 @@
+{
+ "mode": "mechanical",
+ "n": 12,
+ "events": [
+  {
+   "type": "scene",
+   "t": 0.0,
+   "scene": 1,
+   "scene_id": "normal",
+   "time_scale": 60.0,
+   "label": "1. 정상 운전",
+   "priority": 0,
+   "id": 0
+  },
+  {
+   "type": "scene",
+   "t": 25.0,
+   "scene": 2,
+   "scene_id": "bearing_fault",
+   "time_scale": 120.0,
+   "label": "2. DE 베어링 열화",
+   "priority": 0,
+   "id": 1
+  },
+  {
+   "type": "vib_zone",
+   "t": 25.25,
+   "scene": 2,
+   "from": "Normal",
+   "to": "Act",
+   "from_ko": "정상",
+   "to_ko": "즉시 조치",
+   "up": true,
+   "threshold_mms": 4.5,
+   "value_mms": 4.8,
+   "priority": 2,
+   "id": 2
+  },
+  {
+   "type": "scene",
+   "t": 60.0,
+   "scene": 3,
+   "scene_id": "misalignment",
+   "time_scale": 120.0,
+   "label": "3. 축 정렬 불량",
+   "priority": 0,
+   "id": 3
+  },
+  {
+   "type": "vib_zone",
+   "t": 60.25,
+   "scene": 3,
+   "from": "Act",
+   "to": "Watch",
+   "from_ko": "즉시 조치",
+   "to_ko": "주시",
+   "up": false,
+   "threshold_mms": 4.5,
+   "value_mms": 3.6,
+   "priority": 2,
+   "id": 4
+  },
+  {
+   "type": "scene",
+   "t": 85.0,
+   "scene": 4,
+   "scene_id": "fan_failure",
+   "time_scale": 120.0,
+   "label": "4. 냉각팬 고장",
+   "priority": 0,
+   "id": 5
+  },
+  {
+   "type": "vib_zone",
+   "t": 85.25,
+   "scene": 4,
+   "from": "Watch",
+   "to": "Normal",
+   "from_ko": "주시",
+   "to_ko": "정상",
+   "up": false,
+   "threshold_mms": 1.8,
+   "value_mms": 1.2,
+   "priority": 2,
+   "id": 6
+  },
+  {
+   "type": "scene",
+   "t": 110.0,
+   "scene": 5,
+   "scene_id": "brake_drag",
+   "time_scale": 120.0,
+   "label": "5. 브레이크 끌림",
+   "priority": 0,
+   "id": 7
+  },
+  {
+   "type": "vib_zone",
+   "t": 110.25,
+   "scene": 5,
+   "from": "Normal",
+   "to": "Watch",
+   "from_ko": "정상",
+   "to_ko": "주시",
+   "up": true,
+   "threshold_mms": 1.8,
+   "value_mms": 2.0,
+   "priority": 2,
+   "id": 8
+  },
+  {
+   "type": "scene",
+   "t": 130.0,
+   "scene": 6,
+   "scene_id": "overload",
+   "time_scale": 150.0,
+   "label": "6. 과부하 운전 (열 관점)",
+   "priority": 0,
+   "id": 9
+  },
+  {
+   "type": "scene",
+   "t": 160.0,
+   "scene": 7,
+   "scene_id": "cooldown",
+   "time_scale": 150.0,
+   "label": "7. 결함 해제 후 냉각",
+   "priority": 0,
+   "id": 10
+  },
+  {
+   "type": "vib_zone",
+   "t": 160.0,
+   "scene": 7,
+   "from": "Watch",
+   "to": "Normal",
+   "from_ko": "주시",
+   "to_ko": "정상",
+   "up": false,
+   "threshold_mms": 1.8,
+   "value_mms": 1.0,
+   "priority": 2,
+   "id": 11
+  }
+ ]
+}

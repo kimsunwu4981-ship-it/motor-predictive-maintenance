@@ -80,8 +80,13 @@ def elec_status(ratio: float, th: dict) -> str:
 # ----------------------------------------------------------------- thresholds
 def build_thresholds(mode: str) -> dict:
     motor, elec, colors, thermal = load("motor"), load("electrical"), load("colors"), load("thermal")
-    tm = ThermalModel()
-    cm = CurrentModel()
+    if SOURCE["kind"] == "fleet":                      # M1 라이브러리 경로 (LUT 케이스·열회로 스케일)와 같은 엔진
+        from engine import motor_library as ml
+        _m = ml.load_motor(SOURCE["motor"])
+        tm = ThermalModel(ml.thermal_cfg(_m)); cm = CurrentModel(ml.electrical_cfg(_m), ml.motor_spec(_m))
+    else:
+        tm = ThermalModel()
+        cm = CurrentModel()
     i_line = cm.motor.rated_current("rated_line_A")
     i_phase = cm.motor.rated_current("rated_phase_A")
     labels = {n.key: n.label for n in tm.nodes}
@@ -119,7 +124,9 @@ def build_thresholds(mode: str) -> dict:
     i2i1_marks = []
     for case_key in ("healthy", "itsc_4turn", "itsc_12turn"):
         c = elec["cases"][case_key]
-        if c.get("target_i2i1") is not None:
+        if SOURCE["kind"] == "fleet" and cm.method == "lut":          # M1: LUT 설계값(고유 비대칭 포함) — 0.027/0.073/0.270
+            i2i1_marks.append({"case": case_key, "label": c["label"], "value": round(float(cm.expected_i2i1(case_key)), 4)})
+        elif c.get("target_i2i1") is not None:
             i2i1_marks.append({"case": case_key, "label": c["label"], "value": float(c["target_i2i1"])})
 
     rating = motor["rating"]
@@ -136,8 +143,9 @@ def build_thresholds(mode: str) -> dict:
         },
         "honesty": {
             "label": elec["source"]["honesty_label"] if "source" in elec and "honesty_label" in elec["source"] else "시뮬레이션 기반 추정값 (Simulation-based)",
-            "rating_basis": f"정격 기준: {V(rating['power_kW']):g} kW {V(rating['poles'])}극 크레인 권상 모터 (도면 {meta.get('drawing', '').split(' (')[0]})",
-            "current_note": "전류는 해석식 3상 모델로 생성 (FEM·실측 아님)",
+            "rating_basis": (f"정격 기준: {V(rating['power_kW']):g} kW {V(rating['poles'])}극 권상 모터 M1 (현대 HLP-2.2/4, 카탈로그 사양 — 명판 아님) · 엔진 배치 로그" if SOURCE["kind"] == "fleet"
+                             else f"정격 기준: {V(rating['power_kW']):g} kW {V(rating['poles'])}극 크레인 권상 모터 (도면 {meta.get('drawing', '').split(' (')[0]})"),
+            "current_note": ("전류는 등가회로 LUT(RMxprt v2m2+MCCM, 2D FEM lite 검증) + 해석식 생성 — 실측 아님" if SOURCE["kind"] == "fleet" else "전류는 해석식 3상 모델로 생성 (FEM·실측 아님)"),
             "thermal_note": "온도는 집중정수 열회로 9노드 모델 (측정값 아님)",
         },
         "thermal": {
@@ -162,7 +170,15 @@ def build_thresholds(mode: str) -> dict:
 
 
 # ----------------------------------------------------------------- timeseries
+SOURCE = {"kind": "recording", "motor": None}      # D 후속 2 (2026-10-21): --source fleet 이면 M1 엔진 배치 로그(logs/fleet/M1/<mode>/demo_fleet.csv) 를 쓴다
+
+
 def latest_csv(mode: str) -> str:
+    if SOURCE["kind"] == "fleet":
+        p = os.path.join(VIZ, "logs", "fleet", SOURCE["motor"], mode, "demo_fleet.csv")
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"{p} 가 없다 — tools/run_fleet.py 먼저")
+        return p
     files = sorted(glob.glob(os.path.join(VIZ, "logs", mode, "demo_*.csv")))
     if not files:
         raise FileNotFoundError(f"logs/{mode}/demo_*.csv 가 없다 — tools/record_mode.ps1 -Mode {mode} 먼저")
@@ -256,7 +272,7 @@ def build_scenarios(mode: str, ts: dict, th_json: dict) -> dict:
     log_dir = os.path.join(VIZ, "logs", mode)
     media_dir = os.path.join(DASH, "public", "media", mode)
     meta_path = os.path.join(log_dir, f"recording_{mode}_full.json")
-    meta = json.load(open(meta_path, encoding="utf-8")) if os.path.exists(meta_path) else {}
+    meta = json.load(open(meta_path, encoding="utf-8")) if (os.path.exists(meta_path) and SOURCE["kind"] != "fleet") else {}   # fleet: 영상·오프셋 없음
     idx_path = os.path.join(media_dir, "clips", "clips_index.json")
     clips = {c["step_id"]: c for c in json.load(open(idx_path, encoding="utf-8"))["clips"]} if os.path.exists(idx_path) else {}
     offset = float(meta.get("video_offset_s", 0.0))
@@ -275,12 +291,14 @@ def build_scenarios(mode: str, ts: dict, th_json: dict) -> dict:
             "clip": f"media/{mode}/clips/{c['file']}" if c else None,
         })
         t0 += d
+    has_video = SOURCE["kind"] != "fleet" and os.path.exists(os.path.join(media_dir, f"{mode}_full.mp4"))
     return {
         "mode": mode,
-        "video": f"media/{mode}/{mode}_full.mp4",
+        "video": f"media/{mode}/{mode}_full.mp4" if has_video else None,
         "video_offset_s": offset,
         "video_duration_s": meta.get("duration_s"),
         "recording_meta": os.path.basename(meta_path) if meta else None,
+        "data_source": ("M1 엔진 배치 로그 logs/fleet/M1/<mode>/demo_fleet.csv (tools/run_fleet.py) — 영상 없음" if SOURCE["kind"] == "fleet" else "Isaac 녹화 로그 logs/<mode>/demo_*.csv"),
         "total_duration_s": player.total_duration,
         "steps": steps,
         "lead_time": _with_sim(lead_time(mode, ts, th_json), player),
@@ -332,9 +350,21 @@ def _fill_subtitles(sc: dict, values: dict) -> None:
         st["subtitle"] = fill_vars(st.get("subtitle", ""), values.get(st["id"]))
 
 
+def _engines():
+    """--source fleet 이면 M1 라이브러리 엔진(열회로 스케일·LUT), 아니면 기본(motor.yaml)."""
+    if SOURCE["kind"] == "fleet":
+        from engine import motor_library as ml
+        m = ml.load_motor(SOURCE["motor"])
+        return ThermalModel(ml.thermal_cfg(m)), CurrentModel(ml.electrical_cfg(m), ml.motor_spec(m))
+    return ThermalModel(), CurrentModel()
+
+
 def export(mode: str) -> dict:
     out_dir = os.path.join(DASH, "public", "data", mode)
     os.makedirs(out_dir, exist_ok=True)
+    sys.path.insert(0, HERE)
+    import export_mechanical_extras as _mx, export_electrical_extras as _ex
+    _mx.ENGINE["tm"], _mx.ENGINE["cm"] = _engines(); _ex.ENGINE["tm"], _ex.ENGINE["cm"] = _mx.ENGINE["tm"], _mx.ENGINE["cm"]
     th = build_thresholds(mode)
     ts = build_timeseries(mode, latest_csv(mode), th)
     sc = build_scenarios(mode, ts, th)
@@ -374,6 +404,9 @@ def export(mode: str) -> dict:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="all", choices=("mechanical", "electrical", "all"))
+    ap.add_argument("--source", default="recording", choices=("recording", "fleet"), help="recording = Isaac 녹화 로그(22 kW 이력) / fleet = M1 엔진 배치 로그 (D 후속 2)")
+    ap.add_argument("--motor", default="M1")
     a = ap.parse_args()
+    SOURCE["kind"] = a.source; SOURCE["motor"] = a.motor
     for m in (("mechanical", "electrical") if a.mode == "all" else (a.mode,)):
         export(m)

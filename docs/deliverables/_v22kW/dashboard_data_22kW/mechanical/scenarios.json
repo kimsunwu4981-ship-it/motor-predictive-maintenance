@@ -1,9 +1,10 @@
 {
  "mode": "mechanical",
- "video": "media/mechanical/mechanical_full.mp4",
- "video_offset_s": 2.008,
- "video_duration_s": 187.36,
- "recording_meta": "recording_mechanical_full.json",
+ "video": null,
+ "video_offset_s": 0.0,
+ "video_duration_s": null,
+ "recording_meta": null,
+ "data_source": "M1 엔진 배치 로그 logs/fleet/M1/<mode>/demo_fleet.csv (tools/run_fleet.py) — 영상 없음",
  "total_duration_s": 180.0,
  "steps": [
   {
@@ -14,8 +15,8 @@
    "source": "집중정수 열회로 9노드 모델",
    "t_start": 0.0,
    "t_end": 25.0,
-   "video_start": 2.008,
-   "video_end": 27.008,
+   "video_start": 0.0,
+   "video_end": 25.0,
    "electrical_case": "healthy",
    "faults": [],
    "load": 1.0,
@@ -31,8 +32,8 @@
    "source": "베어링 손실 배율 + 전도 저항 악화 모델",
    "t_start": 25.0,
    "t_end": 60.0,
-   "video_start": 27.008,
-   "video_end": 62.008,
+   "video_start": 25.0,
+   "video_end": 60.0,
    "electrical_case": "healthy",
    "faults": [
     "bearing_de_fault"
@@ -50,8 +51,8 @@
    "source": "부하 배율 + 베어링 손실 증가 모델",
    "t_start": 60.0,
    "t_end": 85.0,
-   "video_start": 62.008,
-   "video_end": 87.008,
+   "video_start": 60.0,
+   "video_end": 85.0,
    "electrical_case": "healthy",
    "faults": [
     "misalignment"
@@ -69,8 +70,8 @@
    "source": "대류 열저항 증가 모델",
    "t_start": 85.0,
    "t_end": 110.0,
-   "video_start": 87.008,
-   "video_end": 112.008,
+   "video_start": 85.0,
+   "video_end": 110.0,
    "electrical_case": "healthy",
    "faults": [
     "fan_failure"
@@ -88,8 +89,8 @@
    "source": "축 노드 발열 주입 모델",
    "t_start": 110.0,
    "t_end": 130.0,
-   "video_start": 112.008,
-   "video_end": 132.008,
+   "video_start": 110.0,
+   "video_end": 130.0,
    "electrical_case": "healthy",
    "faults": [
     "brake_drag"
@@ -107,8 +108,8 @@
    "source": "부하율 기반 동손 I²R 모델",
    "t_start": 130.0,
    "t_end": 160.0,
-   "video_start": 132.008,
-   "video_end": 162.008,
+   "video_start": 130.0,
+   "video_end": 160.0,
    "electrical_case": "healthy",
    "faults": [
     "overload"
@@ -126,8 +127,8 @@
    "source": "집중정수 열회로 9노드 모델",
    "t_start": 160.0,
    "t_end": 180.0,
-   "video_start": 162.008,
-   "video_end": 182.008,
+   "video_start": 160.0,
+   "video_end": 180.0,
    "electrical_case": "healthy",
    "faults": [],
    "load": 1.0,
@@ -138,11 +139,11 @@
  ],
  "lead_time": {
   "basis": "온도 — 부품별 주의 임계값 진입(경보) vs 위험 임계값 진입",
-  "alarm_t": 25.844,
-  "alarm_part": "bearing_de",
-  "danger_t": 27.393,
-  "danger_part": "bearing_de",
-  "lead_s": 1.55,
-  "lead_sim_s": 185.9
+  "alarm_t": null,
+  "alarm_part": null,
+  "danger_t": null,
+  "danger_part": null,
+  "lead_s": null,
+  "lead_sim_s": null
  }
 }

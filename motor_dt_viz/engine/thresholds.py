@@ -270,15 +270,41 @@ class Judge:
         self._last_t = t
         return self._combine(t, out)
 
+    def _light_load_policy(self, out: list[SignalVerdict]) -> None:
+        """2026-10-21 승인 규칙(current_ratio.low_current_policy): 세 상이 함께 r < danger_under 이고 상 불평형 < unbalance_gate 이며 I₂/I₁ 이 경고 미만이면
+        '경부하(참고)' — 세 current_ratio 신호를 advisory 로 돌리고 level 을 SAFE 로 둔다(raw_level 은 보존). 그 밖(한 상만 저전류, 저전류+불평형 ≥ gate, I₂/I₁ ≥ 위험)은 기존대로.
+        히스테리시스·지속 상태(_state)는 건드리지 않는다 — 조건이 깨지면 내부 상태(이미 DANGER)가 그대로 드러난다."""
+        pol = (self.cfg.get("current_ratio") or {}).get("low_current_policy") or {}
+        if not pol.get("light_load_advisory", False):
+            return
+        cr = [s for s in out if s.kind == "current_ratio"]
+        if len(cr) != 3:
+            return
+        du = float(self.cfg["current_ratio"]["danger_under"]); gate = float(pol.get("unbalance_gate", 0.05))
+        vals = [s.value for s in cr]; mean = sum(vals) / 3
+        if not all(v < du for v in vals) or mean <= 0:
+            return
+        unb = max(abs(v - mean) for v in vals) / mean
+        i2 = next((s for s in out if s.kind == "i2i1"), None)
+        lo, _, _ = self.i2i1_bounds()
+        if unb >= gate or (i2 is not None and i2.value >= lo):
+            return
+        for s in cr:
+            s.advisory = True; s.level = "SAFE"
+            s.note = f"경부하(참고): 세 상 r<{du:g}, 불평형 {unb:.3f}<{gate:g}, I₂/I₁ 경고 미만 — 종합 미반영"
+            s.exceed = 0.0
+
     def _combine(self, t: float, out: list[SignalVerdict]) -> Verdict:
-        """종합 = worst-of (규칙 불변). P1: live 스트림 + advisory_only 정책이면 provisional 지표는 worst-of 에서 빼서 advisory 로."""
+        """종합 = worst-of (규칙 불변). P1: live 스트림 + advisory_only 정책이면 provisional 지표는 worst-of 에서 빼서 advisory 로.
+        2026-10-21: 경부하 참고 규칙(_light_load_policy)이 먼저 적용된다."""
+        self._light_load_policy(out)
         policy = self.policy.get(self.stream, "include_with_label")
         advisory: list[SignalVerdict] = []
         if policy == "advisory_only":
             for s in out:
                 if s.status == "provisional":
                     s.advisory = True
-            advisory = [s for s in out if s.advisory]
+        advisory = [s for s in out if s.advisory]
         judged = [s for s in out if not s.advisory]
         base = {"advisory": advisory, "stream": self.stream}
         if not judged:

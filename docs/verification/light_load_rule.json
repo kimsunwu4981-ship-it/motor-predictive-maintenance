@@ -1,0 +1,190 @@
+{
+ "generated": "2026-10-21 17:41:58",
+ "policy": {
+  "light_load_advisory": true,
+  "unbalance_gate": 0.05
+ },
+ "rows": [
+  {
+   "case": "healthy",
+   "r": [
+    1.019,
+    0.979,
+    0.979
+   ],
+   "unbalance": 0.0268,
+   "i2i1": 0.027,
+   "before": "SAFE",
+   "before_cause": "-",
+   "after": "SAFE",
+   "after_cause": "-",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_4turn",
+   "r": [
+    1.103,
+    1.027,
+    0.974
+   ],
+   "unbalance": 0.0657,
+   "i2i1": 0.0726,
+   "before": "WARN",
+   "before_cause": "i2i1",
+   "after": "WARN",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_8turn",
+   "r": [
+    1.297,
+    1.133,
+    0.973
+   ],
+   "unbalance": 0.1434,
+   "i2i1": 0.1676,
+   "before": "DANGER",
+   "before_cause": "i2i1",
+   "after": "DANGER",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_12turn",
+   "r": [
+    1.563,
+    1.272,
+    0.992
+   ],
+   "unbalance": 0.2255,
+   "i2i1": 0.2696,
+   "before": "DANGER",
+   "before_cause": "i2i1",
+   "after": "DANGER",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_16turn",
+   "r": [
+    1.881,
+    1.433,
+    1.042
+   ],
+   "unbalance": 0.2955,
+   "i2i1": 0.3625,
+   "before": "DANGER",
+   "before_cause": "i2i1",
+   "after": "DANGER",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_4turn_resistive",
+   "r": [
+    1.03,
+    0.986,
+    0.979
+   ],
+   "unbalance": 0.0319,
+   "i2i1": 0.0324,
+   "before": "SAFE",
+   "before_cause": "-",
+   "after": "SAFE",
+   "after_cause": "-",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "itsc_4turn_halfload",
+   "r": [
+    0.731,
+    0.685,
+    0.619
+   ],
+   "unbalance": 0.0874,
+   "i2i1": 0.0953,
+   "before": "WARN",
+   "before_cause": "i2i1",
+   "after": "WARN",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "overload",
+   "r": [
+    1.386,
+    1.332,
+    1.332
+   ],
+   "unbalance": 0.0268,
+   "i2i1": 0.027,
+   "before": "DANGER",
+   "before_cause": "current_ratio",
+   "after": "DANGER",
+   "after_cause": "current_ratio",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "voltage_unbalance",
+   "r": [
+    1.08,
+    0.94,
+    0.98
+   ],
+   "unbalance": 0.08,
+   "i2i1": 0.0595,
+   "before": "WARN",
+   "before_cause": "i2i1",
+   "after": "WARN",
+   "after_cause": "i2i1",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "single_phasing",
+   "r": [
+    0.036,
+    1.278,
+    1.278
+   ],
+   "unbalance": 0.9583,
+   "i2i1": 0.4792,
+   "before": "DANGER",
+   "before_cause": "current_ratio",
+   "after": "DANGER",
+   "after_cause": "current_ratio",
+   "advisory": [],
+   "changed": false
+  },
+  {
+   "case": "no_load",
+   "r": [
+    0.339,
+    0.326,
+    0.326
+   ],
+   "unbalance": 0.0268,
+   "i2i1": 0.027,
+   "before": "DANGER",
+   "before_cause": "current_ratio",
+   "after": "SAFE",
+   "after_cause": "-",
+   "advisory": [
+    "경부하(참고)"
+   ],
+   "changed": true
+  }
+ ],
+ "changed": [
+  "no_load"
+ ]
+}

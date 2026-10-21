@@ -1,22 +1,22 @@
 {
  "mode": "mechanical",
  "motor": {
-  "power_kW": 22.0,
-  "poles": 6,
+  "power_kW": 2.2,
+  "poles": 4,
   "voltage_LL_V": 380.0,
   "frequency_Hz": 60.0,
-  "rated_rpm": 1170.0,
-  "connection": "delta",
-  "rated_line_A": 43.7,
-  "rated_phase_A": 25.2,
-  "drawing": "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01",
-  "target": "10t 천장크레인 권상 모터",
-  "current_source": "representative (nameplate unknown)"
+  "rated_rpm": 1760.0,
+  "connection": "star",
+  "rated_line_A": 4.73,
+  "rated_phase_A": 4.73,
+  "drawing": "현대 SSEN 카탈로그 HLP-2.2/4 P2P2TC276 (380 V) — 외형·내부는 assets/motors/M1 재구성",
+  "target": "1톤 호이스트 권상 모터 — 현대 SSEN HLP-2.2/4 (100L)",
+  "current_source": "catalog (nameplate unverified)"
  },
  "honesty": {
   "label": "시뮬레이션 기반 추정값 (Simulation-based)",
-  "rating_basis": "정격 기준: 22 kW 6극 크레인 권상 모터 (도면 정원크레인 JW-01-HTO-00)",
-  "current_note": "전류는 해석식 3상 모델로 생성 (FEM·실측 아님)",
+  "rating_basis": "정격 기준: 2.2 kW 4극 권상 모터 M1 (현대 HLP-2.2/4, 카탈로그 사양 — 명판 아님) · 엔진 배치 로그",
+  "current_note": "전류는 등가회로 LUT(RMxprt v2m2+MCCM, 2D FEM lite 검증) + 해석식 생성 — 실측 아님",
   "thermal_note": "온도는 집중정수 열회로 9노드 모델 (측정값 아님)"
  },
  "thermal": {
@@ -319,12 +319,12 @@
    }
   },
   "loss_rated_W": {
-   "winding": 855.0,
-   "stator_core": 610.0,
-   "rotor": 490.0,
+   "winding": 90.277,
+   "stator_core": 64.408,
+   "rotor": 51.737,
    "shaft": 0.0,
-   "bearing_de": 110.0,
-   "bearing_nde": 70.0,
+   "bearing_de": 11.615,
+   "bearing_nde": 7.391,
    "endshield_de": 0.0,
    "endshield_nde": 0.0,
    "frame": 0.0
@@ -342,8 +342,8 @@
   }
  },
  "electrical": {
-  "rated_line_A": 43.7,
-  "rated_phase_A": 25.2,
+  "rated_line_A": 4.73,
+  "rated_phase_A": 4.73,
   "ratio_thresholds": {
    "over_danger": 1.25,
    "over_caution": 1.1,
@@ -356,8 +356,8 @@
     "label": "위험 과전류",
     "ratio_text": "r > 1.25",
     "ratio": 1.25,
-    "line_A": 54.6,
-    "phase_A": 31.5,
+    "line_A": 5.9,
+    "phase_A": 5.9,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#ff140d"
@@ -367,8 +367,8 @@
     "label": "주의 과전류",
     "ratio_text": "r > 1.1",
     "ratio": 1.1,
-    "line_A": 48.1,
-    "phase_A": 27.7,
+    "line_A": 5.2,
+    "phase_A": 5.2,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#ff731a"
@@ -381,12 +381,12 @@
     "line_A": null,
     "phase_A": null,
     "line_range_A": [
-     37.1,
-     48.1
+     4.0,
+     5.2
     ],
     "phase_range_A": [
-     21.4,
-     27.7
+     4.0,
+     5.2
     ],
     "color": "#26f259"
    },
@@ -395,8 +395,8 @@
     "label": "주의 저전류",
     "ratio_text": "r < 0.85",
     "ratio": 0.85,
-    "line_A": 37.1,
-    "phase_A": 21.4,
+    "line_A": 4.0,
+    "phase_A": 4.0,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#4099ff"
@@ -406,8 +406,8 @@
     "label": "위험 저전류(결상 의심)",
     "ratio_text": "r < 0.5",
     "ratio": 0.5,
-    "line_A": 21.9,
-    "phase_A": 12.6,
+    "line_A": 2.4,
+    "phase_A": 2.4,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#1a59ff"
@@ -432,24 +432,24 @@
    {
     "case": "healthy",
     "label": "정상 운전",
-    "value": 0.006
+    "value": 0.027
    },
    {
     "case": "itsc_4turn",
     "label": "턴간 단락 4턴 (초기)",
-    "value": 0.104
+    "value": 0.0726
    },
    {
     "case": "itsc_12turn",
     "label": "턴간 단락 12턴 (진행)",
-    "value": 0.269
+    "value": 0.2696
    }
   ],
   "slowmo_factor": 0.016667
  },
  "vibration_iso": {
-  "watch_mms": 1.4,
-  "plan_mms": 2.8,
+  "watch_mms": 1.8,
+  "plan_mms": 4.5,
   "act_mms": 4.5,
   "zone_labels": {
    "Normal": "정상",

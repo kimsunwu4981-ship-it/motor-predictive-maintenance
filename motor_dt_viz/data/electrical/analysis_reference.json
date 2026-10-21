@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-21 16:11:05",
+ "generated": "2026-10-21 17:47:39",
  "generator": "motor_dt_viz/tools/verify/build_analysis_reference.py",
  "no_manual_numbers": true,
  "motor": "M1 현대 HLP-2.2/4",
@@ -25,7 +25,7 @@
   "maxwell_source_sha256": "7d7b1ac5147a1e4a436cc96c0a5e4d9827579ccb6e6b41a2bfdce5e55ea9309c",
   "grade": "등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite)",
   "status": "provisional",
-  "fem_verified": false
+  "fem_verified": "2D-eddy-lite (I_f ±3 %, Xm −3.7 %, locked-rotor IEC 안)"
  },
  "grades": {
   "catalog": "카탈로그",
@@ -77,11 +77,11 @@
   },
   "analysis_tables_xlsx": {
    "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\analysis_tables.xlsx",
-   "sha256": "ff09681845fb95e04348c257ebe16e9fc487befbf9d9d1b1ce2e619536126267"
+   "sha256": "cfda1af0f9b13b4d539ed0b3d1b106e413f01658838cbdc4f58802510c1ef7bb"
   },
   "electrical_yaml": {
    "path": "motor_dt_viz/config/electrical.yaml",
-   "sha256": "296249cc9133f5d025582601eb49e536a3f157b264ec332d1a8e067591a79d57"
+   "sha256": "69266c21fed85b6c0f99b2882d56a1ee09f86c83e43e8c462c6d733080756b73"
   },
   "lut_dt": {
    "path": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
@@ -89,7 +89,7 @@
   },
   "thresholds_yaml": {
    "path": "motor_dt_viz/config/thresholds.yaml",
-   "sha256": "9158581eb3d8c5a87c443079dd769fdab1502ed8d87b2480cc6c8aca31119f10"
+   "sha256": "92a7e9fb6043903e611997155bc3e79d339f835a6fd60d6f5f886ad4c21b98d5"
   },
   "m1_yaml": {
    "path": "motor_dt_viz/config/motors/M1.yaml",
@@ -140,7 +140,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -245,7 +245,7 @@
     },
     "detection_delay_expected_s": null,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -293,7 +293,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -412,7 +412,7 @@
     },
     "detection_delay_expected_s": 3.0,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -460,7 +460,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -565,7 +565,7 @@
     },
     "detection_delay_expected_s": 3.0,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -613,7 +613,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -718,7 +718,7 @@
     },
     "detection_delay_expected_s": 3.0,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -766,7 +766,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -871,7 +871,7 @@
     },
     "detection_delay_expected_s": 3.0,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -919,7 +919,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -1038,7 +1038,7 @@
     },
     "detection_delay_expected_s": null,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },
@@ -1086,7 +1086,7 @@
     "tolerance": "범위 |r−h| ~ r+h 안",
     "source_inherent": {
      "file": "motor_dt_viz/config/electrical.yaml",
-     "sha256": "296249cc9133",
+     "sha256": "69266c21fed8",
      "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
      "grade_key": "dataset",
      "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
@@ -1191,7 +1191,7 @@
     },
     "detection_delay_expected_s": 3.0,
     "file": "motor_dt_viz/config/thresholds.yaml",
-    "sha256": "9158581eb3d8",
+    "sha256": "92a7e9fb6043",
     "grade": "임계값(참고 데이터셋 provisional)",
     "grade_key": "dataset"
    },

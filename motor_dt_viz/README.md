@@ -339,3 +339,6 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
 - 발표·문서가 인용할 단 하나의 검증 요약: `../docs/verification_summary.md`(+ `.json`, `tools/docs/verification_summary.py` — 수기 숫자 없음).
 - HUD 합성 스크린샷 10장(Isaac 캡처에는 HUD 가 안 찍힘): `tools/viz/shot_with_hud.py all` → `../docs/assets/screenshots/M1_hud/` + 캡션(`captions.json`, `*.txt`).
 - 산출 문서 4종 M1 갱신(E)은 원본이 `../docs/deliverables/_v22kW/` 에 들어오면 `../docs/deliverables/README.md` 절차대로.
+- 해설 대시보드(기계·전기 해설 화면) 데이터는 `py -3.12 -X utf8 ../dashboard/tools/export_dashboard_data.py --source fleet --mode all` 로 M1 배치 로그에서 만든다(영상 없음, 재실행·재계산 검증 포함; 테스트 `tests/test_dashboard_fleet_export.py`). 22 kW 녹화 기반 동결본은 `../docs/deliverables/_v22kW/dashboard_data_22kW/`.
+- 저전류 판정 규칙(2026-10-21 승인): 세 상이 함께 r < 0.50 이고 균형(불평형 < 0.05)이며 I₂/I₁ < 0.05 면 '경부하(참고)' advisory — `config/thresholds.yaml current_ratio.low_current_policy`, 전후 표 `../docs/verification/light_load_rule.md`.
+- AI Hub 샘플 창별 정상성 게이트 분포표: `py -3.12 -X utf8 tools/aihub/baseline_table.py` → `docs/aihub_baseline_gated.md`(`baseline_capture.py --gate-*` 와 같은 규칙).

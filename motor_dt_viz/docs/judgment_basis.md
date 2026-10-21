@@ -145,3 +145,14 @@ M1 연속 정격 권선 46.4 °C(상승 ≈ 21 K)는 카탈로그 B종 한도 80
 ## 7. D3 원 사양 적용 — LUT 경로 I₁ = LUT 정상분 RMS (2026-10-21, 엔진 수정 승인 1건)
 
 `CurrentModel._phasors` 의 lut 경로가 정상분 크기를 LUT `I1_A`(턴·R_f·부하 보간)에서 가져온다. 이전에는 정격×부하로 고정해 I₂/I_n 표시값이 LUT 정의(결함 시 I₁ 상승)와 어긋났다(16턴 −29 %). 바뀐 수치·판정 1건(반부하 4턴 DANGER→WARN)은 `docs/verification/d3_i1_from_lut.md`, 재검증 89/89 는 `docs/verification/sim_vs_analysis_report.md`. 임계값·규칙·LUT 불변.
+
+## 8. 저전류 판정 규칙 변경 — 경부하(참고) (2026-10-21, 판정 규칙 변경 승인 1건)
+
+**사유**: 호이스트는 권상 대기(무부하) 운전이 잦고, 그때 흐르는 전류는 자화 전류뿐이라 r = I/I_n ≈ 0.33~0.5 가 **정상**이다. 기존 규칙(어느 상이든 r < 0.50 → 위험 저전류·결상 의심)은 무부하 장면을 결상처럼 보고했다(no_load DANGER).
+
+**새 규칙** (`config/thresholds.yaml current_ratio.low_current_policy: {light_load_advisory: true, unbalance_gate: 0.05}`, `engine/thresholds.Judge._light_load_policy`):
+- (a) 세 상이 **함께** r < 0.50 이고 상 불평형(최대 편차/평균) < 0.05 이며 I₂/I₁ 이 경고(0.05) 미만 → **경부하(참고)** — 세 current_ratio 신호를 advisory 로 돌리고 종합(worst-of)에 넣지 않는다(level SAFE, raw_level 보존, note 에 사유).
+- (b) 한 상만 r < 0.50, 또는 저전류와 함께 불평형 ≥ 0.05 또는 I₂/I₁ ≥ 위험(0.10) → **결상 의심 DANGER**(기존과 동일).
+- (c) 상한(r > 1.25 위험, 1.10~1.25 경고)·히스테리시스 5 %·지속 3 s 는 그대로. 경부하 중 한 상이 끊기면 내부 상태(이미 DANGER)가 즉시 드러난다.
+
+**전후 표**(`docs/verification/light_load_rule.md`, 엔진 stateless): 11 시나리오 중 **no_load 만 DANGER(current_ratio) → SAFE(+경부하 참고)**, single_phasing·overload DANGER 유지, 나머지 불변. 테스트 `tests/test_light_load_rule.py`(3상 동시 저전류 / 1상 저전류 / 저전류+불평형·I₂/I₁ / 정책 off / 지속·상한 불변). 출처·상태(provisional)·경계값은 바꾸지 않았다.

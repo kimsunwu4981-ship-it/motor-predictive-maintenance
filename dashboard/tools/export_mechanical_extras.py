@@ -46,10 +46,13 @@ def _narration_cfg() -> dict:
 
 
 # ----------------------------------------------------------------- 엔진 재실행
+ENGINE = {"tm": None, "cm": None}      # export_dashboard_data 가 --source fleet 이면 M1 라이브러리 엔진을 주입한다 (D 후속 2, 2026-10-21)
+
+
 def replay(ts: dict) -> dict:
     """로그 시각마다 손실열·배속·누적 시뮬레이션 시간을 계산하고 온도 오차를 기록한다."""
     player = ScenarioPlayer.for_mode("mechanical")
-    tm = ThermalModel()
+    tm = ENGINE["tm"] or ThermalModel()
     parts = list(ts["temperature_C"].keys())
     bounds, acc = [], 0.0
     for s in player.steps:
@@ -227,7 +230,7 @@ def apply_extras(th: dict, ts: dict, sc: dict, faults: dict) -> tuple[list[dict]
                   "hz": float(colors["thermal"]["pulse"]["hz"]), "depth": float(colors["thermal"]["pulse"]["depth"])},
         "base_materials": {k: list(map(float, v["color"])) for k, v in colors["base_materials"].items()},
     }
-    tm = ThermalModel()
+    tm = ENGINE["tm"] or ThermalModel()
     th["thermal"]["loss_rated_W"] = {n.key: float(n.loss_rated_W) for n in tm.nodes}
     th["thermal"]["loss_model"] = {n.key: n.loss_model for n in tm.nodes}
 

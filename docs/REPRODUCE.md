@@ -45,7 +45,8 @@ C:\ISSACS~1\python.bat tools\cad\build_usd_M1.py           # Isaac 헤드리스,
 cd motor_dt_viz
 py -3.12 -X utf8 tools\verify\build_analysis_reference.py  # data/electrical/analysis_reference.json (+ dashboard public 사본)
 py -3.12 -X utf8 tools\verify\traceability.py
-py -3.12 -X utf8 ..\dashboard\tools\export_status_data.py  # public/data/fleet (해설 데이터 mechanical/electrical 은 동결 커밋본 사용)
+py -3.12 -X utf8 ..\dashboard\tools\export_dashboard_data.py --source fleet --mode all   # 해설 데이터 mechanical/electrical ← M1 배치 로그 (D 후속 2)
+py -3.12 -X utf8 ..\dashboard\tools\export_status_data.py  # public/data/fleet
 cd ..\dashboard ; npm install ; npm run build              # ~2 분 + 7 s
 cd ..\motor_dt_viz ; py -3.12 -X utf8 tools\electrical\verify_lut_integration.py   # 8/8 (V7 은 Isaac 라이브 45 s 기동)  ~3 분  ← PowerShell/cmd 에서
 py -3.12 -X utf8 tools\docs\verification_summary.py        # docs/verification_summary.md
@@ -65,7 +66,7 @@ py -3.12 -X utf8 tools\docs\verification_summary.py        # docs/verification_s
 | `.bat` 인자 깨짐 | `C:\issac sim\python.bat` 공백 경로 → `C:\ISSACS~1\python.bat`, `.bat` 에는 상대 경로만 |
 | 한글 경로 | 파이썬·Isaac 은 동작하나 AEDT 작업 프로젝트는 ASCII(`C:\Users\sunwu\AEDT_work`). 새 clone 은 ASCII 경로 권장 |
 | `test_fleet` FAIL / skip | `tools/run_fleet.py` 먼저(logs/fleet gitignore). AI Hub 테스트 skip 은 L2/L3 산출물 없음 — 정상 |
-| `export_status_data.py` FileNotFoundError `public/data/mechanical/thresholds.json` | 해설 데이터는 22 kW 녹화 로그에서만 재생성됨(`export_dashboard_data.py` → `logs/<mode>/demo_*.csv`, 저장소 밖) → 동결 커밋본(`dashboard/public/data/{mechanical,electrical}`) 사용. 지우지 말 것 |
+| `export_status_data.py` FileNotFoundError `public/data/mechanical/thresholds.json` | 먼저 `export_dashboard_data.py --source fleet --mode all`(M1 배치 로그, `run_fleet` 선행). 22 kW 녹화 기반 동결본은 `docs/deliverables/_v22kW/dashboard_data_22kW/`(이력) |
 | `import_lut.py` 경로 없음 | `MAXWELL_ROOT` 환경변수 또는 `--src` |
 | `ast`/인코딩 오류 (`import_lut.py` BOM) | 파일이 UTF-8 BOM — 편집 도구가 BOM 을 지우지 않도록 |
 | `x_numbers_xlsx.py` 검산 3 FAIL | 위 §1 주의(e3_tables 가 analysis_report.md 뒤 절을 지움) |

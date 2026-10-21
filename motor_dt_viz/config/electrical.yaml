@@ -4,7 +4,7 @@
 #   method: lut    → cases.*.lut 가 있는 케이스는 LUT 에서 I₂/I₁·I₂ 위상·I_f·단락 루프 손실을 읽어 페이저 합성
 #   method: legacy → 기존 방식(목표 I₂/I₁ 을 고장상 크기 배율로 역산) 그대로. 되돌리려면 이 한 줄만 바꾼다.
 #   LUT 는 M1 전용이다. 다른 모터(기준 M5 등)는 transfer_to_other_motors: false 라 자동으로 legacy 로 동작한다.
-# ⚠️ 정직성: LUT 도 FEM/실측이 아니라 등가회로 계산(grade 등가회로, status provisional, fem_verified false)이다. HUD·대시보드에 표시한다.
+# ⚠️ 정직성: LUT 는 등가회로 계산(grade 등가회로, status provisional)이고 2D 와전류 lite 로 I_f ±3 %·Xm −3.7 %·잠김 IEC 안을 확인했다(fem_verified 문구). 실측은 아니다. HUD·대시보드에 표시한다.
 version: 2
 method: lut                      # lut | legacy
 motor: M1                        # LUT 의 모터. motor_library 가 넘기는 motor_id 와 다르면 legacy 로 동작
@@ -22,7 +22,7 @@ source:
   # --- LUT 근거 (method: lut 일 때) ---
   grade: "등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite)"
   status: provisional
-  fem_verified: false
+  fem_verified: "2D-eddy-lite (I_f ±3 %, Xm −3.7 %, locked-rotor IEC 안)"   # 2026-10-21 문구 갱신: 2D 와전류 lite 로 검증된 범위 (값·LUT 불변). LUT 파일 provenance 의 fem_verified(false) 는 가져오기 시점 값
   lut: "data/electrical/M1_mccm_lut_v2.json"      # tools/electrical/import_lut.py 가 만든 파일 (v2: RMxprt v2m2 데이터시트 재질 M400-50A_user60, R_fe 데이터시트 철손, 2026-10-19)
   lut_sha256: "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9"   # 위 파일의 sha256. 다르면 legacy 로 내려가고 경고
   lut_note: "턴 비율 {0,1.04,2.08,4.17,6.25,8.33,12.5,16.7 %} × R_f {0.03,0.1,0.3,1.0 Ω} × 부하 {25~115 %} 160점, 3축 보간(R_f 는 log), 범위 밖 클램프·외삽 없음. 2026-10-19 S4: 2D lite FEM 파라미터(단락 턴 누설 9.5 mΩ, Z₂ 5.33 Ω 참고)로 재계산한 v3 와 7 케이스 변화 < 0.6 %(160점 최대 3.7 %) → v2 유지, 검증 통과. F1(2026-10-19): FaultLoop 에 단락 턴 저항 포함한 2D 와전류 결함 루프 전류 35.2/4.56 A 가 MCCM 34.4/4.42 A 와 ±5 % 정합"

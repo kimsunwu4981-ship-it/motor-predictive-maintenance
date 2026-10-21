@@ -363,7 +363,8 @@ class CurrentModel:
         if self.method == "lut":
             prov = self.lut.provenance
             d = {"method": "lut", "grade": prov.get("grade", "등가회로(RMxprt v2+MCCM)"), "status": prov.get("status", "provisional"),
-                 "fem_verified": bool(prov.get("fem_verified", False)), "lut_version": self.lut.version, "lut_sha256": self.lut_sha256[:12],
+                 "fem_verified": (self.cfg.get("source") or {}).get("fem_verified") if isinstance((self.cfg.get("source") or {}).get("fem_verified"), str) else bool(prov.get("fem_verified", False)),   # electrical.yaml 문구(2D-eddy-lite …) 우선, 없으면 LUT provenance 불리언
+                 "lut_version": self.lut.version, "lut_sha256": self.lut_sha256[:12],
                  "motor": str(self.cfg.get("motor", "M1")), "base_turns_per_phase": self.lut.base_turns,
                  "inherent_i2i1": self.inherent_i2i1 if self.inherent_enabled else 0.0}
         else:

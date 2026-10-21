@@ -57,9 +57,9 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
       {data.source && (
         <span className={"basis-badge " + data.source.method}
               title={data.source.method === "lut"
-                ? `전류 신호 근거: ${data.source.grade} · ${data.source.status} · FEM 검증 ${data.source.fem_verified ? "됨" : "안 됨"} · ${data.source.lut_version} (sha ${data.source.lut_sha256}) · 상당 턴수 ${data.source.base_turns_per_phase} · 고유 비대칭 I₂/I₁ ${data.source.inherent_i2i1} · I_n ${data.source.rated_current_A} A`
+                ? `전류 신호 근거: ${data.source.grade} · ${data.source.status} · FEM 검증 ${typeof data.source.fem_verified === "string" ? data.source.fem_verified : data.source.fem_verified ? "됨" : "안 됨"} · ${data.source.lut_version} (sha ${data.source.lut_sha256}) · 상당 턴수 ${data.source.base_turns_per_phase} · 고유 비대칭 I₂/I₁ ${data.source.inherent_i2i1} · I_n ${data.source.rated_current_A} A`
                 : `전류 신호 근거: ${data.source.grade} — ${data.source.reason}`}>
-          {data.source.method === "lut" ? <>근거 <b>등가회로 LUT</b> · {data.source.status} · FEM 미검증</> : <>근거 <b>해석식 역산</b> (legacy)</>}
+          {data.source.method === "lut" ? <>근거 <b>등가회로 LUT</b> · {data.source.status} · {typeof data.source.fem_verified === "string" ? "2D FEM lite 검증" : data.source.fem_verified ? "FEM 검증" : "FEM 미검증"}</> : <>근거 <b>해석식 역산</b> (legacy)</>}
         </span>
       )}
       <span className="basis-badge prov" title="I₂/I₁·전류/정격 기준은 실측 기준선 미확보(provisional) — 시뮬레이션 시나리오에서는 임시 기준으로 종합 판정에 포함, 실측 스트림에서는 판정에 반영되지 않고 참고(advisory)로만 표시 (config/thresholds.yaml current.*, judgment.provisional_policy)">

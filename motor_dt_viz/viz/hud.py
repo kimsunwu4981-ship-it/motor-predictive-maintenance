@@ -217,8 +217,10 @@ class MotorHUD:
         src = getattr(state, "source", None) or {}
         if "esrc" in self._labels and src:
             if src.get("method") == "lut":
+                fem = src.get("fem_verified")
+                fem_txt = f"FEM: {fem}" if isinstance(fem, str) else ("FEM verified" if fem else "FEM not verified")
                 self._labels["esrc"].text = (f"basis: equivalent-circuit LUT (RMxprt v2 + MCCM) {src.get('lut_version', '')} "
-                                             f"- {src.get('status', '')}, FEM not verified; hotspot not modeled (winding mean node)")
+                                             f"- {src.get('status', '')}, {fem_txt}; hotspot not modeled (winding mean node)")
             else:
                 self._labels["esrc"].text = "basis: legacy analytic inverse (target I2/I1), not FEM"
 

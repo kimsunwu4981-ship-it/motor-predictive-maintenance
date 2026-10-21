@@ -1,22 +1,22 @@
 {
  "mode": "electrical",
  "motor": {
-  "power_kW": 22.0,
-  "poles": 6,
+  "power_kW": 2.2,
+  "poles": 4,
   "voltage_LL_V": 380.0,
   "frequency_Hz": 60.0,
-  "rated_rpm": 1170.0,
-  "connection": "delta",
-  "rated_line_A": 43.7,
-  "rated_phase_A": 25.2,
-  "drawing": "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01",
-  "target": "10t 천장크레인 권상 모터",
-  "current_source": "representative (nameplate unknown)"
+  "rated_rpm": 1760.0,
+  "connection": "star",
+  "rated_line_A": 4.73,
+  "rated_phase_A": 4.73,
+  "drawing": "현대 SSEN 카탈로그 HLP-2.2/4 P2P2TC276 (380 V) — 외형·내부는 assets/motors/M1 재구성",
+  "target": "1톤 호이스트 권상 모터 — 현대 SSEN HLP-2.2/4 (100L)",
+  "current_source": "catalog (nameplate unverified)"
  },
  "honesty": {
   "label": "시뮬레이션 기반 추정값 (Simulation-based)",
-  "rating_basis": "정격 기준: 22 kW 6극 크레인 권상 모터 (도면 정원크레인 JW-01-HTO-00)",
-  "current_note": "전류는 해석식 3상 모델로 생성 (FEM·실측 아님)",
+  "rating_basis": "정격 기준: 2.2 kW 4극 권상 모터 M1 (현대 HLP-2.2/4, 카탈로그 사양 — 명판 아님) · 엔진 배치 로그",
+  "current_note": "전류는 등가회로 LUT(RMxprt v2m2+MCCM, 2D FEM lite 검증) + 해석식 생성 — 실측 아님",
   "thermal_note": "온도는 집중정수 열회로 9노드 모델 (측정값 아님)"
  },
  "thermal": {
@@ -120,8 +120,8 @@
   "pulse_from_stage": "warning"
  },
  "electrical": {
-  "rated_line_A": 43.7,
-  "rated_phase_A": 25.2,
+  "rated_line_A": 4.73,
+  "rated_phase_A": 4.73,
   "ratio_thresholds": {
    "over_danger": 1.25,
    "over_caution": 1.1,
@@ -134,8 +134,8 @@
     "label": "위험 과전류",
     "ratio_text": "r > 1.25",
     "ratio": 1.25,
-    "line_A": 54.6,
-    "phase_A": 31.5,
+    "line_A": 5.9,
+    "phase_A": 5.9,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#ff140d"
@@ -145,8 +145,8 @@
     "label": "주의 과전류",
     "ratio_text": "r > 1.1",
     "ratio": 1.1,
-    "line_A": 48.1,
-    "phase_A": 27.7,
+    "line_A": 5.2,
+    "phase_A": 5.2,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#ff731a"
@@ -159,12 +159,12 @@
     "line_A": null,
     "phase_A": null,
     "line_range_A": [
-     37.1,
-     48.1
+     4.0,
+     5.2
     ],
     "phase_range_A": [
-     21.4,
-     27.7
+     4.0,
+     5.2
     ],
     "color": "#26f259"
    },
@@ -173,8 +173,8 @@
     "label": "주의 저전류",
     "ratio_text": "r < 0.85",
     "ratio": 0.85,
-    "line_A": 37.1,
-    "phase_A": 21.4,
+    "line_A": 4.0,
+    "phase_A": 4.0,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#4099ff"
@@ -184,8 +184,8 @@
     "label": "위험 저전류(결상 의심)",
     "ratio_text": "r < 0.5",
     "ratio": 0.5,
-    "line_A": 21.9,
-    "phase_A": 12.6,
+    "line_A": 2.4,
+    "phase_A": 2.4,
     "line_range_A": null,
     "phase_range_A": null,
     "color": "#1a59ff"
@@ -210,17 +210,17 @@
    {
     "case": "healthy",
     "label": "정상 운전",
-    "value": 0.006
+    "value": 0.027
    },
    {
     "case": "itsc_4turn",
     "label": "턴간 단락 4턴 (초기)",
-    "value": 0.104
+    "value": 0.0726
    },
    {
     "case": "itsc_12turn",
     "label": "턴간 단락 12턴 (진행)",
-    "value": 0.269
+    "value": 0.2696
    }
   ],
   "slowmo_factor": 0.016667,
@@ -289,64 +289,64 @@
     "scene": 1,
     "id": "healthy",
     "label": "정상",
-    "x_i2i1": 0.006,
-    "y_ratio_max": 1.018,
-    "y_ratio_mean": 1.006,
-    "y_ratio_min": 1.0
+    "x_i2i1": 0.027,
+    "y_ratio_max": 1.015,
+    "y_ratio_mean": 0.987,
+    "y_ratio_min": 0.973
    },
    {
     "scene": 2,
     "id": "itsc_4turn",
     "label": "단락(초기)",
-    "x_i2i1": 0.104,
-    "y_ratio_max": 1.323,
-    "y_ratio_mean": 1.108,
-    "y_ratio_min": 1.0
+    "x_i2i1": 0.0726,
+    "y_ratio_max": 1.099,
+    "y_ratio_mean": 1.036,
+    "y_ratio_min": 0.973
    },
    {
     "scene": 3,
     "id": "itsc_12turn",
     "label": "단락(진행)",
-    "x_i2i1": 0.269,
-    "y_ratio_max": 2.014,
-    "y_ratio_mean": 1.338,
-    "y_ratio_min": 1.0
+    "x_i2i1": 0.2696,
+    "y_ratio_max": 1.564,
+    "y_ratio_mean": 1.276,
+    "y_ratio_min": 0.994
    },
    {
     "scene": 4,
     "id": "overload",
     "label": "과부하",
-    "x_i2i1": 0.0,
-    "y_ratio_max": 1.35,
-    "y_ratio_mean": 1.35,
-    "y_ratio_min": 1.35
+    "x_i2i1": 0.027,
+    "y_ratio_max": 1.395,
+    "y_ratio_mean": 1.353,
+    "y_ratio_min": 1.332
    },
    {
     "scene": 5,
     "id": "voltage_unbalance",
     "label": "전압 불평형",
     "x_i2i1": 0.0595,
-    "y_ratio_max": 1.08,
-    "y_ratio_mean": 1.0,
-    "y_ratio_min": 0.941
+    "y_ratio_max": 1.078,
+    "y_ratio_mean": 0.994,
+    "y_ratio_min": 0.93
    },
    {
     "scene": 6,
     "id": "single_phasing",
     "label": "결상",
     "x_i2i1": 0.4792,
-    "y_ratio_max": 1.277,
-    "y_ratio_mean": 0.863,
-    "y_ratio_min": 0.037
+    "y_ratio_max": 1.268,
+    "y_ratio_mean": 0.86,
+    "y_ratio_min": 0.042
    },
    {
     "scene": 7,
     "id": "no_load",
     "label": "무부하",
-    "x_i2i1": 0.0,
-    "y_ratio_max": 0.33,
-    "y_ratio_mean": 0.33,
-    "y_ratio_min": 0.33
+    "x_i2i1": 0.027,
+    "y_ratio_max": 0.338,
+    "y_ratio_mean": 0.324,
+    "y_ratio_min": 0.317
    }
   ]
  }

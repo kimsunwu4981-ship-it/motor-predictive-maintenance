@@ -47,7 +47,7 @@ export interface LiveState {
 }
 export interface ElecSourceCase { key: string; label: string; method: "lut" | "legacy"; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null; load: number }
 export interface ElecSource {
-  method: "lut" | "legacy"; grade: string; status: string; fem_verified: boolean; lut_version: string | null; lut_sha256: string | null;
+  method: "lut" | "legacy"; grade: string; status: string; fem_verified: boolean | string; lut_version: string | null; lut_sha256: string | null;   // string = 2D-eddy-lite 검증 범위 문구
   motor: string; base_turns_per_phase: number | null; inherent_i2i1: number; reason: string; rated_current_A: number | null;
   case?: string; case_method?: "lut" | "legacy"; expected_i2i1?: number | null; turns?: number; turn_frac?: number; R_f_ohm?: number; load_pct?: number;
   lut_i2_over_i1?: number; lut_i2_over_in?: number; lut_i2_angle_deg?: number; i_f_A?: number; p_loop_total_W?: number; clamped?: boolean;
