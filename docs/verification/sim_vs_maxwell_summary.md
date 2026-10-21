@@ -1,6 +1,6 @@
 # 시뮬 vs Maxwell 한 장 요약 (M1)
 
-생성 2026-10-21 23:09:59 · `tools/verify/sim_vs_maxwell_xlsx.py` · 실행 커밋 46a2a96 · 엑셀 `docs/verification/M1_sim_vs_maxwell.xlsx`(바탕화면 사본 `M1_시뮬_vs_Maxwell.xlsx`)
+생성 2026-10-21 23:25:56 · `tools/verify/sim_vs_maxwell_xlsx.py` · 실행 커밋 2cd8914 · 엑셀 `docs/verification/M1_sim_vs_maxwell.xlsx`(바탕화면 사본 `M1_시뮬_vs_Maxwell.xlsx`)
 
 ## 1. 결론 한 줄
 
