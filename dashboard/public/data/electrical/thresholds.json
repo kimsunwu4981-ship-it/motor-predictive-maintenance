@@ -1,0 +1,353 @@
+{
+ "mode": "electrical",
+ "motor": {
+  "power_kW": 22.0,
+  "poles": 6,
+  "voltage_LL_V": 380.0,
+  "frequency_Hz": 60.0,
+  "rated_rpm": 1170.0,
+  "connection": "delta",
+  "rated_line_A": 43.7,
+  "rated_phase_A": 25.2,
+  "drawing": "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01",
+  "target": "10t 천장크레인 권상 모터",
+  "current_source": "representative (nameplate unknown)"
+ },
+ "honesty": {
+  "label": "시뮬레이션 기반 추정값 (Simulation-based)",
+  "rating_basis": "정격 기준: 22 kW 6극 크레인 권상 모터 (도면 정원크레인 JW-01-HTO-00)",
+  "current_note": "전류는 해석식 3상 모델로 생성 (FEM·실측 아님)",
+  "thermal_note": "온도는 집중정수 열회로 9노드 모델 (측정값 아님)"
+ },
+ "thermal": {
+  "parts": [
+   {
+    "key": "bearing_de",
+    "label": "DE 베어링",
+    "hud": true,
+    "normal_max_C": 70.0,
+    "caution_max_C": 85.0,
+    "warning_max_C": 95.0,
+    "note": "그리스 수명 기준"
+   },
+   {
+    "key": "bearing_nde",
+    "label": "NDE 베어링",
+    "hud": false,
+    "normal_max_C": 70.0,
+    "caution_max_C": 85.0,
+    "warning_max_C": 95.0,
+    "note": "그리스 수명 기준"
+   },
+   {
+    "key": "winding",
+    "label": "고정자 권선",
+    "hud": true,
+    "normal_max_C": 95.0,
+    "caution_max_C": 120.0,
+    "warning_max_C": 140.0,
+    "note": "F종 절연 기준(허용 155 °C)"
+   },
+   {
+    "key": "rotor",
+    "label": "로터",
+    "hud": true,
+    "normal_max_C": 90.0,
+    "caution_max_C": 110.0,
+    "warning_max_C": 130.0,
+    "note": "농형 로터는 권선보다 고온이 정상"
+   },
+   {
+    "key": "shaft",
+    "label": "샤프트",
+    "hud": false,
+    "normal_max_C": 70.0,
+    "caution_max_C": 90.0,
+    "warning_max_C": 110.0,
+    "note": ""
+   },
+   {
+    "key": "stator_core",
+    "label": "고정자 코어",
+    "hud": false,
+    "normal_max_C": 70.0,
+    "caution_max_C": 90.0,
+    "warning_max_C": 110.0,
+    "note": ""
+   },
+   {
+    "key": "endshield_de",
+    "label": "DE 엔드실드",
+    "hud": false,
+    "normal_max_C": 70.0,
+    "caution_max_C": 90.0,
+    "warning_max_C": 110.0,
+    "note": ""
+   },
+   {
+    "key": "endshield_nde",
+    "label": "NDE 엔드실드",
+    "hud": false,
+    "normal_max_C": 70.0,
+    "caution_max_C": 90.0,
+    "warning_max_C": 110.0,
+    "note": ""
+   },
+   {
+    "key": "frame",
+    "label": "하우징(프레임)",
+    "hud": true,
+    "normal_max_C": 70.0,
+    "caution_max_C": 90.0,
+    "warning_max_C": 110.0,
+    "note": ""
+   }
+  ],
+  "stage_colors": {
+   "normal": "#26f259",
+   "caution": "#ffbf1a",
+   "warning": "#ff731a",
+   "danger": "#ff1a0d"
+  },
+  "stage_labels": {
+   "normal": "정상",
+   "caution": "주의",
+   "warning": "경고",
+   "danger": "위험"
+  },
+  "base_material": "#8c9ea6",
+  "pulse_hz": 0.8,
+  "pulse_from_stage": "warning"
+ },
+ "electrical": {
+  "rated_line_A": 43.7,
+  "rated_phase_A": 25.2,
+  "ratio_thresholds": {
+   "over_danger": 1.25,
+   "over_caution": 1.1,
+   "under_caution": 0.85,
+   "under_danger": 0.5
+  },
+  "rows": [
+   {
+    "status": "over_danger",
+    "label": "위험 과전류",
+    "ratio_text": "r > 1.25",
+    "ratio": 1.25,
+    "line_A": 54.6,
+    "phase_A": 31.5,
+    "line_range_A": null,
+    "phase_range_A": null,
+    "color": "#ff140d"
+   },
+   {
+    "status": "over_caution",
+    "label": "주의 과전류",
+    "ratio_text": "r > 1.1",
+    "ratio": 1.1,
+    "line_A": 48.1,
+    "phase_A": 27.7,
+    "line_range_A": null,
+    "phase_range_A": null,
+    "color": "#ff731a"
+   },
+   {
+    "status": "normal",
+    "label": "정상",
+    "ratio_text": "0.85 ≤ r ≤ 1.1",
+    "ratio": null,
+    "line_A": null,
+    "phase_A": null,
+    "line_range_A": [
+     37.1,
+     48.1
+    ],
+    "phase_range_A": [
+     21.4,
+     27.7
+    ],
+    "color": "#26f259"
+   },
+   {
+    "status": "under_caution",
+    "label": "주의 저전류",
+    "ratio_text": "r < 0.85",
+    "ratio": 0.85,
+    "line_A": 37.1,
+    "phase_A": 21.4,
+    "line_range_A": null,
+    "phase_range_A": null,
+    "color": "#4099ff"
+   },
+   {
+    "status": "under_danger",
+    "label": "위험 저전류(결상 의심)",
+    "ratio_text": "r < 0.5",
+    "ratio": 0.5,
+    "line_A": 21.9,
+    "phase_A": 12.6,
+    "line_range_A": null,
+    "phase_range_A": null,
+    "color": "#1a59ff"
+   }
+  ],
+  "status_colors": {
+   "over_danger": "#ff140d",
+   "over_caution": "#ff731a",
+   "normal": "#26f259",
+   "under_caution": "#4099ff",
+   "under_danger": "#1a59ff"
+  },
+  "status_labels": {
+   "over_danger": "위험 과전류",
+   "over_caution": "주의 과전류",
+   "normal": "정상",
+   "under_caution": "주의 저전류",
+   "under_danger": "위험 저전류(결상 의심)"
+  },
+  "short_loop_color": "#ff0d0d",
+  "i2i1_marks": [
+   {
+    "case": "healthy",
+    "label": "정상 운전",
+    "value": 0.006
+   },
+   {
+    "case": "itsc_4turn",
+    "label": "턴간 단락 4턴 (초기)",
+    "value": 0.104
+   },
+   {
+    "case": "itsc_12turn",
+    "label": "턴간 단락 12턴 (진행)",
+    "value": 0.269
+   }
+  ],
+  "slowmo_factor": 0.016667,
+  "phase_labels": {
+   "A": "R",
+   "B": "S",
+   "C": "T"
+  },
+  "slowmo_x": 60,
+  "slowmo_label": "슬로모션 ×1/60",
+  "phase_colors": {
+   "A": [
+    0.95,
+    0.85,
+    0.2
+   ],
+   "B": [
+    0.2,
+    0.85,
+    0.95
+   ],
+   "C": [
+    0.85,
+    0.35,
+    0.95
+   ]
+  },
+  "status_rgb": {
+   "under_danger": [
+    0.1,
+    0.35,
+    1.0
+   ],
+   "under_caution": [
+    0.25,
+    0.6,
+    1.0
+   ],
+   "normal": [
+    0.15,
+    0.95,
+    0.35
+   ],
+   "over_caution": [
+    1.0,
+    0.45,
+    0.1
+   ],
+   "over_danger": [
+    1.0,
+    0.08,
+    0.05
+   ]
+  },
+  "short_loop": {
+   "rgb": [
+    1.0,
+    0.05,
+    0.05
+   ],
+   "pulse_hz": 1.5
+  },
+  "model_note": "전류는 해석식 3상 모델 (FEM·실측 아님). 턴간 단락은 목표 I₂/I₁ 을 크기 불평형으로 재현한 등가 표현이며 단락 루프 순환전류는 모델에 없다. 공급전압은 모델 입력이 아니다.",
+  "matrix": [
+   {
+    "scene": 1,
+    "id": "healthy",
+    "label": "정상",
+    "x_i2i1": 0.006,
+    "y_ratio_max": 1.018,
+    "y_ratio_mean": 1.006,
+    "y_ratio_min": 1.0
+   },
+   {
+    "scene": 2,
+    "id": "itsc_4turn",
+    "label": "단락(초기)",
+    "x_i2i1": 0.104,
+    "y_ratio_max": 1.323,
+    "y_ratio_mean": 1.108,
+    "y_ratio_min": 1.0
+   },
+   {
+    "scene": 3,
+    "id": "itsc_12turn",
+    "label": "단락(진행)",
+    "x_i2i1": 0.269,
+    "y_ratio_max": 2.014,
+    "y_ratio_mean": 1.338,
+    "y_ratio_min": 1.0
+   },
+   {
+    "scene": 4,
+    "id": "overload",
+    "label": "과부하",
+    "x_i2i1": 0.0,
+    "y_ratio_max": 1.35,
+    "y_ratio_mean": 1.35,
+    "y_ratio_min": 1.35
+   },
+   {
+    "scene": 5,
+    "id": "voltage_unbalance",
+    "label": "전압 불평형",
+    "x_i2i1": 0.0595,
+    "y_ratio_max": 1.08,
+    "y_ratio_mean": 1.0,
+    "y_ratio_min": 0.941
+   },
+   {
+    "scene": 6,
+    "id": "single_phasing",
+    "label": "결상",
+    "x_i2i1": 0.4792,
+    "y_ratio_max": 1.277,
+    "y_ratio_mean": 0.863,
+    "y_ratio_min": 0.037
+   },
+   {
+    "scene": 7,
+    "id": "no_load",
+    "label": "무부하",
+    "x_i2i1": 0.0,
+    "y_ratio_max": 0.33,
+    "y_ratio_mean": 0.33,
+    "y_ratio_min": 0.33
+   }
+  ]
+ }
+}

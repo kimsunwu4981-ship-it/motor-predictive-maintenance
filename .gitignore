@@ -47,7 +47,11 @@ _backup_*/
 dashboard/node_modules/
 dashboard/dist/
 dashboard/public/media/
-dashboard/public/data/
+dashboard/public/data/*
+# 22 kW 녹화 기반 해설 데이터(재생성에 녹화 로그 필요 — 이력, 동결 커밋; D1 2026-10-21). fleet·verification·analysis_reference 는 스크립트로 재생성
+!dashboard/public/data/mechanical/
+!dashboard/public/data/electrical/
+dashboard/public/data/electrical/analysis_reference.json
 
 # ---- OS / 편집기 ----
 Thumbs.db

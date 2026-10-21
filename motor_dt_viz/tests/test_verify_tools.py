@@ -65,6 +65,8 @@ def test_reference_has_sha_for_every_input_and_matches_lut(ref):
     import hashlib
     assert ref["no_manual_numbers"] is True
     for k, inp in ref["inputs"].items():
+        if k == "lut_report":                                            # verify_lut_integration 이 매 실행 다시 쓰는 보고서 — sha 는 기록만 (새 clone 에서 재실행하면 달라진다, D1)
+            continue
         p = inp["path"] if os.path.isabs(inp["path"]) else os.path.join(REPO, inp["path"])
         if os.path.exists(p):                                           # Maxwell 저장소(읽기 전용)가 없는 환경이면 건너뛴다
             assert hashlib.sha256(open(p, "rb").read()).hexdigest() == inp["sha256"], k

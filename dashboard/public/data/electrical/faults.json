@@ -1,0 +1,194 @@
+{
+ "mode": "electrical",
+ "items": [
+  {
+   "key": "healthy",
+   "label": "정상 운전",
+   "phase_scale": [
+    1.018108651911472,
+    1.0,
+    1.0
+   ],
+   "load": 1.0,
+   "target_i2i1": 0.006,
+   "rms_A": [
+    44.5,
+    43.7,
+    43.7
+   ],
+   "ratio": [
+    1.018,
+    1.0,
+    1.0
+   ],
+   "status": [
+    "normal",
+    "normal",
+    "normal"
+   ],
+   "i2_over_i1": 0.006
+  },
+  {
+   "key": "itsc_4turn",
+   "label": "턴간 단락 4턴 (초기)",
+   "phase_scale": [
+    1.3235056387569757,
+    1.0,
+    1.0
+   ],
+   "load": 1.0,
+   "target_i2i1": 0.104,
+   "rms_A": [
+    57.8,
+    43.7,
+    43.7
+   ],
+   "ratio": [
+    1.324,
+    1.0,
+    1.0
+   ],
+   "status": [
+    "over_danger",
+    "normal",
+    "normal"
+   ],
+   "i2_over_i1": 0.104
+  },
+  {
+   "key": "itsc_12turn",
+   "label": "턴간 단락 12턴 (진행)",
+   "phase_scale": [
+    2.014484305109389,
+    1.0,
+    1.0
+   ],
+   "load": 1.0,
+   "target_i2i1": 0.269,
+   "rms_A": [
+    88.0,
+    43.7,
+    43.7
+   ],
+   "ratio": [
+    2.014,
+    1.0,
+    1.0
+   ],
+   "status": [
+    "over_danger",
+    "normal",
+    "normal"
+   ],
+   "i2_over_i1": 0.269
+  },
+  {
+   "key": "overload",
+   "label": "과부하 135 %",
+   "phase_scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "load": 1.35,
+   "target_i2i1": null,
+   "rms_A": [
+    59.0,
+    59.0,
+    59.0
+   ],
+   "ratio": [
+    1.35,
+    1.35,
+    1.35
+   ],
+   "status": [
+    "over_danger",
+    "over_danger",
+    "over_danger"
+   ],
+   "i2_over_i1": 0.0
+  },
+  {
+   "key": "voltage_unbalance",
+   "label": "공급전압 불평형",
+   "phase_scale": [
+    1.08,
+    0.94,
+    0.98
+   ],
+   "load": 1.0,
+   "target_i2i1": null,
+   "rms_A": [
+    47.2,
+    41.1,
+    42.8
+   ],
+   "ratio": [
+    1.08,
+    0.94,
+    0.98
+   ],
+   "status": [
+    "normal",
+    "normal",
+    "normal"
+   ],
+   "i2_over_i1": 0.0595
+  },
+  {
+   "key": "single_phasing",
+   "label": "결상 (R상 상실)",
+   "phase_scale": [
+    0.04,
+    1.42,
+    1.42
+   ],
+   "load": 0.9,
+   "target_i2i1": null,
+   "rms_A": [
+    1.6,
+    55.8,
+    55.8
+   ],
+   "ratio": [
+    0.036,
+    1.278,
+    1.278
+   ],
+   "status": [
+    "under_danger",
+    "over_danger",
+    "over_danger"
+   ],
+   "i2_over_i1": 0.4792
+  },
+  {
+   "key": "no_load",
+   "label": "무부하",
+   "phase_scale": [
+    0.33,
+    0.33,
+    0.33
+   ],
+   "load": 0.0,
+   "target_i2i1": null,
+   "rms_A": [
+    14.4,
+    14.4,
+    14.4
+   ],
+   "ratio": [
+    0.33,
+    0.33,
+    0.33
+   ],
+   "status": [
+    "under_danger",
+    "under_danger",
+    "under_danger"
+   ],
+   "i2_over_i1": 0.0
+  }
+ ]
+}

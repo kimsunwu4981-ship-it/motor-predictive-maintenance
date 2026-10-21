@@ -1,6 +1,6 @@
 # M1 전체 3D 모델 (현대 HLP-2.2/4, 100L) — 출처·검증·사용법
 
-생성 2026-10-21 15:09 · `tools/cad/write_model_doc.py`. 입력은 `assets/motors/M1/inputs/`(PROVENANCE.md)뿐, Maxwell 폴더 쓰기 0. **새 계산 없음** — 모델은 치수를 그리는 것이고 화면값은 상태 JSON 에서 온다.
+생성 2026-10-21 17:10 · `tools/cad/write_model_doc.py`. 입력은 `assets/motors/M1/inputs/`(PROVENANCE.md)뿐, Maxwell 폴더 쓰기 0. **새 계산 없음** — 모델은 치수를 그리는 것이고 화면값은 상태 JSON 에서 온다.
 
 ## 1. 무엇이 카탈로그·데이터시트이고 무엇이 시각 추정인가
 
@@ -85,23 +85,23 @@
 
 ## 5b. 장면 확인 (assets/motors/M1/scene_check.json — tools/cad/check_m1_scene.py)
 
-- 전기 시나리오 7 장면 HUD 값(장면 끝 Ia/Ib/Ic·I₂/I₁·판정) ↔ 대시보드 fleet 로그: **7/7 일치** (`motor_dt_viz\logs\m1_model\demo_20261021_113507.csv` vs `motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv`)
+- 전기 시나리오 7 장면 HUD 값(장면 끝 Ia/Ib/Ic·I₂/I₁·판정) ↔ 대시보드 fleet 로그: **7/7 일치** (`motor_dt_viz\logs\m1_model\demo_20261021_170452.csv` vs `motor_dt_viz/logs/fleet/M1/electrical/demo_fleet.csv`)
 
 | 장면 | 케이스 | 장면 Ia/Ib/Ic [A] | fleet Ia/Ib/Ic | I₂/I₁ 장면/fleet | I₂/I_n | 판정 장면/fleet | 일치 |
 |---|---|---|---|---|---|---|---|
-| healthy | healthy | 4.9/4.7/4.7 | 4.9/4.7/4.7 | 0.0270/0.0270 | 0.027 | SAFE/SAFE | ✓ |
-| itsc_4turn | itsc_4turn | 5.0/4.7/4.5 | 5.0/4.7/4.5 | 0.0726/0.0726 | 0.0726 | WARN/WARN | ✓ |
-| itsc_12turn | itsc_12turn | 5.9/4.8/3.7 | 5.9/4.8/3.7 | 0.2696/0.2696 | 0.2696 | DANGER/DANGER | ✓ |
+| healthy | healthy | 4.8/4.6/4.6 | 4.8/4.6/4.6 | 0.0270/0.0270 | 0.0268 | SAFE/SAFE | ✓ |
+| itsc_4turn | itsc_4turn | 5.2/4.9/4.6 | 5.2/4.9/4.6 | 0.0726/0.0726 | 0.075 | WARN/WARN | ✓ |
+| itsc_12turn | itsc_12turn | 7.4/6.0/4.7 | 7.4/6.0/4.7 | 0.2696/0.2696 | 0.3376 | DANGER/DANGER | ✓ |
 | overload | overload | 6.6/6.3/6.3 | 6.6/6.3/6.3 | 0.0270/0.0270 | 0.0364 | DANGER/DANGER | ✓ |
 | voltage_unbalance | voltage_unbalance | 5.1/4.4/4.6 | 5.1/4.4/4.6 | 0.0595/0.0595 | 0.0595 | WARN/WARN | ✓ |
 | single_phasing | single_phasing | 0.2/6.0/6.0 | 0.2/6.0/6.0 | 0.4792/0.4792 | 0.414 | DANGER/DANGER | ✓ |
 | no_load | no_load | 1.6/1.5/1.5 | 1.6/1.5/1.5 | 0.0270/0.0270 | 0.0089 | DANGER/DANGER | ✓ |
-| itsc_8turn | itsc_8turn | 5.4 (A상) | 엔진 5.4 | 0.1676/0.1676 (엔진 설계값) | 0.1676 | DANGER / fleet 없음 | ✓ |
-| itsc_16turn | itsc_16turn | 6.3 (A상) | 엔진 6.3 | 0.3625/0.3625 (엔진 설계값) | 0.3625 | DANGER / fleet 없음 | ✓ |
-| itsc_4turn_resistive | itsc_4turn_resistive | 4.9 (A상) | 엔진 4.9 | 0.0324/0.0324 (엔진 설계값) | 0.0324 | WARN / fleet 없음 | ✓ |
-| itsc_4turn_halfload | itsc_4turn_halfload | 2.6 (A상) | 엔진 2.6 | 0.0953/0.0953 (엔진 설계값) | 0.0476 | DANGER / fleet 없음 | ✓ |
+| itsc_8turn | itsc_8turn | 6.1 (A상) | 엔진 6.1 | 0.1676/0.1676 (엔진 설계값) | 0.1887 | DANGER / fleet 없음 | ✓ |
+| itsc_16turn | itsc_16turn | 8.9 (A상) | 엔진 8.9 | 0.3625/0.3625 (엔진 설계값) | 0.5084 | DANGER / fleet 없음 | ✓ |
+| itsc_4turn_resistive | itsc_4turn_resistive | 4.9 (A상) | 엔진 4.9 | 0.0324/0.0324 (엔진 설계값) | 0.0324 | SAFE / fleet 없음 | ✓ |
+| itsc_4turn_halfload | itsc_4turn_halfload | 3.5 (A상) | 엔진 3.5 | 0.0953/0.0953 (엔진 설계값) | 0.0645 | WARN / fleet 없음 | ✓ |
 
-- FPS (1600×900, RTX 실시간): 평균 46.3 · 최소 38.8 · full 40.3 / cutaway 45.4 / windings_only 47.2 / full(후반) 46.8 — 30 FPS 기준 충족
+- FPS (1600×900, RTX 실시간): 평균 47.6 · 최소 38.2 · full 39.2 / cutaway 43.5 / windings_only 46.0 / full(후반) 49.2 — 30 FPS 기준 충족
 
 ## 6. 반입 경로·장면 사용법
 

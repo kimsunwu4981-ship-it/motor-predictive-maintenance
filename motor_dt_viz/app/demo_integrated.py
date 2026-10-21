@@ -68,6 +68,7 @@ ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model
 ap.add_argument("--verify_dir", default="", metavar="DIR", help="검증 로그: DIR/state.csv(10 Hz 전 필드)·events.csv(판정 변화)·waveform_<t>_<pre|post>_<case>.csv(장면 전환 전후 1 s·2 kHz)·meta.json")
 ap.add_argument("--inherent_angle_deg", type=float, default=None, help="고유 비대칭 I₂ 위상 [deg] — 이 실행의 메모리 설정만 덮어쓴다 (electrical.yaml 불변, 민감도 0/90/180° 용)")
 ap.add_argument("--scenario_yaml", default="", metavar="PATH", help="검증 전용 시나리오 파일(steps 포함)로 자동 재생 — 기존 장면 파일 불변")
+ap.add_argument("--shot_plan", default="", help="--m1_shots 캡처 계획을 직접 지정: 't:view:cam:file;t:view:cam:file' (D3 tools/viz/shot_with_hud.py)")
 args = ap.parse_args()
 if args.m1_model is None:
     args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
@@ -341,7 +342,9 @@ if m1 and args.m1_shots:
         _v = args.view
         _SHOT_PLANS = {m_: [(14.0, _v, "side", "01_half_side_normal.png"), (18.0, _v, "wide", "02_half_iso_normal.png"),
                             (58.0, _v, "bearing_de", "04_half_bearing_de.png"), (92.0, _v, "fault_focus", "03_half_itsc_4turn.png")] for m_ in ("integrated", "mechanical", "electrical")}
-    m1.plan_shots(_SHOT_PLANS.get(args.mode, _SHOT_PLANS["electrical"]))
+    if args.shot_plan:
+        _SHOT_PLANS = {args.mode: [(float(t_), v_, c_, f_) for t_, v_, c_, f_ in (item.split(":", 3) for item in args.shot_plan.split(";") if item.strip())]}
+    m1.plan_shots(_SHOT_PLANS.get(args.mode) or _SHOT_PLANS.get("electrical") or [])   # --shot_plan 은 그 모드 키만 있다 — 기본값 표현식을 미리 평가하면 KeyError (D3 실측: 기계 모드가 기동 직후 조용히 종료)
 
 # ------------------------------------------------------------------ 회전 구동
 art = SingleArticulation(prim_path="/World/Motor", name="motor")

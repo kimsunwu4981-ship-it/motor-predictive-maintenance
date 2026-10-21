@@ -15,7 +15,8 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-DEFAULT_SRC = r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\mccm_lut.json"
+MAXWELL_ROOT = os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링")   # D1(2026-10-21): 환경변수로 Maxwell 저장소 위치 지정 (docs/REPRODUCE.md)
+DEFAULT_SRC = os.path.join(MAXWELL_ROOT, "maxwell", "results", "mccm_lut.json")
 OUT_DIR = os.path.join(ROOT, "data", "electrical")
 
 

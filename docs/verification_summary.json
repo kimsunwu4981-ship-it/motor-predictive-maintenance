@@ -1,0 +1,357 @@
+{
+ "key": {
+  "rated_line_current_A": 4.73,
+  "rated_rpm": 1760,
+  "power_kW": 2.2,
+  "poles": 4,
+  "pf": 0.79,
+  "efficiency": 0.895,
+  "bearing_de": "6206ZZC3",
+  "bearing_nde": "6206ZZC3",
+  "bpfo_hz": 104.7,
+  "bpfi_hz": 159.3,
+  "bsf_hz": 67.8,
+  "ftf_hz": 11.6,
+  "vibration_standard": "ISO 10816-1 Class I (< 15 kW, 강성 지지)",
+  "vib_watch": 1.8,
+  "vib_act": 4.5,
+  "frame": "100L",
+  "i2i1_warn": 0.05,
+  "i2i1_danger": 0.1,
+  "inherent_i2i1": 0.027,
+  "i2i1_4turn": 0.073,
+  "i2i1_8turn": 0.168,
+  "i2i1_12turn": 0.27,
+  "i2i1_16turn": 0.363,
+  "i2i1_resistive_fault": 0.0065,
+  "i_st_fem": 7.43,
+  "iec_i_st_max": 7.8,
+  "pf_fem": 0.74,
+  "z2_uncertainty_pct": 19.6,
+  "lsf04_median": 0.0879,
+  "lsf04_p95": 0.1005,
+  "lsf04_n": 77,
+  "reference_baseline": 0.1005,
+  "sim_vs_analysis_pass": 89,
+  "sim_vs_analysis_total": 89,
+  "lut_max_dev_pct": 0.476,
+  "recompute_max_dev_pct": 0.0226,
+  "delay_4turn_s": 3.01,
+  "delay_12turn_s": 3.07,
+  "r_fault_phase": {
+   "itsc_4turn": 1.1,
+   "itsc_8turn": 1.3,
+   "itsc_12turn": 1.56,
+   "itsc_16turn": 1.88
+  },
+  "halfload_I1_A": 3.20136,
+  "angle180_4turn": 0.0313,
+  "baseline_multiple_warn": 0.2011,
+  "baseline_multiple_danger": 0.4022,
+  "baseline_multiple_detect": {
+   "4턴": "SAFE",
+   "8턴": "SAFE",
+   "12턴": "WARN",
+   "16턴": "WARN"
+  },
+  "generated": "2026-10-21 17:03:23"
+ },
+ "grades": [
+  {
+   "item": "정격 성능 (4.73 A · pf 0.79 · η 0.895 · 1760 rpm · 100L · F종/B)",
+   "grade": "카탈로그 확정",
+   "basis": "M1.yaml source=catalog(현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)); RMxprt v2m2 정합 I 4.670 A·pf 0.791·η 89.6 %"
+  },
+  {
+   "item": "결선 (Y, 상전류 = 선전류)",
+   "grade": "현장확인 대기",
+   "basis": "M1.yaml connection source=assumed, verify_on_site=True — 380 V 전용형 내부 결선은 카탈로그에 없음. RMxprt·LUT 모델(상전압 219.4 V)과 일치시킴"
+  },
+  {
+   "item": "기동 특성 (잠김 전류·토크비)",
+   "grade": "2D FEM(보정) / 카탈로그",
+   "basis": "카탈로그 6.5×/2.1× · RMxprt 8.24×/3.09× · FEM+F2 7.43×/2.34× (IEC I_st ≤ 7.8)"
+  },
+  {
+   "item": "등가회로 상수 (R1·R2′·X1·X2′·Xm·Z₂)",
+   "grade": "RMxprt 정합 / 2D FEM",
+   "basis": "R1 1.24388/1.60973 Ω(20/95 °C), Xm RMxprt 97.6 vs FEM X_total 95.6 Ω, Z₂ 앵커 7.136 vs FEM 5.33/5.97 Ω"
+  },
+  {
+   "item": "ITSC 전류 곡선 (I₂/I₁·I_f·손실 LUT)",
+   "grade": "등가회로 (2D FEM 검증, provisional)",
+   "basis": "등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite) · status provisional · FEM 검증 False · I_f 4턴 MCCM 34.35 vs FEM 35.16 A (+2.4 %)"
+  },
+  {
+   "item": "3D 형상 (하우징·내부)",
+   "grade": "카탈로그 + 시각 추정 (Maxwell 체적 ±2 % 검증)",
+   "basis": "카탈로그 치수 19+7개(KS 치수표 100L), visual_estimate 23개(핀·엔드쉴드·팬커버·단자함), 내부 체적 vs Maxwell geometry_check ±2 % PASS (확인)"
+  },
+  {
+   "item": "열 모델 (9노드 집중정수)",
+   "grade": "가정 (22 kW 보정값 스케일)",
+   "basis": "thermal.yaml 22 kW 보정값을 손실비·치수비로 스케일 — 실측 온도 없음, M1 에서 낙관적일 수 있음(정격 상승 ≈21 K vs B종 80 K)"
+  },
+  {
+   "item": "진동·베어링 임계값",
+   "grade": "표준 / 참고 데이터셋",
+   "basis": "진동 ISO 10816-1 Class I (< 15 kW, 강성 지지) 경고 1.8 / 위험 4.5 mm/s(표준); 베어링 kurtosis·고주파 배율 = AI Hub 참고(provisional)"
+  },
+  {
+   "item": "전류 임계값 (I₂/I₁ 0.05/0.10, 전류/정격)",
+   "grade": "참고 데이터셋 (provisional)",
+   "basis": "reference_dataset/provisional, mode absolute, reference_baseline 0.1005(AI Hub 기계시설물 고장 예지 센서 L-SF-04 정상), 정책 simulation=include_with_label / live=advisory_only"
+  }
+ ],
+ "before_after_0p03_0p05": [
+  {
+   "case": "healthy",
+   "i2i1": 0.027,
+   "i1_A": 4.695,
+   "r_R": 1.019,
+   "i2i1_before": "SAFE",
+   "i2i1_after": "SAFE",
+   "overall_before": "SAFE",
+   "overall_after": "SAFE",
+   "cause_after": "-"
+  },
+  {
+   "case": "itsc_4turn",
+   "i2i1": 0.0726,
+   "i1_A": 4.887,
+   "r_R": 1.103,
+   "i2i1_before": "WARN",
+   "i2i1_after": "WARN",
+   "overall_before": "WARN",
+   "overall_after": "WARN",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "itsc_8turn",
+   "i2i1": 0.1676,
+   "i1_A": 5.327,
+   "r_R": 1.297,
+   "i2i1_before": "DANGER",
+   "i2i1_after": "DANGER",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "itsc_12turn",
+   "i2i1": 0.2696,
+   "i1_A": 5.923,
+   "r_R": 1.563,
+   "i2i1_before": "DANGER",
+   "i2i1_after": "DANGER",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "itsc_16turn",
+   "i2i1": 0.3625,
+   "i1_A": 6.633,
+   "r_R": 1.881,
+   "i2i1_before": "DANGER",
+   "i2i1_after": "DANGER",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "itsc_4turn_resistive",
+   "i2i1": 0.0324,
+   "i1_A": 4.719,
+   "r_R": 1.03,
+   "i2i1_before": "WARN",
+   "i2i1_after": "SAFE",
+   "overall_before": "WARN",
+   "overall_after": "SAFE",
+   "cause_after": "-"
+  },
+  {
+   "case": "itsc_4turn_halfload",
+   "i2i1": 0.0953,
+   "i1_A": 3.202,
+   "r_R": 0.731,
+   "i2i1_before": "WARN",
+   "i2i1_after": "WARN",
+   "overall_before": "WARN",
+   "overall_after": "WARN",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "overload",
+   "i2i1": 0.027,
+   "i1_A": 6.385,
+   "r_R": 1.386,
+   "i2i1_before": "SAFE",
+   "i2i1_after": "SAFE",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "current_ratio"
+  },
+  {
+   "case": "voltage_unbalance",
+   "i2i1": 0.0595,
+   "i1_A": 4.727,
+   "r_R": 1.08,
+   "i2i1_before": "WARN",
+   "i2i1_after": "WARN",
+   "overall_before": "WARN",
+   "overall_after": "WARN",
+   "cause_after": "i2i1"
+  },
+  {
+   "case": "single_phasing",
+   "i2i1": 0.4792,
+   "i1_A": 4.087,
+   "r_R": 0.036,
+   "i2i1_before": "DANGER",
+   "i2i1_after": "DANGER",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "current_ratio"
+  },
+  {
+   "case": "no_load",
+   "i2i1": 0.027,
+   "i1_A": 1.561,
+   "r_R": 0.339,
+   "i2i1_before": "SAFE",
+   "i2i1_after": "SAFE",
+   "overall_before": "DANGER",
+   "overall_after": "DANGER",
+   "cause_after": "current_ratio"
+  }
+ ],
+ "aihub_healthy": [
+  {
+   "motor": "L-EF-04 (2.2 kW)",
+   "n": "500",
+   "rms_A": "3.12 / 3.20 / 3.04",
+   "i2i1_median": "0.028",
+   "i2i1_p95": "0.039",
+   "i2i1_max": "0.042",
+   "unb_median": "0.033",
+   "unb_p95": "0.044"
+  },
+  {
+   "motor": "R-EF-05 (2.2 kW)",
+   "n": "65",
+   "rms_A": "2.07 / 2.15 / 2.05",
+   "i2i1_median": "0.026",
+   "i2i1_p95": "0.039",
+   "i2i1_max": "0.040",
+   "unb_median": "0.031",
+   "unb_p95": "0.044"
+  },
+  {
+   "motor": "L-SF-04 (2.2 kW)",
+   "n": "77",
+   "rms_A": "3.08 / 3.40 / 3.11",
+   "i2i1_median": "0.088",
+   "i2i1_p95": "0.101",
+   "i2i1_max": "0.105",
+   "unb_median": "0.066",
+   "unb_p95": "0.078"
+  },
+  {
+   "motor": "L-DSF-01 (2.2 kW)",
+   "n": "97",
+   "rms_A": "1.90 / 1.76 / 2.08",
+   "i2i1_median": "0.080",
+   "i2i1_p95": "0.586",
+   "i2i1_max": "0.964",
+   "unb_median": "0.091",
+   "unb_p95": "0.773"
+  },
+  {
+   "motor": "L-PAHU-03S (55 kW, VVVF)",
+   "n": "97",
+   "rms_A": "58.8 / 58.8 / 58.1",
+   "i2i1_median": "0.034",
+   "i2i1_p95": "0.051",
+   "i2i1_max": "0.270",
+   "unb_median": "0.008",
+   "unb_p95": "0.009"
+  },
+  {
+   "motor": "R-PAHU-04S (55 kW, VVVF)",
+   "n": "59",
+   "rms_A": "53.2 / 52.6 / 52.7",
+   "i2i1_median": "0.005",
+   "i2i1_p95": "0.007",
+   "i2i1_max": "0.007",
+   "unb_median": "0.007",
+   "unb_p95": "0.009"
+  }
+ ],
+ "inputs_sha": {
+  "mccm_results": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+   "sha256": "4e2a832bd6c9c17f3338abdd0063deaf093bab3fdba55c003a1644082ed2550d"
+  },
+  "mccm_lut": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+   "sha256": "7d7b1ac5147a1e4a436cc96c0a5e4d9827579ccb6e6b41a2bfdce5e55ea9309c"
+  },
+  "f2": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f2_corrections.json",
+   "sha256": "5e21ad5b5d91fda90751db20df0c33ae1d4f9c38145ce6321b2c43a9ba18a759"
+  },
+  "f7": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+   "sha256": "f99af4b76654c2fc4da711d0faca690c4d22dc34ba4dda3746afcd76d844abe1"
+  },
+  "eddy_summary": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\eddy2d\\summary.json",
+   "sha256": "0fb986f232d14d4e934fbe9cbac762d533cbf4520b9c74672f26ba1a292109f9"
+  },
+  "rmxprt": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa11165c2e64cad06a26db9e753dd5d6fc999dc86494256435cfc62"
+  },
+  "temp_sweep": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_temp_sweep.json",
+   "sha256": "21fe315328ce824e0bec71668103655e990c6428e8f98aa95a007bb97c8a2a4b"
+  },
+  "magcurve": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\magnetizing_curve_2d.json",
+   "sha256": "b0f93df33e1b66057fc2ff86cb7bb49e3b3e931a671819291d5b4a8acabeeeeb"
+  },
+  "inductance": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\inductance_matrix_2d.json",
+   "sha256": "a36126216cd3ec6cf851d63fc33aebaaedc3b76bdbfc222b3f5e0bfb09f1b974"
+  },
+  "analysis_tables_xlsx": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\analysis_tables.xlsx",
+   "sha256": "ff09681845fb95e04348c257ebe16e9fc487befbf9d9d1b1ce2e619536126267"
+  },
+  "electrical_yaml": {
+   "path": "motor_dt_viz/config/electrical.yaml",
+   "sha256": "296249cc9133f5d025582601eb49e536a3f157b264ec332d1a8e067591a79d57"
+  },
+  "lut_dt": {
+   "path": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+   "sha256": "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9"
+  },
+  "thresholds_yaml": {
+   "path": "motor_dt_viz/config/thresholds.yaml",
+   "sha256": "9158581eb3d8c5a87c443079dd769fdab1502ed8d87b2480cc6c8aca31119f10"
+  },
+  "m1_yaml": {
+   "path": "motor_dt_viz/config/motors/M1.yaml",
+   "sha256": "2d8ca5614eaf3e17e16be9b038691a68dbac06483ffecacd03b183ad4302d56b"
+  },
+  "thermal_yaml": {
+   "path": "motor_dt_viz/config/thermal.yaml",
+   "sha256": "fe1e7d4e4c2a848f5f4534ad02e0e5f22c502902f54ab5756d17c5668fe6d2e0"
+  },
+  "lut_report": {
+   "path": "motor_dt_viz/docs/electrical/lut_integration_report.md",
+   "sha256": "29f1e11329955caf62c0af3924570d4f7ccb92b72bed77fd6a802168fdcb62cd"
+  }
+ }
+}

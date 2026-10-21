@@ -23,7 +23,10 @@ def rows(p):
 
 
 def main():
-    runs = sorted(glob.glob(str(VIZ / "logs" / "m1_model" / "demo_*.csv")), key=lambda p: (sum(1 for _ in open(p, encoding="utf-8")), os.path.getmtime(p)))   # 가장 긴(전체 시나리오) 실행
+    # 전체 시나리오(245 s, 4 Hz ≈ 980 행)를 덮은 실행 중 **가장 최근** 것 (D4 2026-10-21: 예전엔 '가장 긴' 실행이라 옛 I₁ 규약 로그를 집었다)
+    cands = [(p, sum(1 for _ in open(p, encoding="utf-8"))) for p in glob.glob(str(VIZ / "logs" / "m1_model" / "demo_*.csv"))]
+    full = [p for p, n in cands if n >= 900] or [p for p, _ in sorted(cands, key=lambda x: x[1])[-1:]]
+    runs = sorted(full, key=os.path.getmtime)
     if not runs:
         raise SystemExit("logs/m1_model/demo_*.csv 없음 — 먼저 --m1_model --log_subdir m1_model 로 실행")
     run = rows(runs[-1]); fleet = rows(VIZ / "logs" / "fleet" / "M1" / "electrical" / "demo_fleet.csv")

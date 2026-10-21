@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[2]
 INP = ROOT / "assets" / "motors" / "M1" / "inputs"
 XLSX = INP / "Maxwell_M1_HLP2.2-4_전체데이터시트_v4.xlsx"
 RMX = INP / "rmxprt_v2m2.json"
-PDF = Path(r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\docs\sources\현대_SSEN_카탈로그.pdf")
+import os
+PDF = Path(os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링")) / "docs" / "sources" / "현대_SSEN_카탈로그.pdf"   # D1: 카탈로그 PDF 는 저장소 밖(docs/sources, gitignore) — 없으면 datasheet_v4.yaml 을 재생성하지 말 것 (커밋본이 입력 정본)
 OUT = INP / "datasheet_v4.yaml"
 
 FOOT_COLS = ["frame", "H", "poles", "A", "AA", "AB", "HA", "B1", "B2", "B3", "BB", "C", "K", "N_holes", "HC", "HD", "L", "D", "E", "F", "GE", "key", "AD", "O", "PF"]

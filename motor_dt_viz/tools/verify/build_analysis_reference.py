@@ -33,7 +33,7 @@ from engine.config_loader import load, val  # noqa: E402
 from engine.current_model import CurrentModel  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
 
-MAXWELL_DEFAULT = r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링"
+MAXWELL_DEFAULT = os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링")   # D1: MAXWELL_ROOT 환경변수 (docs/REPRODUCE.md)
 SCENARIOS = {   # 시나리오 → (턴, R_f, 부하, MCCM 케이스 이름)
     "healthy": (0, None, 1.0, "C0"), "itsc_4turn": (4, 0.1, 1.0, "C1"), "itsc_8turn": (8, 0.1, 1.0, None), "itsc_12turn": (12, 0.1, 1.0, "C3"),
     "itsc_16turn": (16, 0.1, 1.0, "C4"), "itsc_4turn_resistive": (4, 1.0, 1.0, "C1-R"), "itsc_4turn_halfload": (4, 0.1, 0.5, "C1-L"),

@@ -1,0 +1,148 @@
+{
+ "mode": "mechanical",
+ "video": "media/mechanical/mechanical_full.mp4",
+ "video_offset_s": 2.008,
+ "video_duration_s": 187.36,
+ "recording_meta": "recording_mechanical_full.json",
+ "total_duration_s": 180.0,
+ "steps": [
+  {
+   "n": 1,
+   "id": "normal",
+   "label": "1. 정상 운전",
+   "subtitle": "모든 부품이 정상 온도 범위 — 원래 재질 색 그대로",
+   "source": "집중정수 열회로 9노드 모델",
+   "t_start": 0.0,
+   "t_end": 25.0,
+   "video_start": 2.008,
+   "video_end": 27.008,
+   "electrical_case": "healthy",
+   "faults": [],
+   "load": 1.0,
+   "time_scale": 60.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/02_기계_정상_운전.mp4"
+  },
+  {
+   "n": 2,
+   "id": "bearing_fault",
+   "label": "2. DE 베어링 열화",
+   "subtitle": "구동측 베어링 마찰 증가 → 온도 상승, 진동 4.8 mm/s (ISO 20816-3 Act 초과)",
+   "source": "베어링 손실 배율 + 전도 저항 악화 모델",
+   "t_start": 25.0,
+   "t_end": 60.0,
+   "video_start": 27.008,
+   "video_end": 62.008,
+   "electrical_case": "healthy",
+   "faults": [
+    "bearing_de_fault"
+   ],
+   "load": 1.0,
+   "time_scale": 120.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/03_기계_DE_베어링_열화.mp4"
+  },
+  {
+   "n": 3,
+   "id": "misalignment",
+   "label": "3. 축 정렬 불량",
+   "subtitle": "커플링 정렬이 틀어져 양쪽 베어링 하중이 늘고 축 온도가 함께 오른다",
+   "source": "부하 배율 + 베어링 손실 증가 모델",
+   "t_start": 60.0,
+   "t_end": 85.0,
+   "video_start": 62.008,
+   "video_end": 87.008,
+   "electrical_case": "healthy",
+   "faults": [
+    "misalignment"
+   ],
+   "load": 1.0,
+   "time_scale": 120.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/04_기계_축_정렬_불량.mp4"
+  },
+  {
+   "n": 4,
+   "id": "fan_failure",
+   "label": "4. 냉각팬 고장",
+   "subtitle": "외부 방열이 막혀 하우징부터 권선까지 전체 온도가 밀려 올라간다",
+   "source": "대류 열저항 증가 모델",
+   "t_start": 85.0,
+   "t_end": 110.0,
+   "video_start": 87.008,
+   "video_end": 112.008,
+   "electrical_case": "healthy",
+   "faults": [
+    "fan_failure"
+   ],
+   "load": 1.0,
+   "time_scale": 120.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/05_기계_냉각팬_고장.mp4"
+  },
+  {
+   "n": 5,
+   "id": "brake_drag",
+   "label": "5. 브레이크 끌림",
+   "subtitle": "제동면이 완전히 떨어지지 않아 마찰열이 축을 타고 들어온다",
+   "source": "축 노드 발열 주입 모델",
+   "t_start": 110.0,
+   "t_end": 130.0,
+   "video_start": 112.008,
+   "video_end": 132.008,
+   "electrical_case": "healthy",
+   "faults": [
+    "brake_drag"
+   ],
+   "load": 1.0,
+   "time_scale": 120.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/06_기계_브레이크_끌림.mp4"
+  },
+  {
+   "n": 6,
+   "id": "overload",
+   "label": "6. 과부하 운전 (열 관점)",
+   "subtitle": "부하가 정격을 넘으면 동손이 제곱으로 늘어 권선이 가장 먼저 한계에 닿는다",
+   "source": "부하율 기반 동손 I²R 모델",
+   "t_start": 130.0,
+   "t_end": 160.0,
+   "video_start": 132.008,
+   "video_end": 162.008,
+   "electrical_case": "healthy",
+   "faults": [
+    "overload"
+   ],
+   "load": 1.0,
+   "time_scale": 150.0,
+   "highlight": false,
+   "clip": "media/mechanical/clips/07_기계_과부하_운전_열_관점.mp4"
+  },
+  {
+   "n": 7,
+   "id": "cooldown",
+   "label": "7. 결함 해제 후 냉각",
+   "subtitle": "정비로 결함을 제거하면 온도가 내려간다 — 조기 대응이 가능한 구간",
+   "source": "집중정수 열회로 9노드 모델",
+   "t_start": 160.0,
+   "t_end": 180.0,
+   "video_start": 162.008,
+   "video_end": 182.008,
+   "electrical_case": "healthy",
+   "faults": [],
+   "load": 1.0,
+   "time_scale": 150.0,
+   "highlight": true,
+   "clip": "media/mechanical/clips/08_기계_결함_해제_후_냉각.mp4"
+  }
+ ],
+ "lead_time": {
+  "basis": "온도 — 부품별 주의 임계값 진입(경보) vs 위험 임계값 진입",
+  "alarm_t": 25.844,
+  "alarm_part": "bearing_de",
+  "danger_t": 27.393,
+  "danger_part": "bearing_de",
+  "lead_s": 1.55,
+  "lead_sim_s": 185.9
+ }
+}

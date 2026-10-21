@@ -38,7 +38,7 @@ from engine.config_loader import load  # noqa: E402
 from engine.current_model import CurrentModel  # noqa: E402
 from engine.lut_source import LutSource, default_lut_path  # noqa: E402
 
-MCCM_RESULTS = r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\mccm_results.json"
+MCCM_RESULTS = os.path.join(os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링"), "maxwell", "results", "mccm_results.json")   # D1: MAXWELL_ROOT 환경변수
 REPORT = os.path.join(VIZ, "docs", "electrical", "lut_integration_report.md")
 FORBIDDEN = ["motor_dt_viz/config/thresholds.yaml", "motor_dt_viz/config/motors", "motor_dt_viz/engine/thresholds.py",
              "motor_dt_viz/config/live.yaml", "motor_dt_viz/tools/firewall_rules.ps1"]

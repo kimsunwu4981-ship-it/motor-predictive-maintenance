@@ -1,0 +1,7 @@
+위험 DANGER   원인 bearing_kurtosis 50.0   [안전 <3.5 / 경고 3.5~4 / 위험 ≥4 (kurtosis, 모터 공통)]
+t = 52.0 s   장면 bearing_fault   부하 1.0   1750.8 rpm
+온도 권선 46.7 · DE 베어링 64.8 · 축 45.9 · 프레임 36.5 °C   진동 4.8 mm/s
+등급 온도 SAFE · 진동 DANGER · 베어링 DANGER
+근거: Maxwell 근거 없음 — 진동·베어링 상수(ISO 10816-1 / AI Hub 참고)
+
+DE 베어링 열화 — kurtosis·진동

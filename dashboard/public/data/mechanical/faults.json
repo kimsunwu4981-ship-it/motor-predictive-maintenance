@@ -1,0 +1,65 @@
+{
+ "mode": "mechanical",
+ "items": [
+  {
+   "key": "bearing_de_fault",
+   "label": "DE 베어링 결함",
+   "target": "bearing_de",
+   "loss_multiplier": 5.0,
+   "load_multiplier": null,
+   "r_amb_multiplier": null,
+   "extra_loss_W": null,
+   "vibration_mms": 4.8
+  },
+  {
+   "key": "bearing_nde_fault",
+   "label": "NDE 베어링 결함",
+   "target": "bearing_nde",
+   "loss_multiplier": 5.0,
+   "load_multiplier": null,
+   "r_amb_multiplier": null,
+   "extra_loss_W": null,
+   "vibration_mms": 4.2
+  },
+  {
+   "key": "misalignment",
+   "label": "축 정렬 불량",
+   "target": "bearing_de",
+   "loss_multiplier": 2.5,
+   "load_multiplier": null,
+   "r_amb_multiplier": null,
+   "extra_loss_W": null,
+   "vibration_mms": 3.6
+  },
+  {
+   "key": "fan_failure",
+   "label": "냉각팬 고장",
+   "target": "frame",
+   "loss_multiplier": null,
+   "load_multiplier": null,
+   "r_amb_multiplier": 3.2,
+   "extra_loss_W": null,
+   "vibration_mms": 1.2
+  },
+  {
+   "key": "brake_drag",
+   "label": "브레이크 끌림",
+   "target": "shaft",
+   "loss_multiplier": null,
+   "load_multiplier": null,
+   "r_amb_multiplier": null,
+   "extra_loss_W": 900.0,
+   "vibration_mms": 2.0
+  },
+  {
+   "key": "overload",
+   "label": "과부하",
+   "target": null,
+   "loss_multiplier": null,
+   "load_multiplier": 1.35,
+   "r_amb_multiplier": null,
+   "extra_loss_W": null,
+   "vibration_mms": 2.2
+  }
+ ]
+}

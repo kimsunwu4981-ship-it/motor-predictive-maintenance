@@ -331,3 +331,11 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
 3. 대조·그림·보고서: `py -3.12 -X utf8 tools/verify/sim_vs_analysis.py` → `docs/verification/sim_vs_analysis.{json,md,xlsx}` + `img/` · HUD 합성 `tools/verify/hud_composite.py --shots logs/verify/hud_raw --state logs/verify/hud_shots/state.csv` · `py -3.12 -X utf8 tools/verify/write_report.py`
 4. 실시간 패널: 상태 보드 `④ 해석 근거 비교`(`dashboard/src/status/AnalysisRef.tsx` — 1단계 산출물을 읽는다, `npm run build`), Isaac HUD `ref:` 한 줄. 기계 시나리오는 "Maxwell 근거 없음".
 - 독립 재계산 `tools/verify/recompute_i2i1.py <waveform.csv>` 는 엔진을 import 하지 않는다. 테스트 `tests/test_verify_tools.py`.
+
+## 재현·릴리스·검증 요약 (D, 2026-10-21)
+
+- 깨끗한 clone 에서 끝까지 도는 순서·예상 시간·실패 시 확인: `../docs/REPRODUCE.md`. Maxwell 저장소 위치는 환경변수 `MAXWELL_ROOT`.
+- 변경 이력 `../CHANGELOG.md`(`tools/docs/changelog_from_log.py` 가 SESSION_LOG 장 제목 + git log 에서 생성), 태그 `v1.0-m1`(두 저장소), 환경 함정 `../CLAUDE.md`.
+- 발표·문서가 인용할 단 하나의 검증 요약: `../docs/verification_summary.md`(+ `.json`, `tools/docs/verification_summary.py` — 수기 숫자 없음).
+- HUD 합성 스크린샷 10장(Isaac 캡처에는 HUD 가 안 찍힘): `tools/viz/shot_with_hud.py all` → `../docs/assets/screenshots/M1_hud/` + 캡션(`captions.json`, `*.txt`).
+- 산출 문서 4종 M1 갱신(E)은 원본이 `../docs/deliverables/_v22kW/` 에 들어오면 `../docs/deliverables/README.md` 절차대로.
