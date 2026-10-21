@@ -270,10 +270,11 @@ class Judge:
         self._last_t = t
         return self._combine(t, out)
 
-    def _light_load_policy(self, out: list[SignalVerdict]) -> None:
+    def _light_load_policy(self, t: float, out: list[SignalVerdict]) -> None:
         """2026-10-21 승인 규칙(current_ratio.low_current_policy): 세 상이 함께 r < danger_under 이고 상 불평형 < unbalance_gate 이며 I₂/I₁ 이 경고 미만이면
         '경부하(참고)' — 세 current_ratio 신호를 advisory 로 돌리고 level 을 SAFE 로 둔다(raw_level 은 보존). 그 밖(한 상만 저전류, 저전류+불평형 ≥ gate, I₂/I₁ ≥ 위험)은 기존대로.
-        히스테리시스·지속 상태(_state)는 건드리지 않는다 — 조건이 깨지면 내부 상태(이미 DANGER)가 그대로 드러난다."""
+        경부하 동안 세 상의 내부 상태는 SAFE 로 두고 지속 시계를 현재로 돌린다 — 조건이 깨진 뒤의 상향(결상·과전류)도 보통처럼 3 s 지속 규칙을 거친다
+        (실측: 그렇지 않으면 무부하 장면에서 넘겨받은 DANGER 상태가 다음 장면의 과전류를 지속 없이 즉시 위험으로 만든다)."""
         pol = (self.cfg.get("current_ratio") or {}).get("low_current_policy") or {}
         if not pol.get("light_load_advisory", False):
             return
@@ -293,11 +294,13 @@ class Judge:
             s.advisory = True; s.level = "SAFE"
             s.note = f"경부하(참고): 세 상 r<{du:g}, 불평형 {unb:.3f}<{gate:g}, I₂/I₁ 경고 미만 — 종합 미반영"
             s.exceed = 0.0
+            key = (s.kind, s.component)
+            self._state[key] = "SAFE"; self._since[key] = (s.raw_level, t)      # 지속 시계 리셋 — 경부하 뒤 상향은 3 s 규칙
 
     def _combine(self, t: float, out: list[SignalVerdict]) -> Verdict:
         """종합 = worst-of (규칙 불변). P1: live 스트림 + advisory_only 정책이면 provisional 지표는 worst-of 에서 빼서 advisory 로.
         2026-10-21: 경부하 참고 규칙(_light_load_policy)이 먼저 적용된다."""
-        self._light_load_policy(out)
+        self._light_load_policy(t, out)
         policy = self.policy.get(self.stream, "include_with_label")
         advisory: list[SignalVerdict] = []
         if policy == "advisory_only":

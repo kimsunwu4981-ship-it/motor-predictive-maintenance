@@ -153,6 +153,6 @@ M1 연속 정격 권선 46.4 °C(상승 ≈ 21 K)는 카탈로그 B종 한도 80
 **새 규칙** (`config/thresholds.yaml current_ratio.low_current_policy: {light_load_advisory: true, unbalance_gate: 0.05}`, `engine/thresholds.Judge._light_load_policy`):
 - (a) 세 상이 **함께** r < 0.50 이고 상 불평형(최대 편차/평균) < 0.05 이며 I₂/I₁ 이 경고(0.05) 미만 → **경부하(참고)** — 세 current_ratio 신호를 advisory 로 돌리고 종합(worst-of)에 넣지 않는다(level SAFE, raw_level 보존, note 에 사유).
 - (b) 한 상만 r < 0.50, 또는 저전류와 함께 불평형 ≥ 0.05 또는 I₂/I₁ ≥ 위험(0.10) → **결상 의심 DANGER**(기존과 동일).
-- (c) 상한(r > 1.25 위험, 1.10~1.25 경고)·히스테리시스 5 %·지속 3 s 는 그대로. 경부하 중 한 상이 끊기면 내부 상태(이미 DANGER)가 즉시 드러난다.
+- (c) 상한(r > 1.25 위험, 1.10~1.25 경고)·히스테리시스 5 %·지속 3 s 는 그대로. 경부하 동안 세 상의 내부 상태는 SAFE 로 두고 지속 시계를 리셋하므로, 경부하 뒤의 결상·과전류도 보통처럼 3 s 지속 뒤 DANGER 가 된다(처음 구현은 내부 DANGER 를 넘겨 무부하 다음 장면의 과전류가 즉시 위험으로 찍혔다 — 검증 배치에서 발견해 수정, 2026-10-21 23시).
 
 **전후 표**(`docs/verification/light_load_rule.md`, 엔진 stateless): 11 시나리오 중 **no_load 만 DANGER(current_ratio) → SAFE(+경부하 참고)**, single_phasing·overload DANGER 유지, 나머지 불변. 테스트 `tests/test_light_load_rule.py`(3상 동시 저전류 / 1상 저전류 / 저전류+불평형·I₂/I₁ / 정책 off / 지속·상한 불변). 출처·상태(provisional)·경계값은 바꾸지 않았다.

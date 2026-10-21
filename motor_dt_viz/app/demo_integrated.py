@@ -231,6 +231,15 @@ i_line = cm.motor.rated_current("rated_line_A")
 i_phase = cm.motor.rated_current("rated_phase_A")
 
 # ------------------------------------------------------------------ V1 검증 로깅 훅 (--verify_dir): 기존 엔진 값만 기록
+def _git_head() -> str | None:
+    """실행 시점의 저장소 커밋(검증 로그 meta.json 에 기록 — 어느 엔진으로 돌렸는지 추적, C0 2026-10-21)."""
+    try:
+        import subprocess as _sp
+        return _sp.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True, text=True, timeout=5).stdout.strip() or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 class _VerifyLog:
     FS = 2000.0; DUR = 1.0
     COLS = ["t_session_s", "t_real_s", "mode", "step", "case", "load", "time_scale", "rpm",
@@ -258,7 +267,7 @@ class _VerifyLog:
                      "state_hz": round(1.0 / STATE_PERIOD_S, 2), "waveform_fs_hz": self.FS, "waveform_s": self.DUR,
                      "steps": [{"id": s_["id"], "t0_s": sum(float(x["duration_s"]) for x in player.steps[:k]), "duration_s": s_["duration_s"], "time_scale": s_.get("time_scale"),
                                 "load": s_.get("load"), "electrical_case": s_.get("electrical_case"), "faults": s_.get("faults", [])} for k, s_ in enumerate(player.steps)],
-                     "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+                     "started": time.strftime("%Y-%m-%d %H:%M:%S"), "git_commit": _git_head()}
         self._save_meta()
         print(f"[verify] logging → {d}", flush=True)
 

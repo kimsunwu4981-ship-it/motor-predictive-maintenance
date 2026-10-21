@@ -1,6 +1,6 @@
 # 검증 요약 (verification summary) — 발표·문서가 인용할 단 하나의 출처
 
-생성 2026-10-21 17:49:31 · `motor_dt_viz/tools/docs/verification_summary.py` · 수기 숫자 없음(입력: analysis_reference.json, sim_vs_analysis.json, M1.yaml, thresholds.yaml, baselines, aihub_spec_check.md, housing_params.yaml). 핵심값 JSON: `docs/verification_summary.json`.
+생성 2026-10-21 23:10:00 · `motor_dt_viz/tools/docs/verification_summary.py` · 수기 숫자 없음(입력: analysis_reference.json, sim_vs_analysis.json, M1.yaml, thresholds.yaml, baselines, aihub_spec_check.md, housing_params.yaml). 핵심값 JSON: `docs/verification_summary.json`.
 
 ## 1. 항목별 출처 등급
 
@@ -69,7 +69,7 @@ L-SF-04 S상 RMS 비 1.065(날짜별 1.05~1.069, 창 표준편차 0.0095) — �
 
 ## 5. 시뮬 ↔ 해석 대조 결과 (`docs/verification/sim_vs_analysis_report.md`)
 
-- 대조표 **89/89 PASS**; I₂/I₁ 결함분 vs LUT ≤ **0.48 %**; 엔진 비의존 재계산 ≤ **0.023 %**(127 파형); 탐지 지연 4턴 WARN **3.01 s** · 12턴 DANGER **3.07 s**(지속 3 s 규칙) · 정상 오경보 0.
+- 대조표 **88/89 PASS**; I₂/I₁ 결함분 vs LUT ≤ **0.48 %**; 엔진 비의존 재계산 ≤ **0.023 %**(174 파형); 탐지 지연 4턴 WARN **2.99 s** · 12턴 DANGER **2.96 s**(지속 3 s 규칙) · 정상 오경보 0.
 - I₁ 규약 정정(D3: LUT 상별 RMS) 후 결함상 r = I/I_n: 4턴 **1.1** / 8턴 **1.3** / 12턴 **1.56** / 16턴 **1.88**; 반부하 4턴 I₁ **3.2 A**(정격의 68 %) — 가짜 결상 경보 해소(DANGER→WARN).
 - 고유 비대칭 각도 180° 에서 4턴 합성 I₂/I₁ **0.0313** → 경고 소실(0.05 아래). 각도는 근거 없는 가정(0°)이다.
 - 권선 ΔT 정상 상태 vs 열 모델 에너지 수지 역산 편차 ≤ 0.001 %(모델 자기 일관성). `scene_check.json`(P4 장면표)은 새 규약으로 재실행해 정본과 맞춘다.

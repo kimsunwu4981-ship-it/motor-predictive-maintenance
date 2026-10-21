@@ -1,30 +1,30 @@
 # Isaac Sim 결함 시뮬레이션 ↔ Maxwell/등가회로 해석 결과 대조 검증 보고서
 
-생성 2026-10-21 16:38 · 생성기 `motor_dt_viz/tools/verify/write_report.py` · 대조 `sim_vs_analysis.json`(2026-10-21 16:38:21) · 기준 `motor_dt_viz/data/electrical/analysis_reference.json`(2026-10-21 16:11:05) · 근거 사슬 `traceability.json`
+생성 2026-10-21 23:09 · 생성기 `motor_dt_viz/tools/verify/write_report.py` · 대조 `sim_vs_analysis.json`(2026-10-21 23:09:54) · 기준 `motor_dt_viz/data/electrical/analysis_reference.json`(2026-10-21 17:47:39) · 근거 사슬 `traceability.json`
 
 > 새 계산·새 해석·설정 변경 없음. 시뮬은 기존 장면·엔진·LUT 로 돌렸고(Isaac Sim 헤드리스 자동 재생, `demo_integrated.py --verify_dir` 로깅 훅), 대조·그림·표는 스크립트가 로그와 해석 파일에서 읽어 만들었다(수기 숫자 없음). 기계 결함은 Maxwell 근거가 없어 출처만 표기한다.
 
 ## 1. 한 줄 결론
 
-- 전기 결함 시나리오의 표시값(I₂/I₁ 결함분·I_f·단락 루프 손실·불평형)은 해석값(LUT v2 = MCCM 등가회로)과 **최대 0.48 %** 안에서 일치한다(허용 ±1 %, 손실 ±2 %). 합성 파형을 엔진과 무관하게 다시 계산한 I₂/I₁ 은 **최대 0.023 %** 차이(허용 ±0.5 %, 127 파형).
-- 대조표 **89/89 PASS** — 전 항목 허용 안. D3(2026-10-21, 엔진 수정 승인): LUT 경로의 I₁ 을 LUT 정상분 RMS 에서 가져오도록 바꿔 결함분 I₂/I_n 이 LUT 와 같아졌고 r = I/I_n 이 결함 시 상승한다 — 전후 표 `d3_i1_from_lut.md`.
+- 전기 결함 시나리오의 표시값(I₂/I₁ 결함분·I_f·단락 루프 손실·불평형)은 해석값(LUT v2 = MCCM 등가회로)과 **최대 0.48 %** 안에서 일치한다(허용 ±1 %, 손실 ±2 %). 합성 파형을 엔진과 무관하게 다시 계산한 I₂/I₁ 은 **최대 0.023 %** 차이(허용 ±0.5 %, 174 파형).
+- 대조표 **88/89 PASS**. FAIL 1건: 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) @ itsc_8turn (첫 DANGER) D3(2026-10-21, 엔진 수정 승인): LUT 경로의 I₁ 을 LUT 정상분 RMS 에서 가져오도록 바꿔 결함분 I₂/I_n 이 LUT 와 같아졌고 r = I/I_n 이 결함 시 상승한다 — 전후 표 `d3_i1_from_lut.md`.
 - 판정: 4턴은 주입 3 s 뒤 WARN(0.05 경계), 8·12·16턴은 3 s 뒤 DANGER(0.10), 저항성 4턴(R_f 1.0 Ω)은 SAFE 유지, 정상 구간 오경보 0건 — 임계값·지속 규칙과 일치.
 
 | 시나리오 | 주입 [s] | 첫 WARN | 첫 DANGER | 지연 [s] | 장면 끝 | 원인 |
 |---|---|---|---|---|---|---|
 | healthy | 0.0 | — | — | — | SAFE | - |
-| itsc_4turn | 20.0 | 23.01 | — | WARN 3.01 | WARN | i2i1 |
-| itsc_8turn | 165.0 | — | 168.07 | DANGER 3.07 | DANGER | i2i1 |
-| itsc_12turn | 45.0 | — | 48.07 | DANGER 3.07 | DANGER | i2i1 |
+| itsc_4turn | 20.0 | 22.99 | — | WARN 2.99 | WARN | i2i1 |
+| itsc_8turn | 165.0 | — | 164.95 | DANGER -0.05 | DANGER | i2i1 |
+| itsc_12turn | 45.0 | — | 47.96 | DANGER 2.96 | DANGER | i2i1 |
 | itsc_16turn | 185.0 | — | — | — | DANGER | i2i1 |
 | itsc_4turn_resistive | 205.0 | — | — | — | SAFE | - |
-| itsc_4turn_halfload | 225.0 | 228.03 | — | WARN 3.03 | WARN | i2i1 |
+| itsc_4turn_halfload | 225.0 | 227.96 | — | WARN 2.96 | WARN | i2i1 |
 
 ## 2. 시나리오별 '무슨 일이 일어나는가' (비전공자용)
 
 **healthy** — 세 상 전류가 거의 같다. 완전히 같지는 않은데(R상이 약간 큼), 이것은 정상 모터·전원에도 있는 '고유 비대칭' 0.027 을 일부러 넣었기 때문이다. I₂/I₁ 은 0.027 로 경고 경계 0.05 아래라 **안전** 이 유지된다.
 
-**itsc_4turn** — 코일 한 개의 4턴(권선의 2.1 %)이 서로 붙었다. 붙은 고리에 큰 순환 전류 I_f ≈ 34 A 가 돌지만 바깥 선전류는 R상이 5.21 A 로 조금 커질 뿐이다. 대신 세 상의 '균형'을 재는 I₂/I₁ 이 0.027 → 0.073 으로 뛰어 경계 0.05 을 넘고, 3 s 지속 규칙 뒤 **경고**가 뜬다(주입 후 3.01 s). 단락 고리에서 158 W 가 더 발열해 권선이 천천히 데워진다(통합 모드 §3 열).
+**itsc_4turn** — 코일 한 개의 4턴(권선의 2.1 %)이 서로 붙었다. 붙은 고리에 큰 순환 전류 I_f ≈ 34 A 가 돌지만 바깥 선전류는 R상이 5.21 A 로 조금 커질 뿐이다. 대신 세 상의 '균형'을 재는 I₂/I₁ 이 0.027 → 0.073 으로 뛰어 경계 0.05 을 넘고, 3 s 지속 규칙 뒤 **경고**가 뜬다(주입 후 2.99 s). 단락 고리에서 158 W 가 더 발열해 권선이 천천히 데워진다(통합 모드 §3 열).
 
 **itsc_8turn** — 8턴(4.2 %)이 붙으면 I₂/I₁ 이 0.168 으로 위험 경계 0.1 를 넘어 3 s 뒤 **위험**이다. 손실 511 W 로 권선 온도 상승이 뚜렷하다.
 
@@ -40,7 +40,7 @@
 
 | 항목 | 시나리오 | 시뮬(로그) | 해석 기준 | 허용 | 편차 | 판정 | 비고 |
 |---|---|---|---|---|---|---|---|
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | healthy | 0 | 1 |  |  | PASS | n=89 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | healthy | 0 | 1 |  |  | PASS | n=86 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | healthy | 0 | 0 | ±1 % |  | PASS | 합성 0.02700 ∠0.0°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | healthy | 0.027 | [0.027, 0.027] |  |  | PASS | 기대(각도 0°) 0.027 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | healthy | 0.027 | 0.027 | ±1 % | +0.00 % | PASS |  |
@@ -49,7 +49,7 @@
 | I₂/I_n 표시값 vs 시뮬 기대(합성×부하) | healthy | 0.0268 | 0.026798 | ±1 % | +0.01 % | PASS | 표시값 자체의 일관성 |
 | 상 불평형 max dev [%] vs LUT 합성 기대 | healthy | 2.6806 | 2.681 | ±2 % | -0.01 % | PASS | LUT 자체 0.0 % (LUT I₁ 기준) |
 | 판정 (장면 끝 종합 상태) vs 예상 | healthy | SAFE | SAFE |  |  | PASS | 원인 - 0.0 · i2i1 예상 SAFE |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn | 0 | 1 |  |  | PASS | n=89 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn | 0 | 1 |  |  | PASS | n=83 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_4turn | 0.048965 | 0.048815 | ±1 % | +0.31 % | PASS | 합성 0.07262 ∠23.2°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_4turn | 0.07262 | [0.021815, 0.075815] |  |  | PASS | 기대(각도 0°) 0.072474 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_4turn | 0.07262 | 0.072474 | ±1 % | +0.20 % | PASS |  |
@@ -61,8 +61,8 @@
 | I_f [A] vs 2D FEM(F1 보정) — 참고 열 | itsc_4turn | 34.381 | 35.155 | ±5 % | -2.20 % | PASS | 참고(±5 % MCCM↔FEM 정합 범위) |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_4turn | 158.1 | 157.54 | ±2 % | +0.36 % | PASS | 공식(루프 저항항만) 157.5 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_4turn | WARN | WARN |  |  | PASS | 원인 i2i1 0.0726 · i2i1 예상 WARN |
-| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_4turn | 3.01 | 3 | ±20 % | +0.33 % | PASS | 첫 WARN |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_12turn | 0 | 1 |  |  | PASS | n=87 |
+| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_4turn | 2.99 | 3 | ±20 % | -0.33 % | PASS | 첫 WARN |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_12turn | 0 | 1 |  |  | PASS | n=88 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_12turn | 0.24552 | 0.24551 | ±1 % | +0.00 % | PASS | 합성 0.26958 ∠25.6°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_12turn | 0.26958 | [0.218513, 0.272513] |  |  | PASS | 기대(각도 0°) 0.269578 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_12turn | 0.26958 | 0.26958 | ±1 % | +0.00 % | PASS |  |
@@ -73,12 +73,12 @@
 | 단락 루프 전류 I_f [A] vs MCCM | itsc_12turn | 69.803 | 69.803 | ±1 % | +0.00 % | PASS |  |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_12turn | 977.46 | 977.46 | ±2 % | -0.00 % | PASS | 공식(루프 저항항만) 977.5 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_12turn | DANGER | DANGER |  |  | PASS | 원인 i2i1 0.2696 · i2i1 예상 DANGER |
-| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_12turn | 3.07 | 3 | ±20 % | +2.33 % | PASS | 첫 DANGER |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | overload | 0 | 1 |  |  | PASS | n=88 |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | voltage_unbalance | 0 | 1 |  |  | PASS | n=89 |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | single_phasing | 0 | 1 |  |  | PASS | n=88 |
+| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_12turn | 2.96 | 3 | ±20 % | -1.33 % | PASS | 첫 DANGER |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | overload | 0 | 1 |  |  | PASS | n=89 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | voltage_unbalance | 0 | 1 |  |  | PASS | n=87 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | single_phasing | 0 | 1 |  |  | PASS | n=86 |
 | 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | no_load | 0 | 1 |  |  | PASS | n=89 |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_8turn | 0 | 1 |  |  | PASS | n=88 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_8turn | 0 | 1 |  |  | PASS | n=86 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_8turn | 0.1441 | 0.14425 | ±1 % | -0.11 % | PASS | 합성 0.16757 ∠27.2°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_8turn | 0.16757 | [0.11725, 0.17125] |  |  | PASS | 기대(각도 0°) 0.167724 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_8turn | 0.16757 | 0.16772 | ±1 % | -0.09 % | PASS |  |
@@ -88,8 +88,8 @@
 | 상 불평형 max dev [%] vs LUT 합성 기대 | itsc_8turn | 14.341 | 14.353 | ±2 % | -0.08 % | PASS | LUT 자체 12.9454 % (LUT I₁ 기준) |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_8turn | 510.91 | 511.47 | ±2 % | -0.11 % | PASS | 공식(루프 저항항만) 511.5 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_8turn | DANGER | DANGER |  |  | PASS | 원인 i2i1 0.1676 · i2i1 예상 DANGER |
-| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_8turn | 3.07 | 3 | ±20 % | +2.33 % | PASS | 첫 DANGER |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_16turn | 0 | 1 |  |  | PASS | n=89 |
+| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_8turn | -0.05 | 3 | ±20 % | -101.67 % | **FAIL** | 첫 DANGER |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_16turn | 0 | 1 |  |  | PASS | n=88 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_16turn | 0.33785 | 0.33774 | ±1 % | +0.03 % | PASS | 합성 0.36253 ∠23.1°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_16turn | 0.36253 | [0.31074, 0.36474] |  |  | PASS | 기대(각도 0°) 0.362417 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_16turn | 0.36253 | 0.36242 | ±1 % | +0.03 % | PASS |  |
@@ -100,7 +100,7 @@
 | 단락 루프 전류 I_f [A] vs MCCM | itsc_16turn | 80.643 | 80.631 | ±1 % | +0.02 % | PASS |  |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_16turn | 1523.3 | 1522.2 | ±2 % | +0.07 % | PASS | 공식(루프 저항항만) 1522.2 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_16turn | DANGER | DANGER |  |  | PASS | 원인 i2i1 0.3625 · i2i1 예상 DANGER |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn_resistive | 0 | 1 |  |  | PASS | n=90 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn_resistive | 0 | 1 |  |  | PASS | n=88 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_4turn_resistive | 0.006542 | 0.006511 | ±1 % | +0.48 % | PASS | 합성 0.03244 ∠7.0°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_4turn_resistive | 0.03244 | [0.020489, 0.033511] |  |  | PASS | 기대(각도 0°) 0.032413 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_4turn_resistive | 0.03244 | 0.032413 | ±1 % | +0.08 % | PASS |  |
@@ -112,7 +112,7 @@
 | I_f [A] vs 2D FEM(F1 보정) — 참고 열 | itsc_4turn_resistive | 4.431 | 4.5647 | ±5 % | -2.93 % | PASS | 참고(±5 % MCCM↔FEM 정합 범위) |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_4turn_resistive | 20.32 | 20.232 | ±2 % | +0.43 % | PASS | 공식(루프 저항항만) 20.2 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_4turn_resistive | SAFE | SAFE |  |  | PASS | 원인 - 0.0 · i2i1 예상 SAFE |
-| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn_halfload | 0 | 1 |  |  | PASS | n=88 |
+| 정상 상태 (I₂/I₁ 마지막 5 s 표준편차 < 1 %) | itsc_4turn_halfload | 0 | 1 |  |  | PASS | n=86 |
 | I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저) | itsc_4turn_halfload | 0.074726 | 0.074507 | ±1 % | +0.29 % | PASS | 합성 0.09529 ∠34.8°, 고유 0.027 ∠0° |
 | I₂/I₁ 합성값 (범위 |r−h| ~ r+h) | itsc_4turn_halfload | 0.09529 | [0.047507, 0.101507] |  |  | PASS | 기대(각도 0°) 0.095076 |
 | I₂/I₁ 합성값 vs 기대(각도 0°) | itsc_4turn_halfload | 0.09529 | 0.095076 | ±1 % | +0.23 % | PASS |  |
@@ -123,9 +123,9 @@
 | 단락 루프 전류 I_f [A] vs MCCM | itsc_4turn_halfload | 34.381 | 34.347 | ±1 % | +0.10 % | PASS |  |
 | 단락 루프 총손실 [W] vs I_f²(R_f+μR1_hot)+단락턴 동손 (MCCM) | itsc_4turn_halfload | 158.1 | 157.54 | ±2 % | +0.36 % | PASS | 공식(루프 저항항만) 157.5 W |
 | 판정 (장면 끝 종합 상태) vs 예상 | itsc_4turn_halfload | WARN | WARN |  |  | PASS | 원인 i2i1 0.0953 · i2i1 예상 WARN |
-| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_4turn_halfload | 3.03 | 3 | ±20 % | +1.00 % | PASS | 첫 WARN |
-| 정상 시나리오 오경보 건수 (SAFE 유지) | healthy | 0 | 0 |  |  | PASS | 356 행 |
-| 합성 파형 독립 재계산 I₂/I₁ (최대 편차, 전 파형) | all | 0.0226 | 0 | 0.005 |  | PASS | 127 파형, 기본파 외 고조파 0 |
+| 탐지 지연 [s] (주입 → 첫 상향, 지속 3 s 규칙) | itsc_4turn_halfload | 2.96 | 3 | ±20 % | -1.33 % | PASS | 첫 WARN |
+| 정상 시나리오 오경보 건수 (SAFE 유지) | healthy | 0 | 0 |  |  | PASS | 351 행 |
+| 합성 파형 독립 재계산 I₂/I₁ (최대 편차, 전 파형) | all | 0.0226 | 0 | 0.005 |  | PASS | 174 파형, 기본파 외 고조파 0 |
 | 권선 온도 상승 ΔT [°C] 주입 후 정상 상태 vs 열 모델 에너지 수지 역산 | itsc_4turn | 45.622 | 45.622 | ±5 % | +0.00 % | PASS | 시뮬 시간 300 분 후 (τ 권선 ≈ 36 분), 루프 손실 158.1 W |
 | 권선 온도 상승 ΔT [°C] 주입 후 정상 상태 vs 열 모델 에너지 수지 역산 | itsc_12turn | 174.36 | 174.37 | ±5 % | -0.00 % | PASS | 시뮬 시간 300 분 후 (τ 권선 ≈ 36 분), 루프 손실 977.46 W |
 | 권선 온도 상승 ΔT [°C] 주입 후 정상 상태 vs 열 모델 에너지 수지 역산 | itsc_16turn | 261.94 | 261.95 | ±5 % | -0.00 % | PASS | 시뮬 시간 300 분 후 (τ 권선 ≈ 36 분), 루프 손실 1523.26 W |
@@ -165,17 +165,17 @@
 
 | 표시량 | 엔진 | 입력(sha) | 해석 단계 | 등급 |
 |---|---|---|---|---|
-| I₂/I₁ (HUD I2/I1, 상태 보드 게이지, 대시보드 추세) | `engine/current_model.CurrentModel.waveform→analyze (phasors_from_wavef…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (296249cc9133) | mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전… | **등가회로 LUT + 2D FEM 검증 (provisional, fem_verified false) + 고유 비대칭(참고 데이터셋)** |
-| I₂/I_n (HUD I2/In, 부하 무관 보조 지표) | `CurrentModel.analyze → i2_over_in = |I₂|/I_n (I_n = electrical.yaml ra…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (296249cc9133); M1.yaml (2d8ca5614eaf) | mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전… | **등가회로 LUT (표시 전용, 판정 없음)** |
-| 상별 RMS Ia/Ib/Ic·전류/정격 비율·상태색 | `CurrentModel._phasors (I₁ 피크 = √2·I_n·부하, I₂ = I₁·(r·e^{jθ}+h)) → wave…` | M1_mccm_lut_v2.json (c6898c6e8d80); M1.yaml (2d8ca5614eaf); electrical.yaml (296249cc9133) | LUT 의 I₂/I₁·위상(θ vs I₁) 만 쓰고 크기는 정격 규약 — LUT 자체 I_a/I_b/I_c(결함 시 I₁ 상승)와는 다름… | **등가회로 LUT + 카탈로그 정격** |
+| I₂/I₁ (HUD I2/I1, 상태 보드 게이지, 대시보드 추세) | `engine/current_model.CurrentModel.waveform→analyze (phasors_from_wavef…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (69266c21fed8) | mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전… | **등가회로 LUT + 2D FEM lite 검증(I_f ±3 %, Xm −3.7 %, 잠김 IEC 안; provisional) + 고유 비대칭(참고 데이터셋)** |
+| I₂/I_n (HUD I2/In, 부하 무관 보조 지표) | `CurrentModel.analyze → i2_over_in = |I₂|/I_n (I_n = electrical.yaml ra…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (69266c21fed8); M1.yaml (2d8ca5614eaf) | mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전… | **등가회로 LUT (표시 전용, 판정 없음)** |
+| 상별 RMS Ia/Ib/Ic·전류/정격 비율·상태색 | `CurrentModel._phasors (I₁ 피크 = √2·I_n·부하, I₂ = I₁·(r·e^{jθ}+h)) → wave…` | M1_mccm_lut_v2.json (c6898c6e8d80); M1.yaml (2d8ca5614eaf); electrical.yaml (69266c21fed8) | LUT 의 I₂/I₁·위상(θ vs I₁) 만 쓰고 크기는 정격 규약 — LUT 자체 I_a/I_b/I_c(결함 시 I₁ 상승)와는 다름… | **등가회로 LUT + 카탈로그 정격** |
 | 단락 루프 전류 I_f (Coil_01_short 발광·입자, 상태 short_loop) | `CurrentModel.short_loop → LUT i_f_A (lut.query 3축 보간)…` | M1_mccm_lut_v2.json (c6898c6e8d80) | mccm.py: RMxprt v2m2 등가회로 상수(M400-50A_user60, 철손 데이터시트) → 다중결합 회로(Z₂ 카탈로그 앵커 7.136 Ω, 단락 루프 R_f + μR1) → 격자 160점 LUT; 2D 와전류 FEM(F1) 단락 루프 전… | **등가회로 MCCM (FEM ±5 % 정합)** |
-| 단락 루프 총손실 P_loop_total (권선 노드 추가 손실, HUD basis 줄) | `CurrentModel.loop_loss_W → LUT p_loop_total_W → ThermalModel.step(extr…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (296249cc9133) | I_f²·(R_f + μ·R1_hot) + 단락 턴 동손 (MCCM)… | **등가회로 MCCM** |
+| 단락 루프 총손실 P_loop_total (권선 노드 추가 손실, HUD basis 줄) | `CurrentModel.loop_loss_W → LUT p_loop_total_W → ThermalModel.step(extr…` | M1_mccm_lut_v2.json (c6898c6e8d80); electrical.yaml (69266c21fed8) | I_f²·(R_f + μ·R1_hot) + 단락 턴 동손 (MCCM)… | **등가회로 MCCM** |
 | 권선·로터·베어링·프레임 온도(색·HUD·게이지) | `engine/thermal_model.ThermalModel.step (RK4, 9노드 집중정수, losses: copper_…` | thermal.yaml (fe1e7d4e4c2a); M1.yaml (2d8ca5614eaf) | 22 kW 보정값을 손실비 P(1−η)/η·프레임 치수비로 스케일(engine/motor_library.thermal_cfg, thermal.yaml reference) — Maxwell 근거 아님… | **열회로 모델(낙관 가능성, 실측 전 보정 불가)** |
-| 판정 SAFE/WARN/DANGER·원인 신호·advisory | `engine/thresholds.Judge.update (worst-of, 히스테리시스 5 %, 지속 3 s, provisio…` | thresholds.yaml (9158581eb3d8) | I₂/I₁ 0.05/0.10(참고 데이터셋 provisional), 전류/정격 0.85~1.10/1.25·0.50, 온도 F종·그리스, 진동 ISO 10816-1 Class I… | **임계값(표준·참고 데이터셋) — 해석값 아님** |
+| 판정 SAFE/WARN/DANGER·원인 신호·advisory | `engine/thresholds.Judge.update (worst-of, 히스테리시스 5 %, 지속 3 s, provisio…` | thresholds.yaml (92a7e9fb6043) | I₂/I₁ 0.05/0.10(참고 데이터셋 provisional), 전류/정격 0.85~1.10/1.25·0.50, 온도 F종·그리스, 진동 ISO 10816-1 Class I… | **임계값(표준·참고 데이터셋) — 해석값 아님** |
 | 정격점(카탈로그 4.73 A·pf 0.79·η 0.895·1760 rpm) — 모터 모델 근거 표 | `config/motors/M1.yaml (motor_library.motor_spec)…` | M1.yaml (2d8ca5614eaf); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\rmxprt_v2m2.json (07736423faa1); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\eddy2d\summary.json (0fb986f232d1); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\f7_iec_tolerance.json (f99af4b76654) | RMxprt v2m2 정합 4.670 A·0.791·89.58 % / 2D FEM lite 4.90 A·0.740 / IEC 60034-1 허용차… | **카탈로그 (RMxprt 정합·FEM 참고)** |
 | 기동 특성(잠김 전류·토크비) — 근거 표 | `표시 전용 (엔진 미사용)…` | M1.yaml (2d8ca5614eaf); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\rmxprt_v2m2.json (07736423faa1); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\f2_corrections.json (5e21ad5b5d91) | 카탈로그 6.5×/2.1× ↔ RMxprt 8.24×/3.09× ↔ 2D FEM + F2 스큐 보정 7.43×/2.34×… | **카탈로그 / RMxprt / 2D FEM 보정** |
 | 등가회로 상수(R1·R2′·X1·X2′·Xm·Z₂) — 근거 표 | `표시 전용…` | C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\rmxprt_v2m2.json (07736423faa1); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\rmxprt_temp_sweep.json (21fe315328ce); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\magnetizing_curve_2d.json (b0f93df33e1b); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\eddy2d\summary.json (0fb986f232d1); C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\inductance_matrix_2d.json (a36126216cd3) | RMxprt v2m2 (R1 20/95 °C 온도 스윕) ↔ 2D FEM X_total 95.6 Ω(자화 곡선 k=1) ↔ 역상 Z₂ 5.33(FEM)/5.97(보정) vs 앵커 7.136… | **RMxprt 정합 / 2D FEM** |
-| 기계 결함(DE 베어링·오정렬·팬·브레이크·과부하) 진동·kurtosis·고주파 지표 | `engine/fault_injector (결함별 상수) + thermal.yaml faults(손실 배율·열저항)…` | thermal.yaml (fe1e7d4e4c2a); thresholds.yaml (9158581eb3d8) | Maxwell 근거 없음 — 진동 상수(시나리오), ISO 10816-1 Class I(표준), 베어링 지표 AI Hub 참고 데이터셋… | **표준 / 참고 데이터셋 / 시나리오 상수 (해석값 아님)** |
+| 기계 결함(DE 베어링·오정렬·팬·브레이크·과부하) 진동·kurtosis·고주파 지표 | `engine/fault_injector (결함별 상수) + thermal.yaml faults(손실 배율·열저항)…` | thermal.yaml (fe1e7d4e4c2a); thresholds.yaml (92a7e9fb6043) | Maxwell 근거 없음 — 진동 상수(시나리오), ISO 10816-1 Class I(표준), 베어링 지표 AI Hub 참고 데이터셋… | **표준 / 참고 데이터셋 / 시나리오 상수 (해석값 아님)** |
 
 전체 문장은 `traceability.md`. 해석 파일 sha256 은 `analysis_reference.json inputs` 에 있다(LUT sha 일치: True).
 

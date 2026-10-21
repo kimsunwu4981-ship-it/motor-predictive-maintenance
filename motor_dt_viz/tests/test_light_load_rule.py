@@ -63,10 +63,15 @@ def test_persistence_and_upper_bound_unchanged():
     assert j2.update(1.0, sig_hi).status == "SAFE"                           # 상향은 3 s 지속 뒤 (raw DANGER 시작 t=1.0)
     assert j2.update(3.5, sig_hi).status == "SAFE"                           # 2.5 s 경과 — 아직
     assert j2.update(4.1, sig_hi).status == "DANGER"                         # 3.1 s 경과 → 과전류 위험 (상한 규칙 불변)
-    # 경부하 뒤 한 상이 끊기면 내부 상태(이미 DANGER)가 바로 드러난다
+    # 경부하 뒤 한 상이 끊기거나 과전류가 오면 보통처럼 3 s 지속 뒤 DANGER (경부하 동안 내부 상태 SAFE·지속 시계 리셋)
     j3 = Judge(cfg(), motor=ml.load_motor("M1"))
     for t in (0.0, 2.0, 4.0):
         v = j3.update(t, {"current_ratio": {"A": 0.33, "B": 0.33, "C": 0.33}, "i2i1": 0.027})
     assert v.status == "SAFE" and len(v.advisory) == 3
-    v = j3.update(4.5, {"current_ratio": {"A": 0.33, "B": 0.80, "C": 0.80}, "i2i1": 0.027})
-    assert v.status == "DANGER" and v.cause_signal == "current_ratio"
+    assert j3.update(4.5, {"current_ratio": {"A": 0.33, "B": 0.80, "C": 0.80}, "i2i1": 0.027}).status == "SAFE"     # 0.5 s — 아직
+    assert j3.update(7.6, {"current_ratio": {"A": 0.33, "B": 0.80, "C": 0.80}, "i2i1": 0.027}).status == "DANGER"   # 3.1 s 뒤 결상 의심
+    j4 = Judge(cfg(), motor=ml.load_motor("M1"))
+    for t in (0.0, 2.0, 4.0):
+        j4.update(t, {"current_ratio": {"A": 0.33, "B": 0.33, "C": 0.33}, "i2i1": 0.027})
+    assert j4.update(4.5, {"current_ratio": {"A": 1.30, "B": 1.30, "C": 1.30}, "i2i1": 0.027}).status == "SAFE"     # 경부하 → 과전류도 3 s 뒤
+    assert j4.update(7.6, {"current_ratio": {"A": 1.30, "B": 1.30, "C": 1.30}, "i2i1": 0.027}).status == "DANGER"
