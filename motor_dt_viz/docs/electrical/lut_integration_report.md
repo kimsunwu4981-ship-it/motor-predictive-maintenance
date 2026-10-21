@@ -1,4 +1,4 @@
-# LUT 연동 검증 보고 (TASK A D6) — 2026-10-21 12:16
+# LUT 연동 검증 보고 (TASK A D6) — 2026-10-21 12:35
 
 - electrical.yaml version 2 · method `lut` → M1 실제 동작 **lut** (LUT M1_mccm_lut_v2.json (등가회로(RMxprt v2+MCCM), provisional))
 - LUT `data\electrical\M1_mccm_lut_v2.json` sha256 `c6898c6e8d80…` · 원본 mccm_lut sha `7d7b1ac5147a…` · grade 등가회로(RMxprt v2+MCCM) · status provisional · fem_verified False · R_fe 보정 physical
@@ -15,11 +15,10 @@
 | V4 | legacy 0.104/0.269 ±0.1 % | PASS | M1 legacy · 기본 · motor_id≠M1 |
 | V5 | I₂/I_n 이 I₂/I₁ 보다 부하 의존 작음 (4턴) | PASS | I₂/I₁ +52.6 % vs I₂/I_n -0.0 % |
 | V6 | thresholds 판정표 기록 | PASS | 8 행 |
-| V7 | 라이브 10 s | **FAIL** | 접속 실패 (기동 시간 초과) |
-| V8 | 금지 파일 무변경 | **FAIL** | motor_dt_viz/config/motors/M1.yaml | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-) |
+| V7 | 라이브 10 s | PASS | 88 states, healthy 0.027, 4T 0.0726 |
+| V8 | 금지 파일 무변경 | PASS | clean |
 
-**6/8 통과.** 변경 파일: config/electrical.yaml(v2), engine/current_model.py, engine/lut_source.py, engine/thermal_model.py(extra_loss_W 훅), app/demo_integrated.py(state 키 추가·열 연동·CSV 열), viz/hud.py, tools/electrical/*, tests/test_lut_source.py, data/electrical/*, dashboard(src 5개·css·dist 빌드). WebSocket 포트·스키마 번호·명령 목록은 그대로 (state 에 키만 덧붙임).
+**8/8 통과.** 변경 파일: config/electrical.yaml(v2), engine/current_model.py, engine/lut_source.py, engine/thermal_model.py(extra_loss_W 훅), app/demo_integrated.py(state 키 추가·열 연동·CSV 열), viz/hud.py, tools/electrical/*, tests/test_lut_source.py, data/electrical/*, dashboard(src 5개·css·dist 빌드). WebSocket 포트·스키마 번호·명령 목록은 그대로 (state 에 키만 덧붙임).
 
 ## V1. LUT 격자 ↔ mccm_results 케이스 (±1 %)
 
@@ -80,12 +79,18 @@
 
 ## V7. 라이브 10 s (Isaac Sim `demo_integrated --live --motor M1 --mode electrical`, 검증 포트)
 
-- 접속 실패 (기동 시간 초과) (로그 logs\verify_lut\demo_stdout.log)
+- 접속까지 16.3 s
+- state 88 건 / 10 s (schema 1, motor M1, mode electrical), ack 1 건
+- 새 키 존재: ✓ (i2_over_in, electrical_source, i2i1_marks, p_loop_total_W)
+- electrical_source: method lut · grade 등가회로(RMxprt v2+MCCM) · status provisional · fem_verified False · M1_mccm_lut_v2.json · cases 11
+- healthy: I₂/I₁ 0.027 (설계 0.0270) · I₂/I_n 0.027 → ✓
+- itsc_4turn 주입 ack ✓: I₂/I₁ 0.0726 (설계 0.0726) · I₂/I_n 0.0726 · P_loop_total 158.1 W · Ia/Ib/Ic [5.0, 4.7, 4.5] → ✓
+- i2i1_marks: [{'case': 'healthy', 'label': '정상 운전', 'value': 0.027}, {'case': 'itsc_4turn', 'label': '턴간 단락 4턴 (초기)', 'value': 0.0726}, {'case': 'itsc_12turn', 'label': '턴간 단락 12턴 (진행)', 'value': 0.2696}]
+- 로그: logs\verify_lut\demo_stdout.log
 
 ## V8. 금지 파일 변경 없음 (git diff --stat)
 
 ```
-motor_dt_viz/config/motors/M1.yaml | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+(변경 없음)
 ```
 대상: `motor_dt_viz/config/thresholds.yaml`, `motor_dt_viz/config/motors`, `motor_dt_viz/engine/thresholds.py`, `motor_dt_viz/config/live.yaml`, `motor_dt_viz/tools/firewall_rules.ps1`
