@@ -303,3 +303,8 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
 1. `py -3.12 -X utf8 tools/cad/datasheet_to_yaml.py && py -3.12 -X utf8 tools/cad/build_internals_M1.py && py -3.12 -X utf8 tools/cad/build_housing_100L.py` (저장소 루트, CadQuery) → `assets/motors/M1/*.step|.obj|.glb`
 2. `py -3.12 -X utf8 -m pytest tests/test_m1_model.py -q` → `py -3.12 -X utf8 tools/cad/write_model_doc.py` (`docs/assets/M1_model.md`)
 3. `C:\ISSACS~1\python.bat tools\cad\build_usd_M1.py` (USD 반입·조립) → `cd motor_dt_viz ; C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --m1_model [--view cutaway]`
+
+## 실측 기준선 (P1, 2026-10-21)
+
+- `py -3.12 -X utf8 tools/baseline_capture.py --motor M1 --tag SITE_<날짜> --csv <3상 전류 CSV: t,ia,ib,ic[,va,vb,vc]> --fs 2000` → `config/baselines/M1_SITE_<날짜>.yaml` + thresholds.yaml 반영 제안(diff) 출력. 품질 게이트(창 ≥ 500, I₁ 변동계수 ≤ 10 %) 통과 시 사람이 `current.negative_sequence.baseline`·`mode: baseline_multiple` 로 옮긴다(자동 반영 없음).
+- 참고 데이터셋: `--grade reference --aihub-dir "<AI Hub current/2.2kW/L-SF-04/정상>" --tag AIHUB_LSF04_REFERENCE --apply-reference` → `reference_baseline.value`(p95)만 기록(판정 기준 아님).

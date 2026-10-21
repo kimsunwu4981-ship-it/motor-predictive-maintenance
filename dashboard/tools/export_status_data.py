@@ -185,6 +185,18 @@ def main():
             "current_ratio": thr["current_ratio"], "i2i1": thr["i2i1"], "bearing": thr["bearing"],
             "hysteresis_fraction": thr["hysteresis"]["fraction"], "persistence_s": thr["persistence_s"],
             "vibration_split_kw": ml.VIB_STANDARD_SPLIT_KW,
+            # P1 (2026-10-21): 지표별 출처·상태·정책 — 참고 배지·툴팁은 이 메타만 본다 (판정 규칙·값은 엔진·thresholds.yaml 그대로)
+            "meta": {
+                "current_ratio": {k: thr["current"]["rated_ratio"].get(k) for k in ("source", "status", "i_rated_ref")},
+                "i2i1": {**{k: thr["current"]["negative_sequence"].get(k) for k in ("source", "status", "mode", "warn", "danger", "warn_multiple", "danger_multiple", "baseline")},
+                         "reference_baseline": thr["current"]["negative_sequence"].get("reference_baseline")},
+                "temperature": {k: thr["temperature"].get(k) for k in ("source", "status")},
+                "vibration": {k: thr["vibration"].get(k) for k in ("source", "status")},
+                "bearing": {k: thr["bearing"].get(k) for k in ("source", "status")},
+                "policy": thr.get("judgment", {}).get("provisional_policy"),
+                "stream": "simulation",          # 상태 보드 = 엔진 배치(합성 신호) → include_with_label ("임시 기준")
+                "thermal_scaling_note": "열회로 계수는 22 kW(M5) 기준 스케일 — M1 정격 권선 상승 ≈25 K vs 카탈로그 B종 한도 80 K·IE3 2.2 kW 통상 50~70 K: M1 온도 판정은 낙관적일 수 있음 (실측 전 보정 불가, docs/thermal_scaling.md)",
+            },
         },
         "scenarios": {m: {"total_duration_s": sc[m]["total_duration_s"],
                           "steps": [{**{k: st[k] for k in ("n", "id", "label", "subtitle", "t_start", "t_end", "time_scale", "load", "faults", "electrical_case")},

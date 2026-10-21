@@ -1,0 +1,87 @@
+motor: M1
+tag: AIHUB_LSF04_REFERENCE
+grade: reference
+generated: 2026-10-21 11:42
+source:
+  kind: aihub_dir
+  path: C:/Users/sunwu/OneDrive/바탕 화면/프로젝트/디지털 트윈/2020-02-125.기계시설물고장예지_sample/current/2.2kW/L-SF-04/정상
+  n_files: 77
+  meta_first:
+    Date:
+    - '2020-11-04 17:49:56'
+    Filename:
+    - STFCB-20201012-0105-0159_20201104_174904_002.dat
+    Data Label:
+    - 정상
+    Label No:
+    - '00'
+    Motor Spec:
+    - L-SF-04
+    - '1760'
+    - '2.2'
+    - '4.7'
+    Period:
+    - 1SEC
+    Sample Rate:
+    - '2000'
+    RMS:
+    - '3.09975'
+    - '3.45629'
+    - '3.15637'
+    Data Length:
+    - '2000'
+  column_mapping: 메타 9줄 뒤 열 = 시간, ch1, ch2, ch3 — AI Hub 가이드라인 v2.4 §1.3.2 '전류 = 시간 + R·S·T 상전류' (config/aihub_format.yaml channels.current). 헤더에 열 이름 없음 → 상 순서는
+    문서 근거, 페이저 대칭분은 순서에 무관(큰 쪽을 정상분으로, seq 기록)
+window_s: 1.0
+fundamental_hz:
+  n: 77
+  median: 60.00430757394521
+  p95: 60.031537533094664
+  mean: 60.00303788899223
+  std: 0.01856798253939617
+  min: 59.95574679716122
+  max: 60.03826626287181
+phase_sequence_counts:
+  abc: 77
+  acb: 0
+I1_A:
+  n: 77
+  median: 3.1729943618847636
+  p95: 3.205801483358938
+  mean: 3.171388988642035
+  std: 0.02066996016649982
+  min: 3.1362147844535584
+  max: 3.210012137822664
+i2_over_i1:
+  n: 77
+  median: 0.08786736714635267
+  p95: 0.10053883867418598
+  mean: 0.08625759562803724
+  std: 0.009318896600922342
+  min: 0.06637430996175502
+  max: 0.1051606342344413
+unbalance:
+  n: 77
+  median: 0.06546639088581037
+  p95: 0.0782705582706123
+  mean: 0.06405592585642254
+  std: 0.009481583370286761
+  min: 0.04366058293095164
+  max: 0.0824781253939344
+v2_v1:
+  n: 0
+  note: 전압 채널 없음 → 전압 불평형 보정 불가(compensation enabled 금지)
+quality:
+  n_windows: 77
+  min_windows: 500
+  I1_cv: 0.0065
+  max_cv: 0.1
+  pass: false
+  reasons:
+  - 창 77 < 500
+note: '참고 등급: 같은 용량대 다른 모터(공조기) 정상 데이터 — 실모터 기준선이 아니며 confirmed 조건이 되지 않는다. 2 kHz 샘플은 60 Hz 기본파 대칭 성분 추출에 충분(나이퀴스트 1 kHz, 1 s 창 분해능 1 Hz + 피크 보간).'
+thresholds_diff:
+  current.negative_sequence.reference_baseline.value:
+  - null
+  - 0.1005
+  note: 참고 등급 — warn/danger·baseline 은 바꾸지 않는다

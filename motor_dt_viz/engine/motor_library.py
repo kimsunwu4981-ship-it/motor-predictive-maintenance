@@ -189,12 +189,12 @@ def load_motor(mid: str) -> Motor:
     nde = d.get("bearing_fault_multipliers_nde") or {}
     return Motor(
         raw=d, id=d["id"], name=d["name"], source=d["source"],
-        rated_power_kw=float(d["rated_power_kw"]), poles=int(d["poles"]), sync_rpm=float(d["sync_rpm"]),
-        rated_rpm=float(d["rated_rpm"]), voltage_v=float(d["voltage_v"]), frequency_hz=float(d["frequency_hz"]),
+        rated_power_kw=float(val(d["rated_power_kw"])), poles=int(val(d["poles"])), sync_rpm=float(val(d["sync_rpm"])),
+        rated_rpm=float(val(d["rated_rpm"])), voltage_v=float(val(d["voltage_v"])), frequency_hz=float(val(d["frequency_hz"])),
         connection=str(val(d["connection"])), efficiency=float(val(d["efficiency"])), power_factor=float(val(d["power_factor"])),
         rated_line_current_a=float(val(d["rated_line_current_a"])), rated_phase_current_a=float(val(d["rated_phase_current_a"])),   # {value, source, doc, note} 래퍼 허용 (2026-10-19)
-        frame=str(d["frame"]), insulation_class=str(d["insulation_class"]), duty=str(d["duty"]),
-        bearing_de=str(d["bearing_de"]), bearing_nde=str(d["bearing_nde"]),
+        frame=str(val(d["frame"])), insulation_class=str(val(d["insulation_class"])), duty=str(val(d["duty"])),
+        bearing_de=str(val(d["bearing_de"])), bearing_nde=str(val(d["bearing_nde"])),
         bpfo_mult=float(bm["bpfo"]), bpfi_mult=float(bm["bpfi"]),
         bpfo_mult_nde=float(nde["bpfo"]) if nde else None, bpfi_mult_nde=float(nde["bpfi"]) if nde else None,
         bearing_source=str(bm["source"]), geometry_scale=float(d["geometry_scale"]),
@@ -205,7 +205,7 @@ def load_motor(mid: str) -> Motor:
     )
 
 
-FIELD_SOURCES = ("nameplate", "catalog", "representative", "assumed", "estimated", "measured")
+FIELD_SOURCES = ("nameplate", "catalog", "representative", "assumed", "estimated", "measured", "standard", "reference_dataset", "calculated", "verify_on_site")   # 키별 출처 라벨(표시용; P1-2 확장)
 
 
 def _field_sources(d: dict) -> dict:

@@ -4,8 +4,10 @@ import { levelOf } from "./data";
 // 신호 게이지 (TASK_다중모터 §7.2): 현재값을 안전/경고/위험 구간 띠 위에 마커로 보여준다.
 // 구간 경계는 GaugeSpec(모터별 진동 규격·정격 전류 반영)에서만 온다. 색 + 아이콘 병기.
 export interface Marker { key: string; value: number }
-export function Gauge({ index, title, unit, spec, value, markers, note, judged }: {
+export function Gauge({ index, title, unit, spec, value, markers, note, judged, badge, titleTip }: {
   index: FleetIndex; title: string; unit: string; spec: GaugeSpec;
+  badge?: { text: string; title: string };     // P1 참고 배지 (회색 테두리) — provisional 지표
+  titleTip?: string;                            // 제목 툴팁 (예: 열회로 스케일 주의)
   value: number;                       // 대표값 (등급·숫자 표시)
   markers?: Marker[];                  // 여러 마커 (상별 전류). 없으면 value 하나
   note?: string;                       // 작은 보조 문구 (규격 이름 등)
@@ -19,7 +21,8 @@ export function Gauge({ index, title, unit, spec, value, markers, note, judged }
   return (
     <div className="g-row" title={spec.threshold}>
       <div className="g-head">
-        <span className="g-title">{title}</span>
+        <span className="g-title" title={titleTip}>{title}</span>
+        {badge && <span className="g-prov" title={badge.title}>{badge.text}</span>}
         <span className="g-val" style={{ color: col }}>{index.icons[lv]} {fmt(value)}{unit && <small> {unit}</small>}</span>
         <span className="g-lv" style={{ background: col }}>{index.labels_ko[lv]}</span>
         {judged && judged !== lv && <span className="g-judged" title="판정 엔진 등급 (히스테리시스·지속 시간 적용)">판정 {index.labels_ko[judged]}</span>}

@@ -6,7 +6,7 @@ import { fill } from "../live/types";
 import { Gauge } from "../status/Gauge";
 import { TrendChart, type TrendSel } from "../status/TrendChart";
 import {
-  causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent,
+  causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent, provisionalBadge,
   simElapsed, stepAt, worse, KINDS, PHASES,
   type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent, bearingLevel } from "../status/data";
 import { pickSource, appendSample, type StatusSource } from "../status/source";
@@ -273,6 +273,10 @@ function specFor(index: FleetIndex, motor: MotorInfo, sel: TrendSel) {
 // 신호별 게이지 9개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 kurtosis · 베어링 고주파 RMS 배율 (베어링 종합 = 둘 중 나쁜 쪽). 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.
 function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; motor: MotorInfo; s: MotorSeries; i: number; onPick: (t: TrendSel) => void; picked: TrendSel }) {
   const cur = gaugeCurrent(index);
+  const meta = index.thresholds.meta;                                                   // P1 참고 배지 (provisional 지표)
+  const stream = meta?.stream ?? "simulation";
+  const i2meta = meta?.i2i1;
+  const i2Tip = i2meta ? ` · 출처 ${i2meta.source} · 모드 ${i2meta.mode}` + (i2meta.reference_baseline?.value != null ? ` · 참고 기준선(${i2meta.reference_baseline.dataset ?? "reference"}) p95 ${i2meta.reference_baseline.value}` : "") : "";
   const rated = motor.spec.rated_line_current_a;                                       // 명판값을 넣으면 여기서 바로 바뀐다 (판정은 배치 재실행 후)
   const ratios = PHASES.map((p) => ({ key: index.phase_labels[p], value: s.current_rms_A[p][i] / rated, p }));
   const worstPhase = ratios.reduce((a, b) => (Math.abs(b.value - 1) > Math.abs(a.value - 1) ? b : a));
@@ -282,20 +286,21 @@ function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; mot
   return (
     <div className="st-gauges">
       {TEMP_GAUGES.map((n) => item(n, { kind: "temperature", component: n },
-        <Gauge index={index} title={`${index.node_labels[n] ?? n} 온도`} unit="°C" spec={gaugeTemp(index, n)} value={s.temperature_C[n][i]} />))}
+        <Gauge index={index} title={`${index.node_labels[n] ?? n} 온도`} unit="°C" spec={gaugeTemp(index, n)} value={s.temperature_C[n][i]} titleTip={meta?.thermal_scaling_note} />))}
       {item("cur", { kind: "current_ratio" },
-        <Gauge index={index} title={`전류 / 정격 (${motor.spec.rated_line_current_a} A)`} unit="×" spec={cur} value={worstPhase.value}
+        <Gauge index={index} title={`전류 / 정격 (${motor.spec.rated_line_current_a} A)`} unit="×" spec={cur} value={worstPhase.value} badge={provisionalBadge(meta?.current_ratio, stream)}
           markers={ratios.map((r) => ({ key: r.key, value: r.value }))} judged={s.levels.current_ratio[i]}
           note={ratios.map((r) => `${r.key} ${s.current_rms_A[r.p][i].toFixed(1)} A`).join(" · ") + (motor.spec.source === "nameplate" ? " · 명판 정격 기준 (판정은 배치 재실행 전)" : "")} />)}
       {item("i2i1", { kind: "i2i1" },
-        <Gauge index={index} title="I₂/I₁ 역상 전류비" unit="" spec={gaugeLoHi(index.thresholds.i2i1, 0.3, "")} value={s.i2i1[i]} judged={s.levels.i2i1[i]} />)}
+        <Gauge index={index} title="I₂/I₁ 역상 전류비" unit="" spec={gaugeLoHi(index.thresholds.i2i1, 0.3, "")} value={s.i2i1[i]} judged={s.levels.i2i1[i]}
+          badge={i2meta && provisionalBadge(i2meta, stream) ? { text: provisionalBadge(i2meta, stream)!.text, title: provisionalBadge(i2meta, stream)!.title + i2Tip } : undefined} />)}
       {item("vib", { kind: "vibration" },
         <Gauge index={index} title="진동 속도 RMS" unit="mm/s" spec={gaugeVib(motor.vibration)} value={s.vibration_mms[i]} judged={s.levels.vibration[i]} note={motor.vibration.standard.split(" (")[0] + (motor.vibration.plan_mms < motor.vibration.act_mms ? ` · ${motor.vibration.plan_mms} 부터 정비 계획` : "")} />)}
       {item("brg_k", { kind: "bearing_kurtosis" },
-        <Gauge index={index} title={`베어링 kurtosis · 종합 ${index.icons[bearingLevel(s, i)]} ${index.labels_ko[bearingLevel(s, i)]}`} unit="" spec={gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "")} value={s.bearing_kurtosis[i]} judged={s.levels.bearing_kurtosis[i]}
+        <Gauge index={index} title={`베어링 kurtosis · 종합 ${index.icons[bearingLevel(s, i)]} ${index.labels_ko[bearingLevel(s, i)]}`} unit="" spec={gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "")} value={s.bearing_kurtosis[i]} judged={s.levels.bearing_kurtosis[i]} badge={provisionalBadge(meta?.bearing, stream)}
           note={"주 지표 · 모터 공통 경계 · 시뮬레이션: 결함별 등가값 (thermal.yaml)" + (s.bearing_site_hint?.[i] ? ` · 결함 부위 추정 ${s.bearing_site_hint[i]}` : "")} />)}
       {item("brg_h", { kind: "bearing_hf_ratio" },
-        <Gauge index={index} title="베어링 고주파 RMS (정상 대비)" unit="배" spec={gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배")} value={s.bearing_hf_ratio[i]} judged={s.levels.bearing_hf_ratio[i]}
+        <Gauge index={index} title="베어링 고주파 RMS (정상 대비)" unit="배" spec={gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배")} value={s.bearing_hf_ratio[i]} judged={s.levels.bearing_hf_ratio[i]} badge={provisionalBadge(meta?.bearing, stream)}
           note={"보조 지표 · 기준선 " + (motor.bearing_hf_baseline?.rms_g != null ? `${motor.bearing_hf_baseline.rms_g} g (${motor.bearing_hf_baseline.source})` : "미설정") + " · 종합은 둘 중 나쁜 쪽"} />)}
     </div>
   );
@@ -373,14 +378,15 @@ function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Namepla
 }
 
 // 키별 출처 아이콘 (config/motors/<id>.yaml 의 {value, source, …} 래퍼): ✓ catalog·nameplate·measured / 🔴 assumed·estimated(현장 확인) / · representative
-const SRC_ICON: Record<string, string> = { catalog: "✓", nameplate: "✓", measured: "✓", assumed: "🔴", estimated: "🔴", representative: "·" };
-const SRC_LABEL: Record<string, string> = { catalog: "카탈로그", nameplate: "명판", measured: "실측", assumed: "가정 (현장 확인 필요)", estimated: "추정", representative: "대표값" };
+const SRC_ICON: Record<string, string> = { catalog: "✓", nameplate: "✓✓", measured: "✓✓", standard: "✓", reference_dataset: "·", assumed: "🔴", estimated: "🔴", calculated: "🔴", verify_on_site: "🔴", representative: "·" };
+const SRC_LABEL: Record<string, string> = { catalog: "카탈로그", nameplate: "명판", measured: "실측", standard: "규격", reference_dataset: "참고 데이터셋", assumed: "가정 (현장 확인 필요)", estimated: "추정 (실물 확인 시 교체)", calculated: "계산", verify_on_site: "현장 확인", representative: "대표값" };
 export function connLabel(c: string): string { return c === "delta" ? "Δ결선" : c === "star" ? "Y결선" : c; }
 function srcIcon(m: MotorInfo, key: string): React.ReactNode {
   const fs = m.spec_source?.[key];
   if (!fs) return null;
   const tip = `${SRC_LABEL[fs.source] ?? fs.source}${fs.doc ? ` · ${fs.doc}` : ""}${fs.note ? ` · ${fs.note}` : ""}${fs.verify_on_site ? " · verify_on_site" : ""}`;
-  return <span className={"st-src st-src-" + fs.source} title={tip}>{SRC_ICON[fs.source] ?? "?"}</span>;
+  const icon = fs.verify_on_site ? SRC_ICON.verify_on_site : (SRC_ICON[fs.source] ?? "?");
+  return <span className={"st-src st-src-" + fs.source} title={tip}>{icon}</span>;
 }
 function SourceIcons({ motor }: { motor: MotorInfo }) {
   const fs = motor.spec_source ?? {};
@@ -389,8 +395,10 @@ function SourceIcons({ motor }: { motor: MotorInfo }) {
   const groups: Record<string, string[]> = {};
   for (const k of keys) (groups[fs[k].source] ??= []).push(k);
   const name = (k: string) => NAMEPLATE_FIELDS.find((f) => f.key === k)?.label ?? (k === "connection" ? "결선" : k);
-  return <span className="dim st-src-list" title="키별 출처 — config/motors/<id>.yaml">
-    {Object.entries(groups).map(([src, ks]) => <span key={src} className={"st-src st-src-" + src}>{SRC_ICON[src] ?? "?"} {SRC_LABEL[src] ?? src}: {ks.map(name).join("·")}</span>)}
+  // 항목이 많아지면(카탈로그 25개) 그룹별 개수만 보이고, 전체 키 목록은 툴팁으로 (🔴 가정·현장 확인 항목만 이름을 그대로)
+  const NL = String.fromCharCode(10);
+  return <span className="dim st-src-list" title={"키별 출처 — config/motors/<id>.yaml" + NL + Object.entries(groups).map(([src, ks]) => `${SRC_ICON[src] ?? "?"} ${SRC_LABEL[src] ?? src}: ${ks.map(name).join(", ")}`).join(NL)}>
+    {Object.entries(groups).map(([src, ks]) => <span key={src} className={"st-src st-src-" + src}>{SRC_ICON[src] ?? "?"} {SRC_LABEL[src] ?? src} {(SRC_ICON[src] === "🔴") ? ks.map(name).join("·") : ks.length}</span>)}
   </span>;
 }
 

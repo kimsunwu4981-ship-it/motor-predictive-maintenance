@@ -26,6 +26,14 @@ export interface MotorSpec {
   frame: string; insulation_class: string; duty: string; bearing_de: string; bearing_nde: string; geometry_scale: number; source: string;
 }
 export interface FieldSource { source: string; doc?: string; note?: string; verify_on_site?: boolean }
+export interface MetricMeta { source?: string; status?: string }
+// 참고 배지 문구: provisional 지표 — 시뮬레이션(합성 신호)에서는 "임시 기준" 라벨로 종합에 포함, 실측 스트림에서는 판정 제외(advisory)
+export function provisionalBadge(m?: MetricMeta, stream = "simulation"): { text: string; title: string } | undefined {
+  if (!m || m.status !== "provisional") return undefined;
+  const live = stream === "live";
+  return { text: live ? "참고" : "참고 · 임시 기준",
+           title: `실측 기준선 미확보 (출처 ${m.source ?? "?"}, 상태 provisional) — 실측 모드에서는 판정에 반영되지 않음(advisory). ${live ? "지금은 실측 스트림: 참고 표시만" : "시뮬레이션 시나리오: 임시 기준으로 종합 판정에 포함"}` };
+}
 export interface MotorInfo {
   id: string; name: string; tags: Record<string, string>; spec: MotorSpec;
   spec_source?: Record<string, FieldSource>;   // 키별 출처 — YAML {value, source, …} 래퍼로 적힌 키만 (M1 2026-10-19 카탈로그)
@@ -49,6 +57,11 @@ export interface FleetIndex {
     i2i1: TempBand;
     bearing: { kurtosis: TempBand; hf_ratio: TempBand; combine: string; envelope_hint: boolean; envelope_hint_min_ratio?: number };
     hysteresis_fraction: number; persistence_s: Record<string, number>; vibration_split_kw: number;
+    meta?: {                                   // P1: 지표별 출처·상태 (참고 배지). 없으면 배지 없음
+      current_ratio?: MetricMeta; i2i1?: MetricMeta & { mode?: string; warn?: number; danger?: number; warn_multiple?: number; danger_multiple?: number; baseline?: unknown; reference_baseline?: { value?: number | null; dataset?: string } };
+      temperature?: MetricMeta; vibration?: MetricMeta; bearing?: MetricMeta;
+      policy?: Record<string, string>; stream?: string; thermal_scaling_note?: string;
+    };
   };
   scenarios: Record<Mode, FleetScenario>;
   demo_note: string;

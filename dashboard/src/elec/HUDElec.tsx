@@ -62,6 +62,9 @@ export function HUDElec({ data, theme, onTheme, present, onPresent, autoMode, on
           {data.source.method === "lut" ? <>근거 <b>등가회로 LUT</b> · {data.source.status} · FEM 미검증</> : <>근거 <b>해석식 역산</b> (legacy)</>}
         </span>
       )}
+      <span className="basis-badge prov" title="I₂/I₁·전류/정격 기준은 실측 기준선 미확보(provisional) — 시뮬레이션 시나리오에서는 임시 기준으로 종합 판정에 포함, 실측 스트림에서는 판정에 반영되지 않고 참고(advisory)로만 표시 (config/thresholds.yaml current.*, judgment.provisional_policy)">
+        {data.source ? "참고 · 임시 기준" : "참고"}
+      </span>
       <span className="honesty">
         <b>{th.honesty.label}</b>
         <span>{th.honesty.rating_basis}</span>

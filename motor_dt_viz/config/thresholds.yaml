@@ -9,8 +9,16 @@ labels_ko: { SAFE: "안전", WARN: "경고", DANGER: "위험" }
 icons:     { SAFE: "●",  WARN: "▲",  DANGER: "■" }      # 색각 이상 대비 병기
 colors:    { SAFE: "#26f259", WARN: "#ff731a", DANGER: "#ff140d" }   # colors.yaml 전기 normal/over_caution/over_danger 와 같은 톤
 
+# ── 출처·상태 체계 (P1, 2026-10-21) — 원칙: 시뮬레이션 값은 실모터 판정 기준을 정하지 않는다.
+#   source: nameplate | catalog | baseline | reference_dataset | simulation | standard    status: confirmed | provisional    mode: absolute | baseline_multiple
+#   provisional 지표는 judgment.provisional_policy 에 따라 시뮬레이션(합성 신호)에서는 "임시 기준" 라벨과 함께 종합 판정에 들어가고,
+#   실측 스트림(live)에서는 worst-of 에서 빠져 advisory(참고)로만 나온다. confirmed 전환은 yaml 수정만으로(코드 변경 없음).
+#   온도·진동·베어링은 source·status 만 붙이고 값은 그대로.
+
 # ── 온도 [°C] — 모터 공통 (thermal.yaml stages 와 같은 수치)
 temperature:
+  source: standard            # F종 절연(IEC 60034-1)·그리스 수명 관행. 22 kW 기준 열회로 스케일이라 M1 에서 낙관적일 수 있음(docs/thermal_scaling.md) — 값은 그대로
+  status: confirmed
   bearing: { safe_below: 70.0, danger_from: 95.0,  basis: "그리스 수명" }
   winding: { safe_below: 95.0, danger_from: 140.0, basis: "F종 절연 (허용 155 °C)" }
   rotor:   { safe_below: 90.0, danger_from: 130.0, basis: "농형 로터는 권선보다 고온이 정상" }
@@ -28,10 +36,47 @@ current_ratio:
   danger_over: 1.25           # r > 1.25 위험 과전류   (1.10 < r ≤ 1.25 경고)
   danger_under: 0.50          # r < 0.50 위험 저전류(결상 의심) (0.50 ≤ r < 0.85 경고)
 
-# ── I₂/I₁ (역상분 비율, 전압 불평형 보정 전 값). 4턴 ITSC(0.104)가 위험 경계에 걸리도록
+# ── I₂/I₁ (역상분 비율, 전압 불평형 보정 전 값) — 숫자의 정본은 아래 current.negative_sequence.warn/danger (엔진이 그쪽을 우선 읽고, 이 블록은 호환용 동일값)
 i2i1:
-  safe_below: 0.03
+  safe_below: 0.05            # 2026-10-21 P1: 0.03 → 0.05 (= current.negative_sequence.warn)
   danger_from: 0.10
+
+# ── 전류 계열 지표의 출처·상태·모드 (P1-1). 기존 키 이름(current_ratio, i2i1)은 유지하고 메타·기준선만 여기에.
+current:
+  rated_ratio:                  # r = I / I_n  (엔진 kind: current_ratio)
+    source: catalog             # M1.yaml 정격 전류 출처를 따라감(명판 확인 시 nameplate → confirmed)
+    status: provisional
+    i_rated_ref: motors.M1.rated_line_current_a
+  negative_sequence:            # I₂/I₁  (엔진 kind: i2i1)
+    source: reference_dataset
+    status: provisional
+    mode: absolute              # 실측 기준선 확보 후 baseline_multiple
+    warn: 0.05                  # ← 변경 승인(P1). 근거: AI Hub 2.2 kW 건전 8대 I₂/I₁ 0.026~0.088, M1 참고 기준선(L-SF-04) 아래 reference_baseline — 기존 0.03 은 건전 바닥(0.027) 바로 위
+    danger: 0.10                # 유지
+    baseline: null              # 실모터 실측 후에만 {value, measured_at, n_windows, p95, v2_v1_mean} (tools/baseline_capture.py → diff 출력, 자동 덮어쓰기 금지)
+    reference_baseline:         # AI Hub L-SF-04 정상 (참고 등급 — confirmed 조건 아님)
+      value: 0.1005             # P1-3 baseline_capture --apply-reference (AIHUB_LSF04_REFERENCE, p95 of 77 windows, 2026-10-21 11:42; 품질 부적합: 창 77 < 500)
+      source: reference_dataset
+      dataset: "AI Hub 기계시설물 고장 예지 센서 L-SF-04 정상"
+    warn_multiple: 2.0          # mode: baseline_multiple 일 때 warn = baseline.value × 2.0
+    danger_multiple: 4.0
+    voltage_unbalance_compensation: { enabled: false, k: 1.0 }   # enabled 이고 입력에 v2_v1 이 있을 때만 I₂/I₁ − k·V₂/V₁, 없으면 compensated: false
+  negative_sequence_rated:      # I₂/I_n — 표시 전용 (판정 없음)
+    source: simulation
+    status: provisional
+    warn: null
+    danger: null
+  phase_unbalance:              # 상 불평형 max|I_k − 평균|/평균 — 표시 전용 (엔진 kind 없음)
+    source: simulation
+    status: provisional
+    mode: absolute
+    baseline: null
+
+judgment:
+  provisional_policy:
+    simulation: include_with_label   # DT 시나리오(합성 신호): 종합 판정 포함 + "임시 기준" 라벨
+    live: advisory_only              # 실측 스트림: provisional 지표는 worst-of 제외, advisory 로 별도 출력
+  stream_default: simulation         # Judge(stream=...) 미지정 시. 라이브 브리지가 붙은 데모는 live
 
 # ── 진동 속도 RMS [mm/s] — 모터 출력에 따라 규격이 다르다 (규칙 4). 경계는 config/motors/<id>.yaml 의 vibration 블록에서 온다.
 #    안전 < watch, 경고 watch~act (20816-3 의 plan 2.8 은 경고 안의 "정비 계획" 세부 라벨), 위험 ≥ act
@@ -39,6 +84,7 @@ i2i1:
 #   AI Hub 「기계시설물 고장 예지 센서」 가이드라인 v2.4 는 같은 규격(KS B ISO 10816-3 2군)의 **유연 지지 B/C 4.5 mm/s** 를 정상 검수 상한으로 썼다
 #   (강성 2.8). 우리는 권상 모터가 구조물에 강성 체결된다고 보고 강성 지지 값을 쓴다 (docs/aihub_structure.md §11).
 vibration:
+  status: confirmed           # ISO 20816-3 규격값 (source 는 아래 motor_library = 모터 YAML vibration 블록; 규격 출처 standard)
   source: motor_library       # watch_mms / plan_mms / act_mms
   fallback: { watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5, standard: "ISO 20816-3 Group 2 (모터 미지정 시)" }
 
@@ -53,6 +99,8 @@ vibration:
 #     정상 kurtosis 95 % 분위: M1 4.8 / M2 2.9 / M3 5.0 / M4 3.2 / M5 3.3 (M1·M3 는 충격성 정상 파일 포함 → 이 경계로 M1 정상 29 %, M3 13 % 가 경고 이상)
 #   시뮬레이션(엔진 배치·상태 보드)은 config/thermal.yaml faults.<결함>.bearing_kurtosis / bearing_hf_ratio 등가값을 쓴다 (그 주석에 매핑 근거).
 bearing:
+  source: reference_dataset   # AI Hub 238 전체 진동(동일 모터 정상 대비)에서 정한 경계 — 이 모터 실측 아님
+  status: provisional         # 실모터 정상 기준선(bearing_hf_baseline 실측) 확보 전까지 참고
   kurtosis:  { safe_below: 3.5, danger_from: 4.0 }    # 주 지표, 모터 공통
   hf_ratio:  { safe_below: 1.5, danger_from: 2.5 }    # 보조 지표, 정상 기준선 대비 배 (기준선은 모터별)
   combine: worst                                      # 베어링 종합 = 둘 중 나쁜 쪽

@@ -3,15 +3,27 @@
 # 2026-10-19 결정 (A): 정격 전류·결선·효율·역률 5항목을 현대일렉트릭 SSEN HLP-2.2/4 카탈로그(P2P2TC276, 380 V) 기준으로 통일.
 #   검산: P/(√3·V·η·cosφ) = 2200/(√3·380·0.895·0.79) = 4.73 A (카탈로그 정격 전류와 일치). Y 결선 → 상전류 = 선전류.
 #   이전 대표값: 5.0 A / 2.9 A (Δ) / η 0.85 / pf 0.78 (출처 없음). 나머지 키·다른 모터는 그대로.
+# 2026-10-21 P1-2: 나머지 카탈로그 항목을 {value, source, doc, note} 래퍼로 추가 (값은 assets/motors/M1/inputs/datasheet_v4.yaml 카탈로그 직접값·MCSA 시트에서만). 기존 5항목 불변.
+#   로더 규칙상 최상위 source 는 nameplate|representative 뿐이라 그대로 두고, 키별 출처는 래퍼의 source(catalog ✓ / nameplate ✓✓ / assumed·estimated·verify_on_site 🔴)로 본다.
 # 모터를 추가하려면 이 파일을 복사해 값만 바꾼다. 코드에는 모터 숫자가 없다.
 id: M1
 name: "1톤 호이스트 권상 모터 (2.2 kW 4극)"
 source: representative
 tags: { hoist_ton: "1톤", hoist_speed: "7 m/min" }
-rated_power_kw: 2.2
-poles: 4
+rated_power_kw:
+  value: 2.2
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+poles:
+  value: 4
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
 sync_rpm: 1800
-rated_rpm: 1730
+rated_rpm:
+  value: 1760
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: 이전 대표값 1730 대체. 카탈로그 정격 회전수(AI Hub L-SF-04 헤더 1760 과 같음)
 voltage_v: 380
 frequency_hz: 60
 connection:
@@ -38,20 +50,54 @@ rated_phase_current_a:
   source: catalog
   doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
   note: "Y 결선 기준 상전류 = 선전류"
-frame: 100L
-insulation_class: F
-duty: "S3 40% ED"
-bearing_de: "6206"
-bearing_nde: "6205"
-# BPFO/BPFI = n/2·(1 ∓ d/D·cosα) × fr. 카탈로그 미확인 → 깊은홈 볼베어링 대표 기하(볼 수 9, d 9.525 mm, D 46.0 mm, α 0°)
+frame:
+  value: 100L
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+insulation_class:
+  value: F
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+temp_rise_class:
+  value: B
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+service_factor:
+  value: 1.15
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+duty:
+  value: S1
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: 카탈로그 연속 정격. 호이스트 S3 40 % ED 는 duty_scenario(시나리오 키)로 별도
+duty_scenario: "S3 40% ED"
+bearing_de:
+  value: 6206ZZC3
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: 이전 대표값 6206 (접미 없음)
+bearing_nde:
+  value: 6206ZZC3
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: 이전 대표값 6205 대체 — 카탈로그 DE/NDE 동일 6206ZZC3; AI Hub L-SF-04 6206/6206
+# BPFO/BPFI/BSF/FTF 배율 = 데이터시트 「MCSA·진동 주파수」 시트의 Hz ÷ 회전 주파수 29.333 Hz (6206: 9 / 9.525 / 46.0; SKF 규격 치수).
+#   loader 가 허용하는 source 는 catalog|nameplate|estimated|MFR 뿐이라 estimated 로 두고(규칙 불변), basis 에 'standard' 근거를 적는다. 실베어링 확인 시 교체.
 bearing_fault_multipliers:
   bpfo: 3.568
   bpfi: 5.432
+  bsf: 2.311
+  ftf: 0.396
   source: estimated
-bearing_fault_multipliers_nde:
-  bpfo: 3.584
-  bpfi: 5.416
+  basis: "standard — ISO 15 치수 + SKF 6206 (볼 9 / 9.525 / 46.0), datasheet_v4 MCSA 시트"
+bearing_fault_multipliers_nde:              # NDE 도 6206ZZC3 (카탈로그) → DE 와 같은 배율 (이전 6205 값 3.584/5.416 대체)
+  bpfo: 3.568
+  bpfi: 5.432
+  bsf: 2.311
+  ftf: 0.396
   source: estimated
+  basis: "standard — 6206, DE 와 동일"
 # 베어링 보조 지표 기준선 — 고주파 대역(1 kHz~나이퀴스트, 4 kHz 샘플) 가속도 RMS 의 정상값 (g). 판정은 현재값 ÷ 이 값 (config/thresholds.yaml bearing.hf_ratio).
 # 이 모터의 실측이 아니라 같은 용량대 AI Hub 공조 모터 정상 데이터에서 가져온 대표값 — 현장 정상 운전 실측으로 교체할 것.
 bearing_hf_baseline:
@@ -62,6 +108,56 @@ bearing_hf_baseline:
 geometry_scale: 0.556          # 프레임 축높이 비 100/180 (M5 180L = 1.0). 외형은 대표 형상 비례 스케일
 thermal:
   scale_rule: power_ratio        # 열회로 계수는 M5 보정값을 손실비·geometry_scale 로 스케일 (docs/thermal_scaling.md)
+# ── P1-2 추가 카탈로그 항목 (datasheet_v4.yaml 카탈로그 직접값)
+model:
+  value: HLP-2.2/4
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+catalog_no:
+  value: P2P2TC276 (380 V)
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+efficiency_partial:                        # 부분 부하 효율 (카탈로그 100/75/50 %)
+  value: {75: 0.894, 50: 0.880}
+  source: catalog
+  doc: "현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)"
+  note: "100 % 0.895 은 efficiency 항목"
+starting_current_pct:
+  value: 650.0
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: I_st/I_n 650 % (카탈로그)
+starting_torque_pct:
+  value: 210.0
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+max_torque_pct:
+  value: 250.0
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+rotor_gd2_kgm2:
+  value: 0.008
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: '카탈로그 열 이름 Rotor GD² — 데이터시트 §9 검산: 치수 계산 J 와 비교하면 사실상 J'
+weight_kg:
+  value: 41.0
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+noise_dba:
+  value: 60.0
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+vibration_limit_catalog_mm_s:
+  value: 2.8
+  source: catalog
+  doc: 현대 SSEN HLP-2.2/4 P2P2TC276 (380 V)
+  note: 제조사 허용 진동(신품) — 임계값 아님, 참고 표시
+reference_dataset:
+  value: "AI Hub L-SF-04 (1760 rpm·4.7 A·6206/6206)"
+  source: reference_dataset
+  doc: "AI Hub 기계시설물 고장 예지 센서 2.2 kW 정상 데이터 (docs/aihub_spec_check.md)"
+  note: "참고 등급 — I₂/I₁ 참고 기준선(thresholds.yaml current.negative_sequence.reference_baseline)의 출처. 결선·전압·제조사는 데이터에 없음"
 vibration:
   standard: "ISO 20816-3 Group 2 (강성 지지, 5종 통일)"
   watch_mms: 1.4

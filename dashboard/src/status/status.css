@@ -39,6 +39,7 @@
 .g-val small { font-size: .7em; font-weight: 600; }
 .g-lv { color: #0b0e12; font-weight: 800; font-size: .78em; padding: 1px 8px; border-radius: 6px; }
 .g-judged { font-size: .74em; color: var(--accent2); border: 1px dashed var(--accent2); border-radius: 6px; padding: 0 6px; }
+.g-prov { font-size: .7em; color: var(--fg3); border: 1px solid var(--fg3); border-radius: 6px; padding: 0 6px; margin-left: 4px; white-space: nowrap; cursor: help; }   /* P1 참고 배지 */
 .g-bar { position: relative; height: 14px; border-radius: 7px; overflow: visible; background: var(--panel2); }
 .g-bar .seg { position: absolute; top: 0; height: 100%; opacity: .55; }
 .g-bar .seg:first-child { border-radius: 7px 0 0 7px; } .g-bar .seg:last-of-type { border-radius: 0 7px 7px 0; }

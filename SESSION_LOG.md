@@ -809,3 +809,16 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - 온도 색: 열 모델이 전기 전용 모드에서는 dt=0 으로 돌지 않아 **기계·통합 모드에서만** 적용 — 문서화.
 - 플랜지: USD variant `mount` = B3(기본, EndShield_DE 플랜지 없음) / B35(EndShield_DE_B35, FF215). `--mount` 인자. 절단으로 형상이 사라진 부품(아이볼트)은 cutaway variant 에서 숨김 처리(USD 빌더).
 - FPS(11 장면, 스크린샷 포함 실행): 평균 46 · 최소 39 — 30 FPS 충족.
+
+## 17. P1 실측 기준선 체계 (파트 B, 2026-10-21)
+
+원칙(코드·설정에 박음): 시뮬레이션 값은 실모터 판정 기준을 정하지 않는다. 기존 judgment_basis·근거 배지·electrical.yaml v2·M1.yaml 카탈로그 5항목·출처 아이콘은 덮어쓰지 않고 합쳤다.
+
+- **P1-0 조사**: thresholds.yaml 전류 계열 = `current_ratio`(0.85/1.10/1.25/0.50)·`i2i1`(0.03/0.10), source/status/mode 없음. worst-of = `engine/thresholds.Judge._combine`, 스트림 플래그 없음(라이브 여부는 `demo_integrated` 의 `bridge`). AI Hub L-SF-04 전류 = 경량 샘플 `…\2020-02-125.기계시설물고장예지_sample\current\2.2kW\L-SF-04\정상` 77 파일(1 s·2 kHz, 메타 9줄 + 시간·ch1·ch2·ch3 = R·S·T, 전압·온도 채널 없음; 전체 zip 은 진동만). 배지 자리 = 상태 보드 게이지(`status/Gauge.tsx`)·전기 HUD(`elec/HUDElec.tsx` basis-badge)·모터 카드(`spec_source` 아이콘).
+- **P1-1** `config/thresholds.yaml`: `current.{rated_ratio, negative_sequence, negative_sequence_rated, phase_unbalance}` + `judgment.provisional_policy`(simulation include_with_label / live advisory_only) + 온도·진동·베어링 source/status. 값 변경은 **두 개뿐**(git diff: `i2i1.safe_below 0.03 → 0.05` = `negative_sequence.warn 0.05`, `reference_baseline.value null → 0.1005`). 베어링은 reference_dataset/provisional(실모터 기준선 전 참고).
+- **P1-2** `config/motors/M1.yaml`(기존 5항목 불변, 값은 datasheet_v4.yaml 카탈로그 직접값·MCSA 시트에서 스크립트로): model/catalog_no, rated_power_kw/poles/frame, rated_rpm 1730 → **1760**(카탈로그), efficiency_partial 75/50 % 0.894/0.880, 기동 전류·토크·최대 토크 650/210/250 %, GD² 0.008·중량 41·소음 60, 베어링 DE/NDE **6206ZZC3/6206ZZC3**(이전 6206/6205), 절연 F·온도상승 B·SF 1.15, duty **S1**(호이스트 S3 40 % ED 는 `duty_scenario`), BPFO/BPFI/BSF/FTF 3.568/5.432/2.311/0.396(= Hz ÷ 29.333, NDE 도 6206 으로 통일), 허용 진동 2.8(참고), reference_dataset. 로더 규칙 불변(배율 source 는 허용값 estimated 로 두고 basis 에 standard 근거; 래퍼 val() 확장만). 아이콘: catalog ✓ / nameplate·measured ✓✓ / assumed·estimated·calculated·verify_on_site 🔴.
+- **P1-3** `engine/thresholds.py`: `Judge(stream=)`·`set_stream`, `kind_meta`, `i2i1_bounds`(absolute | baseline_multiple = baseline × 배수), `compensate_i2i1`(enabled + v2_v1 있을 때만), `_combine` 은 live+advisory_only 때 provisional 을 `Verdict.advisory` 로 분리(규칙 불변). `tools/baseline_capture.py`(1 s 창 페이저·I₁·I₂·불평형·V₂/V₁, 중앙값·p95·CV, 품질 게이트, diff 출력, `--apply-reference` 는 참고 등급만). 테스트 `tests/test_thresholds_provisional.py` 5종 통과(전체 134 passed).
+- **참고 기준선 결과(주의)**: L-SF-04 정상 77 창 → I₂/I₁ 중앙값 0.0879 / **p95 0.1005**(= 위험 경계) / 최대 0.105, 불평형 0.066, I₁ 3.17 A(CV 0.7 %). 품질 게이트 **부적합(창 77 < 500)**. S상 RMS 가 10 % 커서 센서 채널 게인 차이인지 공급 불평형인지 구분 불가(전압 채널 없음) → 지시서의 "M1 참고 기준선 ≈0.027" 은 L-EF-04·R-EF-05 값이고 L-SF-04 는 아니다. 참고 등급이라 값은 기록했지만 판정 기준으로 쓰지 않는다(judgment_basis §5.4).
+- **P1-4**: AI Hub 에 온도 채널 없음 → `docs/thermal_scaling.md` 절 + 상태 보드 온도 게이지 툴팁("M1 정격 상승 ≈21 K vs B종 80 K — 낙관적일 수 있음, 실측 전 보정 불가"). 스케일·임계값 불변.
+- **P1-5**: 상태 보드 게이지 "참고 · 임시 기준" 회색 배지(전류/정격·I₂/I₁·베어링) + 툴팁(출처·모드·참고 기준선 p95), 전기 HUD 배지, 출처 아이콘 확장, index.json `thresholds.meta`. `npm run build` 통과. judgment_basis §5(출처·상태 표, 두 정책, 전후 표, 참고 기준선, 측정 절차, yaml 필드 경로 목록), README 기준선 2줄, glossary 4 용어.
+- 삽질: M1.yaml 에 `source: reference_dataset` 래퍼를 넣자 P4 때 만든 `FIELD_SOURCES` 화이트리스트에 막혀 데모가 기동 실패 → 목록 확장(표시용 라벨, 검증 규칙 아님).

@@ -63,3 +63,66 @@ legacy(해석식 역산) 와의 차이: 4턴 0.104 → 0.071 (−32 %), 12턴 0.
 - Z₂ 앵커: LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지) (2026-10-19 F7, 수치 불변).
 - 범위 밖(턴 > 16.7 %, R_f 밖, 부하 < 25 % 또는 > 115 %)은 끝값 클램프(`clamped` 플래그) — 외삽하지 않는다.
 - 검증 보고: `docs/electrical/lut_integration_report.md` (`tools/electrical/verify_lut_integration.py`).
+
+## 5. 실측 기준선 체계 (P1, 2026-10-21) — 원칙: 시뮬레이션 값은 실모터 판정 기준을 정하지 않는다
+
+기준값은 명판·카탈로그·실측 기준선에서만 오고, 실측 기준선이 들어오기 전까지 전류 지표는 실측 스트림에서 "참고"다. 구조는 `config/thresholds.yaml`(`source/status/mode`, `judgment.provisional_policy`)에, 규칙은 `engine/thresholds.py` 에만 있다(worst-of·히스테리시스·지속 규칙은 바꾸지 않았다). §1~§4(ITSC 출처·Z₂ 불확실성)는 그대로.
+
+### 5.1 지표별 출처·상태
+
+| 지표 (엔진 kind) | yaml 경로 | source | status | mode | 경계 | 비고 |
+|---|---|---|---|---|---|---|
+| 전류/정격 r (`current_ratio`) | `current.rated_ratio` | catalog (`motors.M1.rated_line_current_a` 4.73 A) | provisional | — | 0.85~1.10 안전 / 1.25·0.50 위험 (값 불변) | 명판 확인 → M1.yaml `source: nameplate` → confirmed |
+| I₂/I₁ (`i2i1`) | `current.negative_sequence` | reference_dataset | provisional | absolute | **경고 0.05**(0.03 → 0.05 변경) / 위험 0.10 유지 | 근거: AI Hub 2.2 kW 건전 8대 0.026~0.088 — 기존 0.03 은 건전 바닥(0.027) 바로 위. `baseline` null(실측 전) |
+| I₂/I_n (`negative_sequence_rated`) | `current.negative_sequence_rated` | simulation | provisional | — | 표시 전용 | 판정 없음 |
+| 상 불평형 (`phase_unbalance`) | `current.phase_unbalance` | simulation | provisional | absolute | 표시 전용 | 엔진 kind 없음 |
+| 온도 | `temperature` | standard (F종·그리스 수명) | confirmed | — | 값 불변 | 22 kW 기준 열회로 스케일이라 M1 에서 낙관적일 수 있음(§5.5) |
+| 진동 | `vibration` | motor_library (ISO 20816-3) | confirmed | — | 값 불변 | |
+| 베어링 kurtosis·고주파 배율 | `bearing` | reference_dataset (AI Hub 238) | provisional | — | 값 불변 | 실모터 정상 기준선(bearing_hf_baseline 실측) 전까지 참고 |
+
+### 5.2 두 정책 (`judgment.provisional_policy`)
+
+- `simulation: include_with_label` — DT 시나리오(합성 신호): provisional 지표도 종합 판정에 들어가고 `Verdict.provisional_in_status`·`SignalVerdict.status` 로 "임시 기준" 라벨.
+- `live: advisory_only` — 실측 스트림(라이브 브리지 연결, `Judge(stream="live")` / `demo_integrated --live` 가 자동 설정): provisional 지표는 worst-of 에서 빠지고 `Verdict.advisory` 에 따로 나온다(화면: 회색 "참고" 배지).
+- 테스트 `tests/test_thresholds_provisional.py` 5종: live 정책(provisional DANGER 여도 종합은 온도로만) / simulation 포함+라벨 / baseline_multiple 전환(yaml 만) / 전압 보정 on·off / M1 7 시나리오 전후 표.
+
+### 5.3 M1 7 시나리오 — 변경 전(0.03)/후(0.05)
+
+| 케이스 | I₂/I₁ | i2i1 전 | 후 | 종합 전 | 후 |
+|---|---|---|---|---|---|
+| healthy | 0.027 | SAFE | SAFE | SAFE | SAFE |
+| itsc_4turn | 0.0726 | WARN | WARN | WARN | WARN |
+| itsc_12turn | 0.2696 | DANGER | DANGER | DANGER | DANGER |
+| overload | 0.027 | SAFE | SAFE | DANGER(r) | DANGER(r) |
+| voltage_unbalance | 0.0595 | WARN | WARN | WARN | WARN |
+| single_phasing | 0.4792 | DANGER | DANGER | DANGER | DANGER |
+| no_load | 0.027 | SAFE | SAFE | DANGER(r) | DANGER(r) |
+
+4턴(0.0726)은 새 경계 0.05 바로 위라 WARN 유지 — 고유 비대칭 위상에 따라 0.022~0.076 이므로 여전히 SAFE~WARN 사이(§2). 정상(0.027)은 경계에서 0.023 여유(이전 0.003).
+
+### 5.4 참고 기준선 (AI Hub L-SF-04, `config/baselines/M1_AIHUB_LSF04_REFERENCE.yaml`)
+
+- `tools/baseline_capture.py --grade reference --aihub-dir …/current/2.2kW/L-SF-04/정상 --apply-reference`: 창 77(1 s 파일 77개), I₁ 중앙값 3.173 A(변동계수 0.0065), **I₂/I₁ 중앙값 0.0879 / p95 0.1005 / 최대 0.1052**, 상 불평형 중앙값 0.0655, 기본파 60.00 Hz, 상 순서 abc. 열 매핑: 메타 9줄 뒤 시간·ch1·ch2·ch3 = R·S·T(가이드라인 §1.3.2; 대칭분은 순서 무관). 2 kHz 샘플은 60 Hz 대칭 성분에 충분(나이퀴스트 1 kHz).
+- **품질 게이트 부적합**(창 77 < 500) — 참고 등급이라 `reference_baseline.value = 0.1005` 로 기록했지만 판정 기준이 아니다. 더 중요한 점: L-SF-04 의 I₂/I₁ 은 **S상 RMS 가 10 % 커서 0.088 수준(p95 0.10 = 위험 경계)** 이다 — 공급 불평형인지 전류센서 채널 게인 차이인지 데이터로 구분이 안 된다(전압 채널 없음, docs/aihub_spec_check.md). 따라서 L-SF-04 는 "건전 바닥 0.027" 의 근거가 아니고(그 근거는 L-EF-04·R-EF-05), M1 참고 기준선으로도 신뢰도가 낮다. 전압 보정은 `enabled: false` 유지.
+- 온도 채널 없음 → §5.5.
+
+### 5.5 열 모델 M1 (P1-4, 수치 변경 없음)
+
+M1 연속 정격 권선 46.4 °C(상승 ≈ 21 K)는 카탈로그 B종 한도 80 K·IE3 2.2 kW 통상 50~70 K 보다 낮다 — 22 kW 기준 열회로 스케일이 M1 에서 낙관적일 가능성. AI Hub 에 온도 채널이 없어 실측 비교 불가 → `docs/thermal_scaling.md` 절과 온도 게이지 툴팁에 같은 문장. 스케일 규칙·임계값은 바꾸지 않는다.
+
+### 5.6 기준선 측정 절차 (실모터)
+
+1. 정상 운전(정격 부하 근방, 기동 제외) 3상 전류(+가능하면 전압) ≥ 500 s 녹화 → CSV `t, ia, ib, ic[, va, vb, vc]` (2 kHz 이상).
+2. `py -3.12 -X utf8 tools/baseline_capture.py --motor M1 --tag SITE_<날짜> --csv <파일> --fs <Hz>` → `config/baselines/M1_SITE_<날짜>.yaml`, 품질 게이트(창 ≥ 500, I₁ CV ≤ 10 %) 통과 확인, diff 출력 확인.
+3. 사람이 yaml 에 옮긴다(자동 반영 없음) — 아래 5.7.
+
+### 5.7 명판·기준선이 들어오면 바꿀 yaml 필드 경로
+
+| 들어오는 것 | 바꿀 곳 | 결과 |
+|---|---|---|
+| 명판 정격 전류·결선 | `config/motors/M1.yaml` `rated_line_current_a/rated_phase_current_a/connection` 의 `source: nameplate`(값은 명판) | `current.rated_ratio` 는 M1.yaml 출처를 따라가므로 `config/thresholds.yaml current.rated_ratio.source: nameplate, status: confirmed` 로 올림 |
+| 실측 I₂/I₁ 기준선 | `config/thresholds.yaml current.negative_sequence.baseline: {value, measured_at, n_windows, p95, v2_v1_mean}`, `mode: baseline_multiple`, `status: confirmed`, `source: baseline` | 경고 = value×2.0, 위험 = value×4.0 (`warn_multiple/danger_multiple`) — 코드 변경 없음 |
+| 전압 채널 확보 | `current.negative_sequence.voltage_unbalance_compensation.enabled: true` (입력에 `v2_v1`) | I₂/I₁ − k·V₂/V₁ 로 판정, `compensated: true` |
+| 실측 상 불평형 기준선 | `current.phase_unbalance.baseline`, `mode: baseline_multiple` | 표시 전용(엔진 kind 추가는 별도) |
+| 실모터 베어링 정상 고주파 RMS | `config/motors/M1.yaml bearing_hf_baseline` (`source: measured`), `thresholds.yaml bearing.status: confirmed` | 베어링 보조 지표 참고 배지 해제 |
+| 실측 권선·프레임 온도 | 열회로 재보정은 별도 작업(스케일 규칙 변경 금지) — `docs/thermal_scaling.md` | |
