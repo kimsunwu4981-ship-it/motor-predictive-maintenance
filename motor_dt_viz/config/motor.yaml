@@ -1,53 +1,54 @@
-# motor.yaml — 대상 모터 정격 및 상수
-#
-# 기준 결정(사용자 승인, Phase 0): CLAUDE.md §1.1 의 2.2 kW 테스트 리그가 아니라
-# **이 저장소의 3D 모델·물리 시뮬레이션이 대상으로 하는 22 kW 크레인 권상 모터**를 기준으로 한다.
-#
-# source 태그: MFR 도면/명판 · CALC 계산 · EST 미확인(추정) · REP 대표값
+# motor.yaml — 기본(참조) 모터 = M1 현대 SSEN HLP-2.2/4 (파트 C P2′, 2026-10-21). 값의 정본은 config/motors/M1.yaml 이다 — 이 파일은 MotorSpec()·export 도구가 읽는 "같은 모양의 사본".
+#   생성: 파트 C S1 스크립트가 M1.yaml 에서 옮겼다(수기 입력 없음). 이전 22 kW 6극(옛 M5) 원본은 config/motors/_retired/motor_M5_reference.yaml.
+# source 태그: catalog 카탈로그(현대 SSEN HLP-2.2/4 P2P2TC276 380 V) · CALC 계산 · assumed 가정(현장 확인) · standard 규격
 
-library_default: M5   # 이 파일 = config/motors/M5.yaml 과 동일 (모터 라이브러리 기준). 다른 모터는 motor_library 로 고른다.
+library_default: M1   # = config/motors/M1.yaml (모터 라이브러리 기본). 다른 모터는 등록하지 않는다 (M2~M5 퇴역).
 
 meta:
-  target: "10t 천장크레인 권상 모터"
-  drawing: "정원크레인 JW-01-HTO-00 (09-JW06-01), 2008.10.01"
-  basis_note: "CLAUDE.md §1.1 의 2.2kW/4극 대신 도면 기반 22kW/6극 채택 (Phase 0 사용자 승인)"
+  target: "1톤 호이스트 권상 모터 — 현대 SSEN HLP-2.2/4 (100L)"
+  drawing: "현대 SSEN 카탈로그 HLP-2.2/4 P2P2TC276 (380 V) — 외형·내부는 assets/motors/M1 재구성"
+  basis_note: "카탈로그 사양 (명판 아님) · 결선은 현장 확인 · 2026-10-21 단일 모터 전환"
 
 rating:
-  power_kW:        { value: 22.0,   source: MFR,  note: "HTO SPEC / BOM#1 'HOISTING MOTOR 22KWx6P'" }
-  poles:           { value: 6,      source: MFR }
-  voltage_LL_V:    { value: 380.0,  source: MFR,  note: "GA SPEC AC 3φ 380V 60Hz" }
-  frequency_Hz:    { value: 60.0,   source: MFR }
-  connection:      { value: "delta", source: EST, note: "미확인(추정: 380V 22kW 급 관행). 명판 확인 시 교체" }
-  sync_rpm:        { value: 1200.0, source: CALC, note: "120*60/6" }
-  rated_rpm:       { value: 1170.0, source: MFR,  note: "HTO 'ACTUAL SPEED 1170×0.459π×1/2×1/104.5 = 8.0 M/MIN'" }
-  slip:            { value: 0.025,  source: CALC, note: "(1200-1170)/1200" }
-  torque_Nm:       { value: 179.6,  source: CALC, note: "9550*22/1170" }
-  mass_kg:         { value: 285.0,  source: MFR,  note: "HTO BOM#1 TOTAL" }
+  power_kW:        { value: 2.2, source: catalog }
+  poles:           { value: 4, source: catalog }
+  voltage_LL_V:    { value: 380.0, source: catalog }
+  frequency_Hz:    { value: 60.0, source: catalog }
+  connection:      { value: "star", source: assumed, note: "380 V 전용형 내부 결선은 카탈로그에 없음 — RMxprt·LUT 상전압 219.4 V 와 일치시킴, 현장 확인" }
+  sync_rpm:        { value: 1800.0, source: CALC, note: "120·f/p" }
+  rated_rpm:       { value: 1760.0, source: catalog }
+  slip:            { value: 0.0222, source: CALC, note: "(sync−rated)/sync" }
+  torque_Nm:       { value: 11.94, source: CALC, note: "9550·P/rpm (카탈로그 1.22 kg·m ≒ 11.96 N·m)" }
+  mass_kg:         { value: 41.0, source: catalog }
 
-# 정격 전류 — Δ결선 주의: 케이블(선전류) / 권선(상전류) 기준을 섞지 말 것 (CLAUDE.md §1.1)
+# 정격 전류 — Y 결선(가정): 선전류 = 상전류. 케이블/권선 기준을 섞지 말 것
 current:
-  efficiency:      { value: 0.90,  source: REP, note: "22kW 6P 급 대표값 (명판 미확인)" }
-  power_factor:    { value: 0.85,  source: REP, note: "동급 6극 대표값" }
-  rated_line_A:    { value: 43.7,  source: CALC, note: "P/(√3·V·η·cosφ) = 22000/(1.732·380·0.90·0.85)" }
-  rated_phase_A:   { value: 25.2,  source: CALC, note: "Δ결선: I_line/√3 = 43.7/1.732" }
-  source: "representative (nameplate unknown)"
+  efficiency:      { value: 0.895, source: catalog, note: "100 % 부하 (75/50 %: M1.yaml efficiency_partial)" }
+  power_factor:    { value: 0.79, source: catalog }
+  rated_line_A:    { value: 4.73, source: catalog, note: "검산 P/(√3·V·η·cosφ) = 4.73 A" }
+  rated_phase_A:   { value: 4.73, source: catalog, note: "Y 결선 기준 상전류 = 선전류" }
+  source: "catalog (nameplate unverified)"
 
-# 베어링 — CLAUDE.md §1.1 지정값 채택 (기준 회전수 1,180 rpm 은 22kW 6극 정격 1,170 rpm 과 정합)
+# 베어링 6206ZZC3 (카탈로그) — 배율은 datasheet_v4 MCSA 시트(SKF 6206 규격 치수) Hz ÷ fr
 bearing:
-  designation:     { value: "NTN 22220 EAW33", source: MFR, note: "CLAUDE.md §1.1 지정" }
-  bpfo_mult:       { value: 7.608,  source: MFR, note: "BPFO = 7.608 × fr" }
-  bpfi_mult:       { value: 10.392, source: MFR, note: "BPFI = 10.392 × fr" }
-  reference_rpm:   { value: 1180.0, source: MFR }
-  note: "이전 파이프라인(sim/config/motor.yaml)의 6313/6311 은 추정값이었으며 본 값으로 대체"
+  designation:     { value: "6206ZZC3", source: catalog }
+  bpfo_mult:       { value: 3.568, source: standard, note: "standard — ISO 15 치수 + SKF 6206 (볼 9 / 9.525 / 46.0), datasheet_v4 MCSA 시트" }
+  bpfi_mult:       { value: 5.432, source: standard }
+  reference_rpm:   { value: 1760.0, source: catalog }
+  nde:             { value: "6206ZZC3", source: catalog }
+  note: "실베어링 확인 시 교체"
 
-# 진동 판정 — ISO 20816-3 Group 2 (15~300 kW, 강성지지)
+# 진동 판정 — ISO 10816-1 Class I (< 15 kW, 강성 지지): 경고(B/C) 1.8 / 위험(C/D) 4.5 mm/s. 키 이름은 기존 코드 호환(vibration_iso20816_3)이나 값은 M1 규격.
 vibration_iso20816_3:
-  watch_mms: { value: 1.4, source: MFR }
-  plan_mms:  { value: 2.8, source: MFR }
-  act_mms:   { value: 4.5, source: MFR }
+  watch_mms: { value: 1.8, source: standard }
+  plan_mms:  { value: 4.5, source: standard }
+  act_mms:   { value: 4.5, source: standard }
+vibration:
+  standard: "ISO 10816-1 Class I (< 15 kW, 강성 지지)"
+  watch_mms: 1.8
+  plan_mms: 4.5
+  act_mms: 4.5
 
-# 회전부 관성 (Isaac 물리 모델에서 확정)
+# 회전부 관성 — 카탈로그 Rotor GD² 열(데이터시트 §9 검산: 치수 계산 J 0.0086 과 ±20 % 안 → 사실상 J)
 mechanics:
-  rotor_inertia_kgm2: { value: 0.468, source: CALC, note: "CAD 물성: 샤프트 0.018 + 로터 0.444 + 팬 0.006" }
-  rotor_mass_kg:      { value: 92.95, source: CALC }
-  static_mass_kg:     { value: 192.05, source: CALC, note: "명판 285 − 회전부 92.95" }
+  rotor_inertia_kgm2: { value: 0.008, source: catalog, note: "카탈로그 Rotor GD² 0.0080 kg·m² (J 로 해석)" }

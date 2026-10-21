@@ -20,7 +20,8 @@ for _p in (os.environ.get("VIGENT_PYMODS"), r"C:\Temp\pymods"):
         sys.path.append(_p)
 
 websockets = pytest.importorskip("websockets")
-from engine.config_loader import load  # noqa: E402
+from engine.config_loader import load
+from engine import motor_library as ml  # noqa: E402
 from live_bridge import LiveBridge, lan_ip  # noqa: E402
 
 
@@ -61,7 +62,7 @@ def test_state_heartbeat_and_command_roundtrip():
     async def run():
         async with websockets.connect(f"ws://127.0.0.1:{b.port}") as ws:
             hello = await recv_until(ws, lambda m: m["type"] == "hello")          # 접속 직후: 허용 명령 목록·모터 목록 (config/live.yaml)
-            assert set(hello["commands"]) == set(load("live")["commands"]) and hello["motors"] == ["M1", "M2", "M3", "M4", "M5"] and hello["restart_eta_s"] > 0
+            assert set(hello["commands"]) == set(load("live")["commands"]) and hello["motors"] == ml.list_ids() == ["M1"] and hello["restart_eta_s"] > 0
             b.publish({"t_s": 1.0, "mode": "mechanical", "perf": {"fps": 60.0}})
             st = await recv_until(ws, lambda m: m["type"] == "state")
             assert st["schema"] == load("live")["schema"] and st["t_s"] == 1.0 and "t_wall" in st
@@ -116,9 +117,9 @@ def test_rejections_follow_config():
             cmds = await wait_commands(b)
             assert cmds and cmds[0]["args"]["scene"] == 2
             # select_motor (R3 자동 재시작): 라이브러리 모터면 통과해 메인 루프로 (재기동은 메인 루프가), 소문자도 정규화
-            await ws.send(json.dumps({"type": "command", "id": "ok3", "name": "select_motor", "args": {"motor_id": "m3"}}))
+            await ws.send(json.dumps({"type": "command", "id": "ok3", "name": "select_motor", "args": {"motor_id": "m1"}}))
             cmds = await wait_commands(b)
-            assert cmds and cmds[0]["name"] == "select_motor" and cmds[0]["args"]["motor_id"] == "M3"
+            assert cmds and cmds[0]["name"] == "select_motor" and cmds[0]["args"]["motor_id"] == "M1"
     asyncio.run(run())
     assert b.stats["rejected"] == 6
     b.stop()

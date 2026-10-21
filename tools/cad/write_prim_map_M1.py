@@ -25,7 +25,9 @@ groups = {
     "bearing_nde": {"thermal": "bearing_nde", "prims": ["/Bearings/NDE"], "base_color": [0.62, 0.63, 0.65], "roughness": 0.3, "metallic": 0.9},
     "endshield_de": {"thermal": "endshield_de", "prims": ["/Housing/EndShield_DE", "/Housing/EndShield_DE_B35"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
     "endshield_nde": {"thermal": "endshield_nde", "prims": ["/Housing/EndShield_NDE"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
-    "frame": {"thermal": "frame", "prims": ["/Housing/Frame", "/Housing/Foot", "/Housing/TerminalBox", "/Housing/FanCover", "/Housing/Eyebolt"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
+    "frame": {"thermal": "frame", "prims": ["/Housing/Frame", "/Housing/Foot", "/Housing/TerminalBox", "/Housing/Eyebolt"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3},
+    "fan_cover": {"thermal": "frame", "prims": ["/Housing/FanCover"], "base_color": [0.36, 0.40, 0.44], "roughness": 0.7, "metallic": 0.3,
+                  "note": "냉각팬 고장 장면(파트 C S2): 팬 커버는 하우징(frame) 노드 온도로 색 — 열회로에 팬 노드가 없어 별도 온도는 없다"},
 }
 doc = {"meta": {"usd": "assets/motors/M1/M1.usd", "root_in_scene": "/World/M1", "rotor_xform": "/World/M1/Rotor xformOp:rotateX", "thermal_nodes": list(dict.fromkeys(g["thermal"] for g in groups.values())),
                 "note": "값은 상태 JSON(T, stage, p_loop_total_W, rpm)에서만 온다. 색 램프는 config/colors.yaml ThermalColormap 그대로. 코일 상 배치는 datasheet_v4.yaml winding_table"},

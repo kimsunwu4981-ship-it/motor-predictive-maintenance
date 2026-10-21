@@ -77,7 +77,7 @@ legacy(해석식 역산) 와의 차이: 4턴 0.104 → 0.071 (−32 %), 12턴 0.
 | I₂/I_n (`negative_sequence_rated`) | `current.negative_sequence_rated` | simulation | provisional | — | 표시 전용 | 판정 없음 |
 | 상 불평형 (`phase_unbalance`) | `current.phase_unbalance` | simulation | provisional | absolute | 표시 전용 | 엔진 kind 없음 |
 | 온도 | `temperature` | standard (F종·그리스 수명) | confirmed | — | 값 불변 | 22 kW 기준 열회로 스케일이라 M1 에서 낙관적일 수 있음(§5.5) |
-| 진동 | `vibration` | motor_library (ISO 20816-3) | confirmed | — | 값 불변 | |
+| 진동 | `vibration` | motor_library (M1: ISO 10816-1 Class I 1.8/4.5, 2026-10-21) | confirmed | — | 값 불변 | `thresholds.yaml` 의 20816-3 Group 2 값은 모터 미지정 fallback |
 | 베어링 kurtosis·고주파 배율 | `bearing` | reference_dataset (AI Hub 238) | provisional | — | 값 불변 | 실모터 정상 기준선(bearing_hf_baseline 실측) 전까지 참고 |
 
 ### 5.2 두 정책 (`judgment.provisional_policy`)
@@ -126,3 +126,18 @@ M1 연속 정격 권선 46.4 °C(상승 ≈ 21 K)는 카탈로그 B종 한도 80
 | 실측 상 불평형 기준선 | `current.phase_unbalance.baseline`, `mode: baseline_multiple` | 표시 전용(엔진 kind 추가는 별도) |
 | 실모터 베어링 정상 고주파 RMS | `config/motors/M1.yaml bearing_hf_baseline` (`source: measured`), `thresholds.yaml bearing.status: confirmed` | 베어링 보조 지표 참고 배지 해제 |
 | 실측 권선·프레임 온도 | 열회로 재보정은 별도 작업(스케일 규칙 변경 금지) — `docs/thermal_scaling.md` | |
+
+## 6. 단일 모터 M1 전환 (P2′, 2026-10-21) — 판정 규칙·임계값·LUT 불변
+
+사용자 결정: 디지털트윈은 현대 HLP-2.2/4(M1) 한 대로 간다. 이 장에서 바뀐 것은 **어느 모터를 기본으로 쓰는가**뿐이다.
+
+| 항목 | 전 | 후 | 판정에 미치는 영향 |
+|---|---|---|---|
+| 등록 모터 | M1~M5 (M2~M5 representative) | M1 (catalog) — M2~M5 는 `config/motors/_retired/` | 없음 (판정은 모터 YAML 의 정격·진동 규격만 참조) |
+| `config/motor.yaml` 기본값 | 22 kW 6극 Δ (43.7/25.2 A) | M1 2.2 kW 4극 Y (4.73/4.73 A) | 모터 미지정 경로(`CurrentModel()`·`MotorSpec()`)의 정격이 M1 — 비율 판정이라 경계값은 그대로 |
+| 진동 규격 | 5종 통일 ISO 20816-3 Group 2 (1.4/2.8/4.5) | M1 ISO 10816-1 Class I (경고 1.8 / 위험 4.5; < 15 kW 규칙) | 진동 1.4~1.8 mm/s 구간이 SAFE 로 바뀜 (`tests/test_thresholds.py`). `thresholds.yaml` 의 fallback 값은 불변 |
+| 열회로 기준 | M5.yaml | `thermal.yaml reference` (22 kW, η 0.90, 손실 2,444 W, scale 1.0) | 없음 (M1 스케일 결과 동일: 연속 정격 권선 46.4 °C) |
+| I₂/I₁ 경계 | 0.05 / 0.10 (P1) | 불변 | 없음 |
+
+22 kW 전용 수치(43.7 A, 1,180 rpm, NTN 22220, Group 2)는 해설 PDF·가이드라인 등 문서에 남아 있다 — 바꿀 문장 목록은 `docs/m1_migration_notes.md`(본문은 수정하지 않음).
+

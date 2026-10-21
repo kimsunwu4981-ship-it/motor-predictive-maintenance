@@ -64,6 +64,7 @@ export interface FleetIndex {
     };
   };
   scenarios: Record<Mode, FleetScenario>;
+  scene_map?: { id: string; label: string; mode: Mode; t_s: number; expect?: string }[];   // 단일 모터(M1) 첫 화면 빠른 이동 칩 (config/status_demo.yaml)
   demo_note: string;
   motors: MotorInfo[];
 }

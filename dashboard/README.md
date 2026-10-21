@@ -6,7 +6,7 @@ Isaac Sim 녹화 영상과 시뮬레이션 로그를 **동기 재생**하며, �
 
 - 완전 오프라인 (외부 폰트·CDN 없음, ECharts 는 번들에 포함)
 - 모든 숫자는 `motor_dt_viz/config/*.yaml` 과 `logs/<mode>/*.csv` 에서 export 한 JSON 만 읽는다
-- 화면에는 항상 `시뮬레이션 기반 추정값` 과 정격 기준(22 kW 6극, 도면 JW-01-HTO-00)이 표시된다
+- 화면에는 항상 `시뮬레이션 기반 추정값` 과 정격 기준(M1 현대 HLP-2.2/4, 2.2 kW 4극 · 카탈로그 사양 — 2026-10-21 단일 모터 전환; 22 kW 6극 도면 JW-01-HTO-00 은 이전 기준)이 표시된다
 
 ## 실행 (발표장, 더블클릭)
 
@@ -45,18 +45,18 @@ Node.js 만 있으면 되고 인터넷은 필요 없다. 로컬 서버(`serve.cj
 `electrical.yaml` 의 `phase_labels`(R·S·T)를 따른다. 이전 탭형 전기 대시보드(기준표·결함 도감·용어 풀이)는 `#/electrical/classic`.
 전기 리드 타임은 0 s 로 정직하게 표시한다(해석식 등가 표현의 한계) — 균형 지표의 가치는 장면 5로 보여준다.
 
-### 모터 상태 보드 (`#/status`) — 보편 권상 모터 5종
+### 모터 상태 보드 (`#/status`) — M1 단일 (2026-10-21, 5종 레이아웃 코드는 유지)
 
-`run_dashboard_status.bat` 더블클릭. 첫 화면에 M1~M5 카드(안전/경고/위험 + 원인 한 줄)가 뜨고, 카드(또는 1~5 키)로 고르면
-사양·게이지 8개(온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 지표)·원인과 조치·재생 바·추세가 그 모터로 바뀐다. 모터별 진동 규격(M1~M3 1.8/4.5, M4·M5 1.4/4.5)과
-정격 전류가 게이지 구간에 자동 반영된다. 키: Space 재생 · ←→ 장면 · M 기계/전기 시나리오 · F 발표 · Esc.
-"해설 대시보드에서 이 장면 보기" 는 기계·전기 해설 화면(M5 애니메이션 기준)으로 같은 시각에 연다.
+`run_dashboard_status.bat` 더블클릭. 첫 화면에 M1 카드 1장(안전/경고/위험 + 원인 한 줄)과 상세·시나리오 재생 바(`scene_map` 칩: 정상 → 4턴 경계(경고) → 12턴 위험 → DE 베어링 경고 → 과부하 위험)·원인과 조치가 뜬다.
+게이지 8개(온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 지표)의 구간은 M1 규격(정격 4.73 A, ISO 10816-1 Class I 1.8/4.5)에서 자동으로 온다. 모터가 여러 대로 늘면 카드가 자동 배치된다(키 1~5).
+키: Space 재생 · ←→ 장면 · M 기계/전기 시나리오 · F 발표 · Esc. 정직성 라벨 4줄은 `tools/export_status_data.py HONESTY_LINES`.
+"해설 대시보드에서 이 장면 보기" 는 기계·전기 해설 화면(22 kW 애니메이션 기준 — 이력)으로 같은 시각에 연다.
 
 데이터 갱신 (모터 YAML·임계값·시나리오가 바뀌었을 때):
 
 ```
 cd motor_dt_viz
-python tools/run_fleet.py                 # 5종 × 기계·전기 엔진 배치 → logs/fleet (판정 포함, 7 s)
+python tools/run_fleet.py                 # 등록 모터(M1) × 기계·전기 엔진 배치 → logs/fleet (판정 포함)
 python tools/fleet_summary.py             # docs/fleet_summary.md
 python ../dashboard/tools/export_status_data.py   # public/data/fleet/*.json
 cd ../dashboard && npm run build

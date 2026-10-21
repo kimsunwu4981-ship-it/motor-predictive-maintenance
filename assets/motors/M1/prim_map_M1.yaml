@@ -206,7 +206,6 @@ groups:
     - /Housing/Frame
     - /Housing/Foot
     - /Housing/TerminalBox
-    - /Housing/FanCover
     - /Housing/Eyebolt
     base_color:
     - 0.36
@@ -214,3 +213,14 @@ groups:
     - 0.44
     roughness: 0.7
     metallic: 0.3
+  fan_cover:
+    thermal: frame
+    prims:
+    - /Housing/FanCover
+    base_color:
+    - 0.36
+    - 0.4
+    - 0.44
+    roughness: 0.7
+    metallic: 0.3
+    note: '냉각팬 고장 장면(파트 C S2): 팬 커버는 하우징(frame) 노드 온도로 색 — 열회로에 팬 노드가 없어 별도 온도는 없다'

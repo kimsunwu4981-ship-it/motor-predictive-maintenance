@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""fleet_summary.py — logs/fleet 의 5종 결과를 비교표(docs/fleet_summary.md)로 만든다 (TASK_다중모터 §6).
+"""fleet_summary.py — logs/fleet 의 배치 결과를 표로 만든다. 단일 모터(M1, 파트 C 2026-10-21)면 docs/m1_summary.md, 여러 대면 docs/fleet_summary.md(이력).
 
   python tools/fleet_summary.py
 
@@ -36,12 +36,17 @@ def fmt_t(t, scale):
 
 def main():
     ids = ml.list_ids()
-    out = ["# 5종 모터 배치 시뮬레이션 비교표 (엔진 기반, `tools/run_fleet.py`)", "",
-           "로그: `logs/fleet/<id>/<mode>/demo_fleet.csv`(데모와 같은 컬럼), `status_fleet.csv`(판정 엔진 결과). 시나리오·결함 파라미터는 공통,",
-           "결과 온도·전류는 모터별 config(`config/motors/<id>.yaml` + M5 기준 열회로 스케일)로 달라진다. 시각은 **재생 시간(s)** 이고 괄호는",
-           "그 장면의 배속을 곱한 **시뮬레이션 시간(분)** 이다. 판정은 히스테리시스 5 %·지속 3 s 가 적용된 값이다.", ""]
+    single = ids == ["M1"]
+    ref = load("thermal").get("reference") or {}
+    ref_name = f"{ref.get('power_kW', 22):g} kW 기준 열회로(이전 기준, `config/thermal.yaml reference`)" if single else "M5 기준 열회로"
+    out = (["# M1(현대 HLP-2.2/4) 배치 시뮬레이션 요약 (엔진 기반, `tools/run_fleet.py`)", "",
+            "단일 모터 전환(2026-10-21): 등록 모터는 M1 하나다(M2~M5 는 `config/motors/_retired/`, 로더가 읽지 않음). 열회로 계수는 22 kW 보정값을 손실비·프레임 비례로 스케일한 것이라 M1 에서 낙관적일 수 있다(`docs/thermal_scaling.md`).", ""]
+           if single else ["# 5종 모터 배치 시뮬레이션 비교표 (엔진 기반, `tools/run_fleet.py`)", ""])
+    out += ["로그: `logs/fleet/<id>/<mode>/demo_fleet.csv`(데모와 같은 컬럼), `status_fleet.csv`(판정 엔진 결과). 시나리오·결함 파라미터는 공통,",
+            f"결과 온도·전류는 모터 config(`config/motors/<id>.yaml` + {ref_name} 스케일)로 정해진다. 시각은 **재생 시간(s)** 이고 괄호는",
+            "그 장면의 배속을 곱한 **시뮬레이션 시간(분)** 이다. 판정은 히스테리시스 5 %·지속 3 s 가 적용된 값이다.", ""]
     reg_p = os.path.join(FLEET, "regression_M5.json")
-    if os.path.exists(reg_p):
+    if os.path.exists(reg_p) and not single:
         reg = json.load(open(reg_p, encoding="utf-8"))
         out += ["## M5 회귀 (엔진 로그 ↔ 기존 Isaac 로그, 장면 종료 시점)", "",
                 "| 모드 | 최대 차이 | 허용 | 결과 | 대조 로그 |", "|---|---|---|---|---|"]
@@ -135,8 +140,11 @@ def main():
             e = rows[-1]
             cells.append(f"{e['status']} ({cause(e)})")
         out.append(f"| {s['label']} | " + " | ".join(cells) + " |")
-    out += ["", "전기 결과가 5종에서 같은 등급으로 나오는 것은 정상이다: 전류 모델은 정격 대비 비율(케이스 배율)로 정의되고 판정도 비율 기준이라 모터가 바뀌면 암페어만 바뀐다.",
-            "I₂/I₁ 목표값(0.006/0.104/0.269)은 M5 기준 해석식 등가값을 전 모터에 적용한 것이다 (§4.3)."]
+    if single:
+        out += ["", "M1 전기 장면은 등가회로 LUT(`config/electrical.yaml method: lut`, 고유 비대칭 0.027 포함)로 계산한다 — 4턴 I₂/I₁ ≈ 0.073, 12턴 ≈ 0.270 (장면 끝 status_fleet 값은 위 표). 판정은 정격 4.73 A 대비 비율 기준이다."]
+    else:
+        out += ["", "전기 결과가 5종에서 같은 등급으로 나오는 것은 정상이다: 전류 모델은 정격 대비 비율(케이스 배율)로 정의되고 판정도 비율 기준이라 모터가 바뀌면 암페어만 바뀐다.",
+                "I₂/I₁ 목표값(0.006/0.104/0.269)은 M5 기준 해석식 등가값을 전 모터에 적용한 것이다 (§4.3)."]
     out += ["", "## 물리 타당성 자동 검사", ""]
     out += [f"- ⚠ {f}" for f in flags] or ["- 이상 없음 (작은 모터일수록 빨리 식고, 결함 도달은 느리다)"]
     # M1 위험 미도달 등 눈에 띄는 점
@@ -146,9 +154,12 @@ def main():
         if not any(r["temperature"] == "DANGER" for r in rows):
             notes.append(f"{mid}: 기계 시나리오 전체에서 **온도**만으로는 '위험'에 닿지 않는다 — 위험 판정은 진동(시나리오 공통 상수 4.8 mm/s)이 만든다 "
                          f"(결함 손실이 출력에 비례해 작음, docs/thermal_scaling.md). 작은 모터의 결함 배율을 따로 둘지는 사용자 결정 사항")
-    notes.append("진동값(결함별 상수 mm/s)은 5종 공통이다 — 모터별로 다른 것은 규격(경고 1.8 vs 1.4)뿐. 실측 연결 전까지는 진동 기반 판정이 모터 크기에 거의 무관하다.")
+    if single:
+        notes.append("진동값(결함별 상수 mm/s)은 시나리오 상수다 — M1 규격은 ISO 10816-1 Class I(경고 1.8 / 위험 4.5 mm/s). 실측 연결 전까지는 진동 기반 판정이 모터 크기와 무관하다.")
+    else:
+        notes.append("진동값(결함별 상수 mm/s)은 5종 공통이다 — 모터별로 다른 것은 규격(경고 1.8 vs 1.4)뿐. 실측 연결 전까지는 진동 기반 판정이 모터 크기에 거의 무관하다.")
     out += [f"- {n}" for n in notes]
-    p = os.path.join(VIZ, "docs", "fleet_summary.md")
+    p = os.path.join(VIZ, "docs", "m1_summary.md" if ml.list_ids() == ["M1"] else "fleet_summary.md")   # 단일 모터(파트 C)면 m1_summary.md
     with open(p, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("\n".join(out) + "\n")
     print("→", p)

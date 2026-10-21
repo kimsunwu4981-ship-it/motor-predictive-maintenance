@@ -1,6 +1,10 @@
-# 열회로 스케일 규칙 — M5(22 kW) 보정값에서 5종 모터로 (TASK_다중모터 §4.2)
+# 열회로 스케일 규칙 — 22 kW 기준 보정값에서 M1 으로 (원래 TASK_다중모터 §4.2, 5종 표는 이력)
 
-`config/thermal.yaml` 의 노드 질량·열저항·정격 손실은 현 프로젝트 모터 M5(22 kW 6극, 180L)에 맞춰 역산한 값이다.
+> **2026-10-21 단일 모터 전환(P2′)**: 등록 모터는 M1(현대 HLP-2.2/4) 하나다. 스케일 기준이던 M5 YAML 은 `config/motors/_retired/` 로 가고, 기준값(22 kW, η 0.90, 손실 2,444 W, geometry_scale 1.0)은
+> `config/thermal.yaml reference` 절에 있다(`engine/motor_library.thermal_cfg` 가 M5 미등록이면 이 절을 쓴다). 튜닝 계수·규칙·임계값은 바꾸지 않았다. 아래 M2~M5 행은 **이전 기준(이력)** 이고 M1 행이 현재 값이다.
+> 테스트: `tests/test_motor_library.py::test_thermal_reference_block_matches_retired_m5`·`::test_m1_thermal_cfg_scaled_from_reference`.
+
+`config/thermal.yaml` 의 노드 질량·열저항·정격 손실은 이전 기준 모터(22 kW 6극, 180L — 옛 M5)에 맞춰 역산한 값이다.
 다른 모터는 새로 튜닝하지 않고 **출력비와 프레임 치수비**로 스케일한다. 규칙은 `engine/motor_library.thermal_cfg()` 한 곳에 있다.
 
 | 양 | 규칙 | 근거 |
@@ -11,12 +15,12 @@
 | 단계 임계값, 결함 배율(손실 5배·방열 3.2배·부하 135 %), 듀티 사이클 | 공통 | 모터 고유값이 아님 |
 
 `geometry_scale` 은 IEC 프레임 **축높이 비**(100L 0.556 / 132 0.733 / 160L 0.889 / 180L 1.0). M5 는 scale 1.0·손실비 1.0 이라 원본과
-완전히 같다 (`tests/test_motor_library.py::test_m5_thermal_cfg_identical_and_steady_state_regression`).
+완전히 같다 (이력: 옛 `test_m5_thermal_cfg_identical_and_steady_state_regression`; 지금은 `thermal.yaml reference` 절과 `_retired/motor_M5_reference.yaml` 을 대조한다).
 
 손실비 분모는 M5 의 η=0.90 기준 2,444 W 다. (참고: thermal.yaml 노드 정격 손실의 합은 2,135 W 로 주석의 2,440 W 와 다르다 — 베어링 마찰손을
 부하 의존으로 둔 결과. 비율만 쓰므로 스케일 결과에는 영향 없다.)
 
-## 5종 정상 운전 수렴 온도 (엔진 계산, 2026-10-07)
+## 정상 운전 수렴 온도 (엔진 계산, 2026-10-07 — M1 행이 현재, M2~M5 행은 이력)
 
 > M1 행은 2026-10-19 결정 (A)로 갱신: η 0.85 → 0.895(카탈로그) 라 손실비 P·(1−η)/η 가 388 → 258 W(0.16 → 0.11), 권선 수렴 57.1 → 46.4 °C. 다른 모터 불변.
 

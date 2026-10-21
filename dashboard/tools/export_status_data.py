@@ -48,7 +48,8 @@ SIGNALS = {
     "bearing_hf_ratio": {"label": "베어링 고주파 RMS (정상 대비)", "unit": "배"},
 }
 BEARING_COMBINED = {"label": "베어링 종합 (둘 중 나쁜 쪽)", "unit": ""}
-HONESTY_LINES = ["대표 사양 (명판 아님)", "외형은 프레임 비례 스케일", "열회로 계수는 M5 기준 스케일", "ITSC는 해석식 등가 표현"]
+HONESTY_LINES = ["카탈로그 사양(출처 아이콘 참조, 결선은 현장 확인)", "외형·내부는 카탈로그·데이터 시트 재구성(Maxwell 체적 ±2 % 검증)",
+                 "열회로 계수는 22 kW 기준 스케일 — M1에서 낙관적일 수 있음", "ITSC 곡선은 등가회로 LUT + 2D 와전류 검증, 실측 기준선 전 참고"]
 SPEC_KEYS = ("rated_power_kw", "poles", "sync_rpm", "rated_rpm", "voltage_v", "frequency_hz", "connection", "efficiency", "power_factor",
              "rated_line_current_a", "rated_phase_current_a", "frame", "insulation_class", "duty", "bearing_de", "bearing_nde", "geometry_scale", "source")
 
@@ -175,8 +176,9 @@ def main():
     index = {
         "generated": time.strftime("%Y-%m-%d %H:%M:%S"),
         "source": "config/motors/*.yaml · config/thresholds.yaml · config/status_demo.yaml · logs/fleet (engine batch)",
-        "honesty": {"label": "대표 사양 기반 시뮬레이션 추정값 (Simulation-based)", "lines": HONESTY_LINES,
-                    "itsc_note": "I₂/I₁ 목표값은 M5 기준 해석식 등가값을 전 모터에 적용 (TASK §4.3)"},
+        "honesty": {"label": "카탈로그 사양 기반 시뮬레이션 추정값 (Simulation-based)", "lines": HONESTY_LINES,
+                    "itsc_note": "I₂/I₁ 은 M1 등가회로 LUT(RMxprt v2m2+MCCM, 2D 와전류 정합) + 고유 비대칭 0.027 — 실측 기준선 전 참고"},
+        "scene_map": demo_cfg.get("scene_map", []),
         "levels": list(thr["levels"]), "labels_ko": thr["labels_ko"], "icons": thr["icons"], "colors": thr["colors"],
         "signals": SIGNALS, "bearing_combined": BEARING_COMBINED, "node_labels": node_labels,
         "phase_labels": th["electrical"]["electrical"].get("phase_labels", {"A": "A", "B": "B", "C": "C"}),

@@ -138,15 +138,15 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           <span className="mode">디지털 트윈 · 모터 상태 보드</span>
           <span className="st-legend">{(["SAFE", "WARN", "DANGER"] as Level[]).map((l) => <span key={l}><i style={{ background: index.colors[l] }} />{index.icons[l]} {index.labels_ko[l]}</span>)}</span>
           <span className="grow" />
-          {!present && <a className="btn" href="#/mechanical" title="기계적 결함 실시간 해설 대시보드 (M5 애니메이션)">기계 해설 ↗</a>}
-          {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (M5 애니메이션)">전기 해설 ↗</a>}
+          {!present && <a className="btn" href="#/mechanical" title="기계적 결함 실시간 해설 대시보드 (해설 영상·값은 이전 22 kW 녹화 — 이력)">기계 해설 ↗</a>}
+          {!present && <a className="btn" href="#/electrical" title="전기적 결함 실시간 해설 대시보드 (해설 영상·값은 이전 22 kW 녹화 — 이력)">전기 해설 ↗</a>}
           {!present && <button className="b-theme" onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))} title="테마">{theme === "dark" ? "☀" : "☾"}</button>}
           <LiveToggle live={live} />
           {live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 결함 주입·부하·배속·모터 전환 (라이브)">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}
           <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
           <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
             <b>{index.honesty.label}{liveSeries ? " · LIVE (Isaac Sim)" : source.kind === "live" ? " · 실측 스트림" : ""}</b>
-            <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 대표 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
+            <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 카탈로그 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
           </span>
           <LiveBanner live={live} index={index} />
         </div>
@@ -174,7 +174,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
         <div className="st-main">
           <div className="panel st-detail">
             <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name}</span><span className="grow" />
-              <span className={"dim" + (motor.spec.source === "nameplate" ? " st-np-on" : "")}>{motor.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[sel]?.entered_at ?? ""})` : "대표 사양 (명판 아님)"}</span>
+              <span className={"dim" + (motor.spec.source === "nameplate" ? " st-np-on" : "")}>{motor.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[sel]?.entered_at ?? ""})` : "카탈로그 사양 (명판 아님)"}</span>
               <SourceIcons motor={motor} />
               {!present && <button className="b-np" onClick={() => setNpOpen(true)} title="이 모터의 명판값을 입력하면 출처가 nameplate 로 바뀐다">명판값 입력</button>}</div>
             <div className="panel-b">
@@ -213,7 +213,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
               ) : <div className="muted">이 장면의 cause_chain 없음 (narration.yaml)</div>}
               <div className="st-nav">
                 <a className="btn primary" href={`#/${mode}?t=${pb.t.toFixed(1)}`}>{mode === "mechanical" ? "기계" : "전기"} 해설 대시보드에서 이 장면 보기 ↗</a>
-                <span className="dim">해설 영상·설명은 M5(22 kW, 현 애니메이션 기준) 로 만든 것이다{sel !== "M5" ? ` — ${sel} 의 수치는 이 보드에서 확인` : ""}</span>
+                <span className="dim">해설 영상·설명은 이전 기준(22 kW 녹화, 이력)으로 만든 것이다 — M1 의 수치는 이 보드에서 확인 (docs/m1_migration_notes.md)</span>
               </div>
             </div>
           </div>
@@ -230,6 +230,13 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
               {sc.steps.map((s) => <span key={s.id + s.t_start} className={"st-ch" + (s.id === step.id && (!isLiveSel || s.t_start === step.t_start) ? " cur" : "")} style={{ left: `${((s.t_start - x0) / span) * 100}%`, width: `${((s.t_end - s.t_start) / span) * 100}%` }} title={s.label}>{s.n || "·"}</span>)}
               <i className="st-cur" style={{ left: `${((pb.t - x0) / span) * 100}%` }} />
             </div>
+            {!isLiveSel && index.scene_map && index.scene_map.length > 0 && (
+              <span className="chips st-scenes" title="시나리오 시각 매핑 (config/status_demo.yaml scene_map) — 클릭하면 그 모드·시각으로 이동">
+                {index.scene_map.map((sm) => <span key={sm.id} className={"chip sc" + (mode === sm.mode && Math.abs(pb.t - sm.t_s) < 1.5 ? " on" : "")}
+                  onClick={() => { if (mode !== sm.mode) { setModes((m) => ({ ...m, [sel]: sm.mode })); } pb.pause(); pb.seek(sm.t_s); setPos((p) => ({ ...p, [sel]: sm.t_s })); }}>
+                  {sm.expect && <i style={{ background: index.colors[sm.expect as Level] }} />}{sm.label}</span>)}
+              </span>
+            )}
             <span className="chips">
               {KINDS.map((k) => <span key={k} className={"chip" + (trendSel.kind === k ? " on" : "")} onClick={() => setTrend({ kind: k, component: k === "temperature" ? (trendSel.kind === "temperature" ? trendSel.component : "bearing_de") : undefined })}>{index.signals[k].label.split(" (")[0]}</span>)}
               {trendSel.kind === "temperature" && TEMP_GAUGES.map((n) => <span key={n} className={"chip" + (trendSel.component === n ? " on" : "")} onClick={() => setTrend({ kind: "temperature", component: n })}>{index.node_labels[n]}</span>)}
@@ -370,7 +377,7 @@ function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Namepla
           {row("절연 / 듀티", (m) => `${m.spec.insulation_class}종 / ${m.spec.duty}`)}
           {row("진동 규격", (m) => `${m.vibration.standard.split(" (")[0]} (${m.vibration.watch_mms}/${m.vibration.act_mms})`)}
           {row("정상 수렴 권선 온도 (연속)", (m) => `${m.steady_C.winding} °C`)}
-          {row("출처", (m) => <>{m.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[m.id]?.entered_at ?? ""}, YAML 반영 전)` : "대표값 (representative)"}<SourceIcons motor={m} /></>)}
+          {row("출처", (m) => <>{m.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[m.id]?.entered_at ?? ""}, YAML 반영 전)` : "카탈로그 (catalog)"}<SourceIcons motor={m} /></>)}
         </tbody>
       </table>
     </div>
@@ -430,7 +437,7 @@ function NameplateForm({ motor, current, onClose, onSave }: { motor: MotorInfo; 
           <div className="st-np-btns">
             <button className="btn primary" disabled={!np} onClick={() => onSave(np)}>저장</button>
             <button disabled={!snippet} onClick={() => { navigator.clipboard?.writeText(snippet).then(() => setCopied(true)).catch(() => undefined); }}>{copied ? "YAML 복사됨" : "YAML 복사"}</button>
-            {current && <button onClick={() => onSave(null)}>대표 사양으로 되돌리기</button>}
+            {current && <button onClick={() => onSave(null)}>카탈로그 사양으로 되돌리기</button>}
           </div>
         </div>
       </div>

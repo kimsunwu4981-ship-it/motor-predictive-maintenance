@@ -125,7 +125,8 @@ def test_델타결선_기준을_섞지_않는다(model):
     """케이블(선전류)과 권선(상전류)의 정격 기준이 √3 배 차이나야 한다."""
     line = model.motor.rated_current("rated_line_A")
     phase = model.motor.rated_current("rated_phase_A")
-    assert line / phase == pytest.approx(math.sqrt(3), rel=0.02)
+    expect = math.sqrt(3) if model.motor.connection == "delta" else 1.0      # Y 결선(M1)은 같다 — 기준 분리는 유지
+    assert line / phase == pytest.approx(expect, rel=0.02)
 
 
 def test_같은파형이라도_기준에따라_판정이_다르다(model):
@@ -141,8 +142,11 @@ def test_같은파형이라도_기준에따라_판정이_다르다(model):
     st_phase = model.analyze(t, I, "healthy", basis="rated_phase_A")
 
     assert st_line.status[1] == "normal"                      # 올바른 기준 → 정상
-    assert st_phase.ratio[1] > st_line.ratio[1] * 1.7         # √3 배 부풀려짐
-    assert st_phase.status[1] == "over_danger"                # 기준 혼용 시 오판
+    if model.motor.connection == "delta":
+        assert st_phase.ratio[1] > st_line.ratio[1] * 1.7     # √3 배 부풀려짐
+        assert st_phase.status[1] == "over_danger"            # 기준 혼용 시 오판
+    else:                                                     # Y(M1): 두 기준이 같아 판정도 같다 (혼용 위험 없음)
+        assert st_phase.ratio[1] == pytest.approx(st_line.ratio[1]) and st_phase.status[1] == "normal"
 
 
 def test_권선전류_pu는_3상_제곱평균(model):

@@ -49,8 +49,8 @@ ap.add_argument("--record", metavar="MP4",
 ap.add_argument("--no_timecode", action="store_true",
                 help="HUD 타임코드를 숨긴다 (오프셋 확정 후 발표용 녹화에 쓴다)")
 ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: mechanical)")
-ap.add_argument("--motor", default="", metavar="M1..M5",
-                help="모터 라이브러리 ID. 열회로·전류 모델·진동 규격·HUD 문구를 그 모터로 바꾸고 카메라 거리를 1/geometry_scale 로 (비우면 config/motor.yaml = M5)")
+ap.add_argument("--motor", default="M1", metavar="M1",
+                help="모터 라이브러리 ID (기본 M1 = 현대 HLP-2.2/4, 유일한 등록 모터). 열회로·전류 모델·진동 규격·HUD 문구를 그 모터로")
 ap.add_argument("--switch_seq", metavar="mode:sec,...",
                 help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
 ap.add_argument("--live", action="store_true",
@@ -58,11 +58,14 @@ ap.add_argument("--live", action="store_true",
 ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
 ap.add_argument("--preset", default="", metavar="demo|full", help="config/render_demo.yaml 프리셋 (해상도·RTX 모드·물리 서브스텝·입자·뷰포트). --low 보다 우선")
 # P4 (2026-10-21): M1 전체 3D 모델 장면 — 22 kW USD 는 숨기고(물리는 그대로 rpm 생성) assets/motors/M1/M1.usd 에 상태 JSON 값만 색·회전으로 매핑 (viz/m1_model.py)
-ap.add_argument("--m1_model", action="store_true", help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다")
+ap.add_argument("--m1_model", action="store_true", default=None, help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다 (--motor M1 이면 기본 켜짐)")
+ap.add_argument("--no_m1_model", action="store_true", help="M1 모델을 쓰지 않고 22 kW USD 그대로 (이력 비교용)")
 ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only"), help="--m1_model 의 USD variant view")
 ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
 ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model 의 USD variant mount (B3 발 장착 기본 / B35 플랜지)")
 args = ap.parse_args()
+if args.m1_model is None:
+    args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
 PRESET = None
 if args.preset:
     import yaml as _yaml
@@ -222,9 +225,19 @@ if m1:
     _added = M1Model.register_extra_cases(cm, ROOT)                 # 8턴·16턴·저항성·반부하 — electrical.yaml 템플릿 복사(런타임), 파일 불변
     print(f"[m1] extra cases {_added}: " + ", ".join(f"{k} I2/I1 {cm.expected_i2i1(k):.4f}" for k in _added), flush=True)
 if m1 and args.m1_shots:
-    # 전기 시나리오(정상 0~20 s, 4턴 20~45, 12턴 45~75)에 맞춘 6장: 외형, cutaway 정상, cutaway 4턴(발광), cutaway 12턴, windings_only, 축단
-    m1.plan_shots([(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "fault_focus", "03_cutaway_itsc_4turn.png"),
-                   (62.0, "cutaway", "fault_focus", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")])
+    # 시나리오 시각(t_session)에 맞춘 스크린샷 계획 — 모드별 (파트 C S2: 기계·통합 장면 추가)
+    _SHOT_PLANS = {
+        # 전기(정상 0~20 s, 4턴 20~45, 12턴 45~75): 외형, cutaway 정상, cutaway 4턴(발광), cutaway 12턴, windings_only, 축단
+        "electrical": [(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "fault_focus", "03_cutaway_itsc_4turn.png"),
+                       (62.0, "cutaway", "fault_focus", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")],
+        # 기계(정상 0~25, DE 베어링 25~60, 오정렬 60~85, 팬 85~110, 브레이크 110~130, 과부하 130~160, 냉각 160~180)
+        "mechanical": [(14.0, "full", "wide", "01_mech_normal.png"), (52.0, "cutaway", "bearing_de", "02_mech_bearing_de.png"), (78.0, "cutaway", "close", "03_mech_misalignment.png"),
+                       (102.0, "full", "wide", "04_mech_fan_failure.png"), (150.0, "cutaway", "wide", "05_mech_overload.png")],
+        # 통합(정상 0~30, 베어링 30~70, 4턴 70~105, 12턴 105~150, 결론 150~165)
+        "integrated": [(14.0, "full", "wide", "01_int_normal.png"), (58.0, "cutaway", "bearing_de", "02_int_bearing_de.png"), (92.0, "cutaway", "fault_focus", "03_int_itsc_4turn.png"),
+                       (135.0, "cutaway", "fault_focus", "04_int_itsc_12turn.png")],
+    }
+    m1.plan_shots(_SHOT_PLANS.get(args.mode, _SHOT_PLANS["electrical"]))
 
 # ------------------------------------------------------------------ 회전 구동
 art = SingleArticulation(prim_path="/World/Motor", name="motor")
@@ -258,8 +271,8 @@ if args.gui:
         from viz.hud import MotorHUD
         hud = MotorHUD()
         if MOTOR:
-            hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id}, representative spec, "
-                               f"frame x{GEOM_SCALE:.2f} of M5)")
+            hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id} Hyundai HLP-2.2/4, {MOTOR.source} spec, "
+                               f"{MOTOR.rated_rpm:g} rpm, {MOTOR.rated_line_current_a:g} A, {MOTOR.bearing_de}/{MOTOR.bearing_nde})")
             hud.vib_standard = VIB_STD
         hud.set_mode(args.mode)
     except Exception as e:
@@ -343,7 +356,7 @@ def hot_switch_motor(mid: str) -> dict:
     if panel:
         panel.sync_from_state()
     if hud:
-        hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id}, representative spec, frame x{GEOM_SCALE:.2f} of M5)")
+        hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id} Hyundai HLP-2.2/4, {MOTOR.source} spec, {MOTOR.rated_rpm:g} rpm, {MOTOR.rated_line_current_a:g} A, {MOTOR.bearing_de}/{MOTOR.bearing_nde})")
         hud.vib_standard = VIB_STD
         hud.set_mode(state.mode)
     dt = time.perf_counter() - t0
@@ -755,6 +768,8 @@ while simulation_app.is_running():
         xray_on = state.highlight_short_loop or (
             mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
         driver.set_opacity(["endshield_de"], 0.40 if xray_on else 1.0)
+        if m1:                                      # M1 모델: 하우징 투시 대신 cutaway variant (런타임 섹션 없이 절단 메시로)
+            m1.set_view("cutaway" if xray_on else args.view)
         if state.highlight_short_loop:
             driver.housing_transparent(True, opacity=0.25)
         elif mode in ("electrical", "integrated"):
@@ -850,7 +865,8 @@ while simulation_app.is_running():
                 sub = sub.replace("ISO 20816-3", VIB_STD)      # 시나리오 자막의 규격 이름을 모터 규격으로
             if "{" in sub:                                     # 자막 변수 (모터별 전류 수치, D-1 ②)
                 _cs = cm.evaluate_case(case)
-                sub = fill_vars(sub, {"rated_line_A": i_line, "a_rms_end": round(_cs.rms_A[0], 1), "a_pct_end": round(_cs.ratio[0] * 100)})
+                sub = fill_vars(sub, {"rated_line_A": i_line, "a_rms_end": round(_cs.rms_A[0], 1), "a_pct_end": round(_cs.ratio[0] * 100),
+                                      "i2i1": f"{_cs.i2_over_i1:.3f}"})      # {i2i1}: 그 케이스의 I₂/I₁ (M1 은 LUT 값) — 문자열이라 1자리 반올림을 피한다
             hud.update_scenario(title, sub if not frame else f"[{CASE_EN.get(case, case)}]  {sub}",
                                 source=frame.source_en if frame else "")
             # 타임코드는 CSV 의 t_s 와 같은 값이다 (영상에서 오프셋을 눈으로 검증할 때 쓴다)

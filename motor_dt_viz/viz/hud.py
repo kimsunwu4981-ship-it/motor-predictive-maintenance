@@ -186,7 +186,7 @@ class MotorHUD:
         self._sec_thermal.visible = show_therm
         self._legend_elec.visible = show_elec
         self._legend_therm.visible = show_therm and not show_elec
-        basis = getattr(self, "basis_motor", "22 kW 6-pole hoist motor (JW-01-HTO-00)")   # 모터 라이브러리 선택 시 데모가 바꿔 넣는다
+        basis = getattr(self, "basis_motor", "2.2 kW 4-pole hoist motor (M1 Hyundai HLP-2.2/4, catalog spec)")   # 모터 라이브러리(M1.yaml)에서 데모가 채워 넣는다
         if show_therm:
             basis += " / lumped thermal network"
         if show_elec:

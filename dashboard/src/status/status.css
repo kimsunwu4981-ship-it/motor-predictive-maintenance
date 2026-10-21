@@ -10,7 +10,9 @@
 .st-honesty b { color: var(--ok); }
 
 /* ① 카드 */
-.st-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.st-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }   /* 단일 모터(M1)면 카드 1장, 여러 장이면 자동 배치 (5장 레이아웃 코드는 그대로) */
+.st-cards > .st-card:only-child { max-width: 520px; }
+.chips.st-scenes .chip.sc i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
 .st-card { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .st-card:hover { border-color: var(--accent); }
 .st-card.sel { box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow); }

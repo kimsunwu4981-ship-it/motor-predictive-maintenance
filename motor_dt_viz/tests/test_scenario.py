@@ -38,11 +38,11 @@ def test_부하슬라이더는_0에서150퍼센트로_제한된다():
 
 
 def test_ISO20816_판정():
-    """Group 2: Watch 1.4 / Plan 2.8 / Act 4.5 mm/s"""
+    """기본 모터 M1 = ISO 10816-1 Class I: Watch 1.8 / (Plan = Act) 4.5 mm/s (config/motor.yaml vibration_iso20816_3 키, 값은 M1 규격)"""
     fi = FaultInjector()
     assert fi.iso_zone(1.0) == "Normal"
-    assert fi.iso_zone(2.0) == "Watch"
-    assert fi.iso_zone(3.0) == "Plan"
+    assert fi.iso_zone(1.7) == "Normal" and fi.iso_zone(2.0) == "Watch"
+    assert fi.iso_zone(3.0) == "Watch"          # 10816-1 에는 '정비 계획' 중간 경계가 없다 (plan = act)
     assert fi.iso_zone(4.8) == "Act"
     fi.toggle("bearing_de_fault", True)
     assert fi.iso_zone() == "Act"          # 베어링 결함 4.8 mm/s → Act

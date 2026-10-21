@@ -1,7 +1,7 @@
 # 크레인 권상 모터 디지털 트윈 — 결함 시각화 MVP
 
-22 kW 6극 천장크레인 권상 모터(도면 JW-01-HTO-00)의 결함을 Isaac Sim 화면에서 보여주는
-데모다. 심사위원이 설명 없이 화면만 보고 **어디서, 왜 고장이 나는지** 알아보게 하는 것이
+**현대일렉트릭 SSEN HLP-2.2/4(M1, 1톤 호이스트 권상 모터 2.2 kW 4극 100L)** 한 대의 결함을 Isaac Sim 화면에서 보여주는
+데모다 (2026-10-21 단일 모터 전환, 아래 "단일 모터 M1" 절. 이전 기준이던 22 kW 6극 천장크레인 모터(도면 JW-01-HTO-00)는 열회로 튜닝 기준·이력으로만 남는다). 심사위원이 설명 없이 화면만 보고 **어디서, 왜 고장이 나는지** 알아보게 하는 것이
 목표이고, 두 가지를 동시에 그린다.
 
 - **모듈 A — 기계적 결함**: 부하가 쌓이며 생기는 발열을 부품 색으로 보여준다. 정상이면 원래
@@ -98,7 +98,7 @@ config/     모든 수치 (정격·임계값·색상·시나리오). 코드에 �
 engine/     물리 모델 — Isaac Sim 비의존
   thermal_model.py      집중정수 열회로 9노드, RK4 적분
   current_model.py      3상 전류 파형, 대칭좌표법 I₂/I₁, ITSC 역산
-  fault_injector.py     결함 주입, ISO 20816-3 진동 등급
+  fault_injector.py     결함 주입, 진동 등급(모터 규격: M1 ISO 10816-1 Class I)
   scenario_player.py    자동 재생 타임라인
 viz/        USD 시각화
   colormap.py           부품별 임계값 기준 정규화 컬러맵
@@ -176,14 +176,17 @@ powershell -ExecutionPolicy Bypass -File tools\publish_desktop.ps1              
 검증·클립만 다시 하려면 `-SkipRecord`. 녹화는 `gdigrab -i desktop` + 창 좌표 crop 만 동작한다
 (`-i title=` 은 Vulkan 창이라 첫 프레임만 반복됨 — SESSION_LOG 9장).
 
-## 모터 라이브러리 — 모터 추가는 YAML 한 장
+## 모터 라이브러리 — 현재 등록 모터는 M1 한 대 (코드 경로는 유지)
 
-`config/motors/<id>.yaml` 을 한 장 더 만들면 라이브러리·배치·상태 보드가 그 모터를 자동으로 포함한다 (스키마는 `M3.yaml` 을 복사해 수정).
+**2026-10-21 결정**: 디지털트윈은 M1(현대 HLP-2.2/4) 한 대로 간다. 호이스트 4종 라이브러리(M2~M5, `source: representative`)는 만들지 않는다.
+`config/motors/` 에는 `M1.yaml` 만 있고 M2~M5 는 `config/motors/_retired/` 에 보관한다(로더 `list_ids()` 가 읽지 않음, 삭제 금지, `_retired/README.md`).
+`source` 는 `nameplate | catalog` 만 허용한다(`representative` 불허). 열회로 스케일 기준값(옛 M5 22 kW)은 `config/thermal.yaml reference` 절에 있다.
+라이브러리 코드(`engine/motor_library.py`, run_fleet, 상태 보드 카드 목록)는 그대로라 실모터 명판이 확정되면 `config/motors/<id>.yaml` 한 장으로 다시 늘릴 수 있다 — 아래 예시는 그 스키마(이력).
 
 ```yaml
 id: M6
 name: "30톤 호이스트 권상 모터 (37 kW 6극)"
-source: representative            # nameplate | representative  — 상태 보드 출처 라벨이 바뀐다
+source: catalog                   # nameplate | catalog  — 상태 보드 출처 라벨이 바뀐다 (representative 는 2026-10-21 부터 불허)
 rated_power_kw: 37
 poles: 6
 sync_rpm: 1200
@@ -203,24 +206,26 @@ bearing_nde: "6313"
 bearing_fault_multipliers: { bpfo: 3.6, bpfi: 5.4, source: estimated }
 geometry_scale: 1.25              # M5(180L) = 1.0 기준 프레임(축 높이) 비례
 thermal: { scale_rule: power_ratio }
-vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5 }
+vibration: { standard: "ISO 20816-3 Group 2", watch_mms: 1.4, plan_mms: 2.8, act_mms: 4.5 }   # < 15 kW 는 "ISO 10816-1 Class I" 1.8/4.5 (M1)
 ```
 
 - 검증: `python -m pytest tests/test_motor_library.py -q` (필수 키·범위·파생값).
 - 배치·비교표·대시보드 갱신: `python tools/run_fleet.py` → `python tools/fleet_summary.py` → `python ../dashboard/tools/export_status_data.py` → `cd ../dashboard && npm run build`.
 - 데모 첫 화면 위치: `config/status_demo.yaml` 에 그 모터의 `{mode, t_s, expect}` 를 추가한다 (테스트가 기대 상태와 판정을 대조).
-- 열회로 계수는 M5 보정값을 출력비·프레임 비례로 스케일한다 (`docs/thermal_scaling.md`). 판정 임계값은 `config/thresholds.yaml` (모터 공통) + 모터 YAML 의 진동 규격.
+- 열회로 계수는 22 kW 기준값(`thermal.yaml reference`)을 출력비·프레임 비례로 스케일한다 (`docs/thermal_scaling.md`). 판정 임계값은 `config/thresholds.yaml` (모터 공통) + 모터 YAML 의 진동 규격.
 
-## 모터별 애니메이션 녹화 (M1~M5)
+## 모터별 애니메이션 녹화 (이력: M1~M5 → 현재 M1)
 
-`python app/demo_integrated.py --gui --autoplay --mode mechanical --motor M3` 처럼 `--motor` 를 주면 그 모터의 열회로·전류·진동 규격·HUD 로 돌고, 외형은 카메라 거리로 프레임 비례 크기가 된다.
+`python app/demo_integrated.py --gui --autoplay --mode mechanical --motor M1` — `--motor` 기본값이 M1 이고, M1 이면 전체 3D 모델(`assets/motors/M1/M1.usd`)이 자동으로 올라간다(`--no_m1_model` 이면 22 kW USD, 이력 비교용).
+퇴역 모터는 `--motor M3` 처럼 불러도 로더가 거부한다. 22 kW 애니메이션 원본 영상·USD 는 지우지 않고 보관한다.
 일괄 녹화: `powershell -ExecutionPolicy Bypass -File tools
 ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/fleet/`, 산출물 `모터결함_애니메이션/4_모터별/`. 녹화 중 화면을 비워야 한다.
 
-## 상태 보드 (모터 5종)
+## 상태 보드 (M1 단일)
 
-`dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 키 1~5 모터, Space 재생, ←→ 장면, M 기계/전기, F 발표.
-데이터는 `logs/fleet`(엔진 배치) 와 config 에서만 온다. 자세한 것은 `dashboard/README.md`, 결과 비교표는 `docs/fleet_summary.md`.
+`dashboard/run_dashboard_status.bat` 더블클릭 → `http://localhost:4173/#/status`. 첫 화면은 M1 카드 1장 + 상세 + 시나리오 재생 바(`config/status_demo.yaml scene_map` 칩: 정상·4턴 경계·12턴 위험·DE 베어링·과부하) + 원인·조치.
+5장 카드 레이아웃 코드는 남아 있고 모터가 하나면 자동으로 1장이 된다. Space 재생, ←→ 장면, M 기계/전기, F 발표.
+데이터는 `logs/fleet`(엔진 배치) 와 config 에서만 온다. 자세한 것은 `dashboard/README.md`, 결과 요약은 `docs/m1_summary.md`(5종 비교표 `docs/fleet_summary.md` 는 이력).
 
 베어링 지표(2026-10-08): 주 **kurtosis**(경고 3.5 / 위험 4.0, 모터 공통) + 보조 **고주파 대역 RMS 배율**(경고 1.5 / 위험 2.5, 기준선은 `config/motors/<id>.yaml bearing_hf_baseline`), 종합은 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만). 시뮬레이션은 `config/thermal.yaml` 의 결함별 등가값 — 정의·근거 `docs/bearing_metric_definition.md`, 전후 비교 `docs/bearing_metric_change_comparison.md` (`python tools/fleet_compare.py`).
 
@@ -233,7 +238,7 @@ ecord_fleet.ps1 [-Motors M1,M2 -Modes mechanical]` → `dashboard/public/media/f
 
 ```bat
 C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical --live            # 콘솔에 ws://<IP>:8765 와 대시보드 주소가 찍힌다
-C:\ISSACS~1\python.bat app\demo_integrated.py --gui --mode integrated --live --motor M5 --preset demo   # 발표용: 1280×720 RTX Real-Time, 물리 서브스텝 2, 입자 12, 뷰포트 1개 (config/render_demo.yaml). 모터 전환은 제어 패널에서
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --mode integrated --live --motor M1 --preset demo   # 발표용: 1280×720 RTX Real-Time, 물리 서브스텝 2, 입자 12, 뷰포트 1개 (config/render_demo.yaml). 등록 모터는 M1 하나
 ```
 
 HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원인>` 행이 보인다. 간단 확인(아무 PC, websockets 설치된 파이썬):
@@ -243,13 +248,13 @@ HUD 에 `LIVE ws://<데스크탑 IP>:8765  clients N` 과 `STATUS <등급> <원�
 
 ### 대시보드에서 LIVE 켜기 (R2)
 
-세 화면(`#/status`, `#/mechanical`, `#/electrical`) 상단의 **녹화 / LIVE** 스위치. LIVE 를 누르면 주소 입력(기본 `ws://localhost:8765`, 맥북이면 `ws://<데스크탑 IP>:8765`, 마지막 값 기억) → 연결되면 초록 `LIVE · M5 · n명` 뱃지.
+세 화면(`#/status`, `#/mechanical`, `#/electrical`) 상단의 **녹화 / LIVE** 스위치. LIVE 를 누르면 주소 입력(기본 `ws://localhost:8765`, 맥북이면 `ws://<데스크탑 IP>:8765`, 마지막 값 기억) → 연결되면 초록 `LIVE · M1 · n명` 뱃지.
 주소로 바로 켜기: `http://<데스크탑 IP>:4173/#/status?live=ws://<데스크탑 IP>:8765`. 스트림이 3 s 끊기면 **자동으로 녹화 재생**으로 돌아가고 노란 띠("라이브 연결 끊김 — 녹화 재생 중")가 뜬다. 다시 붙으면 저절로 LIVE 복귀.
 라이브에서 재생 바는 "최근 5 분" 창(`dashboard/public/content/live.yaml window_s`), `❚❚ 최근 기록 보기`로 버퍼 안을 돌려보고 `▶ LIVE 복귀`. ←/→·챕터 클릭은 Isaac 에 `play_scenario` 명령을 보낸다. 영상 자리는 "Isaac Sim 창을 보세요"(듀얼 모니터용). 자세한 것은 `docs/live_r2_report.md`.
 
 ### 제어 패널 — 대시보드에서 Isaac 조작 (R3, L2)
 
-LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=1` 이면 열린 채 시작). 결함 토글(열 결함 6 · 전류 케이스 6, 모드에 맞는 것만), 부하 0~150 %, 시간 배속 1~600, 슬로모션 1/1~240, 모드(기계/전기/통합), 시나리오 재생·장면 번호·정지, 리셋, **모터 선택(M1~M5)**.
+LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=1` 이면 열린 채 시작). 결함 토글(열 결함 6 · 전류 케이스 6, 모드에 맞는 것만), 부하 0~150 %, 시간 배속 1~600, 슬로모션 1/1~240, 모드(기계/전기/통합), 시나리오 재생·장면 번호·정지, 리셋, **모터 선택**(목록은 Isaac 의 `hello.motors` = 라이브러리 등록 모터, 현재 M1 하나).
 버튼 상태는 내가 누른 값이 아니라 Isaac 이 적용해 state 로 돌려준 값으로 확정되고, 거부되면 "최근 명령"에 이유가 뜬다(예: 시나리오 재생 중 결함 주입 → `stop_scenario` 먼저). 허용 목록·범위는 Isaac 이 접속 직후 보내는 `hello`(= `config/live.yaml commands`)에서 온다.
 **모터 전환**: 기본은 **핫 스위치**(`config/live.yaml select_motor.switch_mode: hot`) — Isaac 프로세스 안에서 모터 라이브러리의 열회로·전류 모델·판정·정격·카메라 거리·HUD 문구만 새 모터로 재생성한다(USD·Isaac 재로드 없음, 1 s 미만). 대시보드 띠는 최소 `switch_banner_min_s`(10 s) 동안 "왜 바뀌는지 + 무엇을 비교할지"(문구는 `dashboard/public/content/live.yaml switch_*`)를 보여준다. `switch_mode: restart` 로 두면 R3 방식(현재 모터 정리 → 같은 인자로 재기동, 45~130 s, 로그 `logs/live_restart_<모터>.log`). 실측은 `docs/live_r3_report.md`·`live_r4_report.md`.
 데모 대본 `docs/live_demo_script.md`(5단계), 자동 구동 `tools/live_demo_drive.py`, 녹화 `tools/record_live_demo.ps1`(화면을 비워야 한다).
@@ -295,14 +300,22 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
   색으로 칠하며, 부품 안에서 온도가 번지는 그라디언트를 쓰지 않았다. 노드가 부품당 하나뿐이라
   그라디언트를 그리면 모델에 없는 분포를 화면이 지어내는 셈이 되고, 그건 추정값을 측정값처럼
   보이게 만드는 일이다.
-- Δ결선이라 케이블은 선전류(정격 43.7 A), 권선은 상전류(정격 25.2 A) 기준이다. 두 기준을
-  섞지 않도록 `config/motor.yaml` 에 나눠 두었다.
+- 케이블은 선전류, 권선은 상전류 기준이고 두 기준은 `config/motor.yaml` 에 나눠 두었다. M1 은 Y결선(카탈로그 기준, 현장 확인)이라 둘 다 정격 4.73 A 로 같다
+  (이전 기준 22 kW Δ결선은 선 43.7 A / 상 25.2 A — 이력).
 
 ## M1 전체 3D 모델 (100L 하우징 + 내부) — P4, 2026-10-21
 
 1. `py -3.12 -X utf8 tools/cad/datasheet_to_yaml.py && py -3.12 -X utf8 tools/cad/build_internals_M1.py && py -3.12 -X utf8 tools/cad/build_housing_100L.py` (저장소 루트, CadQuery) → `assets/motors/M1/*.step|.obj|.glb`
 2. `py -3.12 -X utf8 -m pytest tests/test_m1_model.py -q` → `py -3.12 -X utf8 tools/cad/write_model_doc.py` (`docs/assets/M1_model.md`)
 3. `C:\ISSACS~1\python.bat tools\cad\build_usd_M1.py` (USD 반입·조립) → `cd motor_dt_viz ; C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --m1_model [--view cutaway]`
+
+## 단일 모터 M1 전환 (P2′, 2026-10-21)
+
+- 설정: `config/motors/M1.yaml`(catalog) 하나, `config/motor.yaml` = M1 값(`library_default: M1`), 퇴역 `config/motors/_retired/`(M2~M5 + 옛 motor.yaml 사본 `motor_M5_reference.yaml`), `config/thermal.yaml reference`(22 kW 기준 손실 2,444 W·scale 1.0 — 튜닝 계수 불변), `config/status_demo.yaml scene_map`.
+- 진동 규격: < 15 kW 는 ISO 10816-1 Class I(경고 1.8 / 위험 4.5 mm/s, `engine/motor_library.VIB_STANDARD_SPLIT_KW`). `thresholds.yaml` 의 숫자·판정 규칙·LUT 는 바꾸지 않았다.
+- Isaac: `C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode mechanical|integrated|electrical --motor M1 [--m1_shots DIR] [--record logs\x.mp4]` — 기계 7 장면·통합 5 장면의 M1 자막은 `config/scenarios_M1.yaml`(장면·배속·결함은 공용 파일과 동일), 시각 매핑은 `assets/motors/M1/prim_map_M1.yaml`(베어링 `/M1/Bearings/DE·NDE`, 축 `/M1/Rotor/Shaft`, 팬 커버 `/M1/Housing/FanCover`, 프레임 `/M1/Housing/Frame`). 22 kW 기하 전용 전류 경로·입자는 M1 장면에서 숨긴다.
+- 문서: `docs/m1_summary.md`(배치 요약), `docs/m1_migration_notes.md`(해설 PDF·가이드라인·센서 가이드·구매 목록에서 바꿀 문장 목록 — 본문은 미수정), `docs/thermal_scaling.md`·`docs/judgment_basis.md` §6.
+- 검증: `py -3.12 -X utf8 -m pytest tests -q`(128 passed) · `py -3.12 tools/electrical/verify_lut_integration.py`.
 
 ## 실측 기준선 (P1, 2026-10-21)
 

@@ -14,3 +14,13 @@
 | **기준선 배수 (baseline_multiple)** | 임계값을 절대값이 아니라 그 모터의 정상 실측 기준선 × 배수로 두는 방식. | `current.negative_sequence.mode: baseline_multiple` 이면 경고 = baseline.value × warn_multiple(2.0), 위험 = × danger_multiple(4.0). baseline 은 실모터 실측 후에만 채운다. |
 | **p95** | 95 % 분위수 — 창(1 s) 값들 중 95 %가 이 값 이하. | `tools/baseline_capture.py` 가 I₂/I₁ 의 중앙값·p95·표준편차를 내고, 참고 데이터셋(AI Hub L-SF-04)의 p95 를 `reference_baseline.value` 에 기록한다. |
 | **전압 불평형 보정** | 공급 전압의 역상비 V₂/V₁ 가 만드는 전류 역상분을 빼서 모터 자체(권선)의 불평형만 보는 것. | `voltage_unbalance_compensation.enabled` 이고 입력에 `v2_v1` 이 있을 때만 I₂/I₁ − k·V₂/V₁; 전압 채널이 없으면 `compensated: false`. AI Hub 데이터에는 전압 채널이 없다. |
+
+### P2′ — 단일 모터 M1 전환 (2026-10-21)
+
+| 용어 | 뜻 | 이 프로젝트에서 |
+|---|---|---|
+| **퇴역 라이브러리 (`_retired/`)** | 더 이상 로더가 읽지 않지만 삭제하지 않고 보관하는 설정 파일 폴더. | `motor_dt_viz/config/motors/_retired/` 의 M2~M5.yaml 과 옛 `motor.yaml` 사본(`motor_M5_reference.yaml`). `engine/motor_library.list_ids()` 는 `config/motors/*.yaml` 만 읽는다. 라이브러리 **코드 경로는 그대로**라 YAML 한 장으로 다시 늘릴 수 있다. |
+| **기준 열회로 (`thermal.yaml reference`)** | 열회로 튜닝 계수를 역산한 원래 모터의 출력·효율·프레임 비(= 스케일 분모). | 22 kW 6극(옛 M5): power_kW 22, efficiency 0.90, geometry_scale 1.0, loss_W 2,444. `thermal_cfg()` 가 M5 가 미등록이면 이 절로 손실비·치수비를 만든다. M1 은 손실비 0.11·scale 0.556. |
+| **ISO 10816-1 Class I** | 15 kW 이하 소형 기계의 진동 속도 RMS 등급(강성 지지). 경고(C 구역 시작) 1.8 mm/s, 위험(D) 4.5 mm/s — 중간 '정비 계획' 경계가 없다. | `VIB_STANDARD_SPLIT_KW = 15.0`: 그 아래 출력이면 YAML `vibration.standard` 가 10816-1 이어야 로더 검증을 통과한다. M1 1.8/4.5(plan = act). `thresholds.yaml` 의 20816-3 Group 2(1.4/2.8/4.5)는 모터 미지정 fallback 값으로 불변. |
+| **scene_map (상태 보드 시각 매핑)** | 시나리오 재생 바에서 "어느 장면·몇 초가 어떤 판정인지" 를 미리 적어 둔 표. | `config/status_demo.yaml scene_map`(정상 15 s SAFE / 4턴 40 s WARN / 12턴 60 s DANGER / DE 베어링 27.5 s WARN / 과부하 85 s DANGER) → `index.json` → 상태 보드 칩(클릭 시 그 모드·시각으로 이동). `positions.M1` 은 첫 화면 위치. |
+| **USD 참조 자리(DefinePrim)** | 다른 USD 파일을 끌어오는 빈 prim. 타입을 주면(Xform.Define) 참조된 메시가 안 보이는 경우가 있어 타입 없이 만든다. | `viz/m1_model.py` 가 `/World/M1` 에 `assets/motors/M1/M1.usd` 를 참조하고, 22 kW `/World/Motor`·`/World/CurrentPaths` 는 숨긴다(매 프레임 재숨김 — MakeVisible 이 조상을 되살리므로). |

@@ -12,6 +12,15 @@
 # 결함 주입 시 계수 배율(fault_multiplier)은 "시뮬레이션 시간 2~5분 내 경고(90 °C) 돌파"를 목표로 잡았다.
 # ⚠️ 단순화 가정: 공극 복사·축방향 전도 분포를 무시한 1차 RC 근사이며, 실측 교정 전 값이다.
 
+# 열회로 튜닝 기준 모터 (파트 C, 2026-10-21): 계수는 22 kW 6극(옛 M5, config/motors/_retired/motor_M5_reference.yaml)에서 튜닝됐다.
+# 라이브러리 모터(M1)는 motor_library.thermal_cfg 가 손실비 P·(1−η)/η 와 geometry_scale 로 여기서 스케일한다 (docs/thermal_scaling.md). 값은 이전 motor.yaml 그대로.
+reference:
+  motor: "M5 (retired) — 22 kW 6극 정원크레인 JW-01-HTO-00"
+  power_kW: 22.0
+  efficiency: 0.9
+  geometry_scale: 1.0
+  loss_W: 2444.4       # = P·(1−η)/η
+
 ambient:
   temperature_C: 25.0
   note: "실내 크레인 운전 환경 가정"

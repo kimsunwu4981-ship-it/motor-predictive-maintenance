@@ -1,4 +1,4 @@
-# LUT 연동 검증 보고 (TASK A D6) — 2026-10-21 11:52
+# LUT 연동 검증 보고 (TASK A D6) — 2026-10-21 12:16
 
 - electrical.yaml version 2 · method `lut` → M1 실제 동작 **lut** (LUT M1_mccm_lut_v2.json (등가회로(RMxprt v2+MCCM), provisional))
 - LUT `data\electrical\M1_mccm_lut_v2.json` sha256 `c6898c6e8d80…` · 원본 mccm_lut sha `7d7b1ac5147a…` · grade 등가회로(RMxprt v2+MCCM) · status provisional · fem_verified False · R_fe 보정 physical
@@ -12,13 +12,14 @@
 | V1 | LUT ↔ mccm_results ±1 % | PASS | 5 케이스 |
 | V2 | 합성 파형 ↔ LUT ±1 % (inherent OFF) | PASS | healthy/4T/12T |
 | V3 | inherent ON 범위 | PASS | h=0.027 |
-| V4 | legacy 0.104/0.269 ±0.1 % | PASS | M1 legacy · 기본 · M5 |
+| V4 | legacy 0.104/0.269 ±0.1 % | PASS | M1 legacy · 기본 · motor_id≠M1 |
 | V5 | I₂/I_n 이 I₂/I₁ 보다 부하 의존 작음 (4턴) | PASS | I₂/I₁ +52.6 % vs I₂/I_n -0.0 % |
 | V6 | thresholds 판정표 기록 | PASS | 8 행 |
-| V7 | 라이브 10 s | PASS | 생략(--skip-live) |
-| V8 | 금지 파일 무변경 | PASS | clean |
+| V7 | 라이브 10 s | **FAIL** | 접속 실패 (기동 시간 초과) |
+| V8 | 금지 파일 무변경 | **FAIL** | motor_dt_viz/config/motors/M1.yaml | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-) |
 
-**8/8 통과.** 변경 파일: config/electrical.yaml(v2), engine/current_model.py, engine/lut_source.py, engine/thermal_model.py(extra_loss_W 훅), app/demo_integrated.py(state 키 추가·열 연동·CSV 열), viz/hud.py, tools/electrical/*, tests/test_lut_source.py, data/electrical/*, dashboard(src 5개·css·dist 빌드). WebSocket 포트·스키마 번호·명령 목록은 그대로 (state 에 키만 덧붙임).
+**6/8 통과.** 변경 파일: config/electrical.yaml(v2), engine/current_model.py, engine/lut_source.py, engine/thermal_model.py(extra_loss_W 훅), app/demo_integrated.py(state 키 추가·열 연동·CSV 열), viz/hud.py, tools/electrical/*, tests/test_lut_source.py, data/electrical/*, dashboard(src 5개·css·dist 빌드). WebSocket 포트·스키마 번호·명령 목록은 그대로 (state 에 키만 덧붙임).
 
 ## V1. LUT 격자 ↔ mccm_results 케이스 (±1 %)
 
@@ -50,9 +51,9 @@
 | 기본 CurrentModel() | legacy | healthy | 0.006 | 0.0060 | +0.000 % | ✓ |
 | 기본 CurrentModel() | legacy | itsc_4turn | 0.104 | 0.1040 | +0.000 % | ✓ |
 | 기본 CurrentModel() | legacy | itsc_12turn | 0.269 | 0.2690 | +0.000 % | ✓ |
-| M5 (transfer false) | legacy | healthy | 0.006 | 0.0060 | +0.000 % | ✓ |
-| M5 (transfer false) | legacy | itsc_4turn | 0.104 | 0.1040 | +0.000 % | ✓ |
-| M5 (transfer false) | legacy | itsc_12turn | 0.269 | 0.2690 | +0.000 % | ✓ |
+| motor_id≠M1 (transfer false) | legacy | healthy | 0.006 | 0.0060 | +0.000 % | ✓ |
+| motor_id≠M1 (transfer false) | legacy | itsc_4turn | 0.104 | 0.1040 | +0.000 % | ✓ |
+| motor_id≠M1 (transfer false) | legacy | itsc_12turn | 0.269 | 0.2690 | +0.000 % | ✓ |
 
 ## V5. 부하 50 % vs 100 % (4턴 · R_f 0.1 Ω) — I₂/I₁ 은 부하에 따라 흔들리고 I₂/I_n 은 덜 흔들린다
 
@@ -79,11 +80,12 @@
 
 ## V7. 라이브 10 s (Isaac Sim `demo_integrated --live --motor M1 --mode electrical`, 검증 포트)
 
-`--skip-live` 로 생략
+- 접속 실패 (기동 시간 초과) (로그 logs\verify_lut\demo_stdout.log)
 
 ## V8. 금지 파일 변경 없음 (git diff --stat)
 
 ```
-(변경 없음)
+motor_dt_viz/config/motors/M1.yaml | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 ```
 대상: `motor_dt_viz/config/thresholds.yaml`, `motor_dt_viz/config/motors`, `motor_dt_viz/engine/thresholds.py`, `motor_dt_viz/config/live.yaml`, `motor_dt_viz/tools/firewall_rules.ps1`

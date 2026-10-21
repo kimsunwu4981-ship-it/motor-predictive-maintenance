@@ -30,6 +30,7 @@ class M1Model:
     CAM_CLOSE = ([0.33, -0.42, 0.30], [0.06, 0.0, 0.12])      # 단락 루프(Coil_01, DE 쪽 엔드턴)
     CAM_SHAFT = ([0.58, -0.36, 0.20], [0.19, 0.0, 0.10])      # 축단
     CAM_FAULT = ([0.21, -0.11, 0.25], [0.085, 0.0, 0.165])    # fault_focus: 슬롯 1(+Z) Coil_01_short DE 쪽 엔드턴 근접 (절단면 θ −45~+45° 안, 적층 끝 x 67.5 + 돌출 28 mm)
+    CAM_BEARING = ([0.30, -0.16, 0.26], [0.105, 0.0, 0.10])   # bearing_de: 절단면 위에서 DE 베어링(/M1/Bearings/DE, 축 중심 z≈0.10, 엔드실드 안쪽 x≈0.10) 근접 (파트 C S2 기계 장면)
 
     def __init__(self, stage, asset_dir: str, view: str = "full", hide=("/World/Motor", "/World/CurrentPaths"), shots_dir: str | None = None):
         self.stage = stage
@@ -151,7 +152,7 @@ class M1Model:
             return None
         self._shot_i += 1
         self.set_view(view)
-        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT}[cam]
+        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT, "bearing_de": self.CAM_BEARING}[cam]
         set_camera_view(eye=eye, target=tgt)
         for _ in range(8):
             render()

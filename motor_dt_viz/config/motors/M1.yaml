@@ -1,5 +1,5 @@
-# M1.yaml — 1톤 호이스트 권상 모터 (2.2 kW 4극) · 대표 사양 (명판 아님)
-# source: representative — 국내 와이어로프 호이스트 표준 톤수의 권상 전동기를 동급 범용 3상 유도전동기 대표값으로 정리 (TASK_다중모터 §2).
+# M1.yaml — 현대 SSEN HLP-2.2/4 (2.2 kW 4극 100L) · 카탈로그 사양 (명판 아님) — 디지털트윈의 유일한 등록 모터 (2026-10-21 파트 C, M2~M5 는 config/motors/_retired/)
+# (이전: 국내 와이어로프 호이스트 표준 톤수의 권상 전동기 대표값, source: representative — 폐지)
 # 2026-10-19 결정 (A): 정격 전류·결선·효율·역률 5항목을 현대일렉트릭 SSEN HLP-2.2/4 카탈로그(P2P2TC276, 380 V) 기준으로 통일.
 #   검산: P/(√3·V·η·cosφ) = 2200/(√3·380·0.895·0.79) = 4.73 A (카탈로그 정격 전류와 일치). Y 결선 → 상전류 = 선전류.
 #   이전 대표값: 5.0 A / 2.9 A (Δ) / η 0.85 / pf 0.78 (출처 없음). 나머지 키·다른 모터는 그대로.
@@ -7,8 +7,8 @@
 #   로더 규칙상 최상위 source 는 nameplate|representative 뿐이라 그대로 두고, 키별 출처는 래퍼의 source(catalog ✓ / nameplate ✓✓ / assumed·estimated·verify_on_site 🔴)로 본다.
 # 모터를 추가하려면 이 파일을 복사해 값만 바꾼다. 코드에는 모터 숫자가 없다.
 id: M1
-name: "1톤 호이스트 권상 모터 (2.2 kW 4극)"
-source: representative
+name: "현대 SSEN HLP-2.2/4 — 1톤 호이스트 권상 모터 (2.2 kW 4극, 100L)"
+source: catalog                   # 2026-10-21 파트 C: representative 등급 폐지 — 카탈로그 사양(명판 아님, 결선은 현장 확인). 명판 확인 시 nameplate
 tags: { hoist_ton: "1톤", hoist_speed: "7 m/min" }
 rated_power_kw:
   value: 2.2
@@ -159,8 +159,9 @@ reference_dataset:
   doc: "AI Hub 기계시설물 고장 예지 센서 2.2 kW 정상 데이터 (docs/aihub_spec_check.md)"
   note: "참고 등급 — I₂/I₁ 참고 기준선(thresholds.yaml current.negative_sequence.reference_baseline)의 출처. 결선·전압·제조사는 데이터에 없음"
 vibration:
-  standard: "ISO 20816-3 Group 2 (강성 지지, 5종 통일)"
-  watch_mms: 1.4
-  plan_mms: 2.8
-  act_mms: 4.5
-  note: "2026-10-08 결정 B-1 ②: 15 kW 미만도 20816-3 2군 강성 지지(1.4/2.8/4.5)로 통일. AI Hub 가이드라인은 같은 규격의 유연 지지 B/C 4.5 mm/s 를 정상 검수 기준으로 썼다 (docs/aihub_structure.md §11)"
+  standard: "ISO 10816-1 Class I (< 15 kW, 강성 지지)"
+  watch_mms: 1.8                  # B/C 경계 (경고)
+  plan_mms: 4.5                   # 10816-1 에는 '정비 계획' 중간 경계가 없다 → act 와 같게 (세부 라벨 없음)
+  act_mms: 4.5                    # C/D 경계 (위험)
+  source: standard
+  note: "2026-10-21 파트 C 결정(단일 모터 M1): ISO 10816-1 Class I 1.8/4.5 (이전 2026-10-08 B-1 ② 5종 통일 ISO 20816-3 Group 2 1.4/2.8/4.5 는 라이브러리 퇴역과 함께 해제). 카탈로그 허용 진동 2.8 은 vibration_limit_catalog_mm_s(참고)"

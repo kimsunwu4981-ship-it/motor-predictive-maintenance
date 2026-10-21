@@ -53,15 +53,12 @@ def test_i2i1_boundaries_4turn_is_danger():
 
 
 def test_vibration_standard_depends_on_motor():
-    m1, m5 = ml.load_motor("M1"), ml.load_motor("M5")
-    assert lv("vibration", 1.3, motor=m1) == "SAFE" and lv("vibration", 1.6, motor=m1) == "WARN"   # 5종 통일: 경고 1.4 부터 (결정 B-1 ②)
-    assert lv("vibration", 1.6, motor=m5) == "WARN"        # 20816-3: 경고 1.4 부터
-    assert Judge(motor=m1).raw("vibration", 3.0)[3] == "정비 계획" and lv("vibration", 4.5, motor=m1) == "DANGER"
-    assert lv("vibration", 4.5, motor=m5) == "DANGER" and lv("vibration", 4.49, motor=m5) == "WARN"
-    j5 = Judge(motor=m5)
-    assert j5.raw("vibration", 3.6)[3] == "정비 계획"     # 2.8 이상은 경고 안의 세부 라벨
-    assert j5.raw("vibration", 2.0)[3] == "주시"
-    assert Judge().raw("vibration", 1.6)[0] == "WARN"      # 모터 미지정 → fallback(20816-3)
+    m1 = ml.load_motor("M1")                               # ISO 10816-1 Class I: 경고 1.8 / 위험 4.5 (2026-10-21 파트 C)
+    assert lv("vibration", 1.7, motor=m1) == "SAFE" and lv("vibration", 1.9, motor=m1) == "WARN"
+    assert Judge(motor=m1).raw("vibration", 3.0)[3] == "주시" and lv("vibration", 4.5, motor=m1) == "DANGER" and lv("vibration", 4.49, motor=m1) == "WARN"
+    assert "10816-1" in Judge(motor=m1).raw("vibration", 3.0)[1]
+    j0 = Judge()                                           # 모터 미지정 → thresholds.yaml fallback (ISO 20816-3 Group 2 1.4/2.8/4.5)
+    assert j0.raw("vibration", 1.6)[0] == "WARN" and j0.raw("vibration", 3.6)[3] == "정비 계획" and j0.raw("vibration", 2.0)[3] == "주시"
 
 
 def test_bearing_kurtosis_and_hf_ratio_boundaries():
@@ -140,7 +137,7 @@ def test_temperature_has_no_persistence_and_first_call_is_immediate():
 
 # ---------------------------------------------------------------- 종합·원인
 def test_overall_is_worst_with_cause():
-    j = Judge(motor=ml.load_motor("M3"))
+    j = Judge(motor=ml.load_motor("M1"))
     v = j.update(0.0, {"temperature": {"bearing_de": 91.2, "winding": 80.0, "rotor": 60.0},
                        "current_ratio": {"A": 1.02, "B": 1.0, "C": 1.0}, "i2i1": 0.006, "vibration": 1.0})
     assert v.status == "WARN" and v.cause_signal == "temperature" and v.cause_component == "bearing_de"

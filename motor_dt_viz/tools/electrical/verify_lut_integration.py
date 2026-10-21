@@ -5,7 +5,7 @@
   V1  LUT 격자 ↔ mccm_results.json 케이스 (C1·C3·C4·C1-R·C1-L) I₂/I₁·I₂/I_n ±1 %
   V2  M1 LUT 방식: 고유 비대칭 OFF 로 합성한 파형의 I₂/I₁ 이 LUT 값 ±1 % · 위상 ±1°
   V3  고유 비대칭 ON: I₂/I₁ 이 범위 [|r−h|, r+h] 안 (4턴·12턴), 값 기록
-  V4  legacy 회귀: method legacy 로 M1 → 0.104 / 0.269 ±0.1 %, 기준 모터(M5·기본)도 같음
+  V4  legacy 회귀: method legacy 로 M1 → 0.104 / 0.269 ±0.1 %, 기본 모터(motor.yaml)·motor_id≠M1 도 같음 (M5 는 퇴역)
   V5  부하 50 % vs 100 % (4턴·R_f 0.1): I₂/I₁ 과 I₂/I_n 의 변화율 비교
   V6  config/thresholds.yaml i2i1 경계로 케이스별 판정 (최소/설계/최대) — 판정 코드는 바꾸지 않는다
   V7  라이브 10 s: Isaac Sim demo_integrated --live --motor M1 --mode electrical 을 띄워 state 에 새 키가 오고 값이 맞는지 (--skip-live 로 생략)
@@ -144,9 +144,11 @@ def main() -> int:
     cfg_leg = copy.deepcopy(ml.electrical_cfg(m1)); cfg_leg["method"] = "legacy"
     cm_leg = CurrentModel(cfg_leg, ml.motor_spec(m1))
     cm_ref = CurrentModel()        # 기준 모터(config/motor.yaml) — method lut 라도 M1 아님 → legacy
-    cm_m5 = CurrentModel(ml.electrical_cfg(ml.load_motor("M5")), ml.motor_spec(ml.load_motor("M5")))
+    # 다른 모터는 legacy: M2~M5 는 퇴역(파트 C 2026-10-21, config/motors/_retired/ — 로더가 읽지 않음)이라 motor_id 만 M1 이 아닌 설정으로 같은 규칙을 검증한다
+    cfg_other = copy.deepcopy(ml.electrical_cfg(m1)); cfg_other["motor_id"] = "M5_retired"
+    cm_other = CurrentModel(cfg_other, ml.motor_spec(m1))
     rows, ok4 = [], True
-    for label, m in (("M1 method:legacy", cm_leg), ("기본 CurrentModel()", cm_ref), ("M5 (transfer false)", cm_m5)):
+    for label, m in (("M1 method:legacy", cm_leg), ("기본 CurrentModel()", cm_ref), ("motor_id≠M1 (transfer false)", cm_other)):
         for case, tgt in (("healthy", 0.006), ("itsc_4turn", 0.104), ("itsc_12turn", 0.269)):
             v = m.evaluate_case(case).i2_over_i1
             d = (v / tgt - 1) * 100
@@ -154,7 +156,7 @@ def main() -> int:
             ok4 &= g
             rows.append([label, m.method, case, tgt, f(v), f"{d:+.3f} %", "✓" if g else "✗"])
     lines.append(md_table(["모델", "method", "케이스", "목표", "값", "Δ", "판정"], rows))
-    check("V4", "legacy 0.104/0.269 ±0.1 %", ok4, "M1 legacy · 기본 · M5")
+    check("V4", "legacy 0.104/0.269 ±0.1 %", ok4, "M1 legacy · 기본 · motor_id≠M1")
 
     # ---------------- V5 load
     lines.append("\n## V5. 부하 50 % vs 100 % (4턴 · R_f 0.1 Ω) — I₂/I₁ 은 부하에 따라 흔들리고 I₂/I_n 은 덜 흔들린다\n")

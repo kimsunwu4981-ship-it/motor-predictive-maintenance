@@ -28,9 +28,10 @@ import yaml
 from .config_loader import CONFIG_DIR, MotorSpec, load, val
 
 MOTORS_DIR = os.path.join(CONFIG_DIR, "motors")
-REFERENCE_ID = "M5"          # 열회로 튜닝 기준 모터 (현 프로젝트 22 kW, thermal.yaml 의 값)
-VIB_STANDARD_SPLIT_KW = 0.0   # 규칙 4(구): 15 kW 경계. 2026-10-08 부터 0 = 경계 없음, 전 모터 VIB_STANDARD_REQUIRED
-VIB_STANDARD_REQUIRED = "ISO 20816-3"   # 5종 통일 (강성 지지 1.4/2.8/4.5). AI Hub 가이드라인은 유연 지지 4.5 를 정상 상한으로 씀
+REFERENCE_ID = "M5"          # 열회로 튜닝 기준 모터 (22 kW 6극, 2026-10-21 퇴역) — 등록돼 있지 않으면 config/thermal.yaml reference 절의 값을 쓴다
+RETIRED_DIR = "_retired"     # config/motors/_retired/ 는 보관만, 로더가 읽지 않는다 (파트 C)
+VIB_STANDARD_SPLIT_KW = 15.0  # 규칙 4: < 15 kW → ISO 10816-1 (Class I), ≥ 15 kW → ISO 20816-3. (2026-10-08 B-1 ② 5종 통일은 라이브러리 퇴역과 함께 해제, 2026-10-21)
+VIB_STANDARD_REQUIRED = "ISO 20816-3"   # ≥ 15 kW 용 (현재 등록 모터 없음)
 
 REQUIRED = ("id", "name", "source", "rated_power_kw", "poles", "sync_rpm", "rated_rpm", "voltage_v", "frequency_hz",
             "connection", "efficiency", "power_factor", "rated_line_current_a", "rated_phase_current_a", "frame",
@@ -108,9 +109,10 @@ class Motor:
 
 # ----------------------------------------------------------------------------- 로드·검증
 def list_ids() -> list[str]:
+    """등록 모터 ID — config/motors/*.yaml 파일만 (하위 폴더 _retired/ 는 보관용, 읽지 않는다)."""
     if not os.path.isdir(MOTORS_DIR):
         return []
-    return sorted(f[:-5] for f in os.listdir(MOTORS_DIR) if f.endswith(".yaml"))
+    return sorted(f[:-5] for f in os.listdir(MOTORS_DIR) if f.endswith(".yaml") and os.path.isfile(os.path.join(MOTORS_DIR, f)))
 
 
 def _num(d: dict, key: str, lo: float, hi: float, mid: str) -> float:
@@ -127,8 +129,8 @@ def validate(d: dict) -> None:
     missing = [k for k in REQUIRED if k not in d]
     if missing:
         raise MotorLibraryError(f"{mid}: 필수 키 누락 {missing}")
-    if d["source"] not in ("nameplate", "representative"):
-        raise MotorLibraryError(f"{mid}: source 는 nameplate | representative")
+    if d["source"] not in ("nameplate", "catalog"):      # representative 등급은 2026-10-21 부터 불허 (퇴역 파일에만 남음)
+        raise MotorLibraryError(f"{mid}: source 는 nameplate | catalog (representative 는 퇴역 등급)")
     p = _num(d, "rated_power_kw", 0.1, 500.0, mid)
     poles = int(_num(d, "poles", 2, 12, mid))
     if poles % 2:
@@ -253,8 +255,8 @@ def motor_spec_cfg(m: Motor) -> dict:
     s = m.geometry_scale
     ref_mass = float(val(base["rating"]["mass_kg"]))
     ref_inertia = float(val(mech["rotor_inertia_kgm2"]))
-    mass = m.raw.get("mass_kg")
-    inertia = m.raw.get("rotor_inertia_kgm2")
+    mass = val(m.raw.get("mass_kg", m.raw.get("weight_kg")))                       # 카탈로그 중량(weight_kg 래퍼)도 허용
+    inertia = val(m.raw.get("rotor_inertia_kgm2", m.raw.get("rotor_gd2_kgm2")))   # 카탈로그 GD²(= J, 데이터시트 §9 검산)
     return {
         "meta": {"target": m.name, "drawing": m.raw.get("drawing", ""), "basis_note": f"motor library {m.id} ({m.source})"},
         "rating": {
@@ -281,9 +283,12 @@ def motor_spec(m: Motor) -> MotorSpec:
 def thermal_cfg(m: Motor) -> dict:
     """M5 기준 thermal.yaml 을 §4.2 규칙으로 스케일한 cfg. M5 는 원본과 같다."""
     base = copy.deepcopy(load("thermal"))
-    ref = load_motor(REFERENCE_ID)
-    s = m.geometry_scale / ref.geometry_scale
-    p_ratio = m.loss_w / ref.loss_w
+    if REFERENCE_ID in list_ids():
+        ref = load_motor(REFERENCE_ID); ref_scale, ref_loss, ref_id = ref.geometry_scale, ref.loss_w, ref.id
+    else:                                                   # 기준 모터 퇴역 → thermal.yaml reference 절 (같은 값)
+        r = base["reference"]; ref_scale = float(r["geometry_scale"]); ref_loss = float(r["power_kW"]) * 1000.0 * (1 - float(r["efficiency"])) / float(r["efficiency"]); ref_id = str(r.get("motor", "reference"))
+    s = m.geometry_scale / ref_scale
+    p_ratio = m.loss_w / ref_loss
     for node in base["nodes"].values():
         node["mass_kg"] = round(float(node["mass_kg"]) * s ** 3, 4)
         node["R_amb"] = round(float(node["R_amb"]) / s ** 2, 6)
@@ -292,15 +297,15 @@ def thermal_cfg(m: Motor) -> dict:
     for fc in base["faults"].values():
         if "extra_loss_W" in fc:
             fc["extra_loss_W"] = round(float(fc["extra_loss_W"]) * p_ratio, 2)
-    base["scaled_from"] = {"reference": ref.id, "motor": m.id, "geometry_scale": s, "loss_ratio": round(p_ratio, 4),
+    base["scaled_from"] = {"reference": ref_id, "motor": m.id, "geometry_scale": s, "loss_ratio": round(p_ratio, 4),
                            "rule": "P∝P(1−η)/η, R∝1/scale², C∝scale³ (docs/thermal_scaling.md)"}
     return base
 
 
 def electrical_cfg(m: Motor) -> dict:
     base = copy.deepcopy(load("electrical"))
-    base["source"]["honesty_sub"] = (f"정격 기준: {m.name} — {'명판' if m.source == 'nameplate' else '대표 사양(명판 아님)'} · "
-                                     f"전류는 해석식 생성")
+    base["source"]["honesty_sub"] = (f"정격 기준: {m.name} — {'명판' if m.source == 'nameplate' else '카탈로그 사양(명판 아님, 결선 현장 확인)'} · "
+                                     f"전류는 등가회로 LUT + 해석식 생성")
     base["motor_id"] = m.id
     return base
 

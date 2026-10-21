@@ -31,13 +31,13 @@ export function Landing() {
         </a>
         <a href="#/status">
           <h2>3. 모터 상태 보드</h2>
-          <div className="muted">보편 권상 모터 5종의 안전·경고·위험을 한눈에 봅니다</div>
+          <div className="muted">현대 HLP-2.2/4(M1) 한 대의 안전·경고·위험을 한눈에 봅니다</div>
           <div className="sample">
             <span style={{ background: "#26f259" }} title="안전" />
             <span style={{ background: "#ff731a" }} title="경고" />
             <span style={{ background: "#ff2e0a", boxShadow: "0 0 10px #ff2e0a" }} title="위험" />
           </div>
-          <div className="dim">1톤 2.2 kW ~ 15~20톤 22 kW · 판정 엔진 · 모터별 임계값</div>
+          <div className="dim">1톤 호이스트 2.2 kW 4극 (카탈로그 사양) · 판정 엔진 · 실측 기준선 전 참고 지표 표시</div>
         </a>
       </div>
       <div className="dim">시뮬레이션 기반 추정값 · 오프라인 동작 · F 키: 발표 모드</div>

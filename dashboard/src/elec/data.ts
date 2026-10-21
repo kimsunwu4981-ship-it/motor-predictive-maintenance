@@ -7,7 +7,7 @@ import type { ElecSource } from "../live/feed";
 
 export type Phase = "A" | "B" | "C";
 export const PHASES: Phase[] = ["A", "B", "C"];
-export type Basis = "line" | "phase";     // Δ결선: 케이블 = 선전류(43.7 A 기준), 권선 = 상전류(25.2 A 기준)
+export type Basis = "line" | "phase";     // 케이블 = 선전류, 권선 = 상전류 (Δ 면 √3 배, Y(M1)면 같음) — 정격값은 thresholds.json 에서
 
 export interface ElecTimeseries extends Timeseries {
   ratio: Record<Phase, number[]>;          // 정격 대비 (선전류/정격 선전류 = 상전류/정격 상전류)
