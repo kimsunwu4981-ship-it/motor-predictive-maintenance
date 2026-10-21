@@ -119,7 +119,9 @@ def test_m1_current_model_default_equals_library():
     assert a.rms_A == pytest.approx(b.rms_A, abs=1e-9)
     for case in ("healthy", "overload"):
         a, b = cm_lib.evaluate_case(case), cm_old.evaluate_case(case)
-        assert sum(a.rms_A) / 3 == pytest.approx(sum(b.rms_A) / 3, rel=0.01), case
+        assert sum(a.rms_A) / 3 == pytest.approx(sum(b.rms_A) / 3, rel=0.02), case   # D3(2026-10-21): LUT 경로 I₁ = LUT 정상분 RMS(정상 4.695 A, MCCM 정합값) vs legacy 정격 4.73 A → 약 1.4 %
+    assert cm_lib.evaluate_case("healthy").i1_A == pytest.approx(4.6946, abs=0.002)   # D3: 정상 I₁ = LUT 격자 I1_A (MCCM 물리 보정 전류), 정격 4.73 A 가 아니다
+    assert cm_lib.evaluate_case("itsc_12turn").i1_A > 5.5                              # D3: 결함 시 I₁ 상승 (LUT 5.92 A)
     assert cm_lib.evaluate_case("healthy").source["method"] == "lut" and cm_old.evaluate_case("healthy").source["method"] == "legacy"
 
 

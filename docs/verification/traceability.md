@@ -1,6 +1,6 @@
 # 근거 사슬 (traceability) — 화면값 → 엔진 → 입력 파일(sha) → 해석 단계 → 출처 등급
 
-생성 2026-10-21 15:47:51 · `motor_dt_viz/tools/verify/traceability.py` · 숫자 출처 `motor_dt_viz/data/electrical/analysis_reference.json`
+생성 2026-10-21 16:09:37 · `motor_dt_viz/tools/verify/traceability.py` · 숫자 출처 `motor_dt_viz/data/electrical/analysis_reference.json`
 
 | 표시량 | 엔진 함수 | 입력 파일 (sha256 앞 12자리) | 해석 단계 | 출처 등급 |
 |---|---|---|---|---|

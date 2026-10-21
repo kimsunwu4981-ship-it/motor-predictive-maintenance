@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-21 15:41:16",
+ "generated": "2026-10-21 16:11:05",
  "generator": "motor_dt_viz/tools/verify/build_analysis_reference.py",
  "no_manual_numbers": true,
  "motor": "M1 현대 HLP-2.2/4",
@@ -101,7 +101,7 @@
   },
   "lut_report": {
    "path": "motor_dt_viz/docs/electrical/lut_integration_report.md",
-   "sha256": "12293116ef99bb0b981b3c2ecb53d95d450654350590422ab61442835545e1c6"
+   "sha256": "29f1e11329955caf62c0af3924570d4f7ccb92b72bed77fd6a802168fdcb62cd"
   }
  },
  "scenarios": {
@@ -149,8 +149,8 @@
    "i2_over_in": {
     "lut": 0.0,
     "lut_I1_A": 4.69464,
-    "sim_expected": 0.027,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.026798,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -165,11 +165,11 @@
     ],
     "sim_expected": 2.681,
     "sim_expected_I_abc_A": [
-     4.85771,
-     4.66746,
-     4.66746
+     4.82139,
+     4.63256,
+     4.63256
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -198,15 +198,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 21.38,
-     "stator_core": 16.604,
-     "rotor": 19.319,
-     "bearing_de": 14.588,
-     "frame": 10.893
+     "winding": 21.182,
+     "stator_core": 16.483,
+     "rotor": 19.277,
+     "bearing_de": 14.542,
+     "frame": 10.823
     },
-    "winding_current_pu": 1.00036,
+    "winding_current_pu": 0.99289,
     "loss_W_nodes": [
-     90.34,
+     89.0,
      64.41,
      51.74,
      0.0,
@@ -302,8 +302,8 @@
    "i2_over_in": {
     "lut": 0.050428,
     "lut_I1_A": 4.88627,
-    "sim_expected": 0.072474,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.074868,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -318,11 +318,11 @@
     ],
     "sim_expected": 6.5603,
     "sim_expected_I_abc_A": [
-     5.04701,
-     4.70143,
-     4.46044
+     5.21375,
+     4.85675,
+     4.6078
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -365,15 +365,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 44.72,
-     "stator_core": 30.856,
-     "rotor": 24.353,
-     "bearing_de": 19.941,
-     "frame": 19.185
+     "winding": 45.622,
+     "stator_core": 31.407,
+     "rotor": 24.547,
+     "bearing_de": 20.148,
+     "frame": 19.505
     },
-    "winding_current_pu": 1.00263,
+    "winding_current_pu": 1.03591,
     "loss_W_nodes": [
-     248.86,
+     254.98,
      64.41,
      51.74,
      0.0,
@@ -393,7 +393,7 @@
    "expected_judgment": {
     "i2i1_level": "WARN",
     "current_ratio_levels": [
-     "SAFE",
+     "WARN",
      "SAFE",
      "SAFE"
     ],
@@ -469,8 +469,8 @@
    "i2_over_in": {
     "lut": 0.162467,
     "lut_I1_A": 5.32735,
-    "sim_expected": 0.167724,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.188906,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -485,11 +485,11 @@
     ],
     "sim_expected": 14.3526,
     "sim_expected_I_abc_A": [
-     5.44745,
-     4.7583,
-     4.08543
+     6.1354,
+     5.35922,
+     4.60138
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -518,15 +518,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 96.973,
-     "stator_core": 62.763,
-     "rotor": 35.62,
-     "bearing_de": 31.927,
-     "frame": 37.747
+     "winding": 100.638,
+     "stator_core": 65.001,
+     "rotor": 36.411,
+     "bearing_de": 32.768,
+     "frame": 39.049
     },
-    "winding_current_pu": 1.01394,
+    "winding_current_pu": 1.14184,
     "loss_W_nodes": [
-     603.72,
+     628.61,
      64.41,
      51.74,
      0.0,
@@ -546,8 +546,8 @@
    "expected_judgment": {
     "i2i1_level": "DANGER",
     "current_ratio_levels": [
+     "DANGER",
      "WARN",
-     "SAFE",
      "SAFE"
     ],
     "current_ratio_levels_lut_I_abc": [
@@ -622,8 +622,8 @@
    "i2_over_in": {
     "lut": 0.307449,
     "lut_I1_A": 5.92325,
-    "sim_expected": 0.269578,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.337585,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -638,11 +638,11 @@
     ],
     "sim_expected": 22.5458,
     "sim_expected_I_abc_A": [
-     5.90544,
-     4.80418,
-     3.74727
+     7.39522,
+     6.01614,
+     4.69261
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -671,15 +671,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 166.264,
-     "stator_core": 105.074,
-     "rotor": 50.563,
-     "bearing_de": 47.821,
-     "frame": 62.361
+     "winding": 174.366,
+     "stator_core": 110.022,
+     "rotor": 52.31,
+     "bearing_de": 49.679,
+     "frame": 65.239
     },
-    "winding_current_pu": 1.0357,
+    "winding_current_pu": 1.29698,
     "loss_W_nodes": [
-     1074.3,
+     1129.32,
      64.41,
      51.74,
      0.0,
@@ -699,9 +699,9 @@
    "expected_judgment": {
     "i2i1_level": "DANGER",
     "current_ratio_levels": [
-     "WARN",
-     "SAFE",
-     "WARN"
+     "DANGER",
+     "DANGER",
+     "SAFE"
     ],
     "current_ratio_levels_lut_I_abc": [
      "DANGER",
@@ -775,8 +775,8 @@
    "i2_over_in": {
     "lut": 0.473518,
     "lut_I1_A": 6.63155,
-    "sim_expected": 0.362417,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.508115,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -791,11 +791,11 @@
     ],
     "sim_expected": 29.5387,
     "sim_expected_I_abc_A": [
-     6.34289,
-     4.83242,
-     3.51425
+     8.89285,
+     6.77515,
+     4.92704
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -824,15 +824,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 247.412,
-     "stator_core": 154.626,
-     "rotor": 68.062,
-     "bearing_de": 66.434,
-     "frame": 91.188
+     "winding": 261.947,
+     "stator_core": 163.501,
+     "rotor": 71.196,
+     "bearing_de": 69.768,
+     "frame": 96.351
     },
-    "winding_current_pu": 1.06369,
+    "winding_current_pu": 1.49161,
     "loss_W_nodes": [
-     1625.4,
+     1724.12,
      64.41,
      51.74,
      0.0,
@@ -853,8 +853,8 @@
     "i2i1_level": "DANGER",
     "current_ratio_levels": [
      "DANGER",
-     "SAFE",
-     "WARN"
+     "DANGER",
+     "SAFE"
     ],
     "current_ratio_levels_lut_I_abc": [
      "DANGER",
@@ -928,8 +928,8 @@
    "i2_over_in": {
     "lut": 0.006496,
     "lut_I1_A": 4.719,
-    "sim_expected": 0.032413,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.032338,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -944,11 +944,11 @@
     ],
     "sim_expected": 3.1903,
     "sim_expected_I_abc_A": [
-     4.8822,
-     4.67226,
-     4.63932
+     4.87085,
+     4.66139,
+     4.62854
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -991,15 +991,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 24.377,
-     "stator_core": 18.434,
-     "rotor": 19.966,
-     "bearing_de": 15.275,
-     "frame": 11.958
+     "winding": 24.316,
+     "stator_core": 18.397,
+     "rotor": 19.952,
+     "bearing_de": 15.261,
+     "frame": 11.936
     },
-    "winding_current_pu": 1.00053,
+    "winding_current_pu": 0.99822,
     "loss_W_nodes": [
-     110.7,
+     110.28,
      64.41,
      51.74,
      0.0,
@@ -1095,8 +1095,8 @@
    "i2_over_in": {
     "lut": 0.050428,
     "lut_I1_A": 3.20136,
-    "sim_expected": 0.047538,
-    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "sim_expected": 0.064349,
+    "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -1111,11 +1111,11 @@
     ],
     "sim_expected": 8.7152,
     "sim_expected_I_abc_A": [
-     2.55292,
-     2.39422,
-     2.16371
+     3.45574,
+     3.24092,
+     2.92889
     ],
-    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
     "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
     "sha256": "c6898c6e8d80",
     "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
@@ -1144,15 +1144,15 @@
    },
    "winding_dT_steady_C": {
     "model": {
-     "winding": 33.286,
-     "stator_core": 23.248,
-     "rotor": 12.317,
-     "bearing_de": 12.535,
-     "frame": 13.989
+     "winding": 36.079,
+     "stator_core": 24.954,
+     "rotor": 12.919,
+     "bearing_de": 13.176,
+     "frame": 14.982
     },
-    "winding_current_pu": 0.50227,
+    "winding_current_pu": 0.68002,
     "loss_W_nodes": [
-     180.88,
+     199.85,
      64.41,
      12.93,
      0.0,
@@ -1174,14 +1174,14 @@
     "current_ratio_levels": [
      "WARN",
      "WARN",
-     "DANGER"
+     "WARN"
     ],
     "current_ratio_levels_lut_I_abc": [
      "WARN",
      "WARN",
      "WARN"
     ],
-    "overall_expected": "DANGER",
+    "overall_expected": "WARN",
     "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
     "thresholds": {
      "warn": 0.05,

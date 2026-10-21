@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-21 15:47:51",
+ "generated": "2026-10-21 16:09:37",
  "generator": "motor_dt_viz/tools/verify/traceability.py",
  "reference_json": "motor_dt_viz/data/electrical/analysis_reference.json",
  "rows": [

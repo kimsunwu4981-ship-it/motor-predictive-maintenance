@@ -100,9 +100,9 @@ def main():
 
     A_OP = cmath.exp(2j * math.pi / 3)
 
-    def sim_phases(fault, theta_deg, load_, ang_deg):
-        """엔진 규약 재현(독립 수식): I₁ = I_n·부하(RMS), I₂ = I₁·(r·e^{jθ} + h·e^{jφ}) → Ia = I₁+I₂, Ib = a²I₁ + aI₂, Ic = aI₁ + a²I₂ (RMS 크기)."""
-        i1 = I_n * load_; i2 = i1 * (fault * cmath.exp(1j * math.radians(theta_deg)) + h * cmath.exp(1j * math.radians(ang_deg)))
+    def sim_phases(fault, theta_deg, i1_lut, ang_deg):
+        """엔진 규약 재현(독립 수식, D3 2026-10-21): I₁ = LUT 정상분 RMS(격자값), I₂ = I₁·(r·e^{jθ} + h·e^{jφ}) → Ia = I₁+I₂, Ib = a²I₁ + aI₂, Ic = aI₁ + a²I₂ (RMS 크기)."""
+        i1 = i1_lut; i2 = i1 * (fault * cmath.exp(1j * math.radians(theta_deg)) + h * cmath.exp(1j * math.radians(ang_deg)))
         ph = [i1 + i2, A_OP ** 2 * i1 + A_OP * i2, A_OP * i1 + A_OP ** 2 * i2]
         rms = [abs(x) for x in ph]; mean = sum(rms) / 3
         return [round(x, 5) for x in rms], round(max(abs(x - mean) for x in rms) / mean * 100, 4)
@@ -143,21 +143,22 @@ def main():
             fem = {"I_f_A": float(J["f2"]["F1"][k]["I_f_after"]), "I_abc_A": J["f2"]["F1"][k]["I_abc_after"], "dev_vs_mccm_pct": float(J["f2"]["F1"][k]["dev_after_pct"]),
                    "pass_5pct": bool(J["f2"]["F1"][k]["pass_5pct"]), **src("f2", "fem2d", "F1: FaultLoop 에 단락 턴 저항 포함(2D lite, 학생판)")}
         dT, pu, P = steady_dT(sid, load_)
-        sim_rms, sim_unb = sim_phases(fault, theta, load_, h_angle)
+        i1_lut = float(r["I1_A"])                                   # D3: 시뮬 I₁ = LUT 정상분 RMS (격자값)
+        sim_rms, sim_unb = sim_phases(fault, theta, i1_lut, h_angle)
         lv_ratio = ratio_levels(*sim_rms); lv_i2 = i2i1_level(comp["angle_0"])
         order = {"SAFE": 0, "WARN": 1, "DANGER": 2}
         overall = max([lv_i2] + lv_ratio, key=lambda x: order[x])
-        # 엔진 규약: I₁ = 정격×부하 고정(B·C 상 규약), I₂ = I₁·(결함 + 고유). → 시뮬 I₂/I_n = 합성 I₂/I₁ × 부하. LUT I₂/I_n 은 LUT 자체 I₁(결함 시 상승) 기준이라 다르다 — 대조표에 두 기준 모두 적는다.
-        sim_i2_over_in_expected = round(comp["angle_0"] * load_, 6)
+        # 엔진 규약(D3): I₁ = LUT 정상분 RMS(결함 시 상승), I₂ = I₁·(결함 + 고유) → 시뮬 I₂/I_n = 합성 I₂/I₁ × I₁_LUT / I_n (결함분만이면 LUT I₂/I_n 과 같다)
+        sim_i2_over_in_expected = round(comp["angle_0"] * i1_lut / I_n, 6)
         scen[sid] = {
             "turns": turns, "turn_ratio_pct": round(mu * 100, 3), "R_f_ohm": rf_used, "load": load_, "mccm_case": cname,
             "i2_over_i1_fault": {"value": round(fault, 6), "angle_deg_vs_i1": round(theta, 3), **src("lut_dt", "lut"), "maxwell_grid": src("mccm_lut", "mccm")},
             "i2_over_i1_composite": {"inherent": h, "inherent_angle_deg": h_angle, "range": comp_range, "expected_by_angle": comp, "tolerance": "범위 |r−h| ~ r+h 안",
                                      "source_inherent": {"file": inputs["electrical_yaml"]["path"], "sha256": inputs["electrical_yaml"]["sha256"][:12], "grade": GRADE["dataset"], "grade_key": "dataset", "note": el["inherent"].get("source", "")}},
             "i2_over_in": {"lut": round(float(r["I2_over_In"]), 6), "lut_I1_A": round(float(r["I1_A"]), 5), "sim_expected": sim_i2_over_in_expected,
-                           "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교", **src("lut_dt", "lut")},
+                           "note": "D3(2026-10-21): 시뮬 I₁ = LUT 정상분 RMS → 결함분 I₂/I_n 이 LUT 와 같고, 표시값(합성)은 고유 비대칭만큼 더 크다", **src("lut_dt", "lut")},
             "unbalance_max_dev_pct": {"lut": round(float(r["unbalance_max_dev_pct"]), 4), "lut_I_abc_A": [round(float(r[k]), 5) for k in ("I_a", "I_b", "I_c")],
-                                      "sim_expected": sim_unb, "sim_expected_I_abc_A": sim_rms, "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형", **src("lut_dt", "lut")},
+                                      "sim_expected": sim_unb, "sim_expected_I_abc_A": sim_rms, "note": "sim_expected = 엔진 규약(D3: I₁ = LUT 정상분 RMS, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형", **src("lut_dt", "lut")},
             "i_f_A": {"mccm": round(float(mc["I_f"]), 4) if mc else None, "lut": round(float(r["I_f"]), 4), "fem_corrected": fem, **src("mccm_results", "mccm")},
             "p_loop_total_W": {"lut": round(float(r["P_loop_total_W"]), 3), "mccm": round(float(mc["P_loop_total_W"]), 3) if mc else None,
                                "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph", "formula_value": round(p_loop_formula, 3), "R1_hot_ohm": R1_hot, "N_ph": N_ph, **src("mccm_results", "mccm")},

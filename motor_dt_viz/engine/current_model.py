@@ -226,7 +226,13 @@ class CurrentModel:
             q = self.lut_point(case)
             r = float(q["i2_over_i1"])
             theta = math.radians(float(q.get("i2_angle_deg") or 0.0))
-            i1 = math.sqrt(2.0) * i_rated * load                          # 정상분 피크 (B·C 상 정격×부하 규약 유지)
+            i1_lut = float(q.get("i1_A") or 0.0)
+            if i1_lut > 0.0 and self.rated_current_A:
+                # D3 원 사양 (2026-10-21 승인, 이 건에 한함): 정상분 크기 = LUT 정상분 RMS (상별 RMS 의 대칭 성분, 턴 비율·R_f·부하 격자 보간).
+                # 결함 시 I₁ 이 LUT 대로 상승 → r = I/I_n 상승, I₂/I_n 이 LUT 와 일치, 열 모델 pu 가 실제 전류 기준. LUT 는 선전류 I_n 기준이라 기준(선/상) 환산 배율을 곱한다 (Y = 1).
+                i1 = math.sqrt(2.0) * i1_lut * (i_rated / float(self.rated_current_A))
+            else:
+                i1 = math.sqrt(2.0) * i_rated * load                      # LUT 에 I₁ 이 없을 때만 이전 규약 (정격×부하)
             i2 = i1 * (r * np.exp(1j * theta) + self._inherent_phasor())  # 결함 I₂ + 고유 비대칭 (페이저 합)
             return np.array(phases_from_components(i1, i2), dtype=complex)
         # ---- legacy 규칙 (크기 배율 + 위상 shift)

@@ -124,10 +124,12 @@ def main():
         rows_out.append(row("I₂/I₁ 결함분 (합성 − 고유 비대칭 페이저)", sid, round(fault, 6), R["i2_over_i1_fault"]["value"], TOL["i2i1_fault"], "", f"합성 {comp:.5f} ∠{math.degrees(ang):.1f}°, 고유 {h} ∠{math.degrees(h_ang):.0f}°", "LUT v2 격자 (mccm_results)"))
         rows_out.append(row("I₂/I₁ 합성값 (범위 |r−h| ~ r+h)", sid, round(comp, 6), R["i2_over_i1_composite"]["range"], None, "", f"기대(각도 0°) {R['i2_over_i1_composite']['expected_by_angle']['angle_0']}", "LUT + inherent", "range"))
         rows_out.append(row("I₂/I₁ 합성값 vs 기대(각도 0°)", sid, round(comp, 6), R["i2_over_i1_composite"]["expected_by_angle"]["angle_0"], TOL["i2i1_fault"], "", "", "LUT + inherent"))
-        if st_in:
-            fault_in = fault * float(step.get("load", 1.0))     # 시뮬 규약: I₁ = I_n×부하 → 결함분 I₂/I_n = 결함분 × 부하
-            rows_out.append(row("I₂/I_n (시뮬 규약: 결함분×부하) vs LUT I₂/I_n", sid, round(fault_in, 6), R["i2_over_in"]["lut"], TOL["i2_over_in"], "",
-                                "FAIL 사유(규약 차이): 엔진은 I₁ 을 정격×부하로 고정하고 LUT 는 결함 시 I₁ 이 상승(4T 4.89 A, 16T 6.63 A) → 분모·분자 모두 달라 결함이 클수록 벌어짐. 값 변경 금지 범위 — 보고만", "LUT v2"))
+        st_i1 = steady(base["state"], sid, t0, t1, "i1_A")
+        if st_in and st_i1:
+            fault_in = fault * st_i1["mean"] / I_n               # D3: I₁ = LUT 정상분 RMS → 결함분 I₂/I_n = 결함분 × I₁/I_n (LUT 와 같은 정의)
+            rows_out.append(row("I₂/I_n 결함분 (I₂_fault/I_n, 시뮬 I₁ 기준) vs LUT I₂/I_n", sid, round(fault_in, 6), R["i2_over_in"]["lut"], TOL["i2_over_in"], "",
+                                f"시뮬 I₁ {st_i1['mean']:.4f} A (LUT 정상분 RMS, D3), LUT I₁ {R['i2_over_in']['lut_I1_A']} A", "LUT v2"))
+            rows_out.append(row("I₁ 정상분 [A] vs LUT I₁", sid, round(st_i1["mean"], 5), R["i2_over_in"]["lut_I1_A"], TOL["i2_over_in"], "A", "D3: 결함 시 상승(격자 보간)", "LUT v2"))
             rows_out.append(row("I₂/I_n 표시값 vs 시뮬 기대(합성×부하)", sid, round(st_in["mean"], 6), R["i2_over_in"]["sim_expected"], TOL["i2_over_in"], "", "표시값 자체의 일관성", "LUT + inherent"))
         if all(rms):
             m = [x["mean"] for x in rms]; mean = sum(m) / 3; unb = max(abs(v - mean) for v in m) / mean * 100

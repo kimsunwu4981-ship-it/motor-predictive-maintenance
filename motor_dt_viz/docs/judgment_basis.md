@@ -141,3 +141,7 @@ M1 연속 정격 권선 46.4 °C(상승 ≈ 21 K)는 카탈로그 B종 한도 80
 
 22 kW 전용 수치(43.7 A, 1,180 rpm, NTN 22220, Group 2)는 해설 PDF·가이드라인 등 문서에 남아 있다 — 바꿀 문장 목록은 `docs/m1_migration_notes.md`(본문은 수정하지 않음).
 
+
+## 7. D3 원 사양 적용 — LUT 경로 I₁ = LUT 정상분 RMS (2026-10-21, 엔진 수정 승인 1건)
+
+`CurrentModel._phasors` 의 lut 경로가 정상분 크기를 LUT `I1_A`(턴·R_f·부하 보간)에서 가져온다. 이전에는 정격×부하로 고정해 I₂/I_n 표시값이 LUT 정의(결함 시 I₁ 상승)와 어긋났다(16턴 −29 %). 바뀐 수치·판정 1건(반부하 4턴 DANGER→WARN)은 `docs/verification/d3_i1_from_lut.md`, 재검증 89/89 는 `docs/verification/sim_vs_analysis_report.md`. 임계값·규칙·LUT 불변.

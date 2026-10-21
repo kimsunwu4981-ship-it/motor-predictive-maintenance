@@ -38,7 +38,8 @@ def main():
          "", "> 새 계산·새 해석·설정 변경 없음. 시뮬은 기존 장면·엔진·LUT 로 돌렸고(Isaac Sim 헤드리스 자동 재생, `demo_integrated.py --verify_dir` 로깅 훅), 대조·그림·표는 스크립트가 로그와 해석 파일에서 읽어 만들었다(수기 숫자 없음). 기계 결함은 Maxwell 근거가 없어 출처만 표기한다.", "",
          "## 1. 한 줄 결론", "",
          f"- 전기 결함 시나리오의 표시값(I₂/I₁ 결함분·I_f·단락 루프 손실·불평형)은 해석값(LUT v2 = MCCM 등가회로)과 **최대 {lut_max:.2f} %** 안에서 일치한다(허용 ±1 %, 손실 ±2 %). 합성 파형을 엔진과 무관하게 다시 계산한 I₂/I₁ 은 **최대 {rc_max:.3f} %** 차이(허용 ±0.5 %, {len(rc)} 파형).",
-         f"- 대조표 **{res['summary']['pass']}/{res['summary']['total']} PASS**. FAIL {len(fails)}건은 모두 한 가지 규약 차이다: 엔진은 I₁ 을 정격×부하로 고정하는데 LUT 의 I₂/I_n 은 결함 시 상승한 LUT 자체 I₁ 기준이라, **시뮬의 'I₂/I_n' 표시값은 LUT 의 I₂/I_n 이 아니라 I₂/I₁×부하** 와 같다(§3 비고). 엔진 수치 변경 금지 범위라 보고만 한다.",
+         f"- 대조표 **{res['summary']['pass']}/{res['summary']['total']} PASS**" + (f". FAIL {len(fails)}건: " + "; ".join(f"{r['item']} @ {r['scenario']} ({r['note'][:60]})" for r in fails) if fails else " — 전 항목 허용 안.")
+         + " D3(2026-10-21, 엔진 수정 승인): LUT 경로의 I₁ 을 LUT 정상분 RMS 에서 가져오도록 바꿔 결함분 I₂/I_n 이 LUT 와 같아졌고 r = I/I_n 이 결함 시 상승한다 — 전후 표 `d3_i1_from_lut.md`.",
          "- 판정: 4턴은 주입 3 s 뒤 WARN(0.05 경계), 8·12·16턴은 3 s 뒤 DANGER(0.10), 저항성 4턴(R_f 1.0 Ω)은 SAFE 유지, 정상 구간 오경보 0건 — 임계값·지속 규칙과 일치.",
          "", "| 시나리오 | 주입 [s] | 첫 WARN | 첫 DANGER | 지연 [s] | 장면 끝 | 원인 |", "|---|---|---|---|---|---|---|"]
     for sid in ("healthy", "itsc_4turn", "itsc_8turn", "itsc_12turn", "itsc_16turn", "itsc_4turn_resistive", "itsc_4turn_halfload"):
@@ -52,15 +53,15 @@ def main():
         "itsc_4turn": "코일 한 개의 4턴(권선의 2.1 %)이 서로 붙었다. 붙은 고리에 큰 순환 전류 I_f ≈ {if_:.0f} A 가 돌지만 바깥 선전류는 R상이 {ia:.2f} A 로 조금 커질 뿐이다. 대신 세 상의 '균형'을 재는 I₂/I₁ 이 {h} → {comp:.3f} 으로 뛰어 경계 {warn} 을 넘고, 3 s 지속 규칙 뒤 **경고**가 뜬다(주입 후 {d} s). 단락 고리에서 {pl:.0f} W 가 더 발열해 권선이 천천히 데워진다(통합 모드 §3 열).",
         "itsc_8turn": "8턴(4.2 %)이 붙으면 I₂/I₁ 이 {comp:.3f} 으로 위험 경계 {danger} 를 넘어 3 s 뒤 **위험**이다. 손실 {pl:.0f} W 로 권선 온도 상승이 뚜렷하다.",
         "itsc_12turn": "12턴(6.3 %)에서는 I₂/I₁ {comp:.3f}, 순환 전류 {if_:.0f} A, 손실 {pl:.0f} W. 권선 온도가 F종 한계를 넘는 방향으로 간다(통합 모드에서 권선 ΔT 역산 {dT:.0f} °C). **위험**.",
-        "itsc_16turn": "코일 전체 16턴이 붙은 경우. I₂/I₁ {comp:.3f}, R상 선전류도 {ia:.2f} A(정격의 {ra:.0f} %)로 과전류 경고 영역에 들어간다. 손실 {pl:.0f} W. **위험**.",
+        "itsc_16turn": "코일 전체 16턴이 붙은 경우. I₂/I₁ {comp:.3f}, R상 선전류도 {ia:.2f} A(정격의 {ra:.0f} %)로 과전류 위험 영역(>125 %)에 들어간다. 손실 {pl:.0f} W. **{final}**.",
         "itsc_4turn_resistive": "4턴이 붙었지만 접촉 저항이 1.0 Ω 으로 크면 순환 전류가 {if_:.1f} A 에 그쳐 I₂/I₁ 은 {comp:.3f} — 경계 {warn} 아래라 **안전** 으로 남는다. '턴 수'가 아니라 '얼마나 세게 붙었나'가 탐지를 가른다는 뜻이다.",
-        "itsc_4turn_halfload": "같은 4턴 단락을 부하 50 % 에서 보면 I₂/I₁ 은 {comp:.3f} 으로 100 % 부하({comp100:.3f})보다 커 보인다(분모 I₁ 이 작아져서). 그래서 부하 무관 지표 I₂/I_n 을 같이 본다. 이 장면은 세 상 전류 자체가 정격의 절반이라 '저전류' 규칙에도 걸려 종합은 **위험**(원인 current_ratio)이다 — 시나리오 설계상 저부하를 결상처럼 보는 규칙의 한계.",
+        "itsc_4turn_halfload": "같은 4턴 단락을 부하 50 % 에서 보면 I₂/I₁ 은 {comp:.3f} 으로 100 % 부하({comp100:.3f})보다 커 보인다(분모 I₁ 이 작아져서). 그래서 부하 무관 지표 I₂/I_n 을 같이 본다. 세 상 전류가 정격의 62~73 % 라 '저전류 경고' 규칙에도 걸리고, 장면 끝 종합은 **{final}**(원인 {cause})이다. (D3 전에는 I₁ 을 정격×0.5 로 고정해 T상이 0.46 으로 '결상 의심' 위험이었다 — docs/verification/d3_i1_from_lut.md)",
     }
     for sid, tpl in narr.items():
         R = S[sid]; r_ia = rget("상 불평형", sid); comp = rget("I₂/I₁ 합성값 vs 기대", sid); if_ = rget("단락 루프 전류", sid); pl = rget("단락 루프 총손실", sid)
         e = ev.get(sid, {}); dly = (e.get("delay_s") or {}); d = dly.get("WARN", dly.get("DANGER", "—"))
         ia = R["unbalance_max_dev_pct"]["sim_expected_I_abc_A"][0]
-        txt = tpl.format(h=ref["inherent_i2i1"], warn=warn, danger=danger, if_=(if_["sim"] if if_ else R["i_f_A"]["lut"]), ia=ia, ra=ia / ref["I_n_A"] * 100,
+        txt = tpl.format(h=ref["inherent_i2i1"], warn=warn, danger=danger, if_=(if_["sim"] if if_ else R["i_f_A"]["lut"]), ia=ia, ra=ia / ref["I_n_A"] * 100, final=e.get("final", "—"), cause=e.get("cause", "—"),
                          comp=(comp["sim"] if comp else R["i2_over_i1_composite"]["expected_by_angle"]["angle_0"]), comp100=S["itsc_4turn"]["i2_over_i1_composite"]["expected_by_angle"]["angle_0"],
                          pl=(pl["sim"] if pl else R["p_loop_total_W"]["lut"]), d=d, dT=th.get(sid, {}).get("dT_steady_ref_C", R["winding_dT_steady_C"]["model"]["winding"]))
         L.append(f"**{sid}** — {txt}"); L.append("")
