@@ -1,0 +1,8 @@
+# 검증 전용 시나리오 (V1, 2026-10-21): 통합 모드 — 정상 20 s 뒤 4턴 ITSC 를 200 s(배속 90 → 300 분) 유지해 권선 온도 정상 상태 도달. 기존 장면 파일 불변.
+playback: { total_target_s: 220, subtitle_font_size: 26, hud_update_hz: 15 }
+steps:
+  - { id: normal, label: "정상 운전 (검증)", subtitle: "주입 전 기준 구간", subtitle_en: "Baseline before injection", source: "열회로 + LUT", source_en: "Thermal network + LUT",
+      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+  - { id: itsc_4turn, label: "턴간 단락 4턴 (검증, 정상 상태까지)", subtitle: "4턴 ITSC 유지 — 권선 온도 정상 상태", subtitle_en: "4-turn ITSC held to thermal steady state", source: "등가회로 LUT + 루프 손실 → 열회로", source_en: "LUT + loop loss to thermal network",
+      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_4turn, faults: [], load: 1.0 }
+manual_defaults: { mode: integrated, load: 1.0, time_scale: 60, slowmo_factor: 0.016667, electrical_case: healthy, faults: [] }

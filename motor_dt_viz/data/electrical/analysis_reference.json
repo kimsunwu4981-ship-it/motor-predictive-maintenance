@@ -1,0 +1,1464 @@
+{
+ "generated": "2026-10-21 15:41:16",
+ "generator": "motor_dt_viz/tools/verify/build_analysis_reference.py",
+ "no_manual_numbers": true,
+ "motor": "M1 현대 HLP-2.2/4",
+ "I_n_A": 4.73,
+ "N_ph": 192,
+ "inherent_i2i1": 0.027,
+ "thresholds": {
+  "i2i1_warn": 0.05,
+  "i2i1_danger": 0.1,
+  "persistence_s": 3.0,
+  "current_ratio": {
+   "safe_low": 0.85,
+   "safe_high": 1.1,
+   "danger_over": 1.25,
+   "danger_under": 0.5
+  }
+ },
+ "lut": {
+  "dt_file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+  "dt_sha256": "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9",
+  "sha_in_electrical_yaml": "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9",
+  "sha_match": true,
+  "maxwell_source_sha256": "7d7b1ac5147a1e4a436cc96c0a5e4d9827579ccb6e6b41a2bfdce5e55ea9309c",
+  "grade": "등가회로(RMxprt v2m2+MCCM) + 2D 와전류 검증(단순화 기하, 학생판 lite)",
+  "status": "provisional",
+  "fem_verified": false
+ },
+ "grades": {
+  "catalog": "카탈로그",
+  "rmxprt": "RMxprt v2m2 정합(등가회로 상수)",
+  "mccm": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+  "lut": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+  "fem2d": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+  "standard": "표준(IEC 60034-1 허용차)",
+  "assumed": "가정",
+  "model": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+  "dataset": "참고 데이터셋(AI Hub 정상 중앙값)"
+ },
+ "inputs": {
+  "mccm_results": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+   "sha256": "4e2a832bd6c9c17f3338abdd0063deaf093bab3fdba55c003a1644082ed2550d"
+  },
+  "mccm_lut": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+   "sha256": "7d7b1ac5147a1e4a436cc96c0a5e4d9827579ccb6e6b41a2bfdce5e55ea9309c"
+  },
+  "f2": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f2_corrections.json",
+   "sha256": "5e21ad5b5d91fda90751db20df0c33ae1d4f9c38145ce6321b2c43a9ba18a759"
+  },
+  "f7": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+   "sha256": "f99af4b76654c2fc4da711d0faca690c4d22dc34ba4dda3746afcd76d844abe1"
+  },
+  "eddy_summary": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\eddy2d\\summary.json",
+   "sha256": "0fb986f232d14d4e934fbe9cbac762d533cbf4520b9c74672f26ba1a292109f9"
+  },
+  "rmxprt": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa11165c2e64cad06a26db9e753dd5d6fc999dc86494256435cfc62"
+  },
+  "temp_sweep": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_temp_sweep.json",
+   "sha256": "21fe315328ce824e0bec71668103655e990c6428e8f98aa95a007bb97c8a2a4b"
+  },
+  "magcurve": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\magnetizing_curve_2d.json",
+   "sha256": "b0f93df33e1b66057fc2ff86cb7bb49e3b3e931a671819291d5b4a8acabeeeeb"
+  },
+  "inductance": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\inductance_matrix_2d.json",
+   "sha256": "a36126216cd3ec6cf851d63fc33aebaaedc3b76bdbfc222b3f5e0bfb09f1b974"
+  },
+  "analysis_tables_xlsx": {
+   "path": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\analysis_tables.xlsx",
+   "sha256": "ff09681845fb95e04348c257ebe16e9fc487befbf9d9d1b1ce2e619536126267"
+  },
+  "electrical_yaml": {
+   "path": "motor_dt_viz/config/electrical.yaml",
+   "sha256": "296249cc9133f5d025582601eb49e536a3f157b264ec332d1a8e067591a79d57"
+  },
+  "lut_dt": {
+   "path": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+   "sha256": "c6898c6e8d801f49f7c40a15e6470586011a51af20916b8509a1093b8b7ddda9"
+  },
+  "thresholds_yaml": {
+   "path": "motor_dt_viz/config/thresholds.yaml",
+   "sha256": "9158581eb3d8c5a87c443079dd769fdab1502ed8d87b2480cc6c8aca31119f10"
+  },
+  "m1_yaml": {
+   "path": "motor_dt_viz/config/motors/M1.yaml",
+   "sha256": "2d8ca5614eaf3e17e16be9b038691a68dbac06483ffecacd03b183ad4302d56b"
+  },
+  "thermal_yaml": {
+   "path": "motor_dt_viz/config/thermal.yaml",
+   "sha256": "fe1e7d4e4c2a848f5f4534ad02e0e5f22c502902f54ab5756d17c5668fe6d2e0"
+  },
+  "lut_report": {
+   "path": "motor_dt_viz/docs/electrical/lut_integration_report.md",
+   "sha256": "12293116ef99bb0b981b3c2ecb53d95d450654350590422ab61442835545e1c6"
+  }
+ },
+ "scenarios": {
+  "healthy": {
+   "turns": 0,
+   "turn_ratio_pct": 0.0,
+   "R_f_ohm": null,
+   "load": 1.0,
+   "mccm_case": "C0",
+   "i2_over_i1_fault": {
+    "value": 0.0,
+    "angle_deg_vs_i1": 0.0,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.027,
+     0.027
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.027,
+     "angle_90": 0.027,
+     "angle_180": 0.027
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.0,
+    "lut_I1_A": 4.69464,
+    "sim_expected": 0.027,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 0.0,
+    "lut_I_abc_A": [
+     4.69464,
+     4.69464,
+     4.69464
+    ],
+    "sim_expected": 2.681,
+    "sim_expected_I_abc_A": [
+     4.85771,
+     4.66746,
+     4.66746
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 0.0,
+    "lut": 0.0,
+    "fem_corrected": null,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 0.0,
+    "mccm": 0.0,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 0.0,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 21.38,
+     "stator_core": 16.604,
+     "rotor": 19.319,
+     "bearing_de": 14.588,
+     "frame": 10.893
+    },
+    "winding_current_pu": 1.00036,
+    "loss_W_nodes": [
+     90.34,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "SAFE",
+    "current_ratio_levels": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "overall_expected": "SAFE",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": null,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_4turn": {
+   "turns": 4,
+   "turn_ratio_pct": 2.083,
+   "R_f_ohm": 0.1,
+   "load": 1.0,
+   "mccm_case": "C1",
+   "i2_over_i1_fault": {
+    "value": 0.048815,
+    "angle_deg_vs_i1": 35.704,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.021815,
+     0.075815
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.072474,
+     "angle_90": 0.068193,
+     "angle_180": 0.031167
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.050428,
+    "lut_I1_A": 4.88627,
+    "sim_expected": 0.072474,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 4.4846,
+    "lut_I_abc_A": [
+     5.08186,
+     4.91571,
+     4.6699
+    ],
+    "sim_expected": 6.5603,
+    "sim_expected_I_abc_A": [
+     5.04701,
+     4.70143,
+     4.46044
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 34.3475,
+    "lut": 34.3475,
+    "fem_corrected": {
+     "I_f_A": 35.155080071336435,
+     "I_abc_A": {
+      "A": 5.951339282242868,
+      "B": 4.763189512432583,
+      "C": 4.926950773392677
+     },
+     "dev_vs_mccm_pct": 2.351173784481997,
+     "pass_5pct": true,
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f2_corrections.json",
+     "sha256": "5e21ad5b5d91",
+     "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+     "grade_key": "fem2d",
+     "note": "F1: FaultLoop 에 단락 턴 저항 포함(2D lite, 학생판)"
+    },
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 157.539,
+    "mccm": 157.539,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 157.539,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 44.72,
+     "stator_core": 30.856,
+     "rotor": 24.353,
+     "bearing_de": 19.941,
+     "frame": 19.185
+    },
+    "winding_current_pu": 1.00263,
+    "loss_W_nodes": [
+     248.86,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "WARN",
+    "current_ratio_levels": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "overall_expected": "WARN",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": 3.0,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_8turn": {
+   "turns": 8,
+   "turn_ratio_pct": 4.167,
+   "R_f_ohm": 0.1,
+   "load": 1.0,
+   "mccm_case": null,
+   "i2_over_i1_fault": {
+    "value": 0.14425,
+    "angle_deg_vs_i1": 32.159,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.11725,
+     0.17125
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.167724,
+     "angle_90": 0.16026,
+     "angle_180": 0.12224
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.162467,
+    "lut_I1_A": 5.32735,
+    "sim_expected": 0.167724,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 12.9454,
+    "lut_I_abc_A": [
+     5.99189,
+     5.41107,
+     4.66166
+    ],
+    "sim_expected": 14.3526,
+    "sim_expected_I_abc_A": [
+     5.44745,
+     4.7583,
+     4.08543
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": null,
+    "lut": 55.3298,
+    "fem_corrected": null,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 511.473,
+    "mccm": null,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 511.473,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 96.973,
+     "stator_core": 62.763,
+     "rotor": 35.62,
+     "bearing_de": 31.927,
+     "frame": 37.747
+    },
+    "winding_current_pu": 1.01394,
+    "loss_W_nodes": [
+     603.72,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "DANGER",
+    "current_ratio_levels": [
+     "WARN",
+     "SAFE",
+     "SAFE"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "DANGER",
+     "WARN",
+     "SAFE"
+    ],
+    "overall_expected": "DANGER",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": 3.0,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_12turn": {
+   "turns": 12,
+   "turn_ratio_pct": 6.25,
+   "R_f_ohm": 0.1,
+   "load": 1.0,
+   "mccm_case": "C3",
+   "i2_over_i1_fault": {
+    "value": 0.245513,
+    "angle_deg_vs_i1": 28.359,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.218513,
+     0.272513
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.269578,
+     "angle_90": 0.259428,
+     "angle_180": 0.222124
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.307449,
+    "lut_I1_A": 5.92325,
+    "sim_expected": 0.269578,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 21.067,
+    "lut_I_abc_A": [
+     7.23601,
+     6.05858,
+     4.74689
+    ],
+    "sim_expected": 22.5458,
+    "sim_expected_I_abc_A": [
+     5.90544,
+     4.80418,
+     3.74727
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 69.8033,
+    "lut": 69.8033,
+    "fem_corrected": null,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 977.462,
+    "mccm": 977.462,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 977.462,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 166.264,
+     "stator_core": 105.074,
+     "rotor": 50.563,
+     "bearing_de": 47.821,
+     "frame": 62.361
+    },
+    "winding_current_pu": 1.0357,
+    "loss_W_nodes": [
+     1074.3,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "DANGER",
+    "current_ratio_levels": [
+     "WARN",
+     "SAFE",
+     "WARN"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "DANGER",
+     "DANGER",
+     "SAFE"
+    ],
+    "overall_expected": "DANGER",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": 3.0,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_16turn": {
+   "turns": 16,
+   "turn_ratio_pct": 8.333,
+   "R_f_ohm": 0.1,
+   "load": 1.0,
+   "mccm_case": "C4",
+   "i2_over_i1_fault": {
+    "value": 0.33774,
+    "angle_deg_vs_i1": 24.856,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.31074,
+     0.36474
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.362417,
+     "angle_90": 0.349947,
+     "angle_180": 0.313446
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.473518,
+    "lut_I1_A": 6.63155,
+    "sim_expected": 0.362417,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 27.5857,
+    "lut_I_abc_A": [
+     8.71482,
+     6.80663,
+     4.97024
+    ],
+    "sim_expected": 29.5387,
+    "sim_expected_I_abc_A": [
+     6.34289,
+     4.83242,
+     3.51425
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 80.6306,
+    "lut": 80.6306,
+    "fem_corrected": null,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 1522.24,
+    "mccm": 1522.24,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 1522.24,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 247.412,
+     "stator_core": 154.626,
+     "rotor": 68.062,
+     "bearing_de": 66.434,
+     "frame": 91.188
+    },
+    "winding_current_pu": 1.06369,
+    "loss_W_nodes": [
+     1625.4,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "DANGER",
+    "current_ratio_levels": [
+     "DANGER",
+     "SAFE",
+     "WARN"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "DANGER",
+     "DANGER",
+     "SAFE"
+    ],
+    "overall_expected": "DANGER",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": 3.0,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_4turn_resistive": {
+   "turns": 4,
+   "turn_ratio_pct": 2.083,
+   "R_f_ohm": 1.0,
+   "load": 1.0,
+   "mccm_case": "C1-R",
+   "i2_over_i1_fault": {
+    "value": 0.006511,
+    "angle_deg_vs_i1": 37.426,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.020489,
+     0.033511
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.032413,
+     "angle_90": 0.031386,
+     "angle_180": 0.022185
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.006496,
+    "lut_I1_A": 4.719,
+    "sim_expected": 0.032413,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 0.6019,
+    "lut_I_abc_A": [
+     4.74344,
+     4.72307,
+     4.69065
+    ],
+    "sim_expected": 3.1903,
+    "sim_expected_I_abc_A": [
+     4.8822,
+     4.67226,
+     4.63932
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 4.4244,
+    "lut": 4.4244,
+    "fem_corrected": {
+     "I_f_A": 4.5647420896258,
+     "I_abc_A": {
+      "A": 5.70143103849206,
+      "B": 4.560283728544736,
+      "C": 4.854350023148231
+     },
+     "dev_vs_mccm_pct": 3.1726210991205095,
+     "pass_5pct": true,
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f2_corrections.json",
+     "sha256": "5e21ad5b5d91",
+     "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+     "grade_key": "fem2d",
+     "note": "F1: FaultLoop 에 단락 턴 저항 포함(2D lite, 학생판)"
+    },
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 20.232,
+    "mccm": 20.232,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 20.232,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 24.377,
+     "stator_core": 18.434,
+     "rotor": 19.966,
+     "bearing_de": 15.275,
+     "frame": 11.958
+    },
+    "winding_current_pu": 1.00053,
+    "loss_W_nodes": [
+     110.7,
+     64.41,
+     51.74,
+     0.0,
+     11.62,
+     7.39,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "SAFE",
+    "current_ratio_levels": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "SAFE",
+     "SAFE",
+     "SAFE"
+    ],
+    "overall_expected": "SAFE",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": null,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  },
+  "itsc_4turn_halfload": {
+   "turns": 4,
+   "turn_ratio_pct": 2.083,
+   "R_f_ohm": 0.1,
+   "load": 0.5,
+   "mccm_case": "C1-L",
+   "i2_over_i1_fault": {
+    "value": 0.074507,
+    "angle_deg_vs_i1": 46.703,
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut",
+    "maxwell_grid": {
+     "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_lut.json",
+     "sha256": "7d7b1ac5147a",
+     "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+     "grade_key": "mccm"
+    }
+   },
+   "i2_over_i1_composite": {
+    "inherent": 0.027,
+    "inherent_angle_deg": 0.0,
+    "range": [
+     0.047507,
+     0.101507
+    ],
+    "expected_by_angle": {
+     "angle_0": 0.095076,
+     "angle_90": 0.095961,
+     "angle_180": 0.059339
+    },
+    "tolerance": "범위 |r−h| ~ r+h 안",
+    "source_inherent": {
+     "file": "motor_dt_viz/config/electrical.yaml",
+     "sha256": "296249cc9133",
+     "grade": "참고 데이터셋(AI Hub 정상 중앙값)",
+     "grade_key": "dataset",
+     "note": "aihub_normal_median (L-EF-04 0.028, R-EF-05 0.026)"
+    }
+   },
+   "i2_over_in": {
+    "lut": 0.050428,
+    "lut_I1_A": 3.20136,
+    "sim_expected": 0.047538,
+    "note": "LUT I₂/I_n 은 LUT I₁(결함 시 상승) 기준, 시뮬은 I₁ 을 정격×부하로 고정하는 규약 → 결함분으로 비교",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "unbalance_max_dev_pct": {
+    "lut": 7.3601,
+    "lut_I_abc_A": [
+     3.36941,
+     3.27788,
+     2.96974
+    ],
+    "sim_expected": 8.7152,
+    "sim_expected_I_abc_A": [
+     2.55292,
+     2.39422,
+     2.16371
+    ],
+    "note": "sim_expected = 엔진 규약(I₁ = I_n×부하 고정, 결함 I₂ + 고유 비대칭 합성)으로 독립 계산한 RMS 의 불평형",
+    "file": "motor_dt_viz/data/electrical/M1_mccm_lut_v2.json",
+    "sha256": "c6898c6e8d80",
+    "grade": "등가회로 LUT v2 (MCCM 격자, DT 등록)",
+    "grade_key": "lut"
+   },
+   "i_f_A": {
+    "mccm": 34.3475,
+    "lut": 34.3475,
+    "fem_corrected": null,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "p_loop_total_W": {
+    "lut": 157.539,
+    "mccm": 157.539,
+    "formula": "I_f²·(R_f + μ·R1_hot), μ = turns/N_ph",
+    "formula_value": 157.539,
+    "R1_hot_ohm": 1.60973,
+    "N_ph": 192,
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+    "sha256": "4e2a832bd6c9",
+    "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+    "grade_key": "mccm"
+   },
+   "winding_dT_steady_C": {
+    "model": {
+     "winding": 33.286,
+     "stator_core": 23.248,
+     "rotor": 12.317,
+     "bearing_de": 12.535,
+     "frame": 13.989
+    },
+    "winding_current_pu": 0.50227,
+    "loss_W_nodes": [
+     180.88,
+     64.41,
+     12.93,
+     0.0,
+     8.13,
+     5.17,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "tolerance_pct": 5.0,
+    "grade": "열회로 모델 자기 일관성(22 kW 기준 스케일 — 실측 아님)",
+    "grade_key": "model",
+    "file": "motor_dt_viz/config/thermal.yaml",
+    "sha256": "fe1e7d4e4c2a",
+    "note": "열회로(22 kW 기준 손실비 스케일) + 단락 루프 손실 → 권선 노드. 실측 아님, M1 에서 낙관적일 수 있음"
+   },
+   "expected_judgment": {
+    "i2i1_level": "WARN",
+    "current_ratio_levels": [
+     "WARN",
+     "WARN",
+     "DANGER"
+    ],
+    "current_ratio_levels_lut_I_abc": [
+     "WARN",
+     "WARN",
+     "WARN"
+    ],
+    "overall_expected": "DANGER",
+    "overall_note": "시뮬레이션 정책: provisional(i2i1·current_ratio) 포함, worst-of. 온도·진동은 전기 모드에서 상수(SAFE)",
+    "thresholds": {
+     "warn": 0.05,
+     "danger": 0.1,
+     "persistence_s": 3.0,
+     "policy": "include_with_label"
+    },
+    "detection_delay_expected_s": 3.0,
+    "file": "motor_dt_viz/config/thresholds.yaml",
+    "sha256": "9158581eb3d8",
+    "grade": "임계값(참고 데이터셋 provisional)",
+    "grade_key": "dataset"
+   },
+   "z2_uncertainty": {
+    "i2_uncertainty_pct": 19.6,
+    "sentence": "LUT I₂ 불확실성 +20 %(FEM Z₂ 5.97 Ω 기준; I₂ ∝ 1/Z₂, 앵커 7.136 Ω 유지)",
+    "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+    "sha256": "f99af4b76654",
+    "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+    "grade_key": "fem2d"
+   }
+  }
+ },
+ "rated_point": {
+  "catalog": {
+   "I_A": 4.73,
+   "pf": 0.79,
+   "eff": 0.895,
+   "rpm": 1760,
+   "file": "motor_dt_viz/config/motors/M1.yaml",
+   "sha256": "2d8ca5614eaf",
+   "grade": "카탈로그",
+   "grade_key": "catalog"
+  },
+  "rmxprt_v2m2": {
+   "I_A": 4.67029,
+   "pf": 0.790916,
+   "eff": 0.895818,
+   "rpm": 1755.1,
+   "slip": 0.0249453,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa1",
+   "grade": "RMxprt v2m2 정합(등가회로 상수)",
+   "grade_key": "rmxprt"
+  },
+  "mccm_calibrated": {
+   "I_A": 4.69463956182434,
+   "pf": 0.7913233644403938,
+   "P_in_W": 2445.1216272621346,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+   "sha256": "4e2a832bd6c9",
+   "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+   "grade_key": "mccm"
+  },
+  "fem_lite": {
+   "I_A": 4.903921370548503,
+   "pf": 0.7400953642109238,
+   "eff": 0.9146508966080783,
+   "T_Nm": 12.05286994656347,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\eddy2d\\summary.json",
+   "sha256": "0fb986f232d1",
+   "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+   "grade_key": "fem2d"
+  },
+  "iec_tolerance": {
+   "limits": {
+    "eff_min": 0.8792500000000001,
+    "pf_tol": 0.034999999999999996,
+    "pf_min": 0.755,
+    "slip": [
+     0.01776,
+     0.02664
+    ],
+    "I_st_max": 7.8,
+    "T_st": [
+     1.785,
+     2.625
+    ],
+    "T_max_min": 2.25
+   },
+   "table": [
+    {
+     "item": "정격 전류 [A]",
+     "catalog": 4.73,
+     "rmxprt_v2m2": 4.67029,
+     "fem_lite": 4.903921370548503,
+     "iec_tolerance": "IEC 60034-1 허용차 없음(역률·효율로 간접)",
+     "internal": "±5 % 내부",
+     "judge_rmxprt": "—",
+     "judge_fem": "—"
+    },
+    {
+     "item": "역률",
+     "catalog": 0.79,
+     "rmxprt_v2m2": 0.790916,
+     "fem_lite": 0.7400953642109238,
+     "iec_tolerance": "−0.035 (−(1−cosφ)/6) → ≥ 0.755",
+     "internal": "±0.03 내부",
+     "judge_rmxprt": "PASS",
+     "judge_fem": "FAIL"
+    },
+    {
+     "item": "효율 [-] (표류 1 % P_in / IEC 배정 2.3 %)",
+     "catalog": 0.895,
+     "rmxprt_v2m2": "0.896 / 0.883",
+     "fem_lite": "0.915 / 0.902",
+     "iec_tolerance": "−15 %·(1−η) → ≥ 0.879",
+     "internal": "±1.5 %p 내부",
+     "judge_rmxprt": "PASS",
+     "judge_fem": "PASS"
+    },
+    {
+     "item": "정격 슬립 [-]",
+     "catalog": 0.0222,
+     "rmxprt_v2m2": 0.0249453,
+     "fem_lite": null,
+     "iec_tolerance": "±20 % → 0.0178~0.0266",
+     "internal": "±0.005 내부",
+     "judge_rmxprt": "PASS",
+     "judge_fem": "—"
+    },
+    {
+     "item": "잠김 전류비 [-] (FEM: 스큐 보정)",
+     "catalog": 6.5,
+     "rmxprt_v2m2": 8.2404,
+     "fem_lite": 7.429110695745793,
+     "iec_tolerance": "+20 %(하한 없음) → ≤ 7.80",
+     "internal": "±10 % 내부",
+     "judge_rmxprt": "FAIL",
+     "judge_fem": "PASS"
+    },
+    {
+     "item": "잠김 토크비 [-] (FEM: 스큐 보정)",
+     "catalog": 2.1,
+     "rmxprt_v2m2": 3.08651,
+     "fem_lite": 2.3393334269471797,
+     "iec_tolerance": "−15 %·+25 % → 1.78~2.62",
+     "internal": "≥ 카탈로그 내부",
+     "judge_rmxprt": "FAIL",
+     "judge_fem": "PASS"
+    },
+    {
+     "item": "최대 토크비 [-]",
+     "catalog": 2.5,
+     "rmxprt_v2m2": 4.15753,
+     "fem_lite": null,
+     "iec_tolerance": "−10 % → ≥ 2.25",
+     "internal": "≥ 카탈로그 내부",
+     "judge_rmxprt": "PASS",
+     "judge_fem": "—"
+    },
+    {
+     "item": "결함 루프 전류 I_f 4턴 R_f 0.1 [A] (MCCM 기준)",
+     "catalog": 34.347510410932365,
+     "rmxprt_v2m2": null,
+     "fem_lite": 35.155080071336435,
+     "iec_tolerance": "표준 허용차 없음 — 내부 ±5 %",
+     "internal": "±5 % 내부",
+     "judge_rmxprt": "—",
+     "judge_fem": "PASS"
+    }
+   ],
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f7_iec_tolerance.json",
+   "sha256": "f99af4b76654",
+   "grade": "표준(IEC 60034-1 허용차)",
+   "grade_key": "standard"
+  }
+ },
+ "starting": {
+  "catalog": {
+   "I_st_ratio": 6.5,
+   "T_st_ratio": 2.1,
+   "T_max_ratio": 2.5,
+   "file": "motor_dt_viz/config/motors/M1.yaml",
+   "sha256": "2d8ca5614eaf",
+   "grade": "카탈로그",
+   "grade_key": "catalog"
+  },
+  "rmxprt_v2m2": {
+   "I_st_ratio": 8.2404,
+   "T_st_ratio": 3.08651,
+   "T_max_ratio": 4.15753,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa1",
+   "grade": "RMxprt v2m2 정합(등가회로 상수)",
+   "grade_key": "rmxprt"
+  },
+  "fem_corrected": {
+   "I_st_ratio": 7.429110695745793,
+   "T_st_ratio": 2.3393334269471797,
+   "I_st_2D_uncorrected": 8.247455775240095,
+   "T_st_2D_uncorrected": 2.883091717080469,
+   "correction": "F2 스큐·엔드링 누설 리액턴스 보정 (dX 0.721 Ω)",
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\f2_corrections.json",
+   "sha256": "5e21ad5b5d91",
+   "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+   "grade_key": "fem2d"
+  }
+ },
+ "equivalent_circuit": {
+  "R1_ohm": {
+   "20C": 1.24388,
+   "95C": 1.60973,
+   "used_hot": 1.60973,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_temp_sweep.json",
+   "sha256": "21fe315328ce",
+   "grade": "RMxprt v2m2 정합(등가회로 상수)",
+   "grade_key": "rmxprt"
+  },
+  "R2p_ohm": {
+   "rmxprt_95C": 1.37589,
+   "mccm_hot_calibrated": 1.2141582186636841,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+   "sha256": "4e2a832bd6c9",
+   "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+   "grade_key": "mccm",
+   "note": "물리 보정: 기계출력 2,236 W 맞춤"
+  },
+  "X1_ohm": {
+   "rmxprt": 2.00296,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa1",
+   "grade": "RMxprt v2m2 정합(등가회로 상수)",
+   "grade_key": "rmxprt"
+  },
+  "X2p_ohm": {
+   "rmxprt": 10.2834,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\rmxprt_v2m2.json",
+   "sha256": "07736423faa1",
+   "grade": "RMxprt v2m2 정합(등가회로 상수)",
+   "grade_key": "rmxprt"
+  },
+  "Xm_ohm": {
+   "rmxprt": 97.5666,
+   "fem_X_total_at_rated_Im": 95.60610504810332,
+   "fem_I_m_rms_A": 2.12923,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\magnetizing_curve_2d.json",
+   "sha256": "b0f93df33e1b",
+   "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+   "grade_key": "fem2d"
+  },
+  "Z2_ohm": {
+   "anchor_catalog": 7.136,
+   "fem_negseq": 5.331807573096316,
+   "fem_corrected": 5.966606203463734,
+   "dev_pct": -16.387244906618072,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\eddy2d\\summary.json",
+   "sha256": "0fb986f232d1",
+   "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+   "grade_key": "fem2d"
+  },
+  "short_turn_inductance_H": {
+   "fem_self_top": 8.1472e-06,
+   "fem_self_bot": 8.2986e-06,
+   "fem_mutual_top_main": 8.089500000000001e-06,
+   "mccm_assumption": "LUT note: 단락 턴 누설 9.5 mΩ (2D lite 파라미터로 재계산한 v3 와 7 케이스 < 0.6 %)",
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\inductance_matrix_2d.json",
+   "sha256": "a36126216cd3",
+   "grade": "2D 와전류 FEM lite(학생판, 단순화 기하, F1/F2 보정)",
+   "grade_key": "fem2d"
+  },
+  "Rfe_ohm": {
+   "mccm_physical": 2516.551905625818,
+   "rmxprt": 2256.35,
+   "file": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\권상모터_3D모델링\\maxwell\\results\\mccm_results.json",
+   "sha256": "4e2a832bd6c9",
+   "grade": "등가회로 MCCM(RMxprt v2m2 + 다중결합 회로, Z₂ 카탈로그 앵커)",
+   "grade_key": "mccm"
+  }
+ },
+ "limitations": [
+  "합성 신호(엔진 페이저 합성) — 실측 아님",
+  "고유 비대칭 0.027 은 건전 하한 가정(AI Hub L-EF-04·R-EF-05 중앙값; L-SF-04 실측 p95 0.1005 는 품질 부적합)",
+  "Z₂ 카탈로그 앵커 7.136 Ω vs FEM 5.97 Ω → LUT I₂ 불확실성 +20 %",
+  "2D lite: 무스큐·분산 결함·단순화 기하(학생판), 시간 파형·RSH 없음",
+  "열 모델은 22 kW 기준 스케일 — M1 에서 낙관적일 수 있음(실측 전 보정 불가)",
+  "기계 결함(베어링·오정렬·팬·브레이크)은 Maxwell 근거 없음 — 진동·베어링 상수(표준/AI Hub 참고)"
+ ],
+ "mechanical_note": "Maxwell 근거 없음 — 진동·베어링 상수(ISO 10816-1 Class I 표준 / AI Hub 참고 데이터셋)"
+}

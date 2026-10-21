@@ -123,6 +123,7 @@ class MotorHUD:
                         ui.Label("I2/In", width=60, style=_style(13, 0xFFBBBBBB))
                         self._labels["i2in"] = ui.Label("-", style=_style(13, 0xFFBBBBBB))
                     self._labels["esrc"] = ui.Label("", style=_style(11, 0xFF9999AA), word_wrap=True)   # D5: 전류 신호 근거 (lut/legacy)
+                    self._labels["aref"] = ui.Label("", style=_style(11, 0xFF9ACD9A), word_wrap=True)   # V6: 해석 기준값 비교 한 줄 (analysis_reference.json)
                     ui.Separator(height=6)
 
                 # 기계 섹션 — 전기 전용 모드에서 통째로 숨긴다
@@ -220,6 +221,12 @@ class MotorHUD:
                                              f"- {src.get('status', '')}, FEM not verified; hotspot not modeled (winding mean node)")
             else:
                 self._labels["esrc"].text = "basis: legacy analytic inverse (target I2/I1), not FEM"
+
+    def update_reference(self, text: str, ok: bool | None = None) -> None:
+        """V6: '지금 보이는 숫자 | 해석 기준값 | 차이 | 출처' 한 줄. ok=False 면 주황."""
+        if "aref" in self._labels:
+            self._labels["aref"].text = text
+            self._restyle("aref", self._labels["aref"], 11, 0xFF9ACD9A if ok in (None, True) else 0xFF33A5FF)
 
     def update_thermal(self, temperatures: dict, stages: dict, labels: dict,
                        keys: list[str] | None = None, levels: dict | None = None) -> None:

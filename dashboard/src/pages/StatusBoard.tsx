@@ -4,6 +4,7 @@ import { fmtT } from "../data";
 import { PlaybackContext, useClockPlayback } from "../state/playback";
 import { fill } from "../live/types";
 import { Gauge } from "../status/Gauge";
+import { AnalysisRef } from "../status/AnalysisRef";
 import { TrendChart, type TrendSel } from "../status/TrendChart";
 import {
   causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent, provisionalBadge,
@@ -219,6 +220,10 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           </div>
         </div>
 
+        <div className="panel st-aref-p">
+          <AnalysisRef index={index} s={cur ?? null} i={i} stepId={step.id} electricalCase={step.electrical_case} mode={mode}
+                       live={isLiveSel && live.buffer.states.length ? live.buffer.states[live.buffer.states.length - 1] : null} isLive={isLiveSel} />
+        </div>
         <div className="panel st-bottom">
           <div className="st-bar">
             <button onClick={pb.toggle} title="Space">{isLiveSel ? (pb.playing ? "❚❚ 최근 기록 보기" : "▶ LIVE 복귀") : (pb.playing ? "⏸ 일시정지" : "▶ 재생")}</button>

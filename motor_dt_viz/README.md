@@ -321,3 +321,13 @@ ISO 존, FPS. 발표 후 수치를 되짚거나 그래프를 그릴 때 쓴다.
 
 - `py -3.12 -X utf8 tools/baseline_capture.py --motor M1 --tag SITE_<날짜> --csv <3상 전류 CSV: t,ia,ib,ic[,va,vb,vc]> --fs 2000` → `config/baselines/M1_SITE_<날짜>.yaml` + thresholds.yaml 반영 제안(diff) 출력. 품질 게이트(창 ≥ 500, I₁ 변동계수 ≤ 10 %) 통과 시 사람이 `current.negative_sequence.baseline`·`mode: baseline_multiple` 로 옮긴다(자동 반영 없음).
 - 참고 데이터셋: `--grade reference --aihub-dir "<AI Hub current/2.2kW/L-SF-04/정상>" --tag AIHUB_LSF04_REFERENCE --apply-reference` → `reference_baseline.value`(p95)만 기록(판정 기준 아님).
+
+## 시뮬 ↔ 해석 대조 검증 (V0~V6, 2026-10-21)
+
+`docs/verification/sim_vs_analysis_report.md` — Isaac Sim 전기 결함 시나리오의 표시값이 해석 결과(RMxprt v2m2 → MCCM/LUT v2 → 2D FEM)에서 어떻게 나왔는지 수치 대조·근거 사슬로 보이는 보고서. 수기 숫자 없음.
+
+1. 해석 근거값: `py -3.12 -X utf8 tools/verify/build_analysis_reference.py` → `data/electrical/analysis_reference.json`(+ dashboard public 사본, 입력 sha 포함; Maxwell 저장소 읽기 전용) · `py -3.12 -X utf8 tools/verify/traceability.py` → `docs/verification/traceability.{json,md}`
+2. 배치(PowerShell/cmd): `C:\ISSACS~1\python.bat app\demo_integrated.py --autoplay --mode electrical --motor M1 --inherent_angle_deg 0 --verify_dir logs\verify\electrical_a0 --max_s 250` (각도 0/90/180), 열 `--mode integrated --scenario_yaml tools\verify\scenario_itsc_4turn_thermal.yaml --verify_dir logs\verify\thermal_itsc_4turn --max_s 222` (4/12/16). `--verify_dir` 는 로깅 훅(state.csv 10 Hz·events.csv·waveform 1 s 2 kHz·meta.json)만 추가하고 값은 기존 엔진이다.
+3. 대조·그림·보고서: `py -3.12 -X utf8 tools/verify/sim_vs_analysis.py` → `docs/verification/sim_vs_analysis.{json,md,xlsx}` + `img/` · HUD 합성 `tools/verify/hud_composite.py --shots logs/verify/hud_raw --state logs/verify/hud_shots/state.csv` · `py -3.12 -X utf8 tools/verify/write_report.py`
+4. 실시간 패널: 상태 보드 `④ 해석 근거 비교`(`dashboard/src/status/AnalysisRef.tsx` — 1단계 산출물을 읽는다, `npm run build`), Isaac HUD `ref:` 한 줄. 기계 시나리오는 "Maxwell 근거 없음".
+- 독립 재계산 `tools/verify/recompute_i2i1.py <waveform.csv>` 는 엔진을 import 하지 않는다. 테스트 `tests/test_verify_tools.py`.

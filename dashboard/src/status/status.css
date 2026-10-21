@@ -1,7 +1,7 @@
 /* 상태 보드 (#/status) — 1920×1080 기준, 1366×768 까지 축소 */
-.dash.st { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+.dash.st { grid-template-rows: auto auto minmax(0, 1fr) auto auto auto; }   /* + V6 해석 근거 비교 행 */
 .dash.st .tabs { max-height: 19vh; }
-.dash.st.present { grid-template-rows: auto auto 1fr auto; }
+.dash.st.present { grid-template-rows: auto auto 1fr auto auto; }
 .st .btn { display: inline-block; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); text-decoration: none; font-size: .9em; }
 .st .btn:hover { border-color: var(--accent); }
 .st .btn.primary { border-color: var(--accent); color: var(--accent); font-weight: 700; }
@@ -104,3 +104,26 @@
 .st-np-foot { padding: 0 14px 12px; display: flex; flex-direction: column; gap: 8px; }
 .st-np-yaml { background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .82em; margin: 0; white-space: pre-wrap; }
 .st-np-btns { display: flex; gap: 8px; }
+
+/* ---- V6 해석 근거 비교 패널 (AnalysisRef.tsx) ---- */
+.st-aref-p { max-height: 36vh; overflow: auto; padding: 6px 12px; }
+.st-aref { font-size: 12px; }
+.st-aref-h { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 4px; }
+.st-aref-h button { font-size: 11px; padding: 2px 7px; }
+.st-aref-none { color: var(--muted); padding: 4px 0; }
+.st-aref-t { width: 100%; border-collapse: collapse; }
+.st-aref-t th, .st-aref-t td { padding: 3px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.st-aref-t td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.st-aref-t tr.ok td:nth-child(4) { color: #26f259; }
+.st-aref-t tr.ng td:nth-child(4) { color: #ff731a; }
+.st-aref-t tr.na td:nth-child(2) { color: var(--muted); }
+.st-aref-t .why { cursor: help; }
+.st-aref-t.small { font-size: 11px; }
+.st-aref-t.small code { font-size: 10px; }
+.st-aref-note { margin-top: 3px; }
+.st-aref .g { display: inline-block; padding: 0 6px; border-radius: 9px; font-size: 10.5px; border: 1px solid var(--line); }
+.st-aref .g-cat { background: #1b5e20; color: #e8f5e9; } .st-aref .g-rmx { background: #0d47a1; color: #e3f2fd; } .st-aref .g-eq { background: #4a148c; color: #f3e5f5; }
+.st-aref .g-fem { background: #006064; color: #e0f7fa; } .st-aref .g-std { background: #37474f; color: #eceff1; } .st-aref .g-asm { background: #bf360c; color: #fff3e0; }
+.st-aref .g-mod { background: #5d4037; color: #efebe9; } .st-aref .g-ds { background: #4e342e; color: #efebe9; }
+.st-aref-basis, .st-aref-trace { margin-top: 6px; }
+.st-aref-trace ul { margin: 4px 0 0 16px; padding: 0; }

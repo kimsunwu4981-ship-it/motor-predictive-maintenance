@@ -64,6 +64,10 @@ ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_
                 help="--m1_model 의 USD variant view (half_translucent*: 한쪽 반을 반투명으로 — 자르지 않음, H2)")
 ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
 ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model 의 USD variant mount (B3 발 장착 기본 / B35 플랜지)")
+# V1 검증 로깅 훅 (2026-10-21, tools/verify): 값은 전부 기존 엔진 — 기록만 늘린다
+ap.add_argument("--verify_dir", default="", metavar="DIR", help="검증 로그: DIR/state.csv(10 Hz 전 필드)·events.csv(판정 변화)·waveform_<t>_<pre|post>_<case>.csv(장면 전환 전후 1 s·2 kHz)·meta.json")
+ap.add_argument("--inherent_angle_deg", type=float, default=None, help="고유 비대칭 I₂ 위상 [deg] — 이 실행의 메모리 설정만 덮어쓴다 (electrical.yaml 불변, 민감도 0/90/180° 용)")
+ap.add_argument("--scenario_yaml", default="", metavar="PATH", help="검증 전용 시나리오 파일(steps 포함)로 자동 재생 — 기존 장면 파일 불변")
 args = ap.parse_args()
 if args.m1_model is None:
     args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
@@ -124,6 +128,9 @@ GEOM_SCALE = float(MOTOR.geometry_scale) if MOTOR else 1.0
 VIB_STD = str(MOTOR.vibration["standard"]).split(" (")[0] if MOTOR else "ISO 20816-3"
 if MOTOR:
     print(f"[demo] motor library {MOTOR.id}: {MOTOR.name}, geometry x{GEOM_SCALE}, {VIB_STD}", flush=True)
+if args.inherent_angle_deg is not None and EL_CFG is not None:
+    EL_CFG.setdefault("inherent", {})["angle_deg"] = float(args.inherent_angle_deg)     # 이 프로세스의 dict 만 — 파일은 그대로
+    print(f"[verify] inherent angle override {args.inherent_angle_deg:g} deg (memory only)", flush=True)
 from viz.colormap import ElectricalColormap  # noqa: E402
 from viz.current_particles import CurrentParticles  # noqa: E402
 from viz.current_paths import CurrentPathBuilder  # noqa: E402
@@ -142,7 +149,12 @@ if args.m1_model:
 
 
 def _player_for(mode_: str):
-    """M1 모델이면 config/scenarios_M1.yaml 의 모드 절(있을 때)로, 아니면 기존 모드별 파일."""
+    """M1 모델이면 config/scenarios_M1.yaml 의 모드 절(있을 때)로, 아니면 기존 모드별 파일. --scenario_yaml 이면 그 파일(steps)로."""
+    if args.scenario_yaml:
+        import yaml as _yaml
+        _cfg = _yaml.safe_load(open(args.scenario_yaml, encoding="utf-8"))
+        _cfg = _cfg.get(mode_, _cfg) if "steps" not in _cfg else _cfg
+        return ScenarioPlayer(_cfg, name=f"verify:{os.path.basename(args.scenario_yaml)}")
     if m1:
         cfg_ = M1Model.scenario_cfg(ROOT, mode_)
         if cfg_:
@@ -216,6 +228,88 @@ HUD_TEMP_EN = {"bearing_de": "DE bearing", "winding": "Stator winding",
 
 i_line = cm.motor.rated_current("rated_line_A")
 i_phase = cm.motor.rated_current("rated_phase_A")
+
+# ------------------------------------------------------------------ V1 검증 로깅 훅 (--verify_dir): 기존 엔진 값만 기록
+class _VerifyLog:
+    FS = 2000.0; DUR = 1.0
+    COLS = ["t_session_s", "t_real_s", "mode", "step", "case", "load", "time_scale", "rpm",
+            "Ia_rms", "Ib_rms", "Ic_rms", "i1_A", "i2_A", "i2_over_i1", "i2_angle_deg", "i2_over_in", "i_f_A", "p_loop_total_W", "method",
+            "T_winding", "T_stator_core", "T_rotor", "T_shaft", "T_bearing_de", "T_bearing_nde", "T_frame", "stage_winding", "stage_bearing_de",
+            "vibration_mms", "status", "label", "cause_signal", "cause_component", "cause_value", "threshold", "stream", "provisional_in_status",
+            "lvl_temperature", "lvl_current_ratio", "lvl_i2i1", "lvl_vibration", "lvl_bearing", "advisory", "fps"]
+
+    def __init__(self, d):
+        import hashlib
+        self.d = d; os.makedirs(d, exist_ok=True)
+        self.f_state = open(os.path.join(d, "state.csv"), "w", newline="", encoding="utf-8"); self.w_state = csv.writer(self.f_state); self.w_state.writerow(self.COLS)
+        self.f_ev = open(os.path.join(d, "events.csv"), "w", newline="", encoding="utf-8"); self.w_ev = csv.writer(self.f_ev)
+        self.w_ev.writerow(["t_session_s", "t_real_s", "step", "case", "kind", "from", "to", "cause_signal", "cause_component", "cause_value", "threshold"])
+        self.prev_status = None; self.prev_step = None; self.n = 0; self.scenes = []
+        def sha(p):
+            return hashlib.sha256(open(p, "rb").read()).hexdigest()
+        lut_p = os.path.join(ROOT, (EL_CFG or {}).get("source", {}).get("lut", "") or "")
+        self.meta = {"argv": sys.argv[1:], "motor": MOTOR.id if MOTOR else None, "mode": args.mode, "scenario": player.name,
+                     "inherent": dict((EL_CFG or {}).get("inherent") or {}), "inherent_angle_override": args.inherent_angle_deg,
+                     "method": cm.method, "rated_line_A": i_line, "rated_phase_A": i_phase,
+                     "lut_file": (EL_CFG or {}).get("source", {}).get("lut"), "lut_sha256": sha(lut_p) if lut_p and os.path.exists(lut_p) else None,
+                     "electrical_yaml_sha256": sha(os.path.join(ROOT, "config", "electrical.yaml")), "thresholds_yaml_sha256": sha(os.path.join(ROOT, "config", "thresholds.yaml")),
+                     "thermal_yaml_sha256": sha(os.path.join(ROOT, "config", "thermal.yaml")), "motor_yaml_sha256": sha(os.path.join(ROOT, "config", "motors", f"{MOTOR.id}.yaml")) if MOTOR else None,
+                     "state_hz": round(1.0 / STATE_PERIOD_S, 2), "waveform_fs_hz": self.FS, "waveform_s": self.DUR,
+                     "steps": [{"id": s_["id"], "t0_s": sum(float(x["duration_s"]) for x in player.steps[:k]), "duration_s": s_["duration_s"], "time_scale": s_.get("time_scale"),
+                                "load": s_.get("load"), "electrical_case": s_.get("electrical_case"), "faults": s_.get("faults", [])} for k, s_ in enumerate(player.steps)],
+                     "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+        self._save_meta()
+        print(f"[verify] logging → {d}", flush=True)
+
+    def _save_meta(self):
+        with open(os.path.join(self.d, "meta.json"), "w", encoding="utf-8") as f:
+            json.dump(self.meta, f, ensure_ascii=False, indent=1)
+
+    def waveform(self, t_s, case_, tag):
+        t_ = np.arange(0, self.DUR, 1.0 / self.FS)
+        I_ = cm.waveform(t_, case_, "rated_line_A")                      # 엔진 생성기 그대로 (슬로모션 없음, fs 2 kHz)
+        p = os.path.join(self.d, f"waveform_{t_s:07.2f}_{tag}_{case_}.csv")
+        with open(p, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f); w.writerow(["t_s", "ia_A", "ib_A", "ic_A"])
+            for k in range(len(t_)):
+                w.writerow([f"{t_[k]:.5f}", f"{I_[0, k]:.6f}", f"{I_[1, k]:.6f}", f"{I_[2, k]:.6f}"])
+        return p
+
+    def tick(self, t_session_, t_real_, mode_, frame_, case_, load_, st_, th_, vib_, verdict_, kind_worst_, fps_, rpm_):
+        step_ = frame_.step_id if frame_ else "manual"
+        if step_ != self.prev_step:                                      # 장면 전환: 전환 전 케이스·후 케이스 파형 1 s 씩
+            if self.prev_step is not None and self.prev_case is not None:
+                self.waveform(t_session_, self.prev_case, "pre")
+            self.waveform(t_session_, case_, "post")
+            self.scenes.append({"t_session_s": round(t_session_, 2), "t_real_s": round(t_real_, 3), "step": step_, "case": case_, "load": load_})
+            self.meta["scene_changes"] = self.scenes; self._save_meta()
+            self.prev_step = step_
+        self.prev_case = case_
+        loop_ = cm.short_loop(case_) or {}
+        adv_ = ";".join(f"{a.kind}:{a.level}" for a in verdict_.advisory)
+        self.w_state.writerow([round(t_session_, 2), round(t_real_, 3), mode_, step_, case_, load_, frame_.time_scale if frame_ else "", round(rpm_, 1),
+                               *[round(v, 4) for v in st_.rms_A], round(st_.i1_A, 5), round(st_.i2_A, 5), round(st_.i2_over_i1, 5),
+                               "" if st_.i2_angle_deg is None else round(st_.i2_angle_deg, 3), "" if st_.i2_over_in is None else round(st_.i2_over_in, 5),
+                               loop_.get("I_f_A", ""), round(cm.loop_loss_W(case_), 2), cm.method,
+                               *[round(th_.temperature_C[k], 3) for k in ("winding", "stator_core", "rotor", "shaft", "bearing_de", "bearing_nde", "frame")],
+                               th_.stage["winding"], th_.stage["bearing_de"], round(vib_, 3),
+                               verdict_.status, verdict_.label_ko, verdict_.cause_signal, verdict_.cause_component, round(verdict_.value, 5), verdict_.threshold,
+                               verdict_.stream, verdict_.provisional_in_status,
+                               *[kind_worst_.get(k, "") for k in ("temperature", "current_ratio", "i2i1", "vibration", "bearing")], adv_, round(fps_, 1)])
+        key_ = (verdict_.status, verdict_.cause_signal)
+        if key_ != self.prev_status:
+            self.w_ev.writerow([round(t_session_, 2), round(t_real_, 3), step_, case_, "status", self.prev_status[0] if self.prev_status else "", verdict_.status,
+                                verdict_.cause_signal, verdict_.cause_component, round(verdict_.value, 5), verdict_.threshold])
+            self.prev_status = key_
+        self.n += 1
+        if self.n % 50 == 0:
+            self.f_state.flush(); self.f_ev.flush()
+
+    def close(self):
+        self.meta["rows"] = self.n; self.meta["finished"] = time.strftime("%Y-%m-%d %H:%M:%S"); self._save_meta()
+        self.f_state.close(); self.f_ev.close()
+
+
 # 전기 결함 신호의 근거 (TASK A D3/D4): lut(M1, 등가회로 LUT) | legacy(해석식 역산). 정격 전류 불일치는 보고만 한다.
 print(f"[demo] electrical method={cm.method} ({cm.method_reason})"
       + (f"; rated_current_A {cm.rated_current_A} vs motor {i_line} A ({cm.rated_current_mismatch_pct:+.1f} %)" if cm.method == "lut" else ""), flush=True)
@@ -238,6 +332,10 @@ if m1 and args.m1_shots:
         "integrated": [(14.0, "full", "wide", "01_int_normal.png"), (58.0, "cutaway", "bearing_de", "02_int_bearing_de.png"), (92.0, "cutaway", "fault_focus", "03_int_itsc_4turn.png"),
                        (135.0, "cutaway", "fault_focus", "04_int_itsc_12turn.png")],
     }
+    if args.verify_dir:
+        # V4: HUD 합성용 4장 (전기 시나리오: 4턴 주입 직후 20.6 s, WARN 전환 23.6 s, 12턴 DANGER 전환 48.6 s, 정상 상태 70 s) — 이름에 시각을 넣어 state.csv 와 합성
+        _SHOT_PLANS = {m_: [(20.6, args.view, "wide", "hud_01_injection_t20.6.png"), (23.6, args.view, "fault_focus", "hud_02_warn_t23.6.png"),
+                            (48.6, args.view, "fault_focus", "hud_03_danger_t48.6.png"), (70.0, args.view, "wide", "hud_04_steady_t70.0.png")] for m_ in ("integrated", "mechanical", "electrical")}
     if args.view.startswith("half_translucent"):
         # H3: 반투명 뷰 4장 — 정상 측면·정상 등각(통합 0~30 s), DE 베어링(30~70), 4턴 fault_focus(70~105)
         _v = args.view
@@ -550,6 +648,30 @@ FPS_WARN_BELOW = float((PRESET or {}).get("fps_warn_below", 30))
 PERF_LOG_AFTER_S = float((PRESET or {}).get("perf_log_after_s", 8))
 STATE_PERIOD_S = 0.5 / float(load("live")["server"].get("state_hz", 10))   # 판정·state 갱신 주기 = 송신 주기의 절반 (브리지가 매 틱 새 state 를 보게 — 같으면 9.2 Hz 로 떨어졌다)
 LOG_PERIOD_S = 0.25      # CSV·status 기록 주기 (실제 시간)
+verify_log = _VerifyLog(args.verify_dir) if args.verify_dir else None     # V1 훅 (STATE_PERIOD_S 뒤)
+# V6: 해석 근거 비교 (data/electrical/analysis_reference.json — tools/verify/build_analysis_reference.py 산출, 없으면 HUD 줄 생략)
+try:
+    with open(os.path.join(ROOT, "data", "electrical", "analysis_reference.json"), encoding="utf-8") as _f:
+        ANALYSIS_REF = json.load(_f)
+except Exception:  # noqa: BLE001
+    ANALYSIS_REF = None
+
+
+def analysis_ref_line(mode_: str, case_: str, st_) -> tuple[str, bool | None]:
+    """HUD 한 줄: 표시값 | 해석 기준 | 차이 % | 출처. 기계 모드는 근거 없음 문구."""
+    if ANALYSIS_REF is None:
+        return "", None
+    if mode_ == "mechanical":
+        return "ref: no Maxwell basis - vibration/bearing constants (standard / AI Hub reference)", None
+    R = ANALYSIS_REF["scenarios"].get(case_)
+    if not R:
+        return f"ref: {case_} outside LUT (legacy analytic) - no analysis reference", None
+    exp = float(R["i2_over_i1_composite"]["expected_by_angle"]["angle_0"]); shown = float(st_.i2_over_i1)
+    dev = (shown / exp - 1) * 100 if exp else 0.0
+    ok = abs(dev) <= 1.0
+    i_f = R["i_f_A"]["mccm"] or R["i_f_A"]["lut"]; fem = (R["i_f_A"].get("fem_corrected") or {}).get("I_f_A")
+    return (f"ref: I2/I1 {exp:.4f} (shown {shown:.4f}, {dev:+.2f} %) | I_f {i_f:.1f} A" + (f" (FEM {fem:.1f})" if fem else "") +
+            f" | P_loop {R['p_loop_total_W']['lut']:.0f} W | LUT v2 + 2D FEM, provisional"), ok
 status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
 
 # ------------------------------------------------------------------ 녹화
@@ -848,6 +970,9 @@ while simulation_app.is_running():
             if mode in ("electrical", "integrated"):
                 hud.update_current(st_line, levels={p: levels.get(("current_ratio", p), "SAFE") for p in "ABC"},
                                    i2i1_level=levels.get(("i2i1", "-"), "SAFE"))
+                _rl, _rok = analysis_ref_line(mode, case, st_line)
+                if _rl:
+                    hud.update_reference(_rl, _rok)
             if mode in ("mechanical", "integrated"):
                 hud.update_thermal({k: th.temperature_C[k] for k in HUD_TEMP_KEYS},
                                    {k: th.stage[k] for k in HUD_TEMP_KEYS},
@@ -914,6 +1039,8 @@ while simulation_app.is_running():
         }
         if bridge is not None:
             bridge.publish(state_dict)
+        if verify_log is not None:
+            verify_log.tick(t_session, t_real, mode, frame, case, state.load, st_line, th, vib, verdict, kind_worst, _fps_hist[-1] if _fps_hist else 0.0, _rpm)
 
     # ---------- 로깅 ----------
     # 기록 주기는 t_session 기준 — t_real 은 모드 전환·재생 시 0 으로 돌아가 기록이 멈춘다(실측)
@@ -972,6 +1099,8 @@ while simulation_app.is_running():
         print(f"[live] restarting with motor {LIVE_RESTART['motor_id']}", flush=True)
         break
 
+if verify_log is not None:
+    verify_log.close()
 if recorder is not None:
     _stop_recording(recorder)
     rec_meta["ffmpeg_stop_wall"] = time.time()
