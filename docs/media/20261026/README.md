@@ -23,6 +23,7 @@ Isaac 은 PowerShell/cmd 에서만 (Git Bash 자식은 Startup 직후 조용히 
 - Isaac 뷰포트 캡처(`capture_viewport_to_file`)에는 omni.ui HUD 가 찍히지 않는다 → `hud/` 는 같은 시각 state.csv 값을 합성한 것(`check_vs_state.json` 으로 1회 대조). 영상(`--record`)은 데스크톱 창 캡처라 HUD 가 그대로 들어간다.
 - 대시보드 네이티브 title 툴팁은 스크린샷에 안 찍혀 같은 문장을 DOM 오버레이로 그렸다(페이지 코드 변경 없음, 캡션에 원문).
 - 해설 화면(#/electrical, #/mechanical)은 이전 22 kW 녹화 영상을 재생하므로 제외했다 — 상태 보드(#/status) 기준으로 대체.
+- 대시보드 사진·영상은 상태 보드 **단순 보기**(2026-10-26 `dashboard: simple view (3-layer IA)` 이후) 기준이다. 전문가 보기는 10번 사진 한 장. 22 kW 문구는 근거 서랍·전문가 보기의 정직성 주석에만 보인다(index.md 표시).
 - 영상의 창 캡처는 창 테두리를 포함할 수 있어 1920×1080 으로 scale/pad 했다(검은 여백 가능).
 
 ## 수동 캡처 체크리스트 (자동화 불가 — 사람이 찍어 이 폴더에 넣고 index.md 에 한 줄 추가)

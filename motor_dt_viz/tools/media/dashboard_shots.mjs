@@ -1,21 +1,20 @@
 // dashboard_shots.mjs — 보고용 대시보드 사진 12장 + 워크스루 영상 + (08) 상태 보드 동기 녹화 (Playwright + 설치된 Edge, 1920×1080).
-//   node tools/media/dashboard_shots.mjs <out_dashboard_dir> <out_video_dir> [base_url]      (dashboard/ 에서, 서버 `node serve.cjs` 4173 필요)
-// 원칙: 페이지 코드 변경 없음. 숫자는 전부 대시보드가 읽는 JSON(엔진·LUT) 값. 네이티브 title 툴팁은 스크린샷에 안 찍히므로 같은 문장을 DOM 오버레이로 그린다(캡션에 원문).
-// 브라우저: 설치된 Edge(channel msedge) — Playwright 번들 Chromium/ffmpeg 다운로드가 이 PC 에서 멈춰서(1.3 MB 에서 정지) recordVideo 대신 시스템 ffmpeg gdigrab 으로 창 영역을 녹화한다(헤드 모드, 창 (0,0)).
-// 22 kW: 해설 화면(#/electrical, #/mechanical)은 이전 22 kW 녹화 영상을 재생하므로 찍지 않고 상태 보드 장면으로 대체한다(excluded 에 사유). 각 사진마다 "22 kW" 문구가 화면 안에 보이는지 기록한다.
+//   node tools/media/dashboard_shots.mjs <out_dashboard_dir> <out_video_dir> [base_url]      (dashboard/ 에서, PowerShell. 서버 `node serve.cjs` 4173 필요)
+// 2026-10-26 (2차): 상태 보드가 "단순 보기"(상태·원인·조치) 기본으로 바뀐 뒤의 캡처. 원칙은 그대로 — 페이지 코드 변경 없음, 숫자는 전부 export JSON(엔진·LUT) 값,
+//   네이티브 title 툴팁은 같은 문장을 DOM 오버레이로 그린다(캡션에 원문). 녹화는 시스템 ffmpeg gdigrab(헤드 창 (0,0)) — 녹화 중 다른 창을 앞으로 올리면 안 된다.
+// 22 kW: 해설 화면(#/electrical, #/mechanical)은 이전 22 kW 녹화 영상을 재생하므로 찍지 않는다(excluded). 각 사진마다 "22 kW" 문구가 화면 안에 보이는지 기록한다.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
-const { chromium } = createRequire(join(process.cwd(), "package.json"))("playwright");   // dashboard/ 의 node_modules (cwd 기준) — 스크립트는 motor_dt_viz/tools/media 에 있다
+const { chromium } = createRequire(join(process.cwd(), "package.json"))("playwright");
 
 const [outDir, videoDir, base = "http://127.0.0.1:4173"] = process.argv.slice(2);
 mkdirSync(outDir, { recursive: true }); mkdirSync(videoDir, { recursive: true });
 const W = 1920, H = 1080;
 const caps = [];
 const excluded = [
-  { name: "04_elec_panel_4turn / 05_elec_panel_12turn (#/electrical)", reason: "해설 화면은 이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드 전기 모드 장면(04·05)으로 대체" },
-  { name: "09_narration_mech_bearing / 10_narration_elec_itsc (#/mechanical, #/electrical)", reason: "같은 이유. 상태 보드 기계 모드(09)·추세 차트(10)로 대체" },
+  { name: "#/electrical · #/mechanical 해설 화면", reason: "이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드(단순 보기·전문가 보기)만 캡처" },
 ];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -37,12 +36,11 @@ async function overlayTitle(page, selector, label) {
     const box = document.createElement("div"); box.id = "__tip";
     const tag = document.createElement("div"); tag.textContent = `툴팁(title) — ${lab}`; tag.style.cssText = "color:#ffb74d;font-weight:bold;margin-bottom:4px";
     const body = document.createElement("div"); body.textContent = t; box.append(tag, body);
-    box.style.cssText = `position:fixed;left:${Math.min(Math.max(r.left, 8), 1400)}px;top:${Math.min(r.bottom + 8, 980)}px;max-width:500px;background:#1e1e22;color:#fff;border:1px solid #ffb74d;border-radius:6px;padding:8px 10px;font:13px/1.5 'Malgun Gothic',sans-serif;z-index:99999;white-space:pre-wrap;box-shadow:0 4px 14px rgba(0,0,0,.5)`;
+    box.style.cssText = `position:fixed;left:${Math.min(Math.max(r.left, 8), 1380)}px;top:${Math.min(r.bottom + 8, 960)}px;max-width:520px;background:#1e1e22;color:#fff;border:1px solid #ffb74d;border-radius:6px;padding:8px 10px;font:14px/1.5 'Malgun Gothic',sans-serif;z-index:99999;white-space:pre-wrap;box-shadow:0 4px 14px rgba(0,0,0,.5)`;
     el.style.outline = "2px solid #ffb74d"; el.setAttribute("data-tipped", "1"); document.body.appendChild(box); return t;
   }, [selector, label]);
 }
 async function clearOverlay(page) { await page.evaluate(() => { document.getElementById("__tip")?.remove(); document.querySelectorAll("[data-tipped]").forEach((e) => { e.style.outline = ""; e.removeAttribute("data-tipped"); }); }); }
-async function scrollTo(page, sel, block = "center") { await page.evaluate(([s, b]) => document.querySelector(s)?.scrollIntoView({ block: b }), [sel, block]); await sleep(400); }
 async function shot(page, name, caption, extra = {}) {
   const p = join(outDir, `${name}.png`); await page.screenshot({ path: p, fullPage: false });
   const kw = await kw22Visible(page);
@@ -50,7 +48,6 @@ async function shot(page, name, caption, extra = {}) {
 }
 async function clickChip(page, text) { await page.locator(".st-scenes .chip", { hasText: text }).first().click(); await sleep(1200); }
 
-// 헤드 모드 창: 뷰포트(innerWidth×innerHeight)가 정확히 1920×1080 이 되도록 창 크기를 맞추고, 화면 좌표의 뷰포트 영역을 돌려준다 (gdigrab 용)
 async function openWindowed(browser) {
   const ctx = await browser.newContext({ viewport: null, locale: "ko-KR", acceptDownloads: true });
   const page = await ctx.newPage();
@@ -76,80 +73,78 @@ let browser;
 try { browser = await chromium.launch({ channel: "msedge", headless: false, args: ["--window-position=0,0", `--window-size=${W + 16},${H + 120}`] }); console.log("browser: msedge (headed)"); }
 catch (e) { console.log("msedge 없음 → 번들 chromium", String(e).slice(0, 80)); browser = await chromium.launch({ headless: false }); }
 
-// ---- 사진 12장 (헤드 창, 뷰포트 1920×1080)
+// ---- 사진 12장 (단순 보기 기본)
 const { ctx, page } = await openWindowed(browser);
-const go = async (hash, ms = 2500) => { await page.goto(`${base}/#/${hash}`, { waitUntil: "networkidle" }); await sleep(ms); };
+const go = async (hash, ms = 2500) => { await page.goto(`${base}/?r=${Date.now()}#/${hash}`, { waitUntil: "networkidle" }); await sleep(ms); };   // 쿼리를 바꿔 매번 새 문서로 — 해시만 바뀌면 보드가 ?drawer/?tab/?view 를 다시 읽지 않는다
 
 await go("status?m=M1&t=40");
-await shot(page, "01_status_board_home", "상태 보드 첫 화면 — M1 카드·시나리오 칩·정직성 4줄 (전기 모드 40 s, 4턴 경고 구간)");
-const connTip = await overlayTitle(page, ".st-spec span:nth-child(3) .st-src", "전원·결선 출처");
-await shot(page, "02_motor_card_sources", "모터 상세 출처 아이콘 — 결선(Y) 항목의 출처 툴팁을 오버레이로 표시 (현장 확인 필요 표시)", { tooltip: connTip });
+await shot(page, "01_simple_home_4turn", "단순 보기 첫 화면 — 경고 · 전류 불균형 0.073 · 왜?/무엇을? · 신호 칩 · 흐름 (전기 40 s, 턴간 단락 4턴)");
+const heroTip = await overlayTitle(page, ".sv-cause abbr", "영웅 원인 신호");
+await shot(page, "02_hero_term_tooltip", "영웅 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시", { tooltip: heroTip });
 await clearOverlay(page);
-await scrollTo(page, ".st-gauges");
-await shot(page, "03_gauges_m1", "게이지 — 진동(ISO 10816-1 Class I)·전류/정격·I₂/I₁·온도, 4턴 경고 시각 40 s");
-await clickChip(page, "과부하 위험"); await scrollTo(page, ".st-gauges");
-await shot(page, "04_gauges_overload", "(대체) 상태 보드 전기 모드 과부하 장면(85 s) 게이지 — 전류/정격 상한 위험");
-await clickChip(page, "12턴 위험"); await scrollTo(page, ".st-gauges");
-await shot(page, "05_gauges_12turn", "(대체) 상태 보드 전기 모드 12턴 위험(60 s) 게이지 — I₂/I₁ 위험, R상 과전류");
-await scrollTo(page, ".st-aref-p");
-await shot(page, "06_analysis_ref_panel", "④ 해석 근거 비교 — 시뮬 | 해석 기준값 | 차이 % | 출처 배지 (12턴, 60 s)");
-await page.getByRole("button", { name: /근거 보기/ }).click(); await sleep(800); await scrollTo(page, ".st-aref-trace", "start");
-await shot(page, "07_evidence_drawer", "'근거 보기' 서랍 — 표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급 + 한계");
-await go("status?m=M1&t=40");
-await page.getByRole("button", { name: "임계값 기준표" }).click(); await sleep(600); await scrollTo(page, ".tabs", "start");
-await shot(page, "08_thresholds_tab", "임계값 기준표 탭 — 신호별 안전/경고/위험 경계와 근거(source·status)");
-await go("status?m=M1&t=40");
-await clickChip(page, "DE 베어링 경고"); await scrollTo(page, ".st-gauges");
-await shot(page, "09_status_mech_bearing", "(대체) 상태 보드 기계 모드 DE 베어링 경고 장면(27.5 s) — 베어링 온도·진동 게이지");
-await go("status?m=M1&t=40");
-await page.locator(".chips:not(.st-scenes) .chip", { hasText: /I₂\/I₁|I2\/I1|불평형/ }).first().click().catch(() => {}); await sleep(800);
-await scrollTo(page, ".st-trend, .trend, .st-gauges", "center");
-await shot(page, "10_trend_i2i1", "(대체) 상태 보드 추세 차트 — I₂/I₁ 시계열과 임계선 (전기 모드 40 s)");
-await go("status?m=M1&t=40"); await scrollTo(page, ".st-gauges");
-const badgeTip = await overlayTitle(page, ".g-prov", "참고 · 임시 기준");
-await shot(page, "11_badge_tooltip", "게이지 '참고 · 임시 기준' 배지 툴팁 — 실측 기준선 미확보(provisional) 문장을 오버레이로 표시", { tooltip: badgeTip });
+const chipTip = await overlayTitle(page, ".sv-sig .sv-chip:nth-of-type(2)", "신호 칩 전류/정격");
+await shot(page, "03_signal_chip_tooltip", "신호 띠 '전류/정격' 칩 툴팁 — 상별 전류(A)·정격·임계 구간을 오버레이로 표시", { tooltip: chipTip });
 await clearOverlay(page);
-await go("status?m=M1&t=40"); await scrollTo(page, ".st-aref-p");
+await go("status?m=M1&t=60");
+await shot(page, "04_simple_12turn_danger", "단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, 무엇을? 정지 후 재권선");
+await go("status?m=M1&t=15");
+await shot(page, "05_simple_healthy", "단순 보기 — 안전 · 정상 (15 s): 기준선, 전류 불균형 0.027");
+await go("status?m=M1&t=40&drawer=1", 3000);
+await shot(page, "06_evidence_drawer_table", "근거 서랍 ① 정직성 4줄 ② 해석 근거 비교 — 시뮬값 있는 행만(결함분·I₂/I_n·I_f·P_loop 채워짐, — 1행 접힘)");
+await page.evaluate(() => { const b = document.querySelector(".sv-drawer .body"); if (b) b.scrollTop = b.scrollHeight; }); await sleep(600);
+await shot(page, "07_evidence_drawer_trace", "근거 서랍 ③ 근거 사슬(표시량 → 엔진 → 파일 sha → 해석 단계 → 등급) ④ 한계");
+await go("status?m=M1&t=40&tab=thr", 3000);
+await shot(page, "08_thresholds_sheet", "임계값 기준표 시트 — 안전/경고/위험 경계 + 근거 + 쉬운 설명 열");
+await go("status?m=M1&t=40&mode=mechanical", 3000);
+await shot(page, "09_simple_mech_bearing", "단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 온도·진동·베어링 칩, DE 베어링 온도 추세");
+await go("status?m=M1&t=40&view=expert", 3000);
+await shot(page, "10_expert_view", "전문가 보기(기존 보드) — 카드·게이지·원인과 조치·해석 근거 비교(엔진 값 채움)·추세·기준표");
+await go("status?m=M1&t=40");
+const tagTip = await overlayTitle(page, ".sv-tag", "임시 태그");
+await shot(page, "11_provisional_tag_tooltip", "영웅 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시", { tooltip: tagTip });
+await clearOverlay(page);
+await go("status?m=M1&t=40&drawer=1", 3000);
 let dlName = "";
 try {
-  const btn = page.getByRole("button", { name: "비교 내보내기" });
+  const btn = page.locator(".sv-drawer button", { hasText: "비교 내보내기" }).first();
   const [dl] = await Promise.all([page.waitForEvent("download", { timeout: 15000 }), btn.click({ timeout: 10000 })]);
   dlName = dl.suggestedFilename(); await dl.saveAs(join(outDir, dlName));
 } catch (e) { console.log("download failed", String(e).slice(0, 160)); }
-await page.evaluate((n) => { const b = document.createElement("div"); b.id = "__tip"; b.textContent = n ? `다운로드됨: ${n}` : "비교 내보내기 클릭"; b.style.cssText = "position:fixed;right:24px;bottom:24px;background:#1b5e20;color:#fff;padding:10px 14px;border-radius:8px;font:14px 'Malgun Gothic';z-index:99999"; document.body.appendChild(b); }, dlName);
-await shot(page, "12_export_csv", `'비교 내보내기' 직후 — 다운로드 파일 ${dlName || "(다운로드 이벤트 없음)"} (V2 형식 CSV, 4턴 40 s)`, { download: dlName });
+await page.evaluate((n) => { const b = document.createElement("div"); b.id = "__tip"; b.textContent = n ? `다운로드됨: ${n}` : "비교 내보내기 클릭 (다운로드 이벤트 없음)"; b.style.cssText = "position:fixed;left:24px;bottom:24px;background:#1b5e20;color:#fff;padding:10px 14px;border-radius:8px;font:14px 'Malgun Gothic';z-index:99999"; document.body.appendChild(b); }, dlName);
+await shot(page, "12_export_csv", `근거 서랍 '비교 내보내기' 직후 — 다운로드 파일 ${dlName || "(다운로드 이벤트 없음)"} (V2 형식 CSV, 4턴 40 s)`, { download: dlName });
 await clearOverlay(page);
 await ctx.close();
 
-// ---- 07 워크스루 (~60 s, gdigrab)
-{
+// ---- 07 워크스루 (~60 s, gdigrab): 첫 화면(정상) → 4턴 칩 → 12턴 칩 → 근거 서랍 → 닫기 → 임계값 시트 → 닫기 → 전문가 보기 → 단순  (PHOTOS_ONLY=1 이면 녹화 두 편 생략)
+if (!process.env.PHOTOS_ONLY) {
   const { ctx: c2, page: vp, rect } = await openWindowed(browser);
   await vp.goto(`${base}/#/status?m=M1&t=15`, { waitUntil: "networkidle" }); await sleep(1500);
   const rec = startRec(join(videoDir, "07_dashboard_walkthrough.mp4"), rect); await sleep(1500);
   await sleep(5000);
   await vp.locator(".st-scenes .chip", { hasText: "4턴 경계" }).first().click(); await sleep(7000);
-  await vp.evaluate(() => document.querySelector(".st-gauges")?.scrollIntoView({ block: "center", behavior: "smooth" })); await sleep(6000);
-  await vp.evaluate(() => document.querySelector(".st-aref-p")?.scrollIntoView({ block: "center", behavior: "smooth" })); await sleep(8000);
-  await vp.getByRole("button", { name: /근거 보기/ }).click(); await sleep(8000);
-  await vp.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" })); await sleep(2000);
   await vp.locator(".st-scenes .chip", { hasText: "12턴 위험" }).first().click(); await sleep(6000);
-  await vp.evaluate(() => document.querySelector(".st-aref-p")?.scrollIntoView({ block: "center", behavior: "smooth" })); await sleep(6000);
-  await vp.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" })); await sleep(4000);
+  await vp.locator(".sv-honesty").click(); await sleep(7000);
+  await vp.evaluate(() => { const b = document.querySelector(".sv-drawer .body"); if (b) b.scrollTo({ top: b.scrollHeight, behavior: "smooth" }); }); await sleep(6000);
+  await vp.keyboard.press("Escape"); await sleep(2000);
+  await vp.locator(".sv-foot .sv-chip", { hasText: "임계값" }).click(); await sleep(6000);
+  await vp.keyboard.press("Escape"); await sleep(2000);
+  await vp.locator(".view-seg button", { hasText: "전문가" }).click(); await sleep(7000);
+  await vp.locator(".view-seg button", { hasText: "단순" }).click(); await sleep(5000);
   await stopRec(rec); await c2.close();
   console.log("walkthrough done");
 }
-// ---- 08 동기 녹화: 상태 보드 전기 모드 15 s 에서 ▶ 재생 → 62 s. 녹화 시작·재생 클릭 벽시계를 json 에 남겨 Isaac 녹화와 맞춘다.
-{
+// ---- 08 동기 녹화: 단순 보기 전기 모드 ▶ 재생(0 s 부터) → 62 s. 녹화 시작·재생 클릭 벽시계를 json 에.
+if (!process.env.PHOTOS_ONLY) {
   const t0 = 0.0;   // ▶ 재생은 ?t 와 무관하게 0 s 부터 시작(실측) — 클릭 순간이 대시보드 t 0
   const { ctx: c3, page: vp, rect } = await openWindowed(browser);
   await vp.goto(`${base}/#/status?m=M1&t=${t0}`, { waitUntil: "networkidle" }); await sleep(2000);
-  await vp.evaluate(() => document.querySelector(".st-gauges")?.scrollIntoView({ block: "center" })); await sleep(500);
+  await vp.bringToFront();
   const rec = startRec(join(videoDir, "08_dashboard_sync.mp4"), rect); await sleep(2000);
   const t_play_ms = Date.now();
   await vp.getByRole("button", { name: /▶ 재생/ }).click();
   await sleep(62000);
   const t_close_ms = await stopRec(rec); await c3.close();
-  writeFileSync(join(videoDir, "08_dashboard_sync.json"), JSON.stringify({ dash_t0_s: t0, t_rec_start_ms: rec.t0, t_play_ms, t_close_ms, play_offset_s: (t_play_ms - rec.t0) / 1000, note: "ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)" }, null, 1));
+  writeFileSync(join(videoDir, "08_dashboard_sync.json"), JSON.stringify({ dash_t0_s: t0, t_rec_start_ms: rec.t0, t_play_ms, t_close_ms, play_offset_s: (t_play_ms - rec.t0) / 1000, note: "단순 보기. ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)" }, null, 1));
   console.log("sync rec done");
 }
 writeFileSync(join(outDir, "captions.json"), JSON.stringify({ captions: caps, excluded, missing: [] }, null, 1));

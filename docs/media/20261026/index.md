@@ -1,6 +1,6 @@
 # 보고용 미디어 팩 — 2026-10-26
 
-M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해석 그림. 커밋 DT `75bd475` · Maxwell `3c4e22e` · 시드 없음(결정적) · 배속 1×.
+M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해석 그림. 커밋 DT `166ba85` · Maxwell `3c4e22e` · 시드 없음(결정적) · 배속 1×.
 모든 숫자는 엔진 출력(state.csv)·검증 산출물·LUT 값이며 연출용 숫자는 없다. 파일명은 ASCII, 설명은 이 표의 캡션. 규격·재현·수동 캡처 체크리스트는 `README.md`.
 
 ![contact sheet](contact_sheet.png)  (57 장 썸네일)
@@ -41,20 +41,21 @@ M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해
 
 | 파일 | 해상도 | URL | 캡션 | 22 kW 문구 |
 |---|---|---|---|---|
-| [01_status_board_home.png](dashboard/01_status_board_home.png) | 1920x1080 | `/#/status?m=M1&t=40` | 상태 보드 첫 화면 — M1 카드·시나리오 칩·정직성 4줄 (전기 모드 40 s, 4턴 경고 구간) | 보임 |
-| [02_motor_card_sources.png](dashboard/02_motor_card_sources.png) | 1920x1080 | `/#/status?m=M1&t=40` | 모터 상세 출처 아이콘 — 결선(Y) 항목의 출처 툴팁을 오버레이로 표시 (현장 확인 필요 표시) — 툴팁 원문: “가정 (현장 확인 필요) · 380 V 전용형 내부 결선은 카탈로그에 없음. RMxprt·LUT 모델(상전압 219.4 V)과 일치시킴 · verify_on_site” | 보임 |
-| [03_gauges_m1.png](dashboard/03_gauges_m1.png) | 1920x1080 | `/#/status?m=M1&t=40` | 게이지 — 진동(ISO 10816-1 Class I)·전류/정격·I₂/I₁·온도, 4턴 경고 시각 40 s | 보임 |
-| [04_gauges_overload.png](dashboard/04_gauges_overload.png) | 1920x1080 | `/#/status?m=M1&t=40` | (대체) 상태 보드 전기 모드 과부하 장면(85 s) 게이지 — 전류/정격 상한 위험 | 보임 |
-| [05_gauges_12turn.png](dashboard/05_gauges_12turn.png) | 1920x1080 | `/#/status?m=M1&t=40` | (대체) 상태 보드 전기 모드 12턴 위험(60 s) 게이지 — I₂/I₁ 위험, R상 과전류 | 보임 |
-| [06_analysis_ref_panel.png](dashboard/06_analysis_ref_panel.png) | 1920x1080 | `/#/status?m=M1&t=40` | ④ 해석 근거 비교 — 시뮬 | 해석 기준값 | 차이 % | 출처 배지 (12턴, 60 s) | 보임 |
-| [07_evidence_drawer.png](dashboard/07_evidence_drawer.png) | 1920x1080 | `/#/status?m=M1&t=40` | '근거 보기' 서랍 — 표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급 + 한계 | 보임 |
-| [08_thresholds_tab.png](dashboard/08_thresholds_tab.png) | 1920x1080 | `/#/status?m=M1&t=40` | 임계값 기준표 탭 — 신호별 안전/경고/위험 경계와 근거(source·status) | 보임 |
-| [09_status_mech_bearing.png](dashboard/09_status_mech_bearing.png) | 1920x1080 | `/#/status?m=M1&t=40` | (대체) 상태 보드 기계 모드 DE 베어링 경고 장면(27.5 s) — 베어링 온도·진동 게이지 | 보임 |
-| [10_trend_i2i1.png](dashboard/10_trend_i2i1.png) | 1920x1080 | `/#/status?m=M1&t=40` | (대체) 상태 보드 추세 차트 — I₂/I₁ 시계열과 임계선 (전기 모드 40 s) | 보임 |
-| [11_badge_tooltip.png](dashboard/11_badge_tooltip.png) | 1920x1080 | `/#/status?m=M1&t=40` | 게이지 '참고 · 임시 기준' 배지 툴팁 — 실측 기준선 미확보(provisional) 문장을 오버레이로 표시 — 툴팁 원문: “실측 기준선 미확보 (출처 catalog, 상태 provisional) — 실측 모드에서는 판정에 반영되지 않음(advisory). 시뮬레이션 시나리오: 임시 기준으로 종합 판정에 포함” | 보임 |
-| [12_export_csv.png](dashboard/12_export_csv.png) | 1920x1080 | `/#/status?m=M1&t=40` | '비교 내보내기' 직후 — 다운로드 파일 export_20261026_152811.csv (V2 형식 CSV, 4턴 40 s) | 보임 |
+| [01_simple_home_4turn.png](dashboard/01_simple_home_4turn.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 단순 보기 첫 화면 — 경고 · 전류 불균형 0.073 · 왜?/무엇을? · 신호 칩 · 흐름 (전기 40 s, 턴간 단락 4턴) | 없음 |
+| [02_hero_term_tooltip.png](dashboard/02_hero_term_tooltip.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 영웅 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시 — 툴팁 원문: “역상 전류비 I₂/I₁ — 세 가닥 전류가 서로 얼마나 틀어졌는지 나타내는 비율. 권선 단락·전압 불평형에서 커집니다.” | 없음 |
+| [03_signal_chip_tooltip.png](dashboard/03_signal_chip_tooltip.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 신호 띠 '전류/정격' 칩 툴팁 — 상별 전류(A)·정격·임계 구간을 오버레이로 표시 — 툴팁 원문: “전류 비율 r = I / I정격 — 지금 흐르는 전류를 그 모터의 정격 전류로 나눈 값. 너무 커도(과부하·단락) 너무 작아도(결상·무부하) 문제입니다.
+R 5.20 A (1.10×) · S 4.90 A (1.04×) · T 4.60 A (0.97×) · 정격 4.73 A · 안전 0.85~1.1× · 위험 >1.25× 또는 <0.5×” | 없음 |
+| [04_simple_12turn_danger.png](dashboard/04_simple_12turn_danger.png) | 1920x1080 | `/?r=1793001113519#/status?m=M1&t=60` | 단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, 무엇을? 정지 후 재권선 | 없음 |
+| [05_simple_healthy.png](dashboard/05_simple_healthy.png) | 1920x1080 | `/?r=1793001116664#/status?m=M1&t=15` | 단순 보기 — 안전 · 정상 (15 s): 기준선, 전류 불균형 0.027 | 없음 |
+| [06_evidence_drawer_table.png](dashboard/06_evidence_drawer_table.png) | 1920x1080 | `/?r=1793001119814#/status?m=M1&t=40&drawer=1` | 근거 서랍 ① 정직성 4줄 ② 해석 근거 비교 — 시뮬값 있는 행만(결함분·I₂/I_n·I_f·P_loop 채워짐, — 1행 접힘) | 보임 |
+| [07_evidence_drawer_trace.png](dashboard/07_evidence_drawer_trace.png) | 1920x1080 | `/?r=1793001119814#/status?m=M1&t=40&drawer=1` | 근거 서랍 ③ 근거 사슬(표시량 → 엔진 → 파일 sha → 해석 단계 → 등급) ④ 한계 | 보임 |
+| [08_thresholds_sheet.png](dashboard/08_thresholds_sheet.png) | 1920x1080 | `/?r=1793001124142#/status?m=M1&t=40&tab=thr` | 임계값 기준표 시트 — 안전/경고/위험 경계 + 근거 + 쉬운 설명 열 | 없음 |
+| [09_simple_mech_bearing.png](dashboard/09_simple_mech_bearing.png) | 1920x1080 | `/?r=1793001127789#/status?m=M1&t=40&mode=mechanical` | 단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 온도·진동·베어링 칩, DE 베어링 온도 추세 | 없음 |
+| [10_expert_view.png](dashboard/10_expert_view.png) | 1920x1080 | `/?r=1793001131425#/status?m=M1&t=40&view=expert` | 전문가 보기(기존 보드) — 카드·게이지·원인과 조치·해석 근거 비교(엔진 값 채움)·추세·기준표 | 보임 |
+| [11_provisional_tag_tooltip.png](dashboard/11_provisional_tag_tooltip.png) | 1920x1080 | `/?r=1793001135106#/status?m=M1&t=40` | 영웅 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시 — 툴팁 원문: “실측 기준선 확보 전까지 참고 기준입니다” | 없음 |
+| [12_export_csv.png](dashboard/12_export_csv.png) | 1920x1080 | `/?r=1793001138254#/status?m=M1&t=40&drawer=1` | 근거 서랍 '비교 내보내기' 직후 — 다운로드 파일 export_20261026_165221.csv (V2 형식 CSV, 4턴 40 s) | 보임 |
 
-제외(22 kW 자산·문구): 04_elec_panel_4turn / 05_elec_panel_12turn (#/electrical) — 해설 화면은 이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드 전기 모드 장면(04·05)으로 대체; 09_narration_mech_bearing / 10_narration_elec_itsc (#/mechanical, #/electrical) — 같은 이유. 상태 보드 기계 모드(09)·추세 차트(10)로 대체
+제외(22 kW 자산·문구): #/electrical · #/mechanical 해설 화면 — 이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드(단순 보기·전문가 보기)만 캡처
 
 ## 영상·GIF (10 편) — `video/`
 
@@ -68,8 +69,8 @@ M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해
 | [06_integrated_full.mp4](video/06_integrated_full.mp4) | 166.0 | 0~166 s | 통합 시나리오 전체 0~166 s: 정상·베어링·4턴·12턴·결론 | 26.1 |
 | [gif_01_orbit.gif](video/gif_01_orbit.gif) |  | 01_exterior_orbit.mp4 | 01_exterior_orbit 의 0~10 s (12 fps) | 3.43 |
 | [gif_02_itsc_glow.gif](video/gif_02_itsc_glow.gif) |  | 03_electrical_fault.mp4 | 03_electrical_fault 의 18~46 s (12 fps) | 5.85 |
-| [07_dashboard_walkthrough.mp4](video/07_dashboard_walkthrough.mp4) | 54.2 |  | 대시보드 워크스루 — 첫 화면(15 s) → 4턴 칩 → 게이지 → 해석 근거 비교 → 근거 보기 → 12턴 칩 → 맨 위 (Edge 창 화면 녹화, 1920×1080) | 1.4 |
-| [08_side_by_side.mp4](video/08_side_by_side.mp4) |  |  | Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s | 3.2 |
+| [07_dashboard_walkthrough.mp4](video/07_dashboard_walkthrough.mp4) | 55.2 |  | 대시보드 워크스루 — 첫 화면(15 s) → 4턴 칩 → 게이지 → 해석 근거 비교 → 근거 보기 → 12턴 칩 → 맨 위 (Edge 창 화면 녹화, 1920×1080) | 2.2 |
+| [08_side_by_side.mp4](video/08_side_by_side.mp4) |  |  | Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s | 3.0 |
 
 ## 해석·검증 그림 (23 장) — `figures/`
 

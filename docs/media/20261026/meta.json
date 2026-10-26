@@ -1,7 +1,7 @@
 {
  "date": "20261026",
- "generated": "2026-10-26T15:35:23",
- "git_commit_dt_repo": "75bd475",
+ "generated": "2026-10-26T16:54:04",
+ "git_commit_dt_repo": "166ba85",
  "git_commit_maxwell_repo": "3c4e22e",
  "seed": null,
  "seed_note": "엔진·장면에 난수 없음 (engine/·viz/·app/ 에 random/np.random 사용 없음) — 같은 시나리오 시각이면 같은 값",
@@ -517,12 +517,8 @@
  },
  "excluded_22kW": [
   {
-   "name": "04_elec_panel_4turn / 05_elec_panel_12turn (#/electrical)",
-   "reason": "해설 화면은 이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드 전기 모드 장면(04·05)으로 대체"
-  },
-  {
-   "name": "09_narration_mech_bearing / 10_narration_elec_itsc (#/mechanical, #/electrical)",
-   "reason": "같은 이유. 상태 보드 기계 모드(09)·추세 차트(10)로 대체"
+   "name": "#/electrical · #/mechanical 해설 화면",
+   "reason": "이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드(단순 보기·전문가 보기)만 캡처"
   }
  ]
 }
