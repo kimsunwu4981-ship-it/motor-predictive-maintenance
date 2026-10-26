@@ -8,7 +8,7 @@ import { AnalysisRef } from "../status/AnalysisRef";
 import { TrendChart, type TrendSel } from "../status/TrendChart";
 import {
   causeLine, fmtSim, gaugeCurrent, gaugeLoHi, gaugeTemp, gaugeVib, idxAt, levelOf, loadStatusContent, provisionalBadge,
-  simElapsed, stepAt, worse, KINDS, PHASES,
+  simElapsed, specFor, stepAt, worse, KINDS, PHASES,
   type FleetIndex, type Kind, type Level, type MotorInfo, type MotorSeries, type StatusContent, bearingLevel } from "../status/data";
 import { pickSource, appendSample, type StatusSource } from "../status/source";
 import { useLiveSession } from "../live/session";
@@ -173,7 +173,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
 
         {view === "simple" ? (
           <SimpleView index={index} motor={motor} s={cur ?? null} i={i} mode={mode} step={step} sc={sc} scene={scene} labels={content.labels} pb={pb} present={present} isLive={isLiveSel} x0={x0} span={span}
-            trendSel={trendSel} setTrend={setTrend} trendSpec={trendSpec} sceneMap={(index.scene_map ?? []) as SceneChip[]}
+            sceneMap={(index.scene_map ?? []) as SceneChip[]}
             onScene={(sm) => { if (mode !== sm.mode) { setModes((m) => ({ ...m, [sel]: sm.mode })); } pb.pause(); pb.seek(sm.t_s); setPos((p) => ({ ...p, [sel]: sm.t_s })); }}
             toggleMode={toggleMode} openDrawer={() => setDrawer(true)} openTab={(t) => setSheet(t)} setView={setView} />
         ) : (<>
@@ -317,15 +317,6 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
       </div>
     </PlaybackContext.Provider>
   );
-}
-
-function specFor(index: FleetIndex, motor: MotorInfo, sel: TrendSel) {
-  if (sel.kind === "temperature") return gaugeTemp(index, sel.component ?? "bearing_de");
-  if (sel.kind === "current_ratio") return gaugeCurrent(index);
-  if (sel.kind === "i2i1") return gaugeLoHi(index.thresholds.i2i1, 0.3, "");
-  if (sel.kind === "vibration") return gaugeVib(motor.vibration);
-  if (sel.kind === "bearing_kurtosis") return gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "");
-  return gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배");
 }
 
 // 신호별 게이지 9개: 온도 4 · 전류 비율 · I₂/I₁ · 진동 · 베어링 kurtosis · 베어링 고주파 RMS 배율 (베어링 종합 = 둘 중 나쁜 쪽). 모터별 임계값(진동 규격·정격 전류)이 자동 반영된다.

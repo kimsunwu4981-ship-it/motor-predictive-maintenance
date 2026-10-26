@@ -82,7 +82,9 @@ export interface MotorSeries {
   // 단순 보기 근거 서랍용 (export_status_data.py 필드 추가, 2026-10-26) — 케이스별 엔진 값. 없으면(구 export) undefined, 값이 없으면 null
   i2i1_fault?: (number | null)[]; i2_over_in?: (number | null)[]; i_f_A?: (number | null)[]; p_loop_total_W?: (number | null)[];
   winding_dT_C?: number[] | null; extras_note?: Record<string, string>;
+  case_signals?: Record<string, CaseSignals>;    // 케이스별 대칭 성분·최근 2주기 파형 (단순 보기 ②③ 타일, 2026-10-26 §1b)
 }
+export interface CaseSignals { i1_A: number; i2_A: number; i0_A: number; waveform: { fs_Hz: number; f0_Hz: number; cycles: number; unit: string; t_ms: number[]; A: number[]; B: number[]; C: number[] } }
 // 쉬운 말 사전 (public/content/status/labels_plain.yaml) — 전문 용어 ↔ 쉬운 말 ↔ 툴팁
 export interface PlainLabel { plain: string; term: string; tip: string }
 export interface PlainLabels {
@@ -90,8 +92,9 @@ export interface PlainLabels {
   replace: { from: string; to: string; tip?: string }[];
   notes: Record<string, string>;
   thresholds_easy: Record<string, string>;
+  tiles?: Record<string, string>;                 // 타일 제목 (map/wave/comp/trend/vib/bearing)
 }
-export const EMPTY_LABELS: PlainLabels = { signals: {}, replace: [], notes: {}, thresholds_easy: {} };
+export const EMPTY_LABELS: PlainLabels = { signals: {}, replace: [], notes: {}, thresholds_easy: {}, tiles: {} };
 export function plainOf(labels: PlainLabels, kind: string, fallback: string): PlainLabel {
   return labels.signals[kind] ?? { plain: fallback, term: fallback, tip: "" };
 }
@@ -187,6 +190,15 @@ export function gaugeVib(v: VibSpec): GaugeSpec {
 export function levelOf(spec: GaugeSpec, x: number): Level {
   for (const s of spec.segments) if (x >= s.from && x < s.to) return s.level;
   return x >= spec.segments[spec.segments.length - 1].from ? spec.segments[spec.segments.length - 1].level : spec.segments[0].level;
+}
+// 추세 차트 구간 사양 (신호 종류별). 상태 보드 전문가·단순 보기가 같이 쓴다.
+export function specFor(index: FleetIndex, motor: MotorInfo, sel: { kind: Kind; component?: string }): GaugeSpec {
+  if (sel.kind === "temperature") return gaugeTemp(index, sel.component ?? "bearing_de");
+  if (sel.kind === "current_ratio") return gaugeCurrent(index);
+  if (sel.kind === "i2i1") return gaugeLoHi(index.thresholds.i2i1, 0.3, "");
+  if (sel.kind === "vibration") return gaugeVib(motor.vibration);
+  if (sel.kind === "bearing_kurtosis") return gaugeLoHi(index.thresholds.bearing.kurtosis, 8, "");
+  return gaugeLoHi(index.thresholds.bearing.hf_ratio, 5, "배");
 }
 export const RANK: Record<Level, number> = { SAFE: 0, WARN: 1, DANGER: 2 };
 export function worse(a: Level, b: Level): Level { return RANK[a] >= RANK[b] ? a : b; }

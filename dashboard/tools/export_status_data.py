@@ -31,7 +31,7 @@ import yaml  # noqa: E402
 
 from engine import motor_library as ml  # noqa: E402
 from engine.config_loader import load  # noqa: E402
-from engine.current_model import CurrentModel  # noqa: E402
+from engine.current_model import CurrentModel, symmetrical_components  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
 from engine.thresholds import bearing_level  # noqa: E402
 from run_fleet import bearing_signals  # noqa: E402
@@ -125,6 +125,27 @@ def case_extras(cm: CurrentModel, cases: list[str]) -> dict:
     return out
 
 
+def case_signals(cm: CurrentModel, cases: list[str], fs_hz: float = 2000.0, cycles: int = 2) -> dict:
+    """단순 보기 비주얼 타일(2026-10-26 §1b)용: 케이스별 대칭 성분 I₁·I₂·I₀ [A RMS] + 최근 2주기 파형(2 kHz) — engine.CurrentModel._phasors/waveform 그대로."""
+    import numpy as np
+    out = {}
+    i_rated = cm.motor.rated_current("rated_line_A")
+    for c in cases:
+        if c in out or c not in cm.cases:
+            continue
+        ph = cm._phasors(c, i_rated)                                      # 피크 페이저 (3,)
+        i1, i2, i0 = symmetrical_components(*[complex(x) for x in ph])
+        t = np.arange(0, cycles / cm.f0, 1.0 / fs_hz)
+        w = np.asarray(cm.waveform(t, c, "rated_line_A"), dtype=float)
+        if w.shape[0] != 3:
+            w = w.T
+        out[c] = {"i1_A": round(abs(i1) / 2 ** 0.5, 4), "i2_A": round(abs(i2) / 2 ** 0.5, 4), "i0_A": round(abs(i0) / 2 ** 0.5, 4),
+                  "waveform": {"fs_Hz": fs_hz, "f0_Hz": float(cm.f0), "cycles": cycles, "unit": "A",
+                               "t_ms": [round(float(x) * 1000, 3) for x in t],
+                               "A": [round(float(x), 4) for x in w[0]], "B": [round(float(x), 4) for x in w[1]], "C": [round(float(x), 4) for x in w[2]]}}
+    return out
+
+
 def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mode: dict, th_cfg: dict, cm: CurrentModel | None = None) -> dict:
     d = rows(os.path.join(FLEET, motor.id, mode, "demo_fleet.csv"))
     s = rows(os.path.join(FLEET, motor.id, mode, "status_fleet.csv"))
@@ -133,6 +154,7 @@ def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mo
     steps = sc_mode["steps"]
     scale = {st["id"]: f(st["time_scale"]) for st in steps}
     extras = case_extras(cm, sorted({r["case"] for r in d})) if cm is not None else {}
+    csig = case_signals(cm, sorted({r["case"] for r in d})) if cm is not None else {}
     t_amb = f(d[0]["T_winding"]) if d else None          # 권선 ΔT 기준 = 첫 샘플(주위 온도와 같은 초기값). 전기 모드는 열 적분이 없어 0 → null 로 둔다
     thermal_on = any(abs(f(r["T_winding"]) - t_amb) > 1e-6 for r in d) if d else False
     out = {
@@ -162,12 +184,14 @@ def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mo
         "i_f_A": [extras.get(r["case"], {}).get("i_f_A") for r in d],
         "p_loop_total_W": [extras.get(r["case"], {}).get("p_loop_total_W") for r in d],
         "winding_dT_C": [round(f(r["T_winding"]) - t_amb, 2) for r in d] if thermal_on else None,
+        "case_signals": csig,                              # 케이스별 I₁·I₂·I₀(RMS)·최근 2주기 파형 — 단순 보기 ②③ 타일
         "extras_note": {
             "i2i1_fault": "LUT 결함분 r (고유 비대칭 제외) — engine.CurrentModel.lut_point; LUT 밖 케이스(정상·과부하·불평형·결상·무부하)는 null",
             "i2_over_in": "I₂/I_n (electrical.yaml 정격 기준) — engine.CurrentModel.analyze; LUT 케이스만",
             "i_f_A": "단락 루프 전류 [A] — engine.CurrentModel.short_loop (LUT); 단락 케이스만",
             "p_loop_total_W": "단락 루프 총손실 [W] — engine.CurrentModel.loop_loss_W (LUT, coupling_to_thermal); 단락 케이스만",
             "winding_dT_C": "권선 온도 − 첫 샘플 [°C]" + ("" if thermal_on else " — 이 모드(전기)는 열 모델을 돌리지 않아 null (통합·기계 모드에서만)"),
+            "case_signals": "케이스별 대칭 성분 I₁·I₂·I₀ [A RMS] (engine.symmetrical_components) + 최근 2주기 3상 파형 2 kHz (engine.CurrentModel.waveform) — 합성 신호(고조파 없음)",
         },
     }
     return out

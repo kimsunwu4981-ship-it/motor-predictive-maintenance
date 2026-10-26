@@ -8,11 +8,12 @@ import { PHASES } from "./data";
 // 전체 시계열을 그리고 커서로 현재를 표시한다 (상태 보드는 해설용이 아니라 감시용이라 미래를 숨기지 않는다).
 export interface TrendSel { kind: Kind; component?: string }
 
-export function TrendChart({ index, motor, series, sel, spec, t, onSeek, scenario, plain = false, yName: yNameProp }: {
+export function TrendChart({ index, motor, series, sel, spec, t, onSeek, scenario, plain = false, yName: yNameProp, markT = null }: {
   index: FleetIndex; motor: MotorInfo; series: MotorSeries; sel: TrendSel; spec: GaugeSpec; t: number; onSeek: (t: number) => void;
   scenario?: FleetScenario;            // 라이브: 흐르는 창 {t_min, total_duration_s=버퍼 끝, 관찰된 장면}
   plain?: boolean;                     // 단순 보기: 선은 전경색 하나(상별은 선 모양으로 구분), 임계 띠는 연하게, 축 라벨 최소
   yName?: string;                      // y축 이름 덮어쓰기 (단순 보기: 쉬운 말)
+  markT?: number | null;               // 주입 시각 세로선 (단순 보기 ④)
 }) {
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<echarts.ECharts | null>(null);
@@ -53,8 +54,8 @@ export function TrendChart({ index, motor, series, sel, spec, t, onSeek, scenari
       grid: { left: 54, right: 16, top: 22, bottom: 24 },
       tooltip: { trigger: "axis", valueFormatter: (v) => (typeof v === "number" ? (Math.abs(v) < 1 ? v.toFixed(3) : v.toFixed(2)) : String(v)) },
       legend: { show: lines.length > 1, top: 0, right: 10, textStyle: { color: fg, fontSize: plain ? 12 : 11 } },
-      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, axisLabel: { color: fg, fontSize: plain ? 12 : undefined, formatter: (v: number) => fmtT(v) }, splitLine: { show: false }, axisLine: { lineStyle: { color: line } } },
-      yAxis: { type: "value", min: Math.min(spec.min, 0), max: yMax, name: yName, nameLocation: "end", nameGap: 4, nameTextStyle: { color: fg, align: "left", padding: [0, 0, 0, -44], fontSize: plain ? 12 : 11 }, axisLabel: { color: fg, fontSize: plain ? 12 : undefined, showMaxLabel: !plain }, splitLine: { show: !plain, lineStyle: { color: line, opacity: .5 } } },
+      xAxis: { type: "value", min: sc.t_min ?? 0, max: sc.total_duration_s, splitNumber: plain ? 3 : undefined, axisLabel: { color: fg, fontSize: plain ? 12 : undefined, formatter: (v: number) => fmtT(v) }, splitLine: { show: false }, axisLine: { lineStyle: { color: line } } },
+      yAxis: { type: "value", min: Math.min(spec.min, 0), max: yMax, splitNumber: plain ? 2 : undefined, name: plain ? "" : yName, nameLocation: "end", nameGap: 4, nameTextStyle: { color: fg, align: "left", padding: [0, 0, 0, -44], fontSize: plain ? 12 : 11 }, axisLabel: { color: fg, fontSize: plain ? 12 : undefined, showMaxLabel: !plain }, splitLine: { show: !plain, lineStyle: { color: line, opacity: .5 } } },
       series: [
         ...lines.map((l, n) => ({
           name: l.name, type: "line" as const, showSymbol: false, lineStyle: { width: plain ? 2.5 : 2, color: l.color, type: plain ? dashes[n % 3] : "solid" }, itemStyle: { color: l.color },
@@ -63,9 +64,11 @@ export function TrendChart({ index, motor, series, sel, spec, t, onSeek, scenari
         })),
         { name: "cursor", type: "line" as const, data: [], silent: true, tooltip: { show: false },
           markLine: { symbol: "none", animation: false, data: [{ xAxis: t }], lineStyle: { color: index.colors[series.status[0]] ?? "#fff", width: 2 }, label: { show: false } } },
+        ...(markT !== null && markT !== undefined ? [{ name: "inject", type: "line" as const, data: [], silent: true, tooltip: { show: false },
+          markLine: { symbol: "none", animation: false, data: [{ xAxis: markT }], lineStyle: { color: fg, width: 1, type: "dashed" as const }, label: { show: true, formatter: "주입", position: "insideEndTop" as const, rotate: 0, color: fg, fontSize: 11 } } }] : []),
       ],
     };
-  }, [index, series, sel, spec, sc, plain, yNameProp]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [index, series, sel, spec, sc, plain, yNameProp, markT]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!el.current) return;

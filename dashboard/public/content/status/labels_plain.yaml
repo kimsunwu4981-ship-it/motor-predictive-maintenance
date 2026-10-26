@@ -43,3 +43,11 @@ thresholds_easy:
   vibration: "베어링 하우징이 흔들리는 세기 — 규격의 '주의/정비/정지' 경계"
   bearing_kurtosis: "진동 파형이 뾰족해지면 구름면이 깨지고 있다는 뜻"
   bearing_hf_ratio: "높은 소리 성분이 평소보다 커지면 윤활 부족을 의심"
+# 그림 타일 제목 (단순 보기 §1b) — 한 단어
+tiles:
+  map: "열·결함 지도"
+  wave: "전류 파형"
+  comp: "전류 성분"
+  trend: "추세"
+  vib: "진동"
+  bearing: "베어링"

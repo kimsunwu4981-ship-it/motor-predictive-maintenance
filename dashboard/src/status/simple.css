@@ -1,56 +1,74 @@
-/* simple.css — 상태 보드 "단순 보기" (3단 정보 구조, 2026-10-26). 첫 화면 = 상태·원인·조치, 나머지는 서랍·시트.
-   글자: 영웅 ≥40 px · 원인·조치 ≥18 px · 본문 ≥14 px · 표 ≥13 px (1920×1080 기준, --sv 배율로 발표 1.25 / 1366×768 0.82).
-   색: 상태 셋(초록·주황·빨강, config colors)만 의미를 가진다 — 그 외 강조색 없음. */
-.sv { --sv: 1; display: grid; grid-template-rows: minmax(0, 300px) auto minmax(0, 1fr) auto; gap: 12px; height: 100%; min-height: 0; }
-.sv.present { --sv: 1.25; grid-template-rows: minmax(0, 380px) minmax(0, 1fr); }
-.sv-top { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12px; min-height: 0; }
+/* simple.css — 상태 보드 "단순 보기" (2026-10-26, TASK §1b 비주얼 우선): 상태 띠 72 px + 그림 타일 2×2 + 하단 띠 48 px.
+   글자: 상태 ≥40 px · 원인·조치 ≥18 px · 본문 ≥14 px · 표 ≥13 px (--sv 배율: 발표 1.25, 1366×768 0.82).
+   색: 상태 셋(초록·주황·빨강, config colors)만 의미. 그 외 강조색 없음(전경/배경만). 전환은 상태색 300 ms 페이드만. */
+.sv2 { --sv: 1; display: grid; grid-template-rows: 72px minmax(0, 1fr) 48px; gap: 10px; height: 100%; min-height: 0; }
+.sv2.present { --sv: 1.25; grid-template-rows: 90px minmax(0, 1fr) 60px; }
+.sv2 abbr { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+.sv2 .grow { flex: 1; }
 
-/* 영웅 */
-.sv-hero { border-radius: 14px; border: 1px solid var(--line); border-left: 12px solid var(--sv-col); background: color-mix(in srgb, var(--sv-col) 20%, var(--panel));
-  padding: calc(16px * var(--sv)) calc(22px * var(--sv)); display: flex; flex-direction: column; gap: calc(6px * var(--sv)); min-height: 0; overflow: hidden;
-  transition: background .3s ease, border-color .3s ease; }
-.sv-status { font-size: calc(46px * var(--sv)); font-weight: 900; line-height: 1.1; display: flex; align-items: center; gap: .35em; letter-spacing: .06em; }
-.sv-status .ic { font-size: .78em; }
-.sv-cause { font-size: calc(22px * var(--sv)); font-weight: 700; line-height: 1.3; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.sv-cause b { font-variant-numeric: tabular-nums; }
-.sv abbr { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
-.sv-thr { font-size: calc(16px * var(--sv)); color: var(--fg2); }
-.sv-note { font-size: calc(14px * var(--sv)); color: var(--fg3); }
-.sv-motor { margin-top: auto; font-size: calc(15px * var(--sv)); color: var(--fg2); display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; }
-.sv-tag { font-size: calc(12px * var(--sv)); border: 1px solid var(--fg3); border-radius: 6px; padding: 0 6px; color: var(--fg3); cursor: help; white-space: nowrap; }
+/* 상태 띠 */
+.sv2-top { display: flex; align-items: center; gap: 18px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); border-left: 12px solid var(--sv-col);
+  background: color-mix(in srgb, var(--sv-col) 20%, var(--panel)); transition: background .3s ease, border-color .3s ease; white-space: nowrap; overflow: hidden; min-height: 0; }
+.sv2-status { font-size: calc(40px * var(--sv)); font-weight: 900; letter-spacing: .06em; line-height: 1; }
+.sv2-cause { font-size: calc(22px * var(--sv)); font-weight: 700; display: inline-flex; align-items: baseline; gap: 8px; }
+.sv2-cause b { font-variant-numeric: tabular-nums; }
+.sv2-motor { font-size: calc(15px * var(--sv)); color: var(--fg2); overflow: hidden; text-overflow: ellipsis; }
+.sv2-scene { font-size: calc(15px * var(--sv)); color: var(--fg2); overflow: hidden; text-overflow: ellipsis; }
+.sv2-time { font-size: calc(15px * var(--sv)); font-variant-numeric: tabular-nums; color: var(--fg2); }
+.sv2-top button { padding: 4px 12px; font-size: calc(14px * var(--sv)); }
+.sv-tag { font-size: calc(12px * var(--sv)); border: 1px solid var(--fg3); border-radius: 6px; padding: 0 6px; color: var(--fg3); cursor: help; white-space: nowrap; font-weight: 400; }
 
-/* 원인·조치 */
-.sv-ww { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
-.sv-q { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(12px * var(--sv)) calc(20px * var(--sv));
-  display: grid; grid-template-columns: 5em 1fr; gap: 4px 14px; align-content: center; font-size: calc(18px * var(--sv)); line-height: 1.4; min-height: 0; overflow: hidden; }
-.sv-q .k { font-weight: 900; font-size: calc(22px * var(--sv)); grid-row: span 2; align-self: start; }
-.sv-q .l1 { font-weight: 700; }
-.sv-q .l2 { color: var(--fg2); font-size: .9em; }
-.sv-q .lv { font-weight: 700; }
+/* 그림 타일 2×2 */
+.sv2-tiles { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; min-height: 0; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; min-height: 0; padding: 8px 14px 6px; }
+.tile-h { display: flex; align-items: baseline; gap: 10px; font-size: calc(15px * var(--sv)); color: var(--fg2); white-space: nowrap; }
+.tile-h .t { font-weight: 800; color: var(--fg); font-size: calc(16px * var(--sv)); }
+.tile-h .big { margin-left: auto; font-size: calc(28px * var(--sv)); font-weight: 800; color: var(--fg); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile-b { flex: 1; min-height: 0; display: flex; align-items: stretch; }
+.tile-b > svg { width: 100%; height: 100%; }
+.tile-na { color: var(--fg3); align-self: center; margin: auto; font-size: 14px; }
+.tile-trend { flex-direction: column; }
+.tile-trend .st-chart { flex: 1; min-height: 80px; height: auto; }
+.sv2-strip-row { display: flex; align-items: center; gap: 10px; padding-top: 4px; }
+.sv2-strip-row .st-strip { flex: 1; min-width: 120px; height: 18px; }
+.sv2-strip-row .st-ch { line-height: 18px; font-size: .66em; }
+.sv2-strip-row .chip.sc { font-size: calc(12px * var(--sv)); padding: 1px 9px; }
+.sv2-strip-row .chip.sc.on { border-color: var(--fg); color: var(--fg); }
+.sv2-strip-row .chips.st-scenes .chip.sc i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
 
-/* 신호 띠 */
-.sv-sig { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: calc(15px * var(--sv)); }
-.sv-sig .t { color: var(--fg2); margin-right: 6px; white-space: nowrap; }
-.sv-chip { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-radius: 999px; padding: 5px 14px; background: var(--panel2); color: var(--fg); font: inherit; cursor: pointer; line-height: 1.3; }
+/* ① 모터 열·결함 지도 */
+.mm-svg .mm-part { stroke: rgba(255,255,255,.18); stroke-width: 1; transition: fill .3s linear; }
+.mm-svg .mm-part.pulsing { animation: mmpulse 1.25s ease-in-out infinite; }
+@keyframes mmpulse { 0%, 100% { opacity: 1; } 50% { opacity: .7; } }
+.mm-svg .mm-slot { fill: rgba(255,255,255,.22); }
+.mm-svg .mm-short { transition: r .3s linear; }
+.mm-svg .mm-lbl { font-size: 11px; fill: var(--fg3); text-anchor: middle; }
+.mm-svg .mm-note { font-size: 12px; fill: var(--fg2); text-anchor: middle; }
+:root[data-theme="light"] .mm-svg .mm-part { stroke: rgba(0,0,0,.18); }
+:root[data-theme="light"] .mm-svg .mm-slot { fill: rgba(0,0,0,.25); }
+
+/* ② 파형 */
+.wv-svg .wv-line { fill: none; stroke: var(--fg); stroke-width: 1.4; opacity: .45; }
+.wv-svg .wv-line.fault { stroke-width: 3; opacity: 1; }
+.wv-svg .wv-rated { stroke: var(--fg3); stroke-dasharray: 5 4; }
+.wv-svg .wv-zero { stroke: var(--line); }
+.wv-svg .wv-lbl { font-size: 11px; fill: var(--fg3); }
+.wv-svg .wv-ph { font-size: 12px; fill: var(--fg3); font-weight: 700; }
+.wv-svg .wv-ph.fault { fill: var(--fg); }
+
+/* ③ 막대 */
+.br-svg .br-base { stroke: var(--line); }
+.br-svg .br-bar { transition: height .3s linear, y .3s linear; }
+.br-svg .br-tick { stroke: var(--fg2); stroke-width: 1.5; }
+.br-svg .br-tick-l { font-size: 10px; fill: var(--fg2); }
+.br-svg .br-lbl { font-size: 12px; fill: var(--fg2); }
+
+/* 하단 띠 */
+.sv2-foot { display: flex; align-items: center; gap: 12px; padding: 0 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; font-size: calc(18px * var(--sv)); white-space: nowrap; overflow: hidden; min-height: 0; }
+.sv2-foot .k { font-weight: 900; }
+.sv2-foot .v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.sv-chip { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-radius: 999px; padding: 3px 12px; background: var(--panel2); color: var(--fg); font: inherit; font-size: calc(14px * var(--sv)); cursor: pointer; line-height: 1.3; white-space: nowrap; }
 .sv-chip:hover { border-color: var(--fg3); }
-.sv-chip.on { box-shadow: 0 0 0 2px var(--fg) inset; }
-.sv-chip b { font-variant-numeric: tabular-nums; }
-.sv-chip .ic { font-size: .9em; }
-.sv-chip.na { border-style: dashed; color: var(--fg3); cursor: default; background: transparent; }
-
-/* 흐름 */
-.sv-flow { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; min-height: 0; padding: 8px 12px 4px; }
-.sv-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: calc(14px * var(--sv)); }
-.sv-bar .sv-time { font-variant-numeric: tabular-nums; color: var(--fg2); min-width: 9ch; }
-.sv-bar .st-strip { min-width: 260px; }
-.sv-bar .chip.sc { font-size: 1em; padding: 3px 12px; }
-.sv-bar .chip.sc.on { border-color: var(--fg); color: var(--fg); }
-.sv-flow .st-chart { flex: 1; min-height: 140px; height: auto; }
-
-/* 하단 칩 한 줄 */
-.sv-foot { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.sv-foot .grow { flex: 1; }
-.sv-foot .sv-chip { padding: 4px 14px; }
 .sv-honesty { border-color: var(--fg3); }
 
 /* 근거 서랍 */
@@ -62,8 +80,10 @@
 .sv-drawer h4 { margin: 0 0 6px; font-size: 15px; }
 .sv-drawer ul { margin: 4px 0 0 18px; padding: 0; }
 .sv-drawer .st-aref { font-size: 13px; }
-.sv-drawer .st-aref-t.small { font-size: 13px; }
-.sv-drawer .st-aref-t.small code { font-size: 12px; }
+.sv-drawer .st-aref-t.small { font-size: 13px; table-layout: fixed; }
+.sv-drawer .st-aref-t.small td, .sv-drawer .st-aref-t.small th { word-break: break-word; overflow-wrap: anywhere; }
+.sv-drawer .st-aref-t.small code { font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+.sv-drawer .st-aref-h { flex-wrap: wrap; row-gap: 4px; }
 .sv-drawer .st-aref-h button { font-size: 12px; }
 .st-aref-t tr.more td { color: var(--fg3); cursor: pointer; }
 
@@ -75,14 +95,7 @@
 .sv-sheet .tabbody { overflow: auto; padding: 10px 16px 16px; font-size: 14px; }
 .sv-sheet table.grid { font-size: 13px; }
 .sv-sheet .tabbar button.on, .sv-drawer button.on { background: var(--fg); color: var(--bg); border-color: transparent; }
-
-@media (max-width: 1400px) {
-  .sv { --sv: .82; gap: 8px; grid-template-rows: minmax(0, 232px) auto minmax(0, 1fr) auto; }
-  .sv.present { --sv: 1.0; grid-template-rows: minmax(0, 300px) minmax(0, 1fr); }
-  .sv-flow .st-chart { min-height: 100px; }
-  .sv-sig { padding: 6px 12px; }
-  .sv-foot { font-size: 13px; }
-}
+table.grid td.easy { color: var(--fg2); }
 
 /* 헤더 보기 토글 (단순 ↔ 전문가) — 강조색 없이 전경/배경만 */
 .view-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
@@ -90,14 +103,16 @@
 .view-seg button.on { background: var(--fg); color: var(--bg); font-weight: 700; }
 .dash.st.simple { grid-template-rows: auto minmax(0, 1fr); }
 .dash.st.simple.present { grid-template-rows: auto minmax(0, 1fr); }
-table.grid td.easy { color: var(--fg2); }
-
-/* 서랍 안 표: 가로 넘침 없이 줄바꿈 */
-.sv-drawer .st-aref-t.small { table-layout: fixed; }
-.sv-drawer .st-aref-t.small td, .sv-drawer .st-aref-t.small th { word-break: break-word; overflow-wrap: anywhere; }
-.sv-drawer .st-aref-t.small code { white-space: pre-wrap; word-break: break-all; }
-.sv-drawer .st-aref-h { flex-wrap: wrap; row-gap: 4px; }
-/* 단순 보기에서는 헤더 녹화/LIVE 토글도 강조색 없이 */
 .dash.st.simple .live-toggle .seg button.on { background: var(--fg); color: var(--bg); }
 .dash.st.simple .btn:hover, .dash.st.simple button:hover { border-color: var(--fg3); }
 .dash.st.simple .btn.primary { border-color: var(--fg3); color: var(--fg); }
+
+@media (max-width: 1400px) {
+  .sv2 { --sv: .82; gap: 8px; grid-template-rows: 60px minmax(0, 1fr) 40px; }
+  .sv2.present { --sv: 1.0; grid-template-rows: 72px minmax(0, 1fr) 48px; }
+  .sv2-tiles { gap: 8px; }
+  .tile { padding: 6px 10px 4px; }
+  .sv2-top { gap: 12px; padding: 0 12px; }
+  .sv2-foot { gap: 8px; padding: 0 12px; }
+  .tile-trend .st-chart { min-height: 60px; }
+}

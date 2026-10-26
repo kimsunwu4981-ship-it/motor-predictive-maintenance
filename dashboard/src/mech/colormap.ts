@@ -46,10 +46,10 @@ export function baseColor(cm: ThermalColormap, partKey: string): RGB {
   return cm.base_materials[partKey] ?? cm.base_materials[ALIAS[partKey] ?? ""] ?? FALLBACK[partKey] ?? [0.5, 0.5, 0.5];
 }
 export interface Sample { diffuse: RGB; emissive: RGB; intensity: number; pos: number; pulsing: boolean }
-export function sample(cm: ThermalColormap, tC: number, partKey: string, th: PartThreshold, stage: Stage, timeS: number): Sample {
+export function sample(cm: ThermalColormap, tC: number, partKey: string, th: PartThreshold, stage: Stage, timeS: number, baseOverride?: RGB): Sample {
   const pos = position(cm, tC, th);
   const s = interp(cm, pos);
-  const base = baseColor(cm, partKey);
+  const base = baseOverride ?? baseColor(cm, partKey);     // baseOverride: 상태 보드 단순 보기 — 재질색 대신 중립 회색(색은 상태 셋만 의미)
   const b = s.blend;
   const diffuse: RGB = [0, 1, 2].map((i) => base[i] * (1 - b) + s.color[i] * b) as RGB;
   const pulsing = cm.pulse.enabled && STAGE_ORDER.indexOf(stage) >= STAGE_ORDER.indexOf(cm.pulse.start_stage);
