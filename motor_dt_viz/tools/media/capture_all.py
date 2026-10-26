@@ -27,12 +27,23 @@ import shutil
 import subprocess
 import sys
 
+def _maxwell_root() -> str:
+    """Maxwell 저장소 위치: MAXWELL_ROOT 환경변수 → 바탕 화면\\권상모터_3D모델링 → 바탕 화면\\모터\\권상모터_3D모델링 (2026-10-26 바탕화면 정리로 이동)."""
+    env = os.environ.get("MAXWELL_ROOT")
+    if env:
+        return env
+    desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    for c in (os.path.join(desk, "권상모터_3D모델링"), os.path.join(desk, "모터", "권상모터_3D모델링")):
+        if os.path.isdir(c):
+            return c
+    return os.path.join(desk, "모터", "권상모터_3D모델링")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 VIZ = os.path.abspath(os.path.join(HERE, "..", ".."))
 REPO = os.path.abspath(os.path.join(VIZ, ".."))
 sys.path.insert(0, VIZ)
 ISAAC_PY = r"C:\ISSACS~1\python.bat"
-MAXWELL = os.environ.get("MAXWELL_ROOT", os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면", "권상모터_3D모델링"))
+MAXWELL = _maxwell_root()
 FONT = r"C:\Windows\Fonts\malgun.ttf"
 FONT_B = r"C:\Windows\Fonts\malgunbd.ttf"
 DATE = "20261026"
@@ -548,7 +559,8 @@ def write_readme(root: str, date: str, meta: dict, sections: dict):
 
 def cmd_desktop(a):
     """바탕화면 사본: ~/OneDrive/바탕 화면/M1_미디어팩_<날짜>/ (사용자 요청 2026-10-26, 저장소 사본과 같은 내용)."""
-    src = out_dir(a.date); dst = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면", f"M1_미디어팩_{a.date}")
+    src = out_dir(a.date); desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    dst = next((d for d in (os.path.join(desk, "모터", f"M1_미디어팩_{a.date}"), os.path.join(desk, f"M1_미디어팩_{a.date}")) if os.path.isdir(d)), os.path.join(desk, "모터", f"M1_미디어팩_{a.date}"))   # 사용자가 옮긴 폴더가 있으면 거기에
     shutil.copytree(src, dst, dirs_exist_ok=True)
     n = sum(len(f) for _, _, f in os.walk(dst)); mb = sum(os.path.getsize(os.path.join(r, f)) for r, _, fs in os.walk(dst) for f in fs) / 1e6
     print(f"desktop: {dst} ({n} files, {mb:.1f} MB)")

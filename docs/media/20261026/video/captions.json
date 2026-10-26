@@ -181,10 +181,10 @@
    "file": "08_side_by_side.mp4",
    "caption": "Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s",
    "sync_method": "Isaac: recording json 의 scenario_start_wall; 대시보드: gdigrab 시작 벽시계 → ▶ 재생 클릭 벽시계 (08_dashboard_sync.json play_offset_s)",
-   "dashboard_offset_s": 2.001,
+   "dashboard_offset_s": 2.005,
    "resolution": "1920x1080",
    "fps": 30,
-   "size_mb": 3.0,
+   "size_mb": 3.1,
    "speed": 1.0
   }
  ],

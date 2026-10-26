@@ -9,7 +9,9 @@ import pytest
 from engine.lut_source import LutSource, default_lut_path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MCCM_RESULTS = r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링\maxwell\results\mccm_results.json"
+_DESK = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+_MAXWELL = os.environ.get("MAXWELL_ROOT") or next((c for c in (os.path.join(_DESK, "권상모터_3D모델링"), os.path.join(_DESK, "모터", "권상모터_3D모델링")) if os.path.isdir(c)), os.path.join(_DESK, "모터", "권상모터_3D모델링"))
+MCCM_RESULTS = os.path.join(_MAXWELL, "maxwell", "results", "mccm_results.json")   # 2026-10-26: 바탕화면 정리로 모터/ 아래로 이동 — 환경변수 → 옛 경로 → 새 경로
 
 
 @pytest.fixture(scope="module")

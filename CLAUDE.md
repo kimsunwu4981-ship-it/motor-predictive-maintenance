@@ -7,7 +7,7 @@
 - 해석 근거: RMxprt v2m2 → MCCM/LUT v2 → 2D 와전류 FEM lite(학생판) 정합. 정본 요약은 `docs/verification_summary.md`, 대조 보고서는 `docs/verification/sim_vs_analysis_report.md`.
 
 ## 두 저장소 경계
-- Maxwell 저장소 `C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링`(github `hoist-motor-maxwell`)은 **읽기 전용**. 위치는 환경변수 `MAXWELL_ROOT` 로 바꿀 수 있다(`import_lut.py`, `verify_lut_integration.py`, `build_analysis_reference.py`, `datasheet_to_yaml.py`).
+- Maxwell 저장소 `C:\Users\sunwu\OneDrive\바탕 화면\모터\권상모터_3D모델링`(github `hoist-motor-maxwell`)은 **읽기 전용**. 위치는 환경변수 `MAXWELL_ROOT` 로 바꿀 수 있다(`import_lut.py`, `verify_lut_integration.py`, `build_analysis_reference.py`, `datasheet_to_yaml.py`).
 - M1 입력 복사본 `assets/motors/M1/inputs/`(datasheet_v4.yaml·geometry_check_v2.json·rmxprt_v2m2.json·PROVENANCE.md)가 **DT 쪽 입력 정본**이다. 카탈로그 PDF 는 Maxwell `docs/sources/`(gitignore)에만 있으므로 PDF 없이 `datasheet_to_yaml.py` 를 돌려 `datasheet_v4.yaml` 을 덮어쓰지 말 것.
 - 금지(승인 없이): `config/thresholds.yaml` 숫자, `config/motors/M1.yaml`, `config/electrical.yaml`, LUT(`data/electrical/*.json`), 판정 코드(`engine/thresholds.py`)·엔진 수치, 포트·방화벽(`config/live.yaml`), AI Hub 키.
 

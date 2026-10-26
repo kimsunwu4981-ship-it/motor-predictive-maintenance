@@ -1,9 +1,9 @@
 # 보고용 미디어 팩 — 2026-10-26
 
-M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해석 그림. 커밋 DT `166ba85` · Maxwell `3c4e22e` · 시드 없음(결정적) · 배속 1×.
+M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해석 그림. 커밋 DT `5e199d5` · Maxwell `3c4e22e` · 시드 없음(결정적) · 배속 1×.
 모든 숫자는 엔진 출력(state.csv)·검증 산출물·LUT 값이며 연출용 숫자는 없다. 파일명은 ASCII, 설명은 이 표의 캡션. 규격·재현·수동 캡처 체크리스트는 `README.md`.
 
-![contact sheet](contact_sheet.png)  (57 장 썸네일)
+![contact sheet](contact_sheet.png)  (58 장 썸네일)
 
 ## Isaac Sim 사진 (13 장) — `isaac/`
 
@@ -41,19 +41,20 @@ M1 (HLP-2.2/4) 디지털 트윈 — Isaac Sim 4.5 장면·HUD·대시보드·해
 
 | 파일 | 해상도 | URL | 캡션 | 22 kW 문구 |
 |---|---|---|---|---|
-| [01_simple_home_4turn.png](dashboard/01_simple_home_4turn.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 단순 보기 첫 화면 — 경고 · 전류 불균형 0.073 · 왜?/무엇을? · 신호 칩 · 흐름 (전기 40 s, 턴간 단락 4턴) | 없음 |
-| [02_hero_term_tooltip.png](dashboard/02_hero_term_tooltip.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 영웅 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시 — 툴팁 원문: “역상 전류비 I₂/I₁ — 세 가닥 전류가 서로 얼마나 틀어졌는지 나타내는 비율. 권선 단락·전압 불평형에서 커집니다.” | 없음 |
-| [03_signal_chip_tooltip.png](dashboard/03_signal_chip_tooltip.png) | 1920x1080 | `/?r=1793001110261#/status?m=M1&t=40` | 신호 띠 '전류/정격' 칩 툴팁 — 상별 전류(A)·정격·임계 구간을 오버레이로 표시 — 툴팁 원문: “전류 비율 r = I / I정격 — 지금 흐르는 전류를 그 모터의 정격 전류로 나눈 값. 너무 커도(과부하·단락) 너무 작아도(결상·무부하) 문제입니다.
-R 5.20 A (1.10×) · S 4.90 A (1.04×) · T 4.60 A (0.97×) · 정격 4.73 A · 안전 0.85~1.1× · 위험 >1.25× 또는 <0.5×” | 없음 |
-| [04_simple_12turn_danger.png](dashboard/04_simple_12turn_danger.png) | 1920x1080 | `/?r=1793001113519#/status?m=M1&t=60` | 단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, 무엇을? 정지 후 재권선 | 없음 |
-| [05_simple_healthy.png](dashboard/05_simple_healthy.png) | 1920x1080 | `/?r=1793001116664#/status?m=M1&t=15` | 단순 보기 — 안전 · 정상 (15 s): 기준선, 전류 불균형 0.027 | 없음 |
-| [06_evidence_drawer_table.png](dashboard/06_evidence_drawer_table.png) | 1920x1080 | `/?r=1793001119814#/status?m=M1&t=40&drawer=1` | 근거 서랍 ① 정직성 4줄 ② 해석 근거 비교 — 시뮬값 있는 행만(결함분·I₂/I_n·I_f·P_loop 채워짐, — 1행 접힘) | 보임 |
-| [07_evidence_drawer_trace.png](dashboard/07_evidence_drawer_trace.png) | 1920x1080 | `/?r=1793001119814#/status?m=M1&t=40&drawer=1` | 근거 서랍 ③ 근거 사슬(표시량 → 엔진 → 파일 sha → 해석 단계 → 등급) ④ 한계 | 보임 |
-| [08_thresholds_sheet.png](dashboard/08_thresholds_sheet.png) | 1920x1080 | `/?r=1793001124142#/status?m=M1&t=40&tab=thr` | 임계값 기준표 시트 — 안전/경고/위험 경계 + 근거 + 쉬운 설명 열 | 없음 |
-| [09_simple_mech_bearing.png](dashboard/09_simple_mech_bearing.png) | 1920x1080 | `/?r=1793001127789#/status?m=M1&t=40&mode=mechanical` | 단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 온도·진동·베어링 칩, DE 베어링 온도 추세 | 없음 |
-| [10_expert_view.png](dashboard/10_expert_view.png) | 1920x1080 | `/?r=1793001131425#/status?m=M1&t=40&view=expert` | 전문가 보기(기존 보드) — 카드·게이지·원인과 조치·해석 근거 비교(엔진 값 채움)·추세·기준표 | 보임 |
-| [11_provisional_tag_tooltip.png](dashboard/11_provisional_tag_tooltip.png) | 1920x1080 | `/?r=1793001135106#/status?m=M1&t=40` | 영웅 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시 — 툴팁 원문: “실측 기준선 확보 전까지 참고 기준입니다” | 없음 |
-| [12_export_csv.png](dashboard/12_export_csv.png) | 1920x1080 | `/?r=1793001138254#/status?m=M1&t=40&drawer=1` | 근거 서랍 '비교 내보내기' 직후 — 다운로드 파일 export_20261026_165221.csv (V2 형식 CSV, 4턴 40 s) | 보임 |
+| [01_simple_home_4turn.png](dashboard/01_simple_home_4turn.png) | 1920x1080 | `/?r=1793019536616#/status?m=M1&t=40` | 단순 보기 첫 화면 — 상태 띠(경고 · 전류 불균형 0.073) + 그림 타일 4(열·결함 지도 · 전류 파형 · 전류 성분 · 추세) + 하단 띠(왜/무엇을/근거) (전기 40 s, 턴간 단락 4턴) | 없음 |
+| [02_hero_term_tooltip.png](dashboard/02_hero_term_tooltip.png) | 1920x1080 | `/?r=1793019536616#/status?m=M1&t=40` | 상태 띠 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시 — 툴팁 원문: “역상 전류비 I₂/I₁ — 세 가닥 전류가 서로 얼마나 틀어졌는지 나타내는 비율. 권선 단락·전압 불평형에서 커집니다.” | 없음 |
+| [03_threshold_tooltip.png](dashboard/03_threshold_tooltip.png) | 1920x1080 | `/?r=1793019536616#/status?m=M1&t=40` | 상태 띠 원인 값 툴팁 — 임계 구간(안전·경고·위험)과 "3초 이상 지속될 때만 경보" 각주를 오버레이로 표시 — 툴팁 원문: “역상 전류비 I₂/I₁ — 세 가닥 전류가 서로 얼마나 틀어졌는지 나타내는 비율. 권선 단락·전압 불평형에서 커집니다.
+안전 <0.05 · 경고 0.05~0.1 · 위험 ≥0.1
+3초 이상 지속될 때만 경보가 올라갑니다” | 없음 |
+| [04_simple_12turn_danger.png](dashboard/04_simple_12turn_danger.png) | 1920x1080 | `/?r=1793019539914#/status?m=M1&t=60` | 단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, R상 파형 굵게(1.56×), I₂ 막대 빨강, 단락 코일 발광 점 커짐 | 없음 |
+| [05_simple_healthy.png](dashboard/05_simple_healthy.png) | 1920x1080 | `/?r=1793019543091#/status?m=M1&t=15` | 단순 보기 — 안전 · 정상 (15 s): 기준선, 전류 불균형 0.027 | 없음 |
+| [06_evidence_drawer_table.png](dashboard/06_evidence_drawer_table.png) | 1920x1080 | `/?r=1793019546281#/status?m=M1&t=40&drawer=1` | 근거 서랍 ① 정직성 4줄 ② 해석 근거 비교 — 시뮬값 있는 행만(결함분·I₂/I_n·I_f·P_loop 채워짐, — 1행 접힘) | 보임 |
+| [07_evidence_drawer_trace.png](dashboard/07_evidence_drawer_trace.png) | 1920x1080 | `/?r=1793019546281#/status?m=M1&t=40&drawer=1` | 근거 서랍 ③ 근거 사슬(표시량 → 엔진 → 파일 sha → 해석 단계 → 등급) ④ 한계 | 보임 |
+| [08_thresholds_sheet.png](dashboard/08_thresholds_sheet.png) | 1920x1080 | `/?r=1793019550752#/status?m=M1&t=40&tab=thr` | 임계값 기준표 시트 — 안전/경고/위험 경계 + 근거 + 쉬운 설명 열 | 없음 |
+| [09_simple_mech_bearing.png](dashboard/09_simple_mech_bearing.png) | 1920x1080 | `/?r=1793019554436#/status?m=M1&t=40&mode=mechanical` | 단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 열·결함 지도(온도 색), 진동 막대, 베어링 충격성·고주파 막대, 추세 | 없음 |
+| [10_expert_view.png](dashboard/10_expert_view.png) | 1920x1080 | `/?r=1793019558103#/status?m=M1&t=40&view=expert` | 전문가 보기(기존 보드) — 카드·게이지·원인과 조치·해석 근거 비교(엔진 값 채움)·추세·기준표 | 보임 |
+| [11_provisional_tag_tooltip.png](dashboard/11_provisional_tag_tooltip.png) | 1920x1080 | `/?r=1793019561788#/status?m=M1&t=40` | 상태 띠 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시 — 툴팁 원문: “실측 기준선 확보 전까지 참고 기준입니다” | 없음 |
+| [12_export_csv.png](dashboard/12_export_csv.png) | 1920x1080 | `/?r=1793019564967#/status?m=M1&t=40&drawer=1` | 근거 서랍 '비교 내보내기' 직후 — 다운로드 파일 export_20261026_215928.csv (V2 형식 CSV, 4턴 40 s) | 보임 |
 
 제외(22 kW 자산·문구): #/electrical · #/mechanical 해설 화면 — 이전 22 kW 녹화 영상(public/media/integrated_autoplay.mp4)을 재생 — 22 kW 자산 사용 금지. 상태 보드(단순 보기·전문가 보기)만 캡처
 
@@ -70,7 +71,7 @@ R 5.20 A (1.10×) · S 4.90 A (1.04×) · T 4.60 A (0.97×) · 정격 4.73 A · 
 | [gif_01_orbit.gif](video/gif_01_orbit.gif) |  | 01_exterior_orbit.mp4 | 01_exterior_orbit 의 0~10 s (12 fps) | 3.43 |
 | [gif_02_itsc_glow.gif](video/gif_02_itsc_glow.gif) |  | 03_electrical_fault.mp4 | 03_electrical_fault 의 18~46 s (12 fps) | 5.85 |
 | [07_dashboard_walkthrough.mp4](video/07_dashboard_walkthrough.mp4) | 55.2 |  | 대시보드 워크스루 — 첫 화면(15 s) → 4턴 칩 → 게이지 → 해석 근거 비교 → 근거 보기 → 12턴 칩 → 맨 위 (Edge 창 화면 녹화, 1920×1080) | 2.2 |
-| [08_side_by_side.mp4](video/08_side_by_side.mp4) |  |  | Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s | 3.0 |
+| [08_side_by_side.mp4](video/08_side_by_side.mp4) |  |  | Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s | 3.1 |
 
 ## 해석·검증 그림 (23 장) — `figures/`
 

@@ -1,8 +1,8 @@
 {
  "dash_t0_s": 0,
- "t_rec_start_ms": 1793000828068,
- "t_play_ms": 1793000830069,
- "t_close_ms": 1793000892667,
- "play_offset_s": 2.001,
- "note": "단순 보기. ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)"
+ "t_rec_start_ms": 1793019718473,
+ "t_play_ms": 1793019720478,
+ "t_close_ms": 1793019783149,
+ "play_offset_s": 2.005,
+ "note": "ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)"
 }

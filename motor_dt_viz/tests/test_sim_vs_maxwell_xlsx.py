@@ -85,4 +85,9 @@ def test_desktop_copy_exists(sm):
     p = sm.get("desktop_copy")
     if not p:
         pytest.skip("바탕화면 사본 생략(--no-desktop)")
-    assert os.path.exists(p) and os.path.getsize(p) > 10_000
+    desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    cands = [p, os.path.join(desk, "모터", os.path.basename(p))]            # 2026-10-26: 사용자가 바탕화면을 정리해 모터/ 로 옮김
+    hit = next((c for c in cands if os.path.exists(c)), None)
+    if hit is None:
+        pytest.skip(f"바탕화면 사본이 옮겨지거나 지워짐: {cands}")
+    assert os.path.getsize(hit) > 10_000

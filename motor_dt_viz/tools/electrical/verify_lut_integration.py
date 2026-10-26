@@ -21,6 +21,17 @@ import copy
 import json
 import math
 import os
+
+def _maxwell_root() -> str:
+    """Maxwell 저장소 위치: MAXWELL_ROOT 환경변수 → 바탕 화면\\권상모터_3D모델링 → 바탕 화면\\모터\\권상모터_3D모델링 (2026-10-26 바탕화면 정리로 이동)."""
+    env = os.environ.get("MAXWELL_ROOT")
+    if env:
+        return env
+    desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    for c in (os.path.join(desk, "권상모터_3D모델링"), os.path.join(desk, "모터", "권상모터_3D모델링")):
+        if os.path.isdir(c):
+            return c
+    return os.path.join(desk, "모터", "권상모터_3D모델링")
 import subprocess
 import sys
 import time
@@ -38,7 +49,7 @@ from engine.config_loader import load  # noqa: E402
 from engine.current_model import CurrentModel  # noqa: E402
 from engine.lut_source import LutSource, default_lut_path  # noqa: E402
 
-MCCM_RESULTS = os.path.join(os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링"), "maxwell", "results", "mccm_results.json")   # D1: MAXWELL_ROOT 환경변수
+MCCM_RESULTS = os.path.join(_maxwell_root(), "maxwell", "results", "mccm_results.json")   # D1: MAXWELL_ROOT 환경변수
 REPORT = os.path.join(VIZ, "docs", "electrical", "lut_integration_report.md")
 FORBIDDEN = ["motor_dt_viz/config/thresholds.yaml", "motor_dt_viz/config/motors", "motor_dt_viz/engine/thresholds.py",
              "motor_dt_viz/config/live.yaml", "motor_dt_viz/tools/firewall_rules.ps1"]

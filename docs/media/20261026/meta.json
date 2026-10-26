@@ -1,7 +1,7 @@
 {
  "date": "20261026",
- "generated": "2026-10-26T16:54:04",
- "git_commit_dt_repo": "166ba85",
+ "generated": "2026-10-26T22:05:00",
+ "git_commit_dt_repo": "5e199d5",
  "git_commit_maxwell_repo": "3c4e22e",
  "seed": null,
  "seed_note": "엔진·장면에 난수 없음 (engine/·viz/·app/ 에 random/np.random 사용 없음) — 같은 시나리오 시각이면 같은 값",

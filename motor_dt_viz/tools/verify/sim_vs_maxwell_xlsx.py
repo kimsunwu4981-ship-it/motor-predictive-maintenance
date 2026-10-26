@@ -14,6 +14,17 @@ import hashlib
 import json
 import math
 import os
+
+def _maxwell_root() -> str:
+    """Maxwell 저장소 위치: MAXWELL_ROOT 환경변수 → 바탕 화면\\권상모터_3D모델링 → 바탕 화면\\모터\\권상모터_3D모델링 (2026-10-26 바탕화면 정리로 이동)."""
+    env = os.environ.get("MAXWELL_ROOT")
+    if env:
+        return env
+    desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    for c in (os.path.join(desk, "권상모터_3D모델링"), os.path.join(desk, "모터", "권상모터_3D모델링")):
+        if os.path.isdir(c):
+            return c
+    return os.path.join(desk, "모터", "권상모터_3D모델링")
 import shutil
 import sys
 import time
@@ -27,7 +38,7 @@ OUT_DIR = os.path.join(REPO, "docs", "verification")
 sys.path.insert(0, HERE)
 from sim_vs_analysis import load_run, steady, fnum  # noqa: E402  (정상 상태 평균 규칙 재사용)
 
-MAXWELL = os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링")
+MAXWELL = _maxwell_root()
 SCEN = ["healthy", "itsc_4turn", "itsc_8turn", "itsc_12turn", "itsc_16turn", "itsc_4turn_resistive", "itsc_4turn_halfload"]
 TURNS = {"healthy": 0, "itsc_4turn": 4, "itsc_8turn": 8, "itsc_12turn": 12, "itsc_16turn": 16, "itsc_4turn_resistive": 4, "itsc_4turn_halfload": 4}
 RF = {"healthy": 0.1, "itsc_4turn": 0.1, "itsc_8turn": 0.1, "itsc_12turn": 0.1, "itsc_16turn": 0.1, "itsc_4turn_resistive": 1.0, "itsc_4turn_halfload": 0.1}

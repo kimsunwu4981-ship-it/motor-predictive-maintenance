@@ -9,13 +9,24 @@ import argparse
 import hashlib
 import json
 import os
+
+def _maxwell_root() -> str:
+    """Maxwell 저장소 위치: MAXWELL_ROOT 환경변수 → 바탕 화면\\권상모터_3D모델링 → 바탕 화면\\모터\\권상모터_3D모델링 (2026-10-26 바탕화면 정리로 이동)."""
+    env = os.environ.get("MAXWELL_ROOT")
+    if env:
+        return env
+    desk = os.path.join(os.path.expanduser("~"), "OneDrive", "바탕 화면")
+    for c in (os.path.join(desk, "권상모터_3D모델링"), os.path.join(desk, "모터", "권상모터_3D모델링")):
+        if os.path.isdir(c):
+            return c
+    return os.path.join(desk, "모터", "권상모터_3D모델링")
 import re
 import sys
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-MAXWELL_ROOT = os.environ.get("MAXWELL_ROOT", r"C:\Users\sunwu\OneDrive\바탕 화면\권상모터_3D모델링")   # D1(2026-10-21): 환경변수로 Maxwell 저장소 위치 지정 (docs/REPRODUCE.md)
+MAXWELL_ROOT = _maxwell_root()   # D1(2026-10-21): 환경변수로 Maxwell 저장소 위치 지정 (docs/REPRODUCE.md)
 DEFAULT_SRC = os.path.join(MAXWELL_ROOT, "maxwell", "results", "mccm_lut.json")
 OUT_DIR = os.path.join(ROOT, "data", "electrical")
 

@@ -78,15 +78,15 @@ const { ctx, page } = await openWindowed(browser);
 const go = async (hash, ms = 2500) => { await page.goto(`${base}/?r=${Date.now()}#/${hash}`, { waitUntil: "networkidle" }); await sleep(ms); };   // 쿼리를 바꿔 매번 새 문서로 — 해시만 바뀌면 보드가 ?drawer/?tab/?view 를 다시 읽지 않는다
 
 await go("status?m=M1&t=40");
-await shot(page, "01_simple_home_4turn", "단순 보기 첫 화면 — 경고 · 전류 불균형 0.073 · 왜?/무엇을? · 신호 칩 · 흐름 (전기 40 s, 턴간 단락 4턴)");
-const heroTip = await overlayTitle(page, ".sv-cause abbr", "영웅 원인 신호");
-await shot(page, "02_hero_term_tooltip", "영웅 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시", { tooltip: heroTip });
+await shot(page, "01_simple_home_4turn", "단순 보기 첫 화면 — 상태 띠(경고 · 전류 불균형 0.073) + 그림 타일 4(열·결함 지도 · 전류 파형 · 전류 성분 · 추세) + 하단 띠(왜/무엇을/근거) (전기 40 s, 턴간 단락 4턴)");
+const heroTip = await overlayTitle(page, ".sv2-cause abbr", "상태 띠 원인 신호");
+await shot(page, "02_hero_term_tooltip", "상태 띠 원인 신호 '전류 불균형' 의 툴팁(정식 용어 역상 전류비 I₂/I₁ + 설명)을 오버레이로 표시", { tooltip: heroTip });
 await clearOverlay(page);
-const chipTip = await overlayTitle(page, ".sv-sig .sv-chip:nth-of-type(2)", "신호 칩 전류/정격");
-await shot(page, "03_signal_chip_tooltip", "신호 띠 '전류/정격' 칩 툴팁 — 상별 전류(A)·정격·임계 구간을 오버레이로 표시", { tooltip: chipTip });
+const chipTip = await overlayTitle(page, ".sv2-cause", "임계 구간 · 지속 규칙");
+await shot(page, "03_threshold_tooltip", "상태 띠 원인 값 툴팁 — 임계 구간(안전·경고·위험)과 \"3초 이상 지속될 때만 경보\" 각주를 오버레이로 표시", { tooltip: chipTip });
 await clearOverlay(page);
 await go("status?m=M1&t=60");
-await shot(page, "04_simple_12turn_danger", "단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, 무엇을? 정지 후 재권선");
+await shot(page, "04_simple_12turn_danger", "단순 보기 — 위험 · 12턴 (60 s): 전류 불균형 0.270, R상 파형 굵게(1.56×), I₂ 막대 빨강, 단락 코일 발광 점 커짐");
 await go("status?m=M1&t=15");
 await shot(page, "05_simple_healthy", "단순 보기 — 안전 · 정상 (15 s): 기준선, 전류 불균형 0.027");
 await go("status?m=M1&t=40&drawer=1", 3000);
@@ -96,12 +96,12 @@ await shot(page, "07_evidence_drawer_trace", "근거 서랍 ③ 근거 사슬(�
 await go("status?m=M1&t=40&tab=thr", 3000);
 await shot(page, "08_thresholds_sheet", "임계값 기준표 시트 — 안전/경고/위험 경계 + 근거 + 쉬운 설명 열");
 await go("status?m=M1&t=40&mode=mechanical", 3000);
-await shot(page, "09_simple_mech_bearing", "단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 온도·진동·베어링 칩, DE 베어링 온도 추세");
+await shot(page, "09_simple_mech_bearing", "단순 보기 기계 모드 — DE 베어링 열화 장면(40 s): 열·결함 지도(온도 색), 진동 막대, 베어링 충격성·고주파 막대, 추세");
 await go("status?m=M1&t=40&view=expert", 3000);
 await shot(page, "10_expert_view", "전문가 보기(기존 보드) — 카드·게이지·원인과 조치·해석 근거 비교(엔진 값 채움)·추세·기준표");
 await go("status?m=M1&t=40");
 const tagTip = await overlayTitle(page, ".sv-tag", "임시 태그");
-await shot(page, "11_provisional_tag_tooltip", "영웅 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시", { tooltip: tagTip });
+await shot(page, "11_provisional_tag_tooltip", "상태 띠 '임시' 태그 툴팁(실측 기준선 확보 전까지 참고 기준)을 오버레이로 표시", { tooltip: tagTip });
 await clearOverlay(page);
 await go("status?m=M1&t=40&drawer=1", 3000);
 let dlName = "";
@@ -126,7 +126,7 @@ if (!process.env.PHOTOS_ONLY) {
   await vp.locator(".sv-honesty").click(); await sleep(7000);
   await vp.evaluate(() => { const b = document.querySelector(".sv-drawer .body"); if (b) b.scrollTo({ top: b.scrollHeight, behavior: "smooth" }); }); await sleep(6000);
   await vp.keyboard.press("Escape"); await sleep(2000);
-  await vp.locator(".sv-foot .sv-chip", { hasText: "임계값" }).click(); await sleep(6000);
+  await vp.locator(".sv2-foot .sv-chip", { hasText: "임계값" }).click(); await sleep(6000);
   await vp.keyboard.press("Escape"); await sleep(2000);
   await vp.locator(".view-seg button", { hasText: "전문가" }).click(); await sleep(7000);
   await vp.locator(".view-seg button", { hasText: "단순" }).click(); await sleep(5000);
@@ -141,7 +141,7 @@ if (!process.env.PHOTOS_ONLY) {
   await vp.bringToFront();
   const rec = startRec(join(videoDir, "08_dashboard_sync.mp4"), rect); await sleep(2000);
   const t_play_ms = Date.now();
-  await vp.getByRole("button", { name: /▶ 재생/ }).click();
+  await vp.locator(".sv2-top button").first()   /* 단순 보기 1b: 재생 버튼은 상태 띠 첫 버튼(아이콘만) */.click();
   await sleep(62000);
   const t_close_ms = await stopRec(rec); await c3.close();
   writeFileSync(join(videoDir, "08_dashboard_sync.json"), JSON.stringify({ dash_t0_s: t0, t_rec_start_ms: rec.t0, t_play_ms, t_close_ms, play_offset_s: (t_play_ms - rec.t0) / 1000, note: "단순 보기. ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)" }, null, 1));

@@ -28,7 +28,7 @@ const p = spawn("ffmpeg", ["-y", "-hide_banner", "-loglevel", "error", "-f", "gd
   "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", out], { stdio: ["pipe", "inherit", "inherit"] });
 const t_rec_start_ms = Date.now(); await sleep(2000);
 const t_play_ms = Date.now();
-await page.getByRole("button", { name: /▶ 재생/ }).click();
+await page.locator(".sv2-top button").first()   /* 단순 보기 1b: 재생 버튼은 상태 띠 첫 버튼(아이콘만) */.click();
 await sleep(62000);
 const t_close_ms = await new Promise((res) => { p.on("exit", () => res(Date.now())); p.stdin.write("q"); p.stdin.end(); });
 writeFileSync(join(videoDir, "08_dashboard_sync.json"), JSON.stringify({ dash_t0_s: t0, t_rec_start_ms, t_play_ms, t_close_ms, play_offset_s: (t_play_ms - t_rec_start_ms) / 1000, note: "ffmpeg gdigrab 시작 벽시계 → 재생 클릭까지의 초가 영상에서 대시보드 t0 가 되는 위치 (ffmpeg 기동 지연 ≈0.3 s 미보정)" }, null, 1));
