@@ -31,6 +31,7 @@ import yaml  # noqa: E402
 
 from engine import motor_library as ml  # noqa: E402
 from engine.config_loader import load  # noqa: E402
+from engine.current_model import CurrentModel  # noqa: E402
 from engine.thermal_model import ThermalModel  # noqa: E402
 from engine.thresholds import bearing_level  # noqa: E402
 from run_fleet import bearing_signals  # noqa: E402
@@ -104,13 +105,36 @@ def scene_values(motor: ml.Motor, mode: str, demo: list[dict], base: dict, steps
     return out
 
 
-def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mode: dict, th_cfg: dict) -> dict:
+def case_extras(cm: CurrentModel, cases: list[str]) -> dict:
+    """단순 보기(2026-10-26) 근거 서랍 비교표의 '지금 표시값' — 엔진이 이미 계산하는 케이스별 값을 그대로 옮긴다 (새 계산 없음).
+    i2i1_fault: LUT 결함분 r (고유 비대칭 제외) · i2_over_in: 엔진 analyze 의 I₂/I_n · i_f_A / p_loop_total_W: LUT 단락 루프 전류·총손실. LUT 를 쓰지 않는 케이스는 None."""
+    out = {}
+    for c in cases:
+        if c in out:
+            continue
+        if not cm.case_uses_lut(c):
+            out[c] = {"i2i1_fault": None, "i2_over_in": None, "i_f_A": None, "p_loop_total_W": None}
+            continue
+        q = cm.lut_point(c) or {}
+        st = cm.evaluate_case(c)
+        loop = cm.short_loop(c) or {}
+        out[c] = {"i2i1_fault": None if q.get("i2_over_i1") is None else round(float(q["i2_over_i1"]), 6),
+                  "i2_over_in": None if st.i2_over_in is None else round(float(st.i2_over_in), 5),
+                  "i_f_A": None if loop.get("I_f_A") is None else round(float(loop["I_f_A"]), 4),
+                  "p_loop_total_W": round(float(cm.loop_loss_W(c)), 2)}
+    return out
+
+
+def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mode: dict, th_cfg: dict, cm: CurrentModel | None = None) -> dict:
     d = rows(os.path.join(FLEET, motor.id, mode, "demo_fleet.csv"))
     s = rows(os.path.join(FLEET, motor.id, mode, "status_fleet.csv"))
     assert len(d) == len(s), f"{motor.id} {mode}: demo/status 행 수 불일치"
     i_line = motor.rated_line_current_a
     steps = sc_mode["steps"]
     scale = {st["id"]: f(st["time_scale"]) for st in steps}
+    extras = case_extras(cm, sorted({r["case"] for r in d})) if cm is not None else {}
+    t_amb = f(d[0]["T_winding"]) if d else None          # 권선 ΔT 기준 = 첫 샘플(주위 온도와 같은 초기값). 전기 모드는 열 적분이 없어 0 → null 로 둔다
+    thermal_on = any(abs(f(r["T_winding"]) - t_amb) > 1e-6 for r in d) if d else False
     out = {
         "motor": motor.id, "mode": mode, "n": len(d), "source": "logs/fleet (engine batch, tools/run_fleet.py) · 판정 engine/thresholds.py",
         "t": [round(f(r["t_real_s"]), 3) for r in d],
@@ -132,6 +156,19 @@ def export_motor(motor: ml.Motor, mode: str, th_mode: dict, sc_mode: dict, nv_mo
         "levels": {**{k: [r[k] for r in s] for k in SIGNALS},
                    "bearing": [r.get("bearing") or bearing_level({"bearing_kurtosis": r["bearing_kurtosis"], "bearing_hf_ratio": r["bearing_hf_ratio"]}) for r in s]},
         "scene_values": scene_values(motor, mode, d, nv_mode.get("scenes", {}), steps, th_mode),
+        # ---- 단순 보기 근거 서랍용 (2026-10-26, 필드 추가만): 케이스별 엔진 값. 값이 없으면 null + 사유(extras_note)
+        "i2i1_fault": [extras.get(r["case"], {}).get("i2i1_fault") for r in d],
+        "i2_over_in": [extras.get(r["case"], {}).get("i2_over_in") for r in d],
+        "i_f_A": [extras.get(r["case"], {}).get("i_f_A") for r in d],
+        "p_loop_total_W": [extras.get(r["case"], {}).get("p_loop_total_W") for r in d],
+        "winding_dT_C": [round(f(r["T_winding"]) - t_amb, 2) for r in d] if thermal_on else None,
+        "extras_note": {
+            "i2i1_fault": "LUT 결함분 r (고유 비대칭 제외) — engine.CurrentModel.lut_point; LUT 밖 케이스(정상·과부하·불평형·결상·무부하)는 null",
+            "i2_over_in": "I₂/I_n (electrical.yaml 정격 기준) — engine.CurrentModel.analyze; LUT 케이스만",
+            "i_f_A": "단락 루프 전류 [A] — engine.CurrentModel.short_loop (LUT); 단락 케이스만",
+            "p_loop_total_W": "단락 루프 총손실 [W] — engine.CurrentModel.loop_loss_W (LUT, coupling_to_thermal); 단락 케이스만",
+            "winding_dT_C": "권선 온도 − 첫 샘플 [°C]" + ("" if thermal_on else " — 이 모드(전기)는 열 모델을 돌리지 않아 null (통합·기계 모드에서만)"),
+        },
     }
     return out
 
@@ -151,9 +188,13 @@ def main():
         m = ml.load_motor(mid)
         th_cfg = ml.thermal_cfg(m)
         ss = ThermalModel(th_cfg).steady_state(1.0, [])
+        try:
+            cm = CurrentModel(ml.electrical_cfg(m), ml.motor_spec(m))      # 근거 서랍 값(LUT 결함분·I₂/I_n·I_f·P_loop) — 엔진 그대로
+        except Exception as e:  # noqa: BLE001
+            print(f"[status] {mid}: CurrentModel 생성 실패 → extras null ({e})"); cm = None
         files = {}
         for mode in MODES:
-            data = export_motor(m, mode, th[mode], sc[mode], nv[mode], th_cfg)
+            data = export_motor(m, mode, th[mode], sc[mode], nv[mode], th_cfg, cm)
             name = f"{mid}_{mode}.json"
             with open(os.path.join(OUT, name), "w", encoding="utf-8") as fh:
                 json.dump(data, fh, ensure_ascii=False, separators=(",", ":"))

@@ -37,7 +37,7 @@ export function Landing() {
             <span style={{ background: "#ff731a" }} title="경고" />
             <span style={{ background: "#ff2e0a", boxShadow: "0 0 10px #ff2e0a" }} title="위험" />
           </div>
-          <div className="dim">1톤 호이스트 2.2 kW 4극 (카탈로그 사양) · 판정 엔진 · 실측 기준선 전 참고 지표 표시</div>
+          <div className="dim">현대 HLP-2.2/4 · 2.2 kW 4극 (카탈로그 사양, 해석 기준 모터) · 판정 엔진 · 상태·원인·조치 한눈에</div>
         </a>
       </div>
       <div className="dim">시뮬레이션 기반 추정값 · 오프라인 동작 · F 키: 발표 모드</div>

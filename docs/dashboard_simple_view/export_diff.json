@@ -1,0 +1,12 @@
+{
+ "files": 3,
+ "changed_existing": [],
+ "added": [
+  "extras_note",
+  "i2_over_in",
+  "i2i1_fault",
+  "i_f_A",
+  "p_loop_total_W",
+  "winding_dT_C"
+ ]
+}

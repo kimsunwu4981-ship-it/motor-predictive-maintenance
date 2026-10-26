@@ -904,3 +904,11 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **실측 함정**: ① 배치에서 `python.bat` 는 `call` 필요(없으면 첫 실행 뒤 종료). ② `--res` 만으로는 Kit 창이 1456×938 — Win32 MoveWindow 로 클라이언트 영역을 맞춤. ③ Kit 기본 레이아웃(Stage·Content·'Isaac Sim Assets [Beta]')이 뷰포트를 1/3 로 줄여 `--capture_layout` 추가. ④ gdigrab 은 데스크톱 캡처라 녹화 중 VS Code·탐색기가 앞으로 오면 그 화면이 찍힘 → 궤도·대시보드 동기 2편 재녹화. ⑤ Playwright 번들 Chromium/ffmpeg 다운로드 정지(1.3 MB) → Edge 채널 + 헤드 모드(PowerShell 에서만 기동). ⑥ 상태 보드 ▶ 재생은 `?t=` 와 무관하게 0 s 부터 → side-by-side 동기 원점 0 s. ⑦ front_shaft 1.05 m 는 너무 멀어 0.62 m 로, orbit 0.95/0.45 → 0.78/0.36.
 - **22 kW 문구**: 해설 화면(#/electrical·#/mechanical)은 22 kW 녹화 영상을 재생하므로 제외하고 상태 보드 장면 4장으로 대체. 상태 보드 전 화면 상단의 정직성 한 줄("열회로 계수는 22 kW 기준 스케일 — M1에서 낙관적일 수 있음")은 M1 이행 주석이라 **포함하고 index 에 표시**(제외 여부는 사용자 판단).
 - 못 찍은 것: 없음(수동 항목 6개 — Maxwell GUI 자속밀도·전류밀도·메시, 라이브 모드 화면, 실물 사진 — 은 README 체크리스트). 테스트 151 passed·1 skipped(캡처 인자 추가 뒤).
+
+## 26. 상태 보드 단순화 — 첫 화면은 "상태 · 원인 · 조치" (3단 정보 구조, 2026-10-26)
+
+- **무엇**: `#/status` 기본 화면을 `SimpleView.tsx`(영웅·왜?·무엇을?·신호 칩·흐름)로 바꾸고, 기존 화면은 헤더 토글 **전문가**로 유지(삭제 없음, 세션 안에서만 기억). 2층 = 하단 칩 → 시트(임계값 기준표 + "쉬운 설명" 열·사양·용어), 3층 = `시뮬레이션 추정값 · 근거 보기 ›` → `EvidenceDrawer.tsx`(정직성 4줄·해석 근거 비교(시뮬값 행만 기본)·근거 사슬·한계). 발표 모드(F)는 영웅·원인조치·흐름만 + 글자 1.25배, 숫자 키 1~5 = 장면 칩.
+- **쉬운 말 사전** `public/content/status/labels_plain.yaml`(signals/replace/notes/thresholds_easy, 런타임 로드) — 역상 전류비 I₂/I₁ → 전류 불균형, kurtosis → 충격성(첨도), 히스테리시스·지속 → "3초 이상 지속될 때만 경보가 올라갑니다"(초 수는 config), 참고·임시 기준 → 임시 태그. 본문 치환은 `<abbr title>` 로 원문 보존. 옛 라벨("1톤"·"권상 7 m/min") 제거 → `현대 SSEN HLP-2.2/4 · 2.2 kW 4극 · 해석 기준 모터`.
+- **export 필드 추가만** (`export_status_data.py`, 값은 `engine.CurrentModel` 그대로): `i2i1_fault`·`i2_over_in`·`i_f_A`·`p_loop_total_W`·`winding_dT_C`·`extras_note`. HEAD 스크립트를 임시 폴더로 실행해 diff — 기존 필드 변화 0. 서랍 비교표 시뮬값 행 5 + 판정 1 (4턴: 결함분 +0.31 %, I₂/I_n +0.22 %, I_f +0.10 %, P_loop +0.36 %). 전문가 보기 비교 패널에도 같은 값.
+- **검수**: 첫 화면 표 0·게이지 0·섹션 4, I₂/I₁ 영웅 1곳(+추세; 신호 띠는 `↖ 위`), 전기 모드 온도 칩 대신 "이 모드에서는 계산하지 않음", 옛 라벨 grep 0, `npm run build`(tsc) 통과, 테스트 151 passed·1 skipped, 1920×1080/1366×768·다크/라이트·전후 비교 스크린샷(`docs/dashboard_simple_view/img/`, `tools/simple_view_shots.mjs`). 문서 `docs/dashboard_simple_view.md`.
+- **한계**: 전기 모드 `winding_dT_C` null(열 모델 미실행), 조치 문장의 현장 용어(서지·절연저항)는 그대로, 해설 화면 22 kW 영상은 범위 밖. 다음: 미디어 팩 대시보드 사진·영상을 단순 보기로 다시 캡처.

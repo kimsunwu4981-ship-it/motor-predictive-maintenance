@@ -43,6 +43,8 @@ const GRADE_CLS: Record<string, string> = { catalog: "g-cat", rmxprt: "g-rmx", m
 const GRADE_SHORT: Record<string, string> = { catalog: "카탈로그", rmxprt: "RMxprt", mccm: "등가회로", lut: "등가회로 LUT", fem2d: "2D FEM", standard: "표준", assumed: "가정", model: "열 모델", dataset: "참고 데이터셋" };
 
 interface Row { item: string; shown: number | string | null; ref: number | string | null; tol: number | null; unit: string; src: Src | { grade_key: string; note?: string }; reason?: string; kind?: "rel" | "match" }
+// 단순 보기 근거 서랍(2026-10-26): export_status_data.py 가 붙인 케이스별 엔진 값 — 라이브가 아닐 때 '지금 표시값' 을 채운다 (값 계산은 엔진 그대로)
+export interface Extras { i2i1_fault: number | null; i2_over_in: number | null; i_f_A: number | null; p_loop_total_W: number | null; winding_dT_C: number | null; note: Record<string, string> }
 
 function fmt(v: number | string | null | undefined, n = 4): string {
   if (v === null || v === undefined) return "—";
@@ -54,13 +56,18 @@ function devPct(a: number | string | null, b: number | string | null): number | 
   return (a / b - 1) * 100;
 }
 
-export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive }: {
+export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive, extras, hideEmpty = false, defaultOpen = false, title = "④ 해석 근거 비교", traceTitle, limitsTitle }: {
   index: FleetIndex; s: MotorSeries | null; i: number; stepId: string; electricalCase: string; mode: Mode; live: LiveState | null; isLive: boolean;
+  extras?: Extras;               // export 추가 필드 (케이스별 엔진 값) — 없으면 기존처럼 라이브 state 에서만
+  hideEmpty?: boolean;           // 표시값이 없는(—) 행은 접어 둔다 ("표시 안 함 n행 ▾")
+  defaultOpen?: boolean;         // 근거 사슬·한계를 펼친 채 시작 (서랍)
+  title?: string; traceTitle?: string; limitsTitle?: string;
 }) {
   const [ref, setRef] = useState<AnalysisReference | null>(null);
   const [trace, setTrace] = useState<TraceDoc | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [basis, setBasis] = useState(false);
+  const [showEmpty, setShowEmpty] = useState(false);
   useEffect(() => { loadRef().then(setRef); }, []);
   useEffect(() => { if (open && !trace) loadTrace().then(setTrace); }, [open, trace]);
 
@@ -75,28 +82,34 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive }
     const transient = tStart < ref.thresholds.persistence_s;
     const liveSrc = live?.electrical_source as (Record<string, unknown> | undefined);
     const liveIf = liveSrc && typeof liveSrc.i_f_A === "number" ? (liveSrc.i_f_A as number) : null;
-    const dTshown = mode === "electrical" && !isLive ? null : (s.temperature_C.winding ? s.temperature_C.winding[i] - 25 : null);   // 전기 모드 녹화는 열 적분 없음 → 표시값 없음(회색)
+    const ex = !isLive ? extras : undefined;                                                           // 재생 모드: export 가 붙인 케이스별 엔진 값
+    const exNote = (k: string) => (ex?.note?.[k] ? ` · ${ex.note[k]}` : "");
+    const dTshown = mode === "electrical" && !isLive ? (ex?.winding_dT_C ?? null) : (s.temperature_C.winding ? s.temperature_C.winding[i] - 25 : null);   // 전기 모드 녹화는 열 적분 없음 → export 값(없으면 회색)
     const out: Row[] = [
       { item: "I₂/I₁ (합성 = 결함분 + 고유 비대칭)", shown: shownI2, ref: exp0, tol: 0.01, unit: "", src: R.i2_over_i1_fault,
         reason: shownI2 < lo || shownI2 > hi ? `고유 비대칭 각도에 따른 범위 ${lo.toFixed(4)}~${hi.toFixed(4)} 밖` : transient ? "과도 구간 — 판정 지속 3 s 전" : undefined },
-      { item: "I₂/I₁ 결함분 (LUT r, 고유 비대칭 제외)", shown: null, ref: R.i2_over_i1_fault.value, tol: 0.01, unit: "", src: R.i2_over_i1_fault, reason: "표시값은 합성값뿐 — 결함분은 로그의 I₂ 위상으로 분리(검증 보고서)" },
-      { item: "I₂/I_n (부하 무관 보조)", shown: isLive && live?.i2_over_in != null ? live.i2_over_in : null, ref: R.i2_over_in.sim_expected, tol: 0.01, unit: "", src: R.i2_over_in,
-        reason: `LUT 자체 I₂/I_n ${R.i2_over_in.lut.toFixed(4)} (LUT I₁ 기준) — 시뮬은 I₁ 을 정격×부하로 고정 (규약 차이)` },
-      { item: "단락 루프 전류 I_f", shown: liveIf, ref: R.i_f_A.mccm ?? R.i_f_A.lut, tol: 0.01, unit: "A", src: R.i_f_A,
-        reason: R.i_f_A.fem_corrected ? `2D FEM(F1 보정) ${R.i_f_A.fem_corrected.I_f_A.toFixed(2)} A (MCCM 대비 ${R.i_f_A.fem_corrected.dev_vs_mccm_pct.toFixed(1)} %)` : (isLive ? undefined : "표시값은 라이브 state 에서만") },
-      { item: "단락 루프 총손실 P_loop", shown: isLive && live?.p_loop_total_W != null ? live.p_loop_total_W : null, ref: R.p_loop_total_W.lut, tol: 0.02, unit: "W", src: R.p_loop_total_W, reason: isLive ? undefined : "표시값은 라이브 state 에서만 (권선 노드 추가 손실)" },
+      { item: "I₂/I₁ 결함분 (LUT r, 고유 비대칭 제외)", shown: ex?.i2i1_fault ?? null, ref: R.i2_over_i1_fault.value, tol: 0.01, unit: "", src: R.i2_over_i1_fault,
+        reason: ex?.i2i1_fault != null ? `엔진 LUT 조회값${exNote("i2i1_fault")}` : "표시값은 합성값뿐 — 결함분은 로그의 I₂ 위상으로 분리(검증 보고서)" },
+      { item: "I₂/I_n (부하 무관 보조)", shown: isLive && live?.i2_over_in != null ? live.i2_over_in : (ex?.i2_over_in ?? null), ref: R.i2_over_in.sim_expected, tol: 0.01, unit: "", src: R.i2_over_in,
+        reason: `LUT 자체 I₂/I_n ${R.i2_over_in.lut.toFixed(4)} (LUT I₁ 기준) — 시뮬은 I₁ 을 정격×부하로 고정 (규약 차이)${exNote("i2_over_in")}` },
+      { item: "단락 루프 전류 I_f", shown: liveIf ?? ex?.i_f_A ?? null, ref: R.i_f_A.mccm ?? R.i_f_A.lut, tol: 0.01, unit: "A", src: R.i_f_A,
+        reason: R.i_f_A.fem_corrected ? `2D FEM(F1 보정) ${R.i_f_A.fem_corrected.I_f_A.toFixed(2)} A (MCCM 대비 ${R.i_f_A.fem_corrected.dev_vs_mccm_pct.toFixed(1)} %)${exNote("i_f_A")}` : (isLive ? undefined : `단락 케이스에서만${exNote("i_f_A")}`) },
+      { item: "단락 루프 총손실 P_loop", shown: isLive && live?.p_loop_total_W != null ? live.p_loop_total_W : (ex?.p_loop_total_W ?? null), ref: R.p_loop_total_W.lut, tol: 0.02, unit: "W", src: R.p_loop_total_W,
+        reason: isLive ? undefined : `권선 노드 추가 손실${exNote("p_loop_total_W")}` },
       { item: "권선 ΔT 정상 상태 (열 모델 역산)", shown: dTshown, ref: R.winding_dT_steady_C.model.winding, tol: 0.05, unit: "°C", src: { grade_key: "model", note: R.winding_dT_steady_C.note },
-        reason: mode === "electrical" && !isLive ? "전기 모드는 열 적분 없음(온도 상수) — 통합 모드 검증 로그 참조" : "주입 후 정상 상태 도달 전이면 작다" },
+        reason: mode === "electrical" && !isLive ? `전기 모드는 열 적분 없음(온도 상수) — 통합 모드 검증 로그 참조${exNote("winding_dT_C")}` : "주입 후 정상 상태 도달 전이면 작다" },
       { item: "판정 (예상 vs 현재)", shown: s.status[i], ref: R.expected_judgment.overall_expected, tol: null, unit: "", src: { grade_key: "dataset", note: "thresholds.yaml 0.05/0.10, 지속 3 s, 시뮬레이션 정책(provisional 포함)" }, kind: "match",
         reason: transient ? "주입 후 3 s 지속 전" : undefined },
     ];
     return out;
-  }, [ref, mode, s, i, stepId, electricalCase, live, isLive]);
+  }, [ref, mode, s, i, stepId, electricalCase, live, isLive, extras]);
 
   if (!ref) return <div className="st-aref muted">해석 근거 비교: analysis_reference.json 없음 (tools/verify/build_analysis_reference.py)</div>;
   if (mode !== "electrical") {
-    return <div className="st-aref"><div className="st-aref-h">④ 해석 근거 비교</div><div className="st-aref-none">{ref.mechanical_note}</div></div>;
+    return <div className="st-aref"><div className="st-aref-h">{title}</div><div className="st-aref-none">{ref.mechanical_note}</div></div>;
   }
+  const visibleRows = hideEmpty && !showEmpty ? rows.filter((r) => r.shown !== null) : rows;
+  const hiddenRows = hideEmpty && !showEmpty ? rows.filter((r) => r.shown === null) : [];
   const R = ref.scenarios[electricalCase];
   const exportCsv = () => {
     const lines = ["item,scenario,sim,ref,tolerance,dev_pct,pass,unit,note,source"];
@@ -112,17 +125,17 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive }
   };
   return (
     <div className="st-aref">
-      <div className="st-aref-h">④ 해석 근거 비교 <span className="dim">{electricalCase}{R ? ` · ${R.turns}턴 · R_f ${R.R_f_ohm ?? "—"} Ω · 부하 ${R.load}` : " · LUT 밖(legacy 해석식) — 해석 기준 없음"}</span>
+      <div className="st-aref-h">{title} <span className="dim">{electricalCase}{R ? ` · ${R.turns}턴 · R_f ${R.R_f_ohm ?? "—"} Ω · 부하 ${R.load}` : " · LUT 밖(legacy 해석식) — 해석 기준 없음"}</span>
         <span className="grow" />
         <button onClick={() => setBasis(!basis)} title="정격점·기동·등가회로 상수 — 카탈로그 / RMxprt / 2D FEM / IEC 허용차">{basis ? "▾" : "▸"} 모터 모델 근거</button>
-        <button onClick={() => setOpen(!open)} title="표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급 + 한계">{open ? "▾" : "▸"} 근거 보기</button>
+        {!defaultOpen && <button onClick={() => setOpen(!open)} title="표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급 + 한계">{open ? "▾" : "▸"} 근거 보기</button>}
         <button onClick={exportCsv} disabled={!R} title="현재 시각의 비교표를 CSV 로 (V2 형식, export_<시각>.csv — 브라우저 다운로드; Isaac 쪽 logs/verify/export_*.csv 는 sim_vs_analysis.py 가 만든다)">비교 내보내기</button>
       </div>
       {R && (
         <table className="st-aref-t">
           <thead><tr><th>항목</th><th>지금 표시값</th><th>해석 기준값</th><th>차이</th><th>출처</th></tr></thead>
           <tbody>
-            {rows.map((r) => {
+            {visibleRows.map((r) => {
               const d = r.kind === "match" ? null : devPct(r.shown, r.ref);
               const ok = r.shown === null ? null : r.kind === "match" ? r.shown === r.ref : (d !== null && r.tol !== null && Math.abs(d) <= r.tol * 100);
               const gk = (r.src as Src).grade_key ?? "";
@@ -137,6 +150,14 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive }
                 </tr>
               );
             })}
+            {hiddenRows.length > 0 && (
+              <tr className="more" onClick={() => setShowEmpty(true)} title={hiddenRows.map((r) => `${r.item}: ${r.reason ?? "표시값 없음"}`).join("\n")}>
+                <td colSpan={5}>표시 안 함 {hiddenRows.length}행 ▾ <span className="dim">(이 모드에서 시뮬값이 없는 항목 — 사유는 툴팁)</span></td>
+              </tr>
+            )}
+            {hideEmpty && showEmpty && rows.some((r) => r.shown === null) && (
+              <tr className="more" onClick={() => setShowEmpty(false)}><td colSpan={5}>표시값 없는 행 접기 ▴</td></tr>
+            )}
           </tbody>
         </table>
       )}
@@ -162,12 +183,12 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive }
       )}
       {open && (
         <div className="st-aref-trace">
-          <div className="sub-h">근거 사슬 — 표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급 (docs/verification/traceability.json)</div>
+          <div className="sub-h">{traceTitle ?? "근거 사슬 — 표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급"} <span className="dim">(docs/verification/traceability.json)</span></div>
           {trace ? (
             <table className="st-aref-t small"><thead><tr><th>표시량</th><th>엔진</th><th>입력(sha)</th><th>해석 단계</th><th>등급</th></tr></thead>
               <tbody>{trace.rows.map((r) => <tr key={r.display}><td>{r.display}</td><td><code>{r.engine}</code></td><td>{r.inputs.join(" · ")}</td><td>{r.analysis_chain}</td><td><b>{r.grade}</b></td></tr>)}</tbody></table>
           ) : <div className="muted">traceability.json 없음 — tools/verify/traceability.py</div>}
-          <div className="sub-h">한계</div>
+          <div className="sub-h">{limitsTitle ?? "한계"}</div>
           <ul>{(trace?.limitations ?? ref.limitations).map((x) => <li key={x}>{x}</li>)}</ul>
         </div>
       )}

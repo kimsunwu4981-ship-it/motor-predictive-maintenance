@@ -17,11 +17,16 @@ import { ControlPanel } from "../live/ControlPanel";
 import { liveSteps, pageMode, toMotorSeries, useLivePlayback } from "../live/livedata";
 import type { Step } from "../data";
 import { applyNameplates, loadNameplates, saveNameplates, parseField, yamlSnippet, NAMEPLATE_FIELDS, type Nameplates } from "../status/nameplate";
+import { SimpleView, type SceneChip } from "../status/SimpleView";
+import { EvidenceDrawer, extrasAt } from "../status/EvidenceDrawer";
+import { StatusStrip } from "../status/StatusStrip";
 import "../status/status.css";
 
 // VIGENT 모터 상태 보드 (TASK_다중모터 §7): 5종 모터 카드 → 선택 모터 상세(게이지 8) → 원인과 조치 → 재생 바·추세 → 기준표 탭.
 // 숫자는 전부 public/data/fleet/*.json (export_status_data.py). 판정은 엔진이 로그에 써 둔 status/cause 를 그대로 쓴다.
 //   #/status?m=M3&t=27.5   특정 모터·시각으로 열기 (스크린샷·확인용)
+// 2026-10-26 단순 보기(3단 정보 구조): 기본은 SimpleView(상태·원인·조치·신호·흐름), 헤더 토글로 이 파일의 기존 화면("전문가 보기")으로 돌아간다.
+//   ?view=expert · ?drawer=1(근거 서랍) · ?tab=thr|spec|gloss(시트) · ?mode=mechanical|electrical — 스크린샷·확인용. 토글은 세션 안에서만(저장 안 함).
 const TEMP_GAUGES = ["winding", "bearing_de", "rotor", "shaft"];
 
 export function StatusBoard() {
@@ -46,7 +51,11 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
   const ids = index.motors.map((m) => m.id);
   const [sel, setSel] = useState<string>(() => (ids.includes(params.get("m") ?? "") ? (params.get("m") as string) : ids[0]));
   // 모터별 모드·시각 (데모 위치에서 시작, 재생하면 그 모터의 시각만 움직인다)
-  const [modes, setModes] = useState<Record<string, Mode>>(() => Object.fromEntries(index.motors.map((m) => [m.id, m.demo.mode])));
+  const [modes, setModes] = useState<Record<string, Mode>>(() => {
+    const o = Object.fromEntries(index.motors.map((m) => [m.id, m.demo.mode])) as Record<string, Mode>;
+    const pm = params.get("mode"); if (pm === "mechanical" || pm === "electrical") o[sel] = pm;          // ?mode= (단순 보기 스크린샷용)
+    return o;
+  });
   const [pos, setPos] = useState<Record<string, number>>(() => {
     const p = Object.fromEntries(index.motors.map((m) => [m.id, m.demo.t_s]));
     const t0 = Number(params.get("t")); if (Number.isFinite(t0) && params.get("t") !== null) p[sel] = t0;
@@ -103,6 +112,9 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
   const [tab, setTab] = useState<"thr" | "spec" | "gloss">("thr");
   const [ctl, setCtl] = useState<boolean>(() => params.get("ctl") === "1");                                   // K: 제어 패널 (라이브)
   const [trend, setTrend] = useState<TrendSel | null>(null);
+  const [view, setView] = useState<"simple" | "expert">(() => (params.get("view") === "expert" ? "expert" : "simple"));   // 단순 보기 기본 — 세션 안에서만 (localStorage 저장 없음)
+  const [drawer, setDrawer] = useState<boolean>(() => params.get("drawer") === "1");                                        // 근거 서랍
+  const [sheet, setSheet] = useState<"thr" | "spec" | "gloss" | null>(() => { const t = params.get("tab"); return t === "thr" || t === "spec" || t === "gloss" ? t : null; });   // 임계값·사양·용어 시트
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -114,12 +126,16 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
       else if (e.key === "f" || e.key === "F") setPresent((p) => !p);
       else if (e.key === "k" || e.key === "K") setCtl((c) => !c);
       else if ((e.key === "m" || e.key === "M") && !isLiveSel) toggleMode();
-      else if (e.key === "Escape") setPresent(false);
-      else if (e.key >= "1" && e.key <= "9") { const id = ids[Number(e.key) - 1]; if (id) setSel(id); }
+      else if (e.key === "Escape") { if (sheet) setSheet(null); else if (drawer) setDrawer(false); else setPresent(false); }
+      else if (e.key >= "1" && e.key <= "9") {
+        if (view === "simple" && !isLiveSel && index.scene_map && index.scene_map.length) {         // 단순 보기: 숫자 키 = 장면 칩 (발표 모드 §4)
+          const sm = index.scene_map[Number(e.key) - 1]; if (sm) { if (mode !== sm.mode) setModes((m) => ({ ...m, [sel]: sm.mode })); pb.pause(); pb.seek(sm.t_s); setPos((p) => ({ ...p, [sel]: sm.t_s })); }
+        } else { const id = ids[Number(e.key) - 1]; if (id) setSel(id); }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [pb, ids, toggleMode, npOpen, isLiveSel]);
+  }, [pb, ids, toggleMode, npOpen, isLiveSel, sheet, drawer, view, index, mode, sel]);
   const npCount = Object.keys(nameplates).length;
 
   const cur = isLiveSel ? liveSeries! : series[`${sel}/${mode}`];
@@ -127,16 +143,19 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
   const step = isLiveSel ? (liveStepList[pb.stepIndex] ?? liveStepList[liveStepList.length - 1] ?? stepAt(sc, pb.t)) : stepAt(sc, pb.t);
   const scene = content.narration[mode][step.id];
   const cl = cur ? causeLine(index, cur, i) : null;
-  // 추세 차트 기본 선택: 원인 신호 (없으면 DE 베어링 온도)
-  const trendSel: TrendSel = trend ?? (cur && cur.status[i] !== "SAFE" ? { kind: cur.cause_signal[i] as Kind, component: cur.cause_component[i] } : { kind: "temperature", component: "bearing_de" });
+  // 추세 차트 기본 선택: 원인 신호 (없으면 모드의 대표 신호 — 전기: 전류 불균형 I₂/I₁, 기계: DE 베어링 온도. 전기 모드는 온도를 계산하지 않으므로 온도 차트를 기본으로 두지 않는다)
+  const trendSel: TrendSel = trend ?? (cur && cur.status[i] !== "SAFE" ? { kind: cur.cause_signal[i] as Kind, component: cur.cause_component[i] }
+    : mode === "electrical" ? { kind: "i2i1" } : { kind: "temperature", component: "bearing_de" });
   const trendSpec = useMemo(() => specFor(index, motor, trendSel), [index, motor, trendSel]);
 
   return (
     <PlaybackContext.Provider value={pb}>
-      <div className={"dash st" + (present ? " present" : "")}>
+      <div className={"dash st" + (present ? " present" : "") + (view === "simple" ? " simple" : "")}>
         <div className="panel hud">
           <span className="brand">VIGENT</span>
-          <span className="mode">디지털 트윈 · 모터 상태 보드</span>
+          <span className="mode">{view === "simple" ? "모터 상태" : "디지털 트윈 · 모터 상태 보드"}</span>
+          {!present && <span className="view-seg" title="단순: 상태·원인·조치만 (기본) / 전문가: 게이지·표 전부 — 이 세션에서만 기억">
+            <button className={view === "simple" ? "on" : ""} onClick={() => setView("simple")}>단순</button><button className={view === "expert" ? "on" : ""} onClick={() => setView("expert")}>전문가</button></span>}
           <span className="st-legend">{(["SAFE", "WARN", "DANGER"] as Level[]).map((l) => <span key={l}><i style={{ background: index.colors[l] }} />{index.icons[l]} {index.labels_ko[l]}</span>)}</span>
           <span className="grow" />
           {!present && <a className="btn" href="#/mechanical" title="기계적 결함 실시간 해설 대시보드 (해설 영상·값은 이전 22 kW 녹화 — 이력)">기계 해설 ↗</a>}
@@ -145,13 +164,19 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           <LiveToggle live={live} />
           {live.enabled && <button className="b-ctl" onClick={() => setCtl((c) => !c)} title="K 키: 결함 주입·부하·배속·모터 전환 (라이브)">{ctl ? "☑ 제어 K" : "☐ 제어 K"}</button>}
           <button onClick={() => setPresent((p) => !p)} title="F 키">{present ? "발표 종료 Esc" : "발표 F"}</button>
-          <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
+          {view === "expert" && <span className="honesty st-honesty" title={`${index.honesty.itsc_note} · 데이터: ${source.label}`}>
             <b>{index.honesty.label}{liveSeries ? " · LIVE (Isaac Sim)" : source.kind === "live" ? " · 실측 스트림" : ""}</b>
             <span>{(npCount ? [`명판값 입력: ${Object.keys(nameplates).join(", ")} (나머지 카탈로그 사양)`, ...index.honesty.lines.slice(1)] : index.honesty.lines).join(" · ")}</span>
-          </span>
+          </span>}
           <LiveBanner live={live} index={index} />
         </div>
 
+        {view === "simple" ? (
+          <SimpleView index={index} motor={motor} s={cur ?? null} i={i} mode={mode} step={step} sc={sc} scene={scene} labels={content.labels} pb={pb} present={present} isLive={isLiveSel} x0={x0} span={span}
+            trendSel={trendSel} setTrend={setTrend} trendSpec={trendSpec} sceneMap={(index.scene_map ?? []) as SceneChip[]}
+            onScene={(sm) => { if (mode !== sm.mode) { setModes((m) => ({ ...m, [sel]: sm.mode })); } pb.pause(); pb.seek(sm.t_s); setPos((p) => ({ ...p, [sel]: sm.t_s })); }}
+            toggleMode={toggleMode} openDrawer={() => setDrawer(true)} openTab={(t) => setSheet(t)} setView={setView} />
+        ) : (<>
         <div className="st-cards">
           {index.motors.map((m, n) => {
             const isLive = !!liveSeries && m.id === liveMotor;
@@ -163,7 +188,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
             const st = isLive ? (liveStepList[liveStepList.length - 1] ?? stepAt(index.scenarios[modes[m.id]], 0)) : stepAt(index.scenarios[modes[m.id]], t);
             return (
               <div key={m.id} className={"st-card" + (m.id === sel ? " sel" : "") + (liveSeries && !isLive ? " off" : "")} onClick={() => setSel(m.id)} style={{ borderColor: m.id === sel ? index.colors[lv] : undefined }}>
-                <div className="st-card-h"><span className="kbd">{n + 1}</span><b>{m.id}</b> <span className="muted">{m.tags.hoist_ton ?? ""} · {m.spec.rated_power_kw} kW {m.spec.poles}극</span>{isLive && <span className="st-live">● LIVE</span>}</div>
+                <div className="st-card-h"><span className="kbd">{n + 1}</span><b>{m.id}</b> <span className="muted">{m.name.split(" — ")[0]} · {m.spec.rated_power_kw} kW {m.spec.poles}극</span>{isLive && <span className="st-live">● LIVE</span>}</div>
                 <div className="st-badge" style={{ background: index.colors[lv] }}>{index.icons[lv]} {index.labels_ko[lv]}</div>
                 <div className="st-cause">{c ? c.head : "불러오는 중…"}</div>
                 <div className="dim st-foot">{isLive ? `LIVE · ${st.label} · ${fmtT(t)}` : liveSeries ? `라이브 아님 · 배치 로그 · ${st.label}` : `${modes[m.id] === "mechanical" ? "기계" : "전기"} 시나리오 · ${st.label} · ${fmtT(t)}`}</div>
@@ -174,13 +199,13 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
 
         <div className="st-main">
           <div className="panel st-detail">
-            <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name}</span><span className="grow" />
+            <div className="panel-h">② 선택 모터 상세 <span className="muted">{motor.id} · {motor.name.split(" — ")[0]} · 해석 기준 모터</span><span className="grow" />
               <span className={"dim" + (motor.spec.source === "nameplate" ? " st-np-on" : "")}>{motor.spec.source === "nameplate" ? `명판값 (입력 ${nameplates[sel]?.entered_at ?? ""})` : "카탈로그 사양 (명판 아님)"}</span>
               <SourceIcons motor={motor} />
               {!present && <button className="b-np" onClick={() => setNpOpen(true)} title="이 모터의 명판값을 입력하면 출처가 nameplate 로 바뀐다">명판값 입력</button>}</div>
             <div className="panel-b">
               <div className="st-spec">
-                <span><i>용도</i>{motor.tags.hoist_ton ?? "-"} 호이스트{motor.tags.hoist_speed ? ` · 권상 ${motor.tags.hoist_speed}` : ""}</span>
+                <span><i>모델</i>{motor.name.split(" — ")[0]} · 해석 기준 모터</span>
                 <span><i>정격</i>{motor.spec.rated_power_kw} kW · {motor.spec.poles}극 · {motor.spec.rated_rpm} rpm (동기 {motor.spec.sync_rpm})</span>
                 <span><i>전원</i>{motor.spec.voltage_v} V {motor.spec.frequency_hz} Hz · {connLabel(motor.spec.connection)}{srcIcon(motor, "connection")}</span>
                 <span><i>정격 전류</i>선 <b>{motor.spec.rated_line_current_a} A</b>{srcIcon(motor, "rated_line_current_a")} · 상 {motor.spec.rated_phase_current_a} A{srcIcon(motor, "rated_phase_current_a")}</span>
@@ -221,7 +246,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
         </div>
 
         <div className="panel st-aref-p">
-          <AnalysisRef index={index} s={cur ?? null} i={i} stepId={step.id} electricalCase={step.electrical_case} mode={mode}
+          <AnalysisRef index={index} s={cur ?? null} i={i} stepId={step.id} electricalCase={step.electrical_case} mode={mode} extras={extrasAt(cur ?? null, i)}
                        live={isLiveSel && live.buffer.states.length ? live.buffer.states[live.buffer.states.length - 1] : null} isLive={isLiveSel} />
         </div>
         <div className="panel st-bottom">
@@ -249,11 +274,32 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
           </div>
           {cur && <TrendChart index={index} motor={motor} series={cur} sel={trendSel} spec={trendSpec} t={pb.t} onSeek={pb.seek} scenario={isLiveSel ? sc : undefined} />}
         </div>
+        </>)}
+
+        {view === "simple" && drawer && <EvidenceDrawer index={index} s={cur ?? null} i={i} stepId={step.id} electricalCase={step.electrical_case} mode={mode}
+          live={isLiveSel && live.buffer.states.length ? live.buffer.states[live.buffer.states.length - 1] : null} isLive={isLiveSel} sourceLabel={source.label} labels={content.labels} onClose={() => setDrawer(false)} />}
+        {view === "simple" && sheet && !present && (
+          <div className="sv-sheet-bg" onClick={() => setSheet(null)}>
+            <div className="sv-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="tabbar">
+                <button className={sheet === "thr" ? "on" : ""} onClick={() => setSheet("thr")}>임계값 기준표</button>
+                <button className={sheet === "spec" ? "on" : ""} onClick={() => setSheet("spec")}>모터 사양표</button>
+                <button className={sheet === "gloss" ? "on" : ""} onClick={() => setSheet("gloss")}>용어 풀이</button>
+                <span className="grow" /><span className="dim">키: 1~{(index.scene_map ?? []).length || 7} 장면 · Space 재생 · ←→ 장면 · M 모드 · F 발표 · Esc 닫기</span><button onClick={() => setSheet(null)}>닫기 Esc</button>
+              </div>
+              <div className="tabbody">
+                {sheet === "thr" && <ThresholdTab index={index} easy={content.labels.thresholds_easy} />}
+                {sheet === "spec" && <SpecTab index={index} nameplates={nameplates} />}
+                {sheet === "gloss" && <dl className="gloss">{content.glossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>}
+              </div>
+            </div>
+          </div>
+        )}
 
         <ControlPanel live={live} open={ctl} onClose={() => setCtl(false)} />
         {npOpen && <NameplateForm motor={index0.motors.find((m) => m.id === sel)!} current={nameplates[sel]} onClose={() => setNpOpen(false)}
           onSave={(np) => { const n = { ...nameplates }; if (np) n[sel] = np; else delete n[sel]; setNameplates(n); saveNameplates(n); setNpOpen(false); }} />}
-        {!present && (
+        {!present && view === "expert" && (
           <div className="panel tabs">
             <div className="tabbar">
               <button className={tab === "thr" ? "on" : ""} onClick={() => setTab("thr")}>임계값 기준표</button>
@@ -262,7 +308,7 @@ function Board({ index0, content, source }: { index0: FleetIndex; content: Statu
               <span className="grow" /><span className="dim">키: 1~5 모터 · Space 재생 · ←→ 장면 · M 모드 · F 발표</span>
             </div>
             <div className="tabbody">
-              {tab === "thr" && <ThresholdTab index={index} />}
+              {tab === "thr" && <ThresholdTab index={index} easy={content.labels.thresholds_easy} />}
               {tab === "spec" && <SpecTab index={index} nameplates={nameplates} />}
               {tab === "gloss" && <dl className="gloss">{content.glossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>}
             </div>
@@ -318,22 +364,9 @@ function Gauges({ index, motor, s, i, onPick, picked }: { index: FleetIndex; mot
   );
 }
 
-// 재생 바 배경: 시각별 판정 상태 색 (구간 병합)
-function StatusStrip({ index, s, total, from = 0 }: { index: FleetIndex; s: MotorSeries; total: number; from?: number }) {
-  const segs = useMemo(() => {
-    const out: { from: number; to: number; lv: Level }[] = [];
-    for (let k = 0; k < s.t.length; k++) {
-      const lv = s.status[k];
-      const last = out[out.length - 1];
-      if (last && last.lv === lv) last.to = s.t[k]; else out.push({ from: s.t[k], to: s.t[k], lv });
-    }
-    return out;
-  }, [s]);
-  return <>{segs.map((g, n) => <i key={n} className="st-seg" style={{ left: `${((g.from - from) / (total - from)) * 100}%`, width: `${Math.max(0.2, ((g.to - g.from) / (total - from)) * 100)}%`, background: index.colors[g.lv] }} />)}</>;
-}
-
-function ThresholdTab({ index }: { index: FleetIndex }) {
+export function ThresholdTab({ index, easy }: { index: FleetIndex; easy?: Record<string, string> }) {
   const th = index.thresholds;
+  const ez = (k: string) => <td className="easy">{easy?.[k] ?? ""}</td>;
   const t = th.temperature, r = th.current_ratio;
   const groups = new Map<string, string[]>();
   for (const m of index.motors) { const k = `${m.vibration.watch_mms}|${m.vibration.act_mms}|${m.vibration.standard}`; groups.set(k, [...(groups.get(k) ?? []), m.id]); }
@@ -342,25 +375,25 @@ function ThresholdTab({ index }: { index: FleetIndex }) {
       <p className="muted" style={{ marginTop: 0 }}>세 단계 <b>안전 / 경고 / 위험</b>. 모터 전체 상태는 모든 신호 중 가장 나쁜 등급이고, 원인 신호를 항상 함께 표시합니다.
         등급 하향은 임계값의 {Math.round(th.hysteresis_fraction * 100)} % 안쪽으로 들어와야 바뀌고(히스테리시스), 전류·진동·I₂/I₁·베어링 지표(kurtosis·고주파 배율)는 {th.persistence_s.current_ratio} s 이상 지속돼야 상향됩니다(돌입전류 무시).</p>
       <table className="grid">
-        <thead><tr><th>신호</th><th><span className="sw" style={{ background: index.colors.SAFE }} />{index.icons.SAFE} 안전</th><th><span className="sw" style={{ background: index.colors.WARN }} />{index.icons.WARN} 경고</th><th><span className="sw" style={{ background: index.colors.DANGER }} />{index.icons.DANGER} 위험</th><th>근거 · 적용</th></tr></thead>
+        <thead><tr><th>신호</th><th><span className="sw" style={{ background: index.colors.SAFE }} />{index.icons.SAFE} 안전</th><th><span className="sw" style={{ background: index.colors.WARN }} />{index.icons.WARN} 경고</th><th><span className="sw" style={{ background: index.colors.DANGER }} />{index.icons.DANGER} 위험</th><th>근거 · 적용</th><th>쉬운 설명</th></tr></thead>
         <tbody>
-          <tr><td>베어링 온도</td><td>&lt; {t.bearing.safe_below} °C</td><td>{t.bearing.safe_below}~{t.bearing.danger_from}</td><td>≥ {t.bearing.danger_from}</td><td>{t.bearing.note ?? "그리스 수명"} · 모터 공통</td></tr>
-          <tr><td>권선 온도</td><td>&lt; {t.winding.safe_below}</td><td>{t.winding.safe_below}~{t.winding.danger_from}</td><td>≥ {t.winding.danger_from}</td><td>{t.winding.note ?? "F종 절연"} · 모터 공통</td></tr>
-          <tr><td>로터 온도</td><td>&lt; {t.rotor.safe_below}</td><td>{t.rotor.safe_below}~{t.rotor.danger_from}</td><td>≥ {t.rotor.danger_from}</td><td>{t.rotor.note ?? ""} 모터 공통</td></tr>
-          <tr><td>축·하우징 온도</td><td>&lt; {t.default.safe_below}</td><td>{t.default.safe_below}~{t.default.danger_from}</td><td>≥ {t.default.danger_from}</td><td>{t.default.note ?? ""} 모터 공통</td></tr>
-          <tr><td>전류 비율 r = I / I정격</td><td>{r.safe_low} ≤ r ≤ {r.safe_high}</td><td>{r.safe_high} &lt; r ≤ {r.danger_over} 또는 {r.danger_under} ≤ r &lt; {r.safe_low}</td><td>r &gt; {r.danger_over} 또는 r &lt; {r.danger_under}</td><td>I정격은 모터별 ({index.motors.map((m) => `${m.id} ${m.spec.rated_line_current_a} A`).join(", ")}) · 저전류는 결상 의심</td></tr>
-          <tr><td>I₂/I₁</td><td>&lt; {th.i2i1.safe_below}</td><td>{th.i2i1.safe_below}~{th.i2i1.danger_from}</td><td>≥ {th.i2i1.danger_from}</td><td>{index.honesty.itsc_note}</td></tr>
+          <tr><td>베어링 온도</td><td>&lt; {t.bearing.safe_below} °C</td><td>{t.bearing.safe_below}~{t.bearing.danger_from}</td><td>≥ {t.bearing.danger_from}</td><td>{t.bearing.note ?? "그리스 수명"} · 모터 공통</td>{ez("temp_bearing")}</tr>
+          <tr><td>권선 온도</td><td>&lt; {t.winding.safe_below}</td><td>{t.winding.safe_below}~{t.winding.danger_from}</td><td>≥ {t.winding.danger_from}</td><td>{t.winding.note ?? "F종 절연"} · 모터 공통</td>{ez("temp_winding")}</tr>
+          <tr><td>로터 온도</td><td>&lt; {t.rotor.safe_below}</td><td>{t.rotor.safe_below}~{t.rotor.danger_from}</td><td>≥ {t.rotor.danger_from}</td><td>{t.rotor.note ?? ""} 모터 공통</td>{ez("temp_rotor")}</tr>
+          <tr><td>축·하우징 온도</td><td>&lt; {t.default.safe_below}</td><td>{t.default.safe_below}~{t.default.danger_from}</td><td>≥ {t.default.danger_from}</td><td>{t.default.note ?? ""} 모터 공통</td>{ez("temp_default")}</tr>
+          <tr><td>전류 비율 r = I / I정격</td><td>{r.safe_low} ≤ r ≤ {r.safe_high}</td><td>{r.safe_high} &lt; r ≤ {r.danger_over} 또는 {r.danger_under} ≤ r &lt; {r.safe_low}</td><td>r &gt; {r.danger_over} 또는 r &lt; {r.danger_under}</td><td>I정격은 모터별 ({index.motors.map((m) => `${m.id} ${m.spec.rated_line_current_a} A`).join(", ")}) · 저전류는 결상 의심</td>{ez("current_ratio")}</tr>
+          <tr><td>I₂/I₁</td><td>&lt; {th.i2i1.safe_below}</td><td>{th.i2i1.safe_below}~{th.i2i1.danger_from}</td><td>≥ {th.i2i1.danger_from}</td><td>{index.honesty.itsc_note}</td>{ez("i2i1")}</tr>
           {[...groups.entries()].map(([k, ids]) => { const v = index.motors.find((m) => m.id === ids[0])!.vibration; return (
-            <tr key={k}><td>진동 속도 RMS<div className="dim">{v.standard}</div></td><td>&lt; {v.watch_mms} mm/s</td><td>{v.watch_mms}~{v.act_mms}{v.plan_mms < v.act_mms ? ` (${v.plan_mms} 부터 "정비 계획")` : ""}</td><td>≥ {v.act_mms}</td><td>{ids.join(" · ")}{v.note ? ` — ${v.note}` : ""}</td></tr>); })}
-          <tr><td>베어링 kurtosis (주 지표)</td><td>&lt; {th.bearing.kurtosis.safe_below}</td><td>{th.bearing.kurtosis.safe_below}~{th.bearing.kurtosis.danger_from}</td><td>≥ {th.bearing.kurtosis.danger_from}</td><td>가속도 첨도, 모터 공통. 정상 ≈3, 소손 시 수십. 시뮬레이션은 결함별 등가값</td></tr>
-          <tr><td>베어링 고주파 RMS 배율 (보조 지표)</td><td>&lt; {th.bearing.hf_ratio.safe_below}배</td><td>{th.bearing.hf_ratio.safe_below}~{th.bearing.hf_ratio.danger_from}배</td><td>≥ {th.bearing.hf_ratio.danger_from}배</td><td>1 kHz 이상 대역 RMS ÷ 모터별 정상 기준선 ({index.motors.map((m) => `${m.id} ${m.bearing_hf_baseline?.rms_g ?? "-"} g`).join(" · ")}). 베어링 종합 = 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만)</td></tr>
+            <tr key={k}><td>진동 속도 RMS<div className="dim">{v.standard}</div></td><td>&lt; {v.watch_mms} mm/s</td><td>{v.watch_mms}~{v.act_mms}{v.plan_mms < v.act_mms ? ` (${v.plan_mms} 부터 "정비 계획")` : ""}</td><td>≥ {v.act_mms}</td><td>{ids.join(" · ")}{v.note ? ` — ${v.note}` : ""}</td>{ez("vibration")}</tr>); })}
+          <tr><td>베어링 kurtosis (주 지표)</td><td>&lt; {th.bearing.kurtosis.safe_below}</td><td>{th.bearing.kurtosis.safe_below}~{th.bearing.kurtosis.danger_from}</td><td>≥ {th.bearing.kurtosis.danger_from}</td><td>가속도 첨도, 모터 공통. 정상 ≈3, 소손 시 수십. 시뮬레이션은 결함별 등가값</td>{ez("bearing_kurtosis")}</tr>
+          <tr><td>베어링 고주파 RMS 배율 (보조 지표)</td><td>&lt; {th.bearing.hf_ratio.safe_below}배</td><td>{th.bearing.hf_ratio.safe_below}~{th.bearing.hf_ratio.danger_from}배</td><td>≥ {th.bearing.hf_ratio.danger_from}배</td><td>1 kHz 이상 대역 RMS ÷ 모터별 정상 기준선 ({index.motors.map((m) => `${m.id} ${m.bearing_hf_baseline?.rms_g ?? "-"} g`).join(" · ")}). 베어링 종합 = 둘 중 나쁜 쪽. 포락선 BPFO/BPFI 는 판정 제외(결함 부위 추정 표시만)</td>{ez("bearing_hf_ratio")}</tr>
         </tbody>
       </table>
     </div>
   );
 }
 
-function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Nameplates }) {
+export function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Nameplates }) {
   const ms = index.motors;
   const row = (label: string, f: (m: MotorInfo) => React.ReactNode) => <tr><td><b>{label}</b></td>{ms.map((m) => <td key={m.id}>{f(m)}</td>)}</tr>;
   return (
@@ -369,7 +402,7 @@ function SpecTab({ index, nameplates }: { index: FleetIndex; nameplates: Namepla
       <table className="grid">
         <thead><tr><th>항목</th>{ms.map((m) => <th key={m.id}>{m.id}</th>)}</tr></thead>
         <tbody>
-          {row("용도", (m) => `${m.tags.hoist_ton ?? "-"} 호이스트${m.tags.hoist_speed ? ` · ${m.tags.hoist_speed}` : ""}`)}
+          {row("모델", (m) => `${m.name.split(" — ")[0]} · 해석 기준 모터`)}
           {row("정격 출력", (m) => `${m.spec.rated_power_kw} kW`)}
           {row("극수 / 동기속도", (m) => `${m.spec.poles}극 / ${m.spec.sync_rpm} rpm`)}
           {row("정격 회전수", (m) => `${m.spec.rated_rpm} rpm (슬립 ${(m.derived.slip * 100).toFixed(1)} %)`)}
@@ -426,7 +459,7 @@ function NameplateForm({ motor, current, onClose, onSave }: { motor: MotorInfo; 
   return (
     <div className="st-modal" onClick={onClose}>
       <div className="st-modal-b" onClick={(e) => e.stopPropagation()}>
-        <div className="panel-h">명판값 입력 — {motor.id} {motor.name} <span className="grow" /><button onClick={onClose}>닫기 Esc</button></div>
+        <div className="panel-h">명판값 입력 — {motor.id} {motor.name.split(" — ")[0]} <span className="grow" /><button onClick={onClose}>닫기 Esc</button></div>
         <div className="st-np-grid">
           {NAMEPLATE_FIELDS.map((f) => (
             <label key={f.key}><span>{f.label}{f.unit ? ` (${f.unit})` : ""}</span>

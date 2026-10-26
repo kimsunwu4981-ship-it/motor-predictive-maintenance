@@ -79,11 +79,27 @@ export interface MotorSeries {
   status: Level[]; cause_signal: string[]; cause_component: string[]; cause_value: number[]; cause_threshold: string[];
   levels: Record<Kind, Level[]> & { bearing?: Level[] };
   scene_values: Record<string, SceneValues>;
+  // 단순 보기 근거 서랍용 (export_status_data.py 필드 추가, 2026-10-26) — 케이스별 엔진 값. 없으면(구 export) undefined, 값이 없으면 null
+  i2i1_fault?: (number | null)[]; i2_over_in?: (number | null)[]; i_f_A?: (number | null)[]; p_loop_total_W?: (number | null)[];
+  winding_dT_C?: number[] | null; extras_note?: Record<string, string>;
+}
+// 쉬운 말 사전 (public/content/status/labels_plain.yaml) — 전문 용어 ↔ 쉬운 말 ↔ 툴팁
+export interface PlainLabel { plain: string; term: string; tip: string }
+export interface PlainLabels {
+  signals: Record<string, PlainLabel>;
+  replace: { from: string; to: string; tip?: string }[];
+  notes: Record<string, string>;
+  thresholds_easy: Record<string, string>;
+}
+export const EMPTY_LABELS: PlainLabels = { signals: {}, replace: [], notes: {}, thresholds_easy: {} };
+export function plainOf(labels: PlainLabels, kind: string, fallback: string): PlainLabel {
+  return labels.signals[kind] ?? { plain: fallback, term: fallback, tip: "" };
 }
 export interface StatusScene { title: string; fingerprint?: string; cause_chain?: CauseChain; data_source_note?: string; [k: string]: unknown }
 export interface StatusContent {
   narration: Record<Mode, Record<string, StatusScene>>;
   glossary: { term: string; text: string }[];
+  labels: PlainLabels;
 }
 
 export async function loadFleetIndex(): Promise<FleetIndex> {
@@ -99,12 +115,13 @@ export function loadSeries(index: FleetIndex, id: string, mode: Mode): Promise<M
   return p;
 }
 export async function loadStatusContent(): Promise<StatusContent> {
-  const [mech, elec, gl] = await Promise.all([
+  const [mech, elec, gl, lb] = await Promise.all([
     getYaml<{ scenes: Record<string, StatusScene> }>("content/mechanical/narration.yaml"),
     getYaml<{ scenes: Record<string, StatusScene> }>("content/electrical/narration.yaml"),
     getYamlOptional<{ items: { term: string; text: string }[] }>("content/status/glossary.yaml", { items: [] }),
+    getYamlOptional<Partial<PlainLabels>>("content/status/labels_plain.yaml", EMPTY_LABELS),
   ]);
-  return { narration: { mechanical: mech.scenes, electrical: elec.scenes }, glossary: gl.items ?? [] };
+  return { narration: { mechanical: mech.scenes, electrical: elec.scenes }, glossary: gl.items ?? [], labels: { ...EMPTY_LABELS, ...lb } };
 }
 
 // 정렬된 시각 배열에서 t 이하의 마지막 인덱스
