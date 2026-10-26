@@ -69,6 +69,10 @@ ap.add_argument("--verify_dir", default="", metavar="DIR", help="검증 로그: 
 ap.add_argument("--inherent_angle_deg", type=float, default=None, help="고유 비대칭 I₂ 위상 [deg] — 이 실행의 메모리 설정만 덮어쓴다 (electrical.yaml 불변, 민감도 0/90/180° 용)")
 ap.add_argument("--scenario_yaml", default="", metavar="PATH", help="검증 전용 시나리오 파일(steps 포함)로 자동 재생 — 기존 장면 파일 불변")
 ap.add_argument("--shot_plan", default="", help="--m1_shots 캡처 계획을 직접 지정: 't:view:cam:file;t:view:cam:file' (D3 tools/viz/shot_with_hud.py)")
+# 보고용 미디어 팩 (2026-10-26, tools/media): 캡처 전용 인자 — 장면·엔진 불변
+ap.add_argument("--res", type=int, nargs=2, default=None, metavar=("W", "H"), help="창(뷰포트) 해상도 덮어쓰기 (예: 1920 1080, 2560 1440) — 캡처용")
+ap.add_argument("--capture_layout", action="store_true", help="캡처용 레이아웃: 창 클라이언트 영역을 --res 크기로 (0,0) 에 맞추고 Kit 패널(Stage/Content/Console/툴바)·제어 패널을 숨긴다. 장면·엔진 불변")
+ap.add_argument("--cam_plan", default="", help="카메라·뷰 일정 't:view:cam;…' — cam 은 프리셋 이름 또는 orbit(축 중심 360°/20 s). 그 시각부터 다음 항목까지 적용 (--m1_model)")
 args = ap.parse_args()
 if args.m1_model is None:
     args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
@@ -87,6 +91,8 @@ _W, _H = (1280, 720) if args.low else (1600, 900)
 PHYSICS_SUBSTEPS = 2 if args.low else 4
 if PRESET:
     _W, _H = int(PRESET["width"]), int(PRESET["height"]); PHYSICS_SUBSTEPS = int(PRESET["physics_substeps"])
+if args.res:
+    _W, _H = int(args.res[0]), int(args.res[1])          # 캡처용 해상도 (미디어 팩)
 PHYSICS_DT = 1.0 / (60 * PHYSICS_SUBSTEPS)         # 서브스텝을 줄여도 프레임당 총 1/60 s 는 유지
 PARTICLES_PER_PATH = 12 if args.low else None      # None = config 값 사용
 if PRESET:
@@ -661,6 +667,8 @@ PERF_LOG_AFTER_S = float((PRESET or {}).get("perf_log_after_s", 8))
 STATE_PERIOD_S = 0.5 / float(load("live")["server"].get("state_hz", 10))   # 판정·state 갱신 주기 = 송신 주기의 절반 (브리지가 매 틱 새 state 를 보게 — 같으면 9.2 Hz 로 떨어졌다)
 LOG_PERIOD_S = 0.25      # CSV·status 기록 주기 (실제 시간)
 verify_log = _VerifyLog(args.verify_dir) if args.verify_dir else None     # V1 훅 (STATE_PERIOD_S 뒤)
+CAM_PLAN = sorted([(float(t_), v_, c_) for t_, v_, c_ in (item.split(":", 2) for item in args.cam_plan.split(";") if item.strip())], key=lambda e: e[0]) if args.cam_plan else []
+CAM_PLAN_APPLIED = [None]
 # V6: 해석 근거 비교 (data/electrical/analysis_reference.json — tools/verify/build_analysis_reference.py 산출, 없으면 HUD 줄 생략)
 try:
     with open(os.path.join(ROOT, "data", "electrical", "analysis_reference.json"), encoding="utf-8") as _f:
@@ -697,9 +705,11 @@ RECORD_PREROLL_S = 2.0          # 녹화 시작 후 시나리오를 시작하기
 WINDOW_TITLE = "Isaac Sim Python 4.5.0"
 
 
-def _focus_window(title: str):
+def _focus_window(title: str, size=None):
     """Isaac Sim 창을 앞으로 가져오고 화면 좌표를 돌려준다.
 
+    size=(w, h) 이면(미디어 팩 --capture_layout) 창을 (0,0) 으로 옮기고 클라이언트 영역을 정확히 그 크기로 맞춘 뒤
+    클라이언트 영역(제목줄·테두리 제외)의 화면 좌표를 돌려준다 → 녹화가 정확히 w×h.
     반환: (x, y, w, h) 또는 None
     """
     import ctypes
@@ -712,6 +722,18 @@ def _focus_window(title: str):
     u.SetForegroundWindow(hwnd)
     u.BringWindowToTop(hwnd)
     time.sleep(0.5)
+    if size:
+        def _client():
+            c = wintypes.RECT(); u.GetClientRect(hwnd, ctypes.byref(c))
+            pt = wintypes.POINT(0, 0); u.ClientToScreen(hwnd, ctypes.byref(pt))
+            return pt.x, pt.y, c.right - c.left, c.bottom - c.top
+        w, h = int(size[0]), int(size[1])
+        u.MoveWindow(hwnd, 0, 0, w, h, True); time.sleep(0.4)
+        _, _, cw, ch = _client()
+        u.MoveWindow(hwnd, 0, 0, w + (w - cw), h + (h - ch), True); time.sleep(0.4)
+        cx, cy, cw, ch = _client()
+        print(f"[media] window client {cw}x{ch} at ({cx},{cy})", flush=True)
+        return max(cx, 0), max(cy, 0), cw & ~1, ch & ~1
     r = wintypes.RECT()
     if not u.GetWindowRect(hwnd, ctypes.byref(r)):
         return None
@@ -753,11 +775,39 @@ def _stop_recording(p) -> None:
         p.kill()
 
 
+if args.capture_layout and args.gui:
+    # 미디어 팩(2026-10-26): 녹화 화면에서 Kit 기본 패널을 치우고 HUD 패널을 오른쪽 가장자리에 — 장면·HUD 내용은 그대로
+    try:
+        import omni.ui as _ui
+        _hide = {"Stage", "Layer", "Render Settings", "Content", "Console", "Main ToolBar", "Property", "Semantics Schema Editor", "Viewport 2", "VIGENT - Control",
+                 "Isaac Sim Assets [Beta]", "Isaac Sim Assets", "Extensions", "Script Editor", "Physics Debug", "Simulation Settings"}
+        try:
+            _names = list(_ui.Workspace.get_windows()) if hasattr(_ui.Workspace, "get_windows") else []
+        except Exception:  # noqa: BLE001
+            _names = []
+        try:
+            print("[media] ui windows: " + ", ".join(f"{w.title}{'*' if w.visible else ''}" for w in _names), flush=True)   # 숨길 이름 확인용 (1차 실측: 'Isaac Sim Assets [Beta]' 가 아래 1/3)
+        except Exception:  # noqa: BLE001
+            pass
+        for _name in _hide:
+            _w = _ui.Workspace.get_window(_name)
+            if _w:
+                _w.visible = False
+        if "hud" in globals() and hud is not None:
+            try:
+                hud.window.position_x, hud.window.position_y = _W - 445, 10
+            except Exception:  # noqa: BLE001
+                pass
+        for _ in range(10):
+            world.render()
+    except Exception as _e:  # noqa: BLE001
+        print("[media] capture_layout:", _e, flush=True)
+
 if args.record:
     # 창이 뜬 직후에는 렌더가 아직 안정되지 않아 몇 프레임 돌려준다
     for _ in range(30):
         world.render()
-    _rect = _focus_window(WINDOW_TITLE)
+    _rect = _focus_window(WINDOW_TITLE, size=(_W, _H) if args.capture_layout else None)
     recorder, _rec_t0 = _start_recording(args.record, _rect)
     rec_meta = {"video": os.path.abspath(args.record), "fps": 30,
                 "ffmpeg_start_wall": _rec_t0, "window_rect": _rect}
@@ -948,8 +998,25 @@ while simulation_app.is_running():
         m1.hide_prims(["/World/CurrentPaths"])      # 경로 set_visible(MakeVisible)이 매 프레임 조상을 다시 보이게 하므로 뒤에서 다시 숨긴다
         m1.run_shots(t_session, set_camera_view, world.render)
 
+    # ---------- 카메라 일정 (--cam_plan, 캡처용) ----------
+    if m1 and CAM_PLAN:
+        _cur = None
+        for _e in CAM_PLAN:
+            if t_session >= _e[0]:
+                _cur = _e
+        if _cur is not None:
+            if _cur[1] and _cur[1] != args.view:
+                args.view = _cur[1]; m1.set_view(_cur[1])
+            if _cur[2] == "orbit":
+                _eye, _tgt = m1.orbit_cam(t_session - _cur[0]); set_camera_view(eye=_eye, target=_tgt)
+            elif _cur is not CAM_PLAN_APPLIED[0]:
+                _eye, _tgt = m1.cam(_cur[2]); set_camera_view(eye=_eye, target=_tgt)
+            CAM_PLAN_APPLIED[0] = _cur
+            state.dirty = False
     # ---------- 카메라 ----------
-    if state.highlight_short_loop:
+    if m1 and CAM_PLAN and CAM_PLAN_APPLIED[0] is not None:
+        pass                                                   # 캡처 일정이 카메라를 쥔다
+    elif state.highlight_short_loop:
         set_camera_view(eye=CAM_CLOSE[0], target=CAM_CLOSE[1])
     elif state.dirty:
         set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])

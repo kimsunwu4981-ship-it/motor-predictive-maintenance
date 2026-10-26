@@ -1,0 +1,71 @@
+{
+ "result": "PASS",
+ "n": 9,
+ "ok": 9,
+ "checks": [
+  {
+   "file": "hud_01_healthy.png",
+   "t_session_s": 12.02,
+   "dt_s": 0.02,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_02_itsc_4turn.png",
+   "t_session_s": 36.48,
+   "dt_s": 0.02,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_03_itsc_12turn.png",
+   "t_session_s": 62.49,
+   "dt_s": 0.01,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_04_overload.png",
+   "t_session_s": 88.01,
+   "dt_s": 0.01,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_05_single_phasing.png",
+   "t_session_s": 137.96,
+   "dt_s": 0.04,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_06_no_load.png",
+   "t_session_s": 157.97,
+   "dt_s": 0.03,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_07_itsc_4turn_resistive.png",
+   "t_session_s": 218.0,
+   "dt_s": 0.0,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_08_bearing_de.png",
+   "t_session_s": 52.49,
+   "dt_s": 0.01,
+   "ok": true,
+   "mismatch": []
+  },
+  {
+   "file": "hud_09_misalignment.png",
+   "t_session_s": 78.51,
+   "dt_s": 0.01,
+   "ok": true,
+   "mismatch": []
+  }
+ ],
+ "method": "captions.json 의 values·hud_lines 를 state.csv 에서 독립 재판독한 행(|Δt| 최소)과 문자열 비교"
+}

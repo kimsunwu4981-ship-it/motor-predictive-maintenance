@@ -1,0 +1,161 @@
+{
+ "captions": [
+  {
+   "file": "isaac_01_exterior_iso.png",
+   "caption": "모터 외형 등각 — 정상 운전 (M1 HLP-2.2/4, 100L 프레임)",
+   "mode": "electrical",
+   "t_session_s": 6.0,
+   "view": "full",
+   "camera": "iso",
+   "resolution": "2560x1440",
+   "raw_resolution": "2560x1440",
+   "note": "",
+   "size_kb": 465
+  },
+  {
+   "file": "isaac_02_exterior_side.png",
+   "caption": "모터 외형 측면 (−Y 방향)",
+   "mode": "electrical",
+   "t_session_s": 8.0,
+   "view": "full",
+   "camera": "side",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 215
+  },
+  {
+   "file": "isaac_03_front_shaft.png",
+   "caption": "축단 정면 (+X 에서 본 DE 축단·엔드실드)",
+   "mode": "electrical",
+   "t_session_s": 10.0,
+   "view": "full",
+   "camera": "front_shaft",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 242
+  },
+  {
+   "file": "isaac_04_cutaway_healthy_iso.png",
+   "caption": "절단 뷰 등각 — 정상 (고정자 권선·로터·DE/NDE 베어링)",
+   "mode": "electrical",
+   "t_session_s": 14.0,
+   "view": "cutaway",
+   "camera": "iso",
+   "resolution": "2560x1440",
+   "raw_resolution": "2560x1440",
+   "note": "",
+   "size_kb": 404
+  },
+  {
+   "file": "isaac_05_cutaway_rotor_closeup.png",
+   "caption": "절단 뷰 상부 근접 — 코일 엔드·로터 코어·엔드링 (DE 쪽)",
+   "mode": "electrical",
+   "t_session_s": 16.0,
+   "view": "cutaway",
+   "camera": "rotor_closeup",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 733
+  },
+  {
+   "file": "isaac_06_windings_only.png",
+   "caption": "권선만 — 36슬롯 2층 권선 코일 배치 (Coil_01 단락 루프 포함)",
+   "mode": "electrical",
+   "t_session_s": 18.0,
+   "view": "windings_only",
+   "camera": "iso",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 235
+  },
+  {
+   "file": "isaac_07_half_translucent_side.png",
+   "caption": "반절 반투명 뷰 측면 — 정상 (한쪽 반이 비침, 절단 없음)",
+   "mode": "electrical",
+   "t_session_s": 19.5,
+   "view": "half_translucent",
+   "camera": "side",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 217
+  },
+  {
+   "file": "isaac_08_cutaway_itsc_4turn.png",
+   "caption": "턴간 단락 4턴 — Coil_01 단락 루프 발광, I₂/I₁ 경계(경고)",
+   "mode": "electrical",
+   "t_session_s": 36.0,
+   "view": "cutaway",
+   "camera": "fault_focus",
+   "resolution": "2560x1440",
+   "raw_resolution": "2560x1440",
+   "note": "",
+   "size_kb": 1403
+  },
+  {
+   "file": "isaac_09_cutaway_itsc_12turn.png",
+   "caption": "턴간 단락 12턴 — 위험 (단락 루프 발광 강함)",
+   "mode": "electrical",
+   "t_session_s": 62.0,
+   "view": "cutaway",
+   "camera": "fault_focus",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 890
+  },
+  {
+   "file": "isaac_10_cutaway_itsc_12turn_close.png",
+   "caption": "턴간 단락 12턴 근접 — 전류 경로·권선 발열 색",
+   "mode": "electrical",
+   "t_session_s": 64.0,
+   "view": "cutaway",
+   "camera": "close",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 516
+  },
+  {
+   "file": "isaac_11_cutaway_bearing_de.png",
+   "caption": "DE 베어링 열화 — 절단 뷰 베어링 근접 (온도 색)",
+   "mode": "mechanical",
+   "t_session_s": 52.0,
+   "view": "cutaway",
+   "camera": "bearing_de",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 832
+  },
+  {
+   "file": "isaac_12_half_translucent_bearing_de.png",
+   "caption": "DE 베어링 열화 — 반절 반투명 뷰 (DE 엔드실드·하우징 너머 내부가 비침)",
+   "mode": "mechanical",
+   "t_session_s": 55.0,
+   "view": "half_translucent",
+   "camera": "bearing_de",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 874
+  },
+  {
+   "file": "isaac_13_cutaway_misalignment_close.png",
+   "caption": "축 정렬 불량 — 근접 (양쪽 베어링·축 온도)",
+   "mode": "mechanical",
+   "t_session_s": 78.0,
+   "view": "cutaway",
+   "camera": "close",
+   "resolution": "1920x1080",
+   "raw_resolution": "1920x1080",
+   "note": "",
+   "size_kb": 508
+  }
+ ],
+ "missing": []
+}

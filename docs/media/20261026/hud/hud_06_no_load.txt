@@ -1,0 +1,8 @@
+안전 SAFE   원인 - 0.0   [-]
+t = 158.0 s   장면 no_load   부하 0.0   1790.6 rpm
+I R/S/T = 1.60 / 1.54 / 1.54 A  (정격 4.73 A)   I₁ 1.561 A
+I₂/I₁ = 0.0270   I₂/I_n = 0.00891   I_f = - A   P_loop = 0.0 W
+참고(advisory): current_ratio:SAFE;current_ratio:SAFE;current_ratio:SAFE
+근거: LUT 밖 장면(legacy 해석식) — 해석 기준 없음
+
+무부하 저전류 — 경부하(참고) 규칙 (세 상 함께 낮고 균형)

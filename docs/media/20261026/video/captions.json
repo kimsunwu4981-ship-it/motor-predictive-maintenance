@@ -1,0 +1,192 @@
+{
+ "captions": [
+  {
+   "file": "01_exterior_orbit.mp4",
+   "caption": "외형 360° 궤도 1회전 (전기 시나리오 정상 구간, HUD 포함)",
+   "title": "M1 모터 외형 — 축 중심 360° 궤도 (20 s)",
+   "run": "orbit",
+   "mode": "electrical",
+   "scenario_t_s": [
+    2.0,
+    22.0
+   ],
+   "video_ss_s": 4.005,
+   "duration_s": 20.0,
+   "offset_rec_to_scenario_s": 2.005,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": false,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 2.7,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_orbit\\demo_20261026_153014.csv"
+  },
+  {
+   "file": "02_cutaway_orbit.mp4",
+   "caption": "절단 뷰 360° 궤도 — 20~45 s 는 4턴 장면이라 Coil_01 단락 루프가 발광한다",
+   "title": "절단 뷰 — 360° 궤도 (턴간 단락 4턴 구간)",
+   "run": "orbit",
+   "mode": "electrical",
+   "scenario_t_s": [
+    26.0,
+    46.0
+   ],
+   "video_ss_s": 28.005,
+   "duration_s": 20.0,
+   "offset_rec_to_scenario_s": 2.005,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": false,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 2.8,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_orbit\\demo_20261026_153014.csv"
+  },
+  {
+   "file": "03_electrical_fault.mp4",
+   "caption": "전기 시나리오 0~76 s: 정상(0~20)·4턴 경고(20~45)·12턴 위험(45~75), 카메라 외형→절단→fault_focus→근접",
+   "title": "전기 시나리오 — 정상 → 턴간 단락 4턴 → 12턴",
+   "run": "vid_elec",
+   "mode": "electrical",
+   "scenario_t_s": [
+    0.0,
+    76.0
+   ],
+   "video_ss_s": 2.007,
+   "duration_s": 76.0,
+   "offset_rec_to_scenario_s": 2.007,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": true,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 11.0,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_vid_elec\\demo_20261026_151616.csv"
+  },
+  {
+   "file": "04_half_translucent_orbit.mp4",
+   "caption": "반절 반투명 뷰 360° 궤도 — 45 s 이후 12턴 장면",
+   "title": "반절 반투명 뷰 — 360° 궤도 (12턴 구간)",
+   "run": "orbit",
+   "mode": "electrical",
+   "scenario_t_s": [
+    50.0,
+    70.0
+   ],
+   "video_ss_s": 52.005,
+   "duration_s": 20.0,
+   "offset_rec_to_scenario_s": 2.005,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": false,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 3.6,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_orbit\\demo_20261026_153014.csv"
+  },
+  {
+   "file": "05_mechanical_bearing.mp4",
+   "caption": "기계 시나리오 10~85 s: 정상(~25)·DE 베어링 열화(25~60)·축 정렬 불량(60~85)",
+   "title": "기계 시나리오 — 정상 → DE 베어링 열화 → 축 정렬 불량",
+   "run": "vid_mech",
+   "mode": "mechanical",
+   "scenario_t_s": [
+    10.0,
+    85.0
+   ],
+   "video_ss_s": 12.001,
+   "duration_s": 75.0,
+   "offset_rec_to_scenario_s": 2.001,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": true,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 8.5,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_vid_mech\\demo_20261026_151756.csv"
+  },
+  {
+   "file": "06_integrated_full.mp4",
+   "caption": "통합 시나리오 전체 0~166 s: 정상·베어링·4턴·12턴·결론",
+   "title": "통합 시나리오 — 베어링 열화 + 턴간 단락 4턴 → 12턴",
+   "run": "vid_int",
+   "mode": "integrated",
+   "scenario_t_s": [
+    0.0,
+    166.0
+   ],
+   "video_ss_s": 2.005,
+   "duration_s": 166.0,
+   "offset_rec_to_scenario_s": 2.005,
+   "window_rect": [
+    8,
+    31,
+    1920,
+    1080
+   ],
+   "timecode_burned_in": true,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 26.1,
+   "speed": 1.0,
+   "source_log": "motor_dt_viz\\logs\\media_vid_int\\demo_20261026_151946.csv"
+  },
+  {
+   "file": "gif_01_orbit.gif",
+   "caption": "01_exterior_orbit 의 0~10 s (12 fps)",
+   "source": "01_exterior_orbit.mp4",
+   "size_mb": 3.43
+  },
+  {
+   "file": "gif_02_itsc_glow.gif",
+   "caption": "03_electrical_fault 의 18~46 s (12 fps)",
+   "source": "03_electrical_fault.mp4",
+   "size_mb": 5.85
+  },
+  {
+   "file": "07_dashboard_walkthrough.mp4",
+   "caption": "대시보드 워크스루 — 첫 화면(15 s) → 4턴 칩 → 게이지 → 해석 근거 비교 → 근거 보기 → 12턴 칩 → 맨 위 (Edge 창 화면 녹화, 1920×1080)",
+   "duration_s": 54.2,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 1.4,
+   "speed": 1.0
+  },
+  {
+   "file": "08_side_by_side.mp4",
+   "caption": "Isaac 전기 시나리오 녹화(왼쪽, 장면 0~60 s)와 대시보드 상태 보드 재생(오른쪽, 같은 시각) 나란히 — 동기는 재생 클릭 벽시계 기준 ±0.5 s",
+   "sync_method": "Isaac: recording json 의 scenario_start_wall; 대시보드: gdigrab 시작 벽시계 → ▶ 재생 클릭 벽시계 (08_dashboard_sync.json play_offset_s)",
+   "dashboard_offset_s": 2.005,
+   "resolution": "1920x1080",
+   "fps": 30,
+   "size_mb": 3.2,
+   "speed": 1.0
+  }
+ ],
+ "missing": []
+}

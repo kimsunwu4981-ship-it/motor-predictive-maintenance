@@ -1,6 +1,6 @@
 # CHANGELOG — 크레인 퀀선 모터 모델링
 
-생성 2026-10-21 16:55 · `motor_dt_viz/tools/docs/changelog_from_log.py` · 출처 `SESSION_LOG.md` 장 제목 + `git log`. 최신 태그 `v1.0-m1`.
+생성 2026-10-26 15:35 · `motor_dt_viz/tools/docs/changelog_from_log.py` · 출처 `SESSION_LOG.md` 장 제목 + `git log`. 최신 태그 `v1.0-m1`.
 
 | # | 날짜 | 장 제목 | 같은 날 커밋 |
 |---|---|---|---|
@@ -28,13 +28,17 @@
 | 22 | 2026-10-09 | 라이브 모드 R4 — 핫 모터 스위치·데모 프리셋·장애 테스트·체크리스트 (2026-10-09 오후, Wi-Fi 테스트만 남음) | — |
 | 23 | 2026-10-14 | AI Hub 사양·전류 구조 확인 (2026-10-14, 확인만 — config/engine/dashboard 무변경) | `f82d793` export/blender/render_captures.py — 모터 모델 캡처 8뷰 일괄 렌더(Cycles OptiX만 지정, 컬렉션 강제 표시, Isaac 병합 복제 메시 숨김)<br>`06353e1` docs/aihub_spec_check.md — AI Hub 2.2 kW 8대 사양·전류 구조·I2/I1 참고 분포 확인 보고 (설정 무변경), SESSION_LOG 23장 |
 | 24 | 2026-10-17 | 전기 트랙 마무리 — Maxwell 경로 B LUT 를 디지털트윈에 연동 (2026-10-17, D0~D6 완료 · 정격 전류 결정 대기) | `767d380` 전기 트랙 D1~D6 — Maxwell 경로 B 등가회로 LUT 를 M1 전류 결함 신호에 연동 (method: lut, legacy 유지) |
-| 15 | 2026-10-21 | M1(현대 HLP-2.2/4) 전체 3D 모델 — 100L 하우징 + 내부 재구성 → Isaac Sim 연결 (P4, 2026-10-21) | `7f02a79` assets: M1 full 3D model (housing + internals) + Isaac Sim scene<br>`eed11d5` assets: M1 model follow-up (end-turn, AD, 4 scenes, fault_focus)<br>`58853c7` judgment: provisional metrics, baseline mode, AI Hub reference<br>`ab87213` docs: LUT verify report 8/8 after P1 commit<br>`9723c61` motor: single-motor M1 (HLP-2.2/4), library retired<br>`70ac500` docs: LUT verify report 8/8 after single-motor M1 commit<br>`d734c05` assets: M1 half-translucent view variant<br>`4a1ad9b` verify: sim-vs-analysis report<br>`37bde73` engine: I1 from LUT phase RMS (D3 spec) |
+| 15 | 2026-10-21 | M1(현대 HLP-2.2/4) 전체 3D 모델 — 100L 하우징 + 내부 재구성 → Isaac Sim 연결 (P4, 2026-10-21) | `7f02a79` assets: M1 full 3D model (housing + internals) + Isaac Sim scene<br>`eed11d5` assets: M1 model follow-up (end-turn, AD, 4 scenes, fault_focus)<br>`58853c7` judgment: provisional metrics, baseline mode, AI Hub reference<br>`ab87213` docs: LUT verify report 8/8 after P1 commit<br>`9723c61` motor: single-motor M1 (HLP-2.2/4), library retired<br>`70ac500` docs: LUT verify report 8/8 after single-motor M1 commit<br>`d734c05` assets: M1 half-translucent view variant<br>`4a1ad9b` verify: sim-vs-analysis report<br>`37bde73` engine: I1 from LUT phase RMS (D3 spec)<br>`89a79e3` release: reproduce guide, changelog, HUD shots, verification summary (D1-D5)<br>`e4eab51` docs: deliverables regenerated for M1<br>`46a2a96` judgment: light-load advisory rule (approved) + D follow-ups<br>`2cd8914` judgment: light-load advisory resets per-phase persistence clocks (follow-up fix) + comparison workbook tooling<br>`75bd475` verify: sim-vs-maxwell comparison workbook |
 | 16 | 2026-10-21 | P4 후속 (파트 A, 2026-10-21) — 엔드턴 정본·AD·M1 시나리오 4장면·fault_focus·mount variant | — |
 | 17 | 2026-10-21 | P1 실측 기준선 체계 (파트 B, 2026-10-21) | — |
 | 18 | 2026-10-21 | P2′ 단일 모터(M1) 전환 (파트 C, 2026-10-21) | — |
 | 19 | 2026-10-21 | M1 "반절 반투명" 뷰 — 자르지 않고 한쪽 반을 투명하게 (H0~H4, 2026-10-21) | — |
 | 20 | 2026-10-21 | Isaac Sim 결함 시뮬레이션 ↔ Maxwell/등가회로 해석 대조 검증 — 증거 보고서 + 실시간 비교 패널 (V0~V6, 2026-10-21) | — |
 | 21 | 2026-10-21 | 엔진 수정(이 건에 한함): LUT 경로 I₁ = LUT 정상분 RMS — D3 원 사양 (2026-10-21) | — |
+| 22 | 2026-10-21 | 마무리 D — 재현성·릴리스·검증 요약 (D1~D5, 2026-10-21) | — |
+| 23 | 2026-10-21 | D 후속 — e3 마커·해설 데이터 M1 전환·fem_verified 문구·창별 게이트·저전류 경부하 규칙(승인)·E 준비 (2026-10-21) | — |
+| 24 | 2026-10-21 | 시뮬 vs Maxwell 비교표(엑셀 9시트 + 한 장 요약) + 결함 크기 역추정 + FEM 불확실성 민감도 (C0~C4, 2026-10-21) | — |
+| 25 | 2026-10-26 | 보고용 미디어 팩 — 모터 구동·결함 장면·대시보드 영상과 사진 (M0~M6, 2026-10-26) | — |
 
 ## 태그
 

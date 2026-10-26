@@ -1,0 +1,189 @@
+{
+ "captions": [
+  {
+   "file": "fig_01_maxwell_render_full_iso.png",
+   "caption": "Maxwell 3D 모델 전체 등각 렌더",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/render_01_full_iso.png",
+   "resolution": "1920x1080",
+   "size_kb": 147
+  },
+  {
+   "file": "fig_02_maxwell_render_quarter_cut.png",
+   "caption": "Maxwell 3D 1/4 절단 렌더",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/render_02_quarter_cut.png",
+   "resolution": "1920x1080",
+   "size_kb": 78
+  },
+  {
+   "file": "fig_03_maxwell_render_windings.png",
+   "caption": "Maxwell 고정자 권선 렌더",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/render_03_windings.png",
+   "resolution": "1920x1080",
+   "size_kb": 168
+  },
+  {
+   "file": "fig_04_maxwell_render_rotor_cage.png",
+   "caption": "Maxwell 로터 케이지 렌더",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/render_04_rotor_cage.png",
+   "resolution": "1920x1080",
+   "size_kb": 150
+  },
+  {
+   "file": "fig_05_maxwell_render_coil01_itsc.png",
+   "caption": "Maxwell Coil_01 턴간 단락 분할 렌더",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/render_05_coil01_itsc.png",
+   "resolution": "1920x1080",
+   "size_kb": 521
+  },
+  {
+   "file": "fig_06_maxwell_section_xy.png",
+   "caption": "Maxwell 2D 단면 (XY)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/m2_full_section_xy.png",
+   "resolution": "2560x1440",
+   "size_kb": 99
+  },
+  {
+   "file": "fig_07_maxwell_2d_lite_geometry.png",
+   "caption": "2D-eddy-lite 해석 형상 (1/4)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/s1_lite_q_geometry.png",
+   "resolution": "1400x1400",
+   "size_kb": 84
+  },
+  {
+   "file": "fig_08_maxwell_fault_rf0p1_B.png",
+   "caption": "턴간 단락 R_f 0.1 Ω 자속밀도 B (2D)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/s3_fault_rf0p1_B.png",
+   "resolution": "1400x1400",
+   "size_kb": 24
+  },
+  {
+   "file": "fig_09_maxwell_fault_rf0p1_J.png",
+   "caption": "턴간 단락 R_f 0.1 Ω 전류밀도 J (2D)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/s3_fault_rf0p1_J.png",
+   "resolution": "1400x1400",
+   "size_kb": 24
+  },
+  {
+   "file": "fig_10_maxwell_fault_rf1p0_B.png",
+   "caption": "턴간 단락 R_f 1.0 Ω 자속밀도 B (2D)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/s3_fault_rf1p0_B.png",
+   "resolution": "1400x1400",
+   "size_kb": 24
+  },
+  {
+   "file": "fig_11_maxwell_torque_speed.png",
+   "caption": "RMxprt 토크–속도 곡선",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/m6_torque_speed.png",
+   "resolution": "941x611",
+   "size_kb": 50
+  },
+  {
+   "file": "fig_12_maxwell_current_speed.png",
+   "caption": "RMxprt 전류–속도 곡선",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/m6_current_speed.png",
+   "resolution": "890x611",
+   "size_kb": 48
+  },
+  {
+   "file": "fig_13_maxwell_loss_breakdown.png",
+   "caption": "RMxprt 손실 분해",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/m6_loss_breakdown.png",
+   "resolution": "899x585",
+   "size_kb": 21
+  },
+  {
+   "file": "fig_14_lut_severity_rf.png",
+   "caption": "LUT: 단락 턴수·R_f 별 I₂/I₁ (결함분)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/e3_severity_rf.png",
+   "resolution": "909x614",
+   "size_kb": 79
+  },
+  {
+   "file": "fig_15_lut_severity_load.png",
+   "caption": "LUT: 부하별 I₂/I₁",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/e3_severity_load.png",
+   "resolution": "909x613",
+   "size_kb": 81
+  },
+  {
+   "file": "fig_16_lut_i2_over_in_load.png",
+   "caption": "LUT: 부하별 I₂/I_n",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/e3_i2_over_in_load.png",
+   "resolution": "909x613",
+   "size_kb": 38
+  },
+  {
+   "file": "fig_17_lut_cases_i2i1.png",
+   "caption": "시나리오 케이스별 I₂/I₁ (LUT)",
+   "source_repo": "hoist-motor-maxwell",
+   "source_path": "docs/maxwell/img/e3_cases_i2i1.png",
+   "resolution": "903x536",
+   "size_kb": 18
+  },
+  {
+   "file": "fig_18_dt_i2i1_timeseries.png",
+   "caption": "DT 검증: I₂/I₁ 시계열 (시뮬 vs 해석 기준)",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/i2i1_timeseries.png",
+   "resolution": "1560x546",
+   "size_kb": 67
+  },
+  {
+   "file": "fig_19_dt_sim_vs_analysis_bars.png",
+   "caption": "DT 검증: 시뮬 vs 해석 차이 막대",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/sim_vs_analysis_bars.png",
+   "resolution": "1560x494",
+   "size_kb": 40
+  },
+  {
+   "file": "fig_20_dt_waveform_spectrum.png",
+   "caption": "DT 검증: 상전류 파형·스펙트럼",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/waveform_spectrum.png",
+   "resolution": "1560x494",
+   "size_kb": 118
+  },
+  {
+   "file": "fig_21_dt_winding_temperature.png",
+   "caption": "DT 검증: 권선 온도 (열회로)",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/winding_temperature.png",
+   "resolution": "1040x520",
+   "size_kb": 50
+  },
+  {
+   "file": "fig_22_dt_status_board_4turn.png",
+   "caption": "검증 당시 상태 보드 4턴 경고 캡처",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/status_board_4turn_warn.png",
+   "resolution": "1600x1400",
+   "size_kb": 193
+  },
+  {
+   "file": "fig_23_dt_status_board_12turn.png",
+   "caption": "검증 당시 상태 보드 12턴 위험 캡처",
+   "source_repo": "motor-predictive-maintenance",
+   "source_path": "docs/verification/img/status_board_12turn_danger.png",
+   "resolution": "1600x1400",
+   "size_kb": 195
+  }
+ ],
+ "missing": []
+}

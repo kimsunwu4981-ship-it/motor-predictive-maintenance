@@ -21,4 +21,6 @@
 - 대시보드 `public/data/`·`dist/` 는 gitignore → `export_dashboard_data.py --source fleet --mode all`(M1 배치 로그, `run_fleet` 선행) → `export_status_data.py` → `build_analysis_reference.py`·`traceability.py` → `npm run build`. 22 kW 녹화 기반 해설 데이터는 `docs/deliverables/_v22kW/dashboard_data_22kW/`(이력). 서버는 `node serve.cjs`(4173).
 - 저전류 판정: 세 상 함께 r < 0.50·균형·I₂/I₁ < 0.05 는 '경부하(참고)' advisory(`current_ratio.low_current_policy`, 2026-10-21 승인) — 결상 의심은 한 상 저전류 또는 불평형·I₂/I₁ 동반 때만.
 - AI Hub 원본은 저장소 밖(`…\디지털 트윈\2020-02-125.기계시설물고장예지_sample`), 전체 Training zip 은 미다운로드(88~112 GB). 산출 요약만 커밋.
+- **보고용 미디어 팩(2026-10-26, `motor_dt_viz/tools/media/`)**: Isaac 영상은 `--record`(ffmpeg gdigrab **데스크톱 영역** 캡처)라 녹화 중 다른 창을 앞으로 올리면 그 창이 찍힌다 — 녹화 동안 PC 를 건드리지 않는다(실측: VS Code·탐색기가 덮인 영상 2편 재녹화). 캡처용 인자 `--res W H`·`--capture_layout`(창 클라이언트 1920×1080 + Kit 패널 숨김)·`--cam_plan`·`--shot_plan` 파일명 `@WxH`. 배치(.cmd)에서 `python.bat` 는 **`call`** 로 — 없으면 첫 실행 뒤 배치가 끝난다.
+- Playwright: 번들 Chromium/ffmpeg 다운로드가 이 PC 에서 멈춤(1.3 MB 에서 정지) → `chromium.launch({channel: "msedge", headless: false})` + 시스템 ffmpeg gdigrab 으로 녹화. Edge 헤드 실행은 **PowerShell 에서**(Git Bash 에서는 "Target page… closed" 로 바로 종료). 대시보드 해설 화면(#/electrical, #/mechanical)은 22 kW 녹화 영상을 재생하므로 보고용 캡처에서 제외.
 - `py -3.12 -X utf8`(`python` 별칭은 MS Store). 파일 쓰기 도구는 UTF-8(BOM 있는 파일 주의: `import_lut.py`).

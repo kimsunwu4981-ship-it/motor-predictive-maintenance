@@ -32,6 +32,19 @@ class M1Model:
     CAM_FAULT = ([0.21, -0.11, 0.25], [0.085, 0.0, 0.165])    # fault_focus: 슬롯 1(+Z) Coil_01_short DE 쪽 엔드턴 근접 (절단면 θ −45~+45° 안, 적층 끝 x 67.5 + 돌출 28 mm)
     CAM_BEARING = ([0.30, -0.16, 0.26], [0.105, 0.0, 0.10])   # bearing_de: 절단면 위에서 DE 베어링(/M1/Bearings/DE, 축 중심 z≈0.10, 엔드실드 안쪽 x≈0.10) 근접 (파트 C S2 기계 장면)
     CAM_SIDE = ([0.02, -0.95, 0.13], [0.02, 0.0, 0.11])        # side: −Y 에서 본 측면 (half_translucent 의 위 반이 비치는 각도)
+    CAM_FRONT_SHAFT = ([0.62, -0.04, 0.13], [0.10, 0.0, 0.10])  # front_shaft: 축단 정면 (+X 에서 −X 방향) — 보고용 미디어 팩 (2026-10-26)
+    CAM_ROTOR = ([0.30, -0.22, 0.24], [0.0, 0.0, 0.11])      # rotor_closeup: 로터 바 스큐가 보이는 각도 (cutaway/windings_only)
+    ORBIT = {"radius": 0.78, "z": 0.36, "target": (0.0, 0.0, 0.11), "period_s": 20.0}   # orbit: 축 중심 360° 궤도 (tools/media/cameras.yaml 과 같은 값)
+
+    def cam(self, name: str):
+        """카메라 프리셋 이름 → (eye, target). 'iso' 는 wide 와 같다."""
+        return {"wide": self.CAM_WIDE, "iso": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT,
+                "bearing_de": self.CAM_BEARING, "side": self.CAM_SIDE, "front_shaft": self.CAM_FRONT_SHAFT, "rotor_closeup": self.CAM_ROTOR}[name]
+
+    def orbit_cam(self, t_since_start: float):
+        """궤도 카메라: period_s 에 360°, 축 중심 target 둘레 반지름 radius·높이 z."""
+        a = 2 * math.pi * (t_since_start / self.ORBIT["period_s"]); r = self.ORBIT["radius"]; tx, ty, tz = self.ORBIT["target"]
+        return ([tx + r * math.cos(a), ty + r * math.sin(a), self.ORBIT["z"]], [tx, ty, tz])
     FCO_KEY = "/rtx/raytracing/fractionalCutoutOpacity"       # Render Settings → Translucency → Fractional Cutout Opacity
     HALF_GLOW = 1.5                                           # half_translucent 에서 Coil_01_short 발광 표시 세기 배율 (값이 아니라 표시 세기)
 
@@ -177,8 +190,15 @@ class M1Model:
         if t_session < t:
             return None
         self._shot_i += 1
+        res = None
+        if "@" in fname:                                   # 미디어 팩(2026-10-26): 'name.png@2560x1440' → 그 해상도로 캡처
+            fname, _r = fname.split("@", 1)
+            try:
+                res = tuple(int(x) for x in _r.lower().split("x"))
+            except ValueError:
+                res = None
         self.set_view(view)
-        eye, tgt = {"wide": self.CAM_WIDE, "close": self.CAM_CLOSE, "shaft": self.CAM_SHAFT, "fault_focus": self.CAM_FAULT, "bearing_de": self.CAM_BEARING, "side": self.CAM_SIDE}[cam]
+        eye, tgt = self.cam(cam)
         set_camera_view(eye=eye, target=tgt)
         for _ in range(8):
             render()
@@ -186,10 +206,28 @@ class M1Model:
         path = os.path.join(self.shots_dir, fname)
         try:
             from omni.kit.viewport.utility import capture_viewport_to_file, get_active_viewport
-            capture_viewport_to_file(get_active_viewport(), path)
-            for _ in range(4):
+            vp = get_active_viewport(); old = None
+            if res:
+                try:
+                    old = tuple(vp.resolution)
+                    if hasattr(vp, "fill_frame"):
+                        vp.fill_frame = False
+                    vp.resolution = res
+                    for _ in range(6):
+                        render()
+                except Exception as e:  # noqa: BLE001
+                    print("[m1] shot resolution failed:", e, flush=True); old = None
+            capture_viewport_to_file(vp, path)
+            for _ in range(8):
                 render()
-            print(f"[m1] shot {fname} (t={t_session:.1f}s, view {view}, cam {cam})", flush=True)
+            if old:
+                try:
+                    vp.resolution = old
+                    if hasattr(vp, "fill_frame"):
+                        vp.fill_frame = True
+                except Exception:  # noqa: BLE001
+                    pass
+            print(f"[m1] shot {fname} (t={t_session:.1f}s, view {view}, cam {cam}, res {res or 'viewport'})", flush=True)
         except Exception as e:  # noqa: BLE001
             print("[m1] shot failed:", e, flush=True)
         return path
