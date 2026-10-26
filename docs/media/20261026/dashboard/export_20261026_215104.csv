@@ -1,8 +1,0 @@
-﻿item,scenario,sim,ref,tolerance,dev_pct,pass,unit,note,source
-"I₂/I₁ (합성 = 결함분 + 고유 비대칭)","itsc_4turn","0.0726","0.0725","0.01","0.174","true","","","등가회로 LUT"
-"I₂/I₁ 결함분 (LUT r, 고유 비대칭 제외)","itsc_4turn","0.0490","0.0488","0.01","0.311","true","","엔진 LUT 조회값 · LUT 결함분 r (고유 비대칭 제외) — engine.CurrentModel.lut_point; LUT 밖 케이스(정상·과부하·불평형·결상·무부하)는 null","등가회로 LUT"
-"I₂/I_n (부하 무관 보조)","itsc_4turn","0.0750","0.0749","0.01","0.216","true","","LUT 자체 I₂/I_n 0.0504 (LUT I₁ 기준) — 시뮬은 I₁ 을 정격×부하로 고정 (규약 차이) · I₂/I_n (electrical.yaml 정격 기준) — engine.CurrentModel.analyze; LUT 케이스만","등가회로 LUT"
-"단락 루프 전류 I_f","itsc_4turn","34.4","34.3","0.01","0.098","true","A","2D FEM(F1 보정) 35.16 A (MCCM 대비 2.4 %) · 단락 루프 전류 [A] — engine.CurrentModel.short_loop (LUT); 단락 케이스만","등가회로"
-"단락 루프 총손실 P_loop","itsc_4turn","158","158","0.02","0.356","true","W","권선 노드 추가 손실 · 단락 루프 총손실 [W] — engine.CurrentModel.loop_loss_W (LUT; coupling_to_thermal); 단락 케이스만","등가회로"
-"권선 ΔT 정상 상태 (열 모델 역산)","itsc_4turn","—","45.6","0.05","","","°C","전기 모드는 열 적분 없음(온도 상수) — 통합 모드 검증 로그 참조 · 권선 온도 − 첫 샘플 [°C] — 이 모드(전기)는 열 모델을 돌리지 않아 null (통합·기계 모드에서만)","열 모델"
-"판정 (예상 vs 현재)","itsc_4turn","WARN","WARN","","","true","","","참고 데이터셋"
