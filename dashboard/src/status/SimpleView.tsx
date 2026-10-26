@@ -136,7 +136,7 @@ export function SimpleView(p: {
             <>
               <div className="sv-cause"><abbr title={`${prim.name.term}${prim.name.tip ? " — " + prim.name.tip : ""}`}>{prim.name.plain}</abbr> <b>{fmtVal(prim.kind, prim.value)}</b>
                 {provisional && <span className="sv-tag" title={labels.notes.provisional_tip ?? "실측 기준선 확보 전까지 참고 기준"}>{labels.notes.provisional_tag ?? "임시"}</span>}</div>
-              <div className="sv-thr">{prim.threshold}</div>
+              <div className="sv-thr"><Plain text={prim.threshold} labels={labels} /></div>
               <div className="sv-note">{prim.persistence > 0 ? `(${note})` : "(온도는 즉시 반영)"}</div>
             </>
           )}
