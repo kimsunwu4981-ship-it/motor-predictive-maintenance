@@ -1,8 +1,8 @@
 // mech/data.ts — 기계 실시간 해설 대시보드 전용 데이터 (export_mechanical_extras.py 출력 + content YAML).
 // 공통 ModeData(data.ts) 와 공통 LiveData(live/types.ts) 위에 얹는다. 전기 대시보드는 이 파일을 쓰지 않는다.
-import type { ModeData, Stage, Timeseries } from "../data";
-import { getJson, getYaml } from "../live/load";
-import { fill, fillParts, fmtNum, type LiveData, type LiveEvent, type LiveScene, type QaItem, type SceneValues, type Templates } from "../live/types";
+import type { ModeData, Stage, Timeseries } from "../../data";
+import { getJson, getYaml } from "../../live/load";
+import { fill, fillParts, fmtNum, type LiveData, type LiveEvent, type LiveScene, type QaItem, type SceneValues, type Templates } from "../../live/types";
 export { fill, fillParts, fmtNum };
 export type { SceneValues };
 

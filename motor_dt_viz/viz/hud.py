@@ -175,14 +175,10 @@ class MotorHUD:
                         ui.Label(text, style=_style(13))
 
     # ------------------------------------------------------------------ 모드
-    def set_mode(self, mode: str) -> None:
-        """모드에 맞는 섹션만 남긴다.
-
-        mechanical : 온도·진동만          electrical : 전류만
-        integrated : 둘 다 (범례는 전류용 — 두 범례를 같이 띄우면 창을 넘는다)
-        """
-        show_elec = mode in ("electrical", "integrated")
-        show_therm = mode in ("mechanical", "thermal", "integrated")
+    def set_mode(self, mode: str = "electrical") -> None:
+        """전기 전용(2026-10-27 패널 Q1): 전류 섹션·전류 범례만. 열·진동 섹션(옛 모드)은 숨긴다 — 그 코드는 _legacy/app/demo_integrated_modes.py 가 쓴다."""
+        show_elec = True
+        show_therm = False
         self._sec_current.visible = show_elec
         self._sec_thermal.visible = show_therm
         self._legend_elec.visible = show_elec

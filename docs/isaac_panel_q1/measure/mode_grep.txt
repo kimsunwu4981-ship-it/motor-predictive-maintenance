@@ -1,0 +1,526 @@
+motor_dt_viz/app/demo_integrated.py:41:ap.add_argument("--mode", choices=("mechanical", "electrical", "integrated"),
+motor_dt_viz/app/demo_integrated.py:54:ap.add_argument("--switch_seq", metavar="mode:sec,...",
+motor_dt_viz/app/demo_integrated.py:171:def _player_for(mode_: str):
+motor_dt_viz/app/demo_integrated.py:176:        _cfg = _cfg.get(mode_, _cfg) if "steps" not in _cfg else _cfg
+motor_dt_viz/app/demo_integrated.py:181:            return ScenarioPlayer(cfg_, name=f"scenarios_M1:{mode_}")
+motor_dt_viz/app/demo_integrated.py:182:    return ScenarioPlayer.for_mode(mode_)
+motor_dt_viz/app/demo_integrated.py:242:player = _player_for(args.mode)
+motor_dt_viz/app/demo_integrated.py:268:    COLS = ["t_session_s", "t_real_s", "mode", "step", "case", "load", "time_scale", "rpm",
+motor_dt_viz/app/demo_integrated.py:284:        self.meta = {"argv": sys.argv[1:], "motor": MOTOR.id if MOTOR else None, "mode": args.mode, "scenario": player.name,
+motor_dt_viz/app/demo_integrated.py:311:    def tick(self, t_session_, t_real_, mode_, frame_, case_, load_, st_, th_, vib_, verdict_, kind_worst_, fps_, rpm_):
+motor_dt_viz/app/demo_integrated.py:323:        self.w_state.writerow([round(t_session_, 2), round(t_real_, 3), mode_, step_, case_, load_, frame_.time_scale if frame_ else "", round(rpm_, 1),
+motor_dt_viz/app/demo_integrated.py:378:        _SHOT_PLANS = {args.mode: [(float(t_), v_, c_, f_) for t_, v_, c_, f_ in (item.split(":", 3) for item in args.shot_plan.split(";") if item.strip())]}
+motor_dt_viz/app/demo_integrated.py:379:    m1.plan_shots(_SHOT_PLANS.get(args.mode) or _SHOT_PLANS.get("electrical") or [])   # --shot_plan 은 그 모드 키만 있다 — 기본값 표현식을 미리 평가하면 KeyError (D3 실측: 기계 모드가 기동 직후 조용히 종료)
+motor_dt_viz/app/demo_integrated.py:399:from ui.control_panel import ControlPanel, DemoState, normalize_mode  # noqa: E402
+motor_dt_viz/app/demo_integrated.py:402:state.mode = args.mode
+motor_dt_viz/app/demo_integrated.py:416:        hud.set_mode(args.mode)
+motor_dt_viz/app/demo_integrated.py:445:                                         "electrical_case": st_.get("electrical_case"), "mode": st_.get("mode", args.mode)} for k, st_ in enumerate(player.steps)]
+motor_dt_viz/app/demo_integrated.py:475:def _reveal_stage(mode_: str, frame_) -> str | None:
+motor_dt_viz/app/demo_integrated.py:478:    rt = (REVEAL.get(mode_) or {}).get(frame_.step_id) or {"why": 0.0, "visible": 0.4, "result": 0.8}
+motor_dt_viz/app/demo_integrated.py:510:    player = _player_for(state.mode)
+motor_dt_viz/app/demo_integrated.py:521:        hud.set_mode(state.mode)
+motor_dt_viz/app/demo_integrated.py:535:        if f in LIVE_THERMAL and state.mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:541:        if f in LIVE_ELECTRICAL and state.mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:545:            return False, f"fault {f} does not apply in mode {state.mode}"
+motor_dt_viz/app/demo_integrated.py:561:    if name == "set_mode":
+motor_dt_viz/app/demo_integrated.py:562:        m = normalize_mode(a["mode"])
+motor_dt_viz/app/demo_integrated.py:564:            panel._set_mode(m)                      # 버튼과 같은 경로 (무관한 결함 해제 포함)
+motor_dt_viz/app/demo_integrated.py:566:            state.mode = m; state.request_mode_reset = True
+motor_dt_viz/app/demo_integrated.py:567:        return True, {"mode": m}
+motor_dt_viz/app/demo_integrated.py:588:        if str(sm_cfg.get("switch_mode", "hot")) == "hot":
+motor_dt_viz/app/demo_integrated.py:624:STEP_EN_BY_MODE = {
+motor_dt_viz/app/demo_integrated.py:645:writer.writerow(["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
+motor_dt_viz/app/demo_integrated.py:718:def analysis_ref_line(mode_: str, case_: str, st_) -> tuple[str, bool | None]:
+motor_dt_viz/app/demo_integrated.py:722:    if mode_ == "mechanical":
+motor_dt_viz/app/demo_integrated.py:863:        switch_plan.append((float(sec), normalize_mode(m.strip())))
+motor_dt_viz/app/demo_integrated.py:882:            panel._set_mode(_m)          # 버튼 클릭과 같은 경로 (무관한 결함 해제 포함)
+motor_dt_viz/app/demo_integrated.py:884:            state.mode = _m
+motor_dt_viz/app/demo_integrated.py:885:            state.request_mode_reset = True
+motor_dt_viz/app/demo_integrated.py:889:    if state.request_mode_reset:
+motor_dt_viz/app/demo_integrated.py:890:        state.mode = normalize_mode(state.mode)
+motor_dt_viz/app/demo_integrated.py:891:        player = _player_for(state.mode)
+motor_dt_viz/app/demo_integrated.py:903:            hud.set_mode(state.mode)
+motor_dt_viz/app/demo_integrated.py:905:        state.request_mode_reset = False
+motor_dt_viz/app/demo_integrated.py:947:        state.mode = frame.mode
+motor_dt_viz/app/demo_integrated.py:959:    mode = state.mode
+motor_dt_viz/app/demo_integrated.py:968:        winding_pu = cm.winding_current_pu(st_phase) if mode in ("electrical", "integrated") else None
+motor_dt_viz/app/demo_integrated.py:972:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:974:            _loop_W = cm.loop_loss_W(case) if mode == "integrated" else 0.0
+motor_dt_viz/app/demo_integrated.py:976:                         winding_current_pu=winding_pu if mode == "integrated" else None,
+motor_dt_viz/app/demo_integrated.py:995:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:999:            mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
+motor_dt_viz/app/demo_integrated.py:1005:        elif mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1012:        show_current = mode in ("electrical", "integrated")
+motor_dt_viz/app/demo_integrated.py:1037:        m1.update(th.temperature_C, th.stage, t_real, THRESHOLDS, cm.loop_loss_W(case), M1_PLOOP_MAX, mode)
+motor_dt_viz/app/demo_integrated.py:1089:            if mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1092:                _rl, _rok = analysis_ref_line(mode, case, st_line)
+motor_dt_viz/app/demo_integrated.py:1095:            if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1110:            _steps_en = STEP_EN_BY_MODE.get(mode, {})
+motor_dt_viz/app/demo_integrated.py:1113:                   f"Mode: {mode} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
+motor_dt_viz/app/demo_integrated.py:1144:            "motor_id": MOTOR.id if MOTOR else ml.REFERENCE_ID, "mode": mode, "step": frame.step_id if frame else "manual", "case": case,
+motor_dt_viz/app/demo_integrated.py:1165:            "narration_key": {"mode": mode, "scene": frame.step_id if frame else None, "reveal": _reveal_stage(mode, frame)},
+motor_dt_viz/app/demo_integrated.py:1175:            verify_log.tick(t_session, t_real, mode, frame, case, state.load, st_line, th, vib, verdict, kind_worst, _fps_hist[-1] if _fps_hist else 0.0, _rpm)
+motor_dt_viz/app/demo_integrated.py:1207:        writer.writerow([round(t_wall, 2), round(t_real, 3), mode, frame.step_id if frame else "manual", case,
+motor_dt_viz/app/demo_integrated.py:1216:                       "mode": mode, "case": case,
+motor_dt_viz/app/live_bridge.py:185:        elif name == "set_mode":
+motor_dt_viz/app/live_bridge.py:186:            if args.get("mode") not in (spec.get("modes") or []):
+motor_dt_viz/app/live_bridge.py:187:                return False, f"mode not allowed: {args.get('mode')}", cmd
+motor_dt_viz/ui/control_panel.py:22:MODES = ("mechanical", "electrical", "integrated")
+motor_dt_viz/ui/control_panel.py:23:MODE_LABEL = {"mechanical": "Mechanical only", "electrical": "Electrical only",
+motor_dt_viz/ui/control_panel.py:26:MODE_ALIAS = {"thermal": "mechanical"}
+motor_dt_viz/ui/control_panel.py:29:def normalize_mode(mode: str) -> str:
+motor_dt_viz/ui/control_panel.py:30:    return MODE_ALIAS.get(mode, mode)
+motor_dt_viz/ui/control_panel.py:56:    mode: str = "integrated"
+motor_dt_viz/ui/control_panel.py:65:    request_mode_reset: bool = False     # 모드 전환 — 머티리얼·입자·HUD 잔상 제거
+motor_dt_viz/ui/control_panel.py:71:        return {"mode": self.mode, "load": self.load, "time_scale": self.time_scale,
+motor_dt_viz/ui/control_panel.py:90:        self._mode_buttons: dict[str, object] = {}
+motor_dt_viz/ui/control_panel.py:100:                ui.Label("MODE", style=S(15, 0xFF66DDFF))
+motor_dt_viz/ui/control_panel.py:102:                    for m in MODES:
+motor_dt_viz/ui/control_panel.py:103:                        b = ui.Button(MODE_LABEL[m], clicked_fn=lambda m=m: self._set_mode(m))
+motor_dt_viz/ui/control_panel.py:104:                        self._mode_buttons[m] = b
+motor_dt_viz/ui/control_panel.py:105:                self._mode_label = ui.Label("", height=18, style=S(13, 0xFFAAAAAA))
+motor_dt_viz/ui/control_panel.py:152:        self._refresh_mode_buttons()
+motor_dt_viz/ui/control_panel.py:164:    def _set_mode(self, mode: str) -> None:
+motor_dt_viz/ui/control_panel.py:165:        if mode == self.state.mode:
+motor_dt_viz/ui/control_panel.py:167:        self.state.mode = mode
+motor_dt_viz/ui/control_panel.py:170:        self.state.request_mode_reset = True
+motor_dt_viz/ui/control_panel.py:172:        if mode == "electrical":
+motor_dt_viz/ui/control_panel.py:176:        elif mode == "mechanical":
+motor_dt_viz/ui/control_panel.py:179:        self._refresh_mode_buttons()
+motor_dt_viz/ui/control_panel.py:181:    def _refresh_mode_buttons(self) -> None:
+motor_dt_viz/ui/control_panel.py:182:        mode = self.state.mode
+motor_dt_viz/ui/control_panel.py:183:        for m, b in self._mode_buttons.items():
+motor_dt_viz/ui/control_panel.py:184:            b.set_style({"background_color": 0xFF2D6A9F if m == mode else 0xFF3A3A3A,
+motor_dt_viz/ui/control_panel.py:186:        self._mode_label.text = f"current: {MODE_LABEL.get(mode, mode)}"
+motor_dt_viz/ui/control_panel.py:188:        self._sec_mech.visible = mode in ("mechanical", "integrated")
+motor_dt_viz/ui/control_panel.py:189:        self._sec_elec.visible = mode in ("electrical", "integrated")
+motor_dt_viz/ui/control_panel.py:249:        self._refresh_mode_buttons()
+motor_dt_viz/viz/hud.py:161:                # 쓰지 않은 모델을 적지 않도록 모드마다 문구를 바꾼다 (set_mode 에서 갱신)
+motor_dt_viz/viz/hud.py:178:    def set_mode(self, mode: str) -> None:
+motor_dt_viz/viz/hud.py:184:        show_elec = mode in ("electrical", "integrated")
+motor_dt_viz/viz/hud.py:185:        show_therm = mode in ("mechanical", "thermal", "integrated")
+motor_dt_viz/engine/scenario_player.py:24:    mode: str
+motor_dt_viz/engine/scenario_player.py:66:    CONFIG_BY_MODE = {
+motor_dt_viz/engine/scenario_player.py:73:        """name: config/<name>.yaml — 또는 for_mode() 로 모드에서 고른다."""
+motor_dt_viz/engine/scenario_player.py:82:    def for_mode(cls, mode: str) -> "ScenarioPlayer":
+motor_dt_viz/engine/scenario_player.py:84:        return cls(name=cls.CONFIG_BY_MODE.get(mode, "scenario"))
+motor_dt_viz/engine/scenario_player.py:123:            mode=step.get("mode", "integrated"),
+motor_dt_viz/engine/scenario_player.py:145:            mode=d.get("mode", "integrated"),
+motor_dt_viz/engine/thresholds.py:20:  · 출처·상태·정책(P1, 2026-10-21): config 의 source/status/mode 를 읽는다. provisional 지표는 judgment.provisional_policy 에 따라
+motor_dt_viz/engine/thresholds.py:22:    I₂/I₁ 이 mode: baseline_multiple 이면 경계 = baseline.value × warn/danger_multiple. 전압 보정은 enabled 이고 입력에 v2_v1 이 있을 때만.
+motor_dt_viz/engine/thresholds.py:114:        """config 의 source/status/mode (없으면 confirmed/absolute)."""
+motor_dt_viz/engine/thresholds.py:119:                return {"source": "", "status": "confirmed", "mode": "absolute"}
+motor_dt_viz/engine/thresholds.py:120:        return {"source": str(d.get("source", "")), "status": str(d.get("status", "confirmed")), "mode": str(d.get("mode", "absolute"))}
+motor_dt_viz/engine/thresholds.py:131:        if str(ns.get("mode", "absolute")) == "baseline_multiple" and isinstance(ns.get("baseline"), dict) and ns["baseline"].get("value") is not None:
+motor_dt_viz/engine/thresholds.py:174:            lo, hi, mode = self.i2i1_bounds()
+motor_dt_viz/engine/thresholds.py:177:            tag = " (기준선 배수)" if mode == "baseline_multiple" else ""
+motor_dt_viz/tools/aihub/extract_features.py:342:        L.append(f"| {kw} | {m} | {lab} | {len(g)//3} | {r[0]:.2f} / {r[1]:.2f} / {r[2]:.2f} | {np.mean(r)/rated*100:.0f} % | {g['i2i1_ref'].median():.3f} | {g['phase_sequence'].mode().iloc[0]} | {g['fund_hz'].median():.2f} |")
+motor_dt_viz/tools/baseline_capture.py:181:                                  "current.negative_sequence.mode": [ns.get("mode"), "baseline_multiple"],
+motor_dt_viz/tools/compare_demo_logs.py:4:  <python> tools/compare_demo_logs.py --mode mechanical --ref logs/mechanical/demo_20260922_174529.csv --new logs/r1_live_mech/demo_*.csv
+motor_dt_viz/tools/compare_demo_logs.py:45:    ap.add_argument("--mode", required=True, choices=("mechanical", "electrical"))
+motor_dt_viz/tools/compare_demo_logs.py:52:    cols, tols = COLS[a.mode]
+motor_dt_viz/tools/compare_demo_logs.py:53:    player = ScenarioPlayer.for_mode(a.mode)
+motor_dt_viz/tools/compare_demo_logs.py:54:    L = [f"# 자동 재생 로그 회귀 비교 ({a.mode})", "", f"- 기준: `{os.path.relpath(a.ref, VIZ)}` ({len(R)} 행)", f"- 새 실행: `{os.path.relpath(new, VIZ)}` ({len(N)} 행)", "",
+motor_dt_viz/tools/docs/verification_summary.py:75:        ("전류 임계값 (I₂/I₁ 0.05/0.10, 전류/정격)", "참고 데이터셋 (provisional)", f"{ns['source']}/{ns['status']}, mode {ns['mode']}, reference_baseline {rb['value']}({rb['dataset']}), 정책 simulation={th['judgment']['provisional_policy']['simulation']} / live={th['judgment']['provisional_policy']['live']}"),
+motor_dt_viz/tools/docs/verification_summary.py:162:          f"절대 임계값 {key['i2i1_warn']}/{key['i2i1_danger']} 은 전압 불평형이 보정된 깨끗한 기준선을 전제한다. L-SF-04 처럼 건전 모터가 {key['lsf04_median']} 을 보이는 현장에서는 (1) 전압 채널로 V₂/V₁ 보정(`voltage_unbalance_compensation`)을 켜거나 (2) 기준선 배수 모드(`mode: baseline_multiple`)로 가야 한다. "
+motor_dt_viz/tools/electrical/verify_lut_integration.py:11:  V7  라이브 10 s: Isaac Sim demo_integrated --live --motor M1 --mode electrical 을 띄워 state 에 새 키가 오고 값이 맞는지 (--skip-live 로 생략)
+motor_dt_viz/tools/electrical/verify_lut_integration.py:205:    lines.append("\n## V7. 라이브 10 s (Isaac Sim `demo_integrated --live --motor M1 --mode electrical`, 검증 포트)\n")
+motor_dt_viz/tools/electrical/verify_lut_integration.py:250:    cmd = f'"{ISAAC_PY}" app\\demo_integrated.py --mode electrical --motor M1 --live --live_port {port} --max_s 45 --log_subdir verify_lut'
+motor_dt_viz/tools/electrical/verify_lut_integration.py:307:    rows += [f"- state {len(states)} 건 / 10 s (schema {last.get('schema')}, motor {last.get('motor_id')}, mode {last.get('mode')}), ack {len(acks)} 건",
+motor_dt_viz/tools/fleet_compare.py:73:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tools/fleet_compare.py:74:        player = ScenarioPlayer.for_mode(mode)
+motor_dt_viz/tools/fleet_compare.py:76:        L += [f"## {'기계' if mode == 'mechanical' else '전기'} 모드 — 장면 끝 상태 (원인 신호 값)", "",
+motor_dt_viz/tools/fleet_compare.py:79:            b = rows(os.path.join(a.before, mid, mode, "status_fleet.csv"))
+motor_dt_viz/tools/fleet_compare.py:80:            f = rows(os.path.join(a.after, mid, mode, "status_fleet.csv"))
+motor_dt_viz/tools/fleet_compare.py:81:            assert len(b) == len(f), f"{mid} {mode}: 행 수 다름 {len(b)} vs {len(f)}"
+motor_dt_viz/tools/fleet_compare.py:87:        L += ["", f"### {'기계' if mode == 'mechanical' else '전기'} 모드 — 상태 시간 점유율·변경 행", "",
+motor_dt_viz/tools/fleet_compare.py:91:            b = rows(os.path.join(a.before, mid, mode, "status_fleet.csv"))
+motor_dt_viz/tools/fleet_compare.py:92:            f = rows(os.path.join(a.after, mid, mode, "status_fleet.csv"))
+motor_dt_viz/tools/fleet_summary.py:29:def read(mid, mode, name):
+motor_dt_viz/tools/fleet_summary.py:30:    return list(csv.DictReader(open(os.path.join(FLEET, mid, mode, name), encoding="utf-8", newline="")))
+motor_dt_viz/tools/fleet_summary.py:45:    out += ["로그: `logs/fleet/<id>/<mode>/demo_fleet.csv`(데모와 같은 컬럼), `status_fleet.csv`(판정 엔진 결과). 시나리오·결함 파라미터는 공통,",
+motor_dt_viz/tools/fleet_summary.py:53:        for mode, r in reg.items():
+motor_dt_viz/tools/fleet_summary.py:55:                out.append(f"| {mode} | - | - | 건너뜀 | {r['skipped']} |")
+motor_dt_viz/tools/fleet_summary.py:57:                out.append(f"| {mode} | {r['max_diff']} | {r['tolerance']} | {'PASS' if r['pass'] else 'FAIL'} | {r['isaac_log']} |")
+motor_dt_viz/tools/fleet_summary.py:70:    player = ScenarioPlayer.for_mode("mechanical")
+motor_dt_viz/tools/fleet_summary.py:132:    pe = ScenarioPlayer.for_mode("electrical")
+motor_dt_viz/tools/live_demo_drive.py:7:통합 모드(--mode integrated)에서 돌려야 2·3 이 둘 다 적용된다. 각 ack 와 전환 시간을 stdout 과 --out JSON 에 남긴다.
+motor_dt_viz/tools/live_demo_drive.py:62:    log(f"접속 {URL} · 모터 {st and st['motor_id']} · 모드 {st and st['mode']}")
+motor_dt_viz/tools/live_restart_measure.py:66:                t1 = time.time(); res["first_state"] = {"motor_id": m["motor_id"], "mode": m["mode"], "step": m["step"], "fps": m["perf"].get("fps")}
+motor_dt_viz/tools/media/capture_all.py:93:# 영상 녹화 4회: 이름 → (mode, cam_plan, max_s, no_timecode)
+motor_dt_viz/tools/media/capture_all.py:172:def photo_plan(mode: str) -> str:
+motor_dt_viz/tools/media/capture_all.py:173:    items = [(t, v, c, f"{name}.png@{r[0]}x{r[1]}") for t, v, c, name, r, _ in ISAAC_SHOTS[mode]]
+motor_dt_viz/tools/media/capture_all.py:174:    items += [(t, v, c, f"{name}_t{t:.1f}.png@{W}x{H}") for name, t, v, c, _ in HUD_SHOTS[mode]]
+motor_dt_viz/tools/media/capture_all.py:188:        lines.append(f'echo [media] retake && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:190:    for mode, (sub, max_s) in PHOTO_RUNS.items():
+motor_dt_viz/tools/media/capture_all.py:191:        if mode in skip:
+motor_dt_viz/tools/media/capture_all.py:193:        d = os.path.join(LOGS, mode); os.makedirs(os.path.join(d, "shots"), exist_ok=True)
+motor_dt_viz/tools/media/capture_all.py:194:        lines.append(f'echo [media] photos {mode} && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode {mode} --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:195:                     f'--m1_shots "{rel(os.path.join(d, "shots"))}" --shot_plan "{photo_plan(mode)}" --verify_dir "{rel(d)}" --max_s {max_s} --log_subdir {sub} > "{rel(os.path.join(d, "run.txt"))}" 2>&1')
+motor_dt_viz/tools/media/capture_all.py:196:    for name, (mode, plan, max_s, notc) in VIDEO_RUNS.items():
+motor_dt_viz/tools/media/capture_all.py:200:        lines.append(f'echo [media] video {name} && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode {mode} --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:213:    for mode, shots in ISAAC_SHOTS.items():
+motor_dt_viz/tools/media/capture_all.py:215:            src = os.path.join(LOGS, mode, "shots", f"{name}.png")
+motor_dt_viz/tools/media/capture_all.py:225:            caps.append({"file": f"{name}.png", "caption": cap, "mode": mode, "t_session_s": t, "view": v, "camera": c, "resolution": f"{r[0]}x{r[1]}", "raw_resolution": f"{size[0]}x{size[1]}", "note": note,
+motor_dt_viz/tools/media/capture_all.py:237:    st = r["status"]; mode = r["mode"]
+motor_dt_viz/tools/media/capture_all.py:240:    if mode in ("electrical", "integrated"):
+motor_dt_viz/tools/media/capture_all.py:245:    if mode in ("mechanical", "integrated"):
+motor_dt_viz/tools/media/capture_all.py:250:        if mode == "mechanical":
+motor_dt_viz/tools/media/capture_all.py:289:    for mode, shots in HUD_SHOTS.items():
+motor_dt_viz/tools/media/capture_all.py:290:        st_p = os.path.join(LOGS, mode, "state.csv")
+motor_dt_viz/tools/media/capture_all.py:295:            raw = os.path.join(LOGS, mode, "shots", f"{name}_t{t:.1f}.png")
+motor_dt_viz/tools/media/capture_all.py:301:            caps.append({"file": f"{name}.png", "caption": desc, "mode": mode, "t_planned_s": t, "t_session_s": float(r["t_session_s"]), "view": v, "camera": c, "resolution": f"{W}x{H}",
+motor_dt_viz/tools/media/capture_all.py:313:            if r.get(k, "") not in ("", None) and (k.startswith("I") or k.startswith("i")) == (r["mode"] in ("electrical", "integrated")):
+motor_dt_viz/tools/media/capture_all.py:370:        caps.append({"file": f"{name}.mp4", "caption": cap, "title": title, "run": run, "mode": VIDEO_RUNS[run][0], "scenario_t_s": [t0, t1], "video_ss_s": round(ss, 3), "duration_s": round(to - ss, 2),
+motor_dt_viz/tools/media/capture_all.py:487:    for mode, (sub, max_s) in PHOTO_RUNS.items():
+motor_dt_viz/tools/media/capture_all.py:488:        mp = os.path.join(LOGS, mode, "meta.json"); runs[f"photos_{mode}"] = {"log_subdir": sub, "max_s": max_s, "shot_plan": photo_plan(mode), "verify_meta": json.load(open(mp, encoding="utf-8")) if os.path.exists(mp) else None}
+motor_dt_viz/tools/media/capture_all.py:489:    for name, (mode, plan, max_s, notc) in VIDEO_RUNS.items():
+motor_dt_viz/tools/media/capture_all.py:490:        off, m = rec_offset(name); runs[f"video_{name}"] = {"mode": mode, "cam_plan": plan, "max_s": max_s, "no_timecode": notc, "recording": m, "offset_rec_to_scenario_s": off}
+motor_dt_viz/tools/media/capture_all.py:515:                        [("파일", lambda c: f"[{c['file']}]({sub}/{c['file']})"), ("해상도", lambda c: c["resolution"]), ("모드·t(s)·뷰·카메라", lambda c: f"{c['mode']} · {c['t_session_s']} · {c['view']} · {c['camera']}"), ("캡션", lambda c: c["caption"] + (f" ({c['note']})" if c.get("note") else "")), ("KB", lambda c: c["size_kb"])])
+motor_dt_viz/tools/media/capture_all.py:554:          "| 4 | 라이브 모드 화면 (Isaac `--live` + 대시보드 `#/status?live=ws://…`) | Isaac 창과 브라우저를 한 화면에 | `manual_05_live_mode.png` | 1920×1080 PNG | 포트·live.yaml 은 바꾸지 않는다. 라이브 세션 중 HUD 와 보드 시각이 같은지 보이게 |",
+motor_dt_viz/tools/run_fleet.py:4:  python tools/run_fleet.py                          # M1..M5 × mechanical,electrical → logs/fleet/<id>/<mode>/
+motor_dt_viz/tools/run_fleet.py:5:  python tools/run_fleet.py --motors M3 --modes electrical
+motor_dt_viz/tools/run_fleet.py:37:COLS = ["t_s", "t_real_s", "mode", "step", "case", "faults", "load", "rpm",
+motor_dt_viz/tools/run_fleet.py:47:def run_one(motor: ml.Motor, mode: str, out_dir: str) -> dict:
+motor_dt_viz/tools/run_fleet.py:49:    player = ScenarioPlayer.for_mode(mode)
+motor_dt_viz/tools/run_fleet.py:64:        case = f.electrical_case if mode == "electrical" else "healthy"
+motor_dt_viz/tools/run_fleet.py:65:        faults = list(f.thermal_faults) if mode == "mechanical" else []
+motor_dt_viz/tools/run_fleet.py:67:        if mode == "mechanical":
+motor_dt_viz/tools/run_fleet.py:75:            rpm = motor.sync_rpm - (motor.sync_rpm - motor.rated_rpm) * (load if mode == "electrical" else 1.0)
+motor_dt_viz/tools/run_fleet.py:77:            rows.append([round(t, 2), tl, mode, step_id, case, ";".join(faults), load, round(rpm, 1)]
+motor_dt_viz/tools/run_fleet.py:100:    meta = {"motor": motor.id, "name": motor.name, "mode": mode, "source": "engine", "h_s": H, "log_hz": RATE_HZ,
+motor_dt_viz/tools/run_fleet.py:101:            "scenario": ScenarioPlayer.CONFIG_BY_MODE[mode], "total_duration_s": player.total_duration,
+motor_dt_viz/tools/run_fleet.py:112:    for mode, cols, tol in (("mechanical", ["T_winding", "T_bearing_de", "T_shaft", "T_frame"], 2.5),
+motor_dt_viz/tools/run_fleet.py:114:        isaac = sorted(glob.glob(os.path.join(VIZ, "logs", mode, "demo_*.csv")))
+motor_dt_viz/tools/run_fleet.py:116:            res[mode] = {"skipped": "Isaac 로그 없음"}; continue
+motor_dt_viz/tools/run_fleet.py:118:        b = list(csv.DictReader(open(os.path.join(out_root, "M5", mode, "demo_fleet.csv"), encoding="utf-8", newline="")))
+motor_dt_viz/tools/run_fleet.py:119:        player = ScenarioPlayer.for_mode(mode)
+motor_dt_viz/tools/run_fleet.py:128:        res[mode] = {"max_diff": round(worst, 3), "tolerance": tol, "pass": worst <= tol, "isaac_log": os.path.basename(isaac[-1])}
+motor_dt_viz/tools/run_fleet.py:135:    ap.add_argument("--modes", default="mechanical,electrical")
+motor_dt_viz/tools/run_fleet.py:139:    modes = [m.strip() for m in a.modes.split(",") if m.strip()]
+motor_dt_viz/tools/run_fleet.py:143:        for mode in modes:
+motor_dt_viz/tools/run_fleet.py:144:            meta = run_one(motor, mode, os.path.join(a.out, mid, mode))
+motor_dt_viz/tools/run_fleet.py:145:            print(f"[fleet] {mid} {mode}: {meta['rows']} 행 → {os.path.join(a.out, mid, mode)}")
+motor_dt_viz/tools/split_clips.py:10:  python tools/split_clips.py --mode mechanical --video ../dashboard/public/media/mechanical/mechanical_full.mp4
+motor_dt_viz/tools/split_clips.py:11:  python tools/split_clips.py --mode electrical --video ../dashboard/public/media/electrical/electrical_full.mp4
+motor_dt_viz/tools/split_clips.py:30:MODE_KO = {"mechanical": "기계", "electrical": "전기", "integrated": "통합"}
+motor_dt_viz/tools/split_clips.py:62:    ap.add_argument("--mode", required=True, choices=("mechanical", "electrical", "integrated"))
+motor_dt_viz/tools/split_clips.py:64:    ap.add_argument("--meta", help="recording_*.json (생략하면 logs/<mode>/ 에서 찾는다)")
+motor_dt_viz/tools/split_clips.py:78:        for d in (os.path.join(ROOT, "logs", args.mode), os.path.join(ROOT, "logs")):
+motor_dt_viz/tools/split_clips.py:89:    player = ScenarioPlayer.for_mode(args.mode)
+motor_dt_viz/tools/split_clips.py:93:    ko = MODE_KO[args.mode]
+motor_dt_viz/tools/split_clips.py:95:    index = {"mode": args.mode, "video": os.path.basename(video), "video_offset_s": offset,
+motor_dt_viz/tools/verify/scenario_itsc_12turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_12turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_12turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_16turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_16turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_16turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_4turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_4turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_4turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/viz/shot_with_hud.py:46:    cmd = [ISAAC_PY, r"app\demo_integrated.py", "--gui", "--autoplay", "--mode", scenario, "--motor", "M1", "--view", view,
+motor_dt_viz/tools/viz/shot_with_hud.py:72:        st = r["status"]; mode = r["mode"]
+motor_dt_viz/tools/viz/shot_with_hud.py:75:        if mode in ("electrical", "integrated"):
+motor_dt_viz/tools/viz/shot_with_hud.py:78:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/tools/viz/shot_with_hud.py:83:            if mode == "mechanical":
+motor_dt_viz/tests/test_dashboard_fleet_export.py:2:"""D 후속 2: 해설 대시보드 데이터(public/data/<mode>/timeseries.json, --source fleet)가 M1 배치 로그(logs/fleet/M1/<mode>/demo_fleet.csv)와 일치하는지.
+motor_dt_viz/tests/test_dashboard_fleet_export.py:16:def _load(mode):
+motor_dt_viz/tests/test_dashboard_fleet_export.py:17:    ts_p = os.path.join(DASH, mode, "timeseries.json"); csv_p = os.path.join(VIZ, "logs", "fleet", "M1", mode, "demo_fleet.csv")
+motor_dt_viz/tests/test_dashboard_fleet_export.py:19:        pytest.skip(f"{mode}: timeseries.json 또는 fleet 로그 없음")
+motor_dt_viz/tests/test_dashboard_fleet_export.py:22:        pytest.skip(f"{mode}: timeseries 가 fleet 로그가 아님({ts.get('source_csv')}) — --source fleet 로 다시 내보내기")
+motor_dt_viz/tests/test_dashboard_fleet_export.py:26:@pytest.mark.parametrize("mode", ["electrical", "mechanical"])
+motor_dt_viz/tests/test_dashboard_fleet_export.py:27:def test_timeseries_equals_fleet_log(mode):
+motor_dt_viz/tests/test_dashboard_fleet_export.py:28:    ts, rows = _load(mode)
+motor_dt_viz/tests/test_dashboard_fleet_export.py:39:    if mode == "electrical":
+motor_dt_viz/tests/test_fleet.py:53:    assert all(r["T_winding"] == "25.0" and r["mode"] == "electrical" for r in d)
+motor_dt_viz/tests/test_fleet.py:91:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tests/test_fleet.py:92:        assert reg[mode].get("pass", "skipped" in reg[mode]), reg[mode]
+motor_dt_viz/tests/test_live_bridge.py:66:            b.publish({"t_s": 1.0, "mode": "mechanical", "perf": {"fps": 60.0}})
+motor_dt_viz/tests/test_live_bridge.py:106:            a = await send(ws, "r5", "set_mode", {"mode": "thermal"})
+motor_dt_viz/tests/test_live_bridge.py:153:def test_restart_args_keep_mode_and_live_drop_autoplay():
+motor_dt_viz/tests/test_live_bridge.py:159:    out = ns["restart_args"](["--gui", "--autoplay", "--mode", "integrated", "--live", "--live_port", "8766", "--motor", "M5", "--max_s", "90", "--low"], "M1")
+motor_dt_viz/tests/test_live_bridge.py:160:    assert out == ["--gui", "--mode", "integrated", "--live", "--live_port", "8766", "--low", "--motor", "M1"]
+motor_dt_viz/tests/test_scenario.py:122:def test_mode_scenarios_load_and_match_declared_length():
+motor_dt_viz/tests/test_scenario.py:124:    for mode, expect_s in (("mechanical", 180.0), ("electrical", 165.0)):
+motor_dt_viz/tests/test_scenario.py:125:        p = ScenarioPlayer.for_mode(mode)
+motor_dt_viz/tests/test_scenario.py:126:        assert p.name == ScenarioPlayer.CONFIG_BY_MODE[mode]
+motor_dt_viz/tests/test_scenario.py:133:    p = ScenarioPlayer.for_mode("mechanical")
+motor_dt_viz/tests/test_scenario.py:136:        assert step["mode"] == "mechanical", step["id"]
+motor_dt_viz/tests/test_scenario.py:141:    p = ScenarioPlayer.for_mode("electrical")
+motor_dt_viz/tests/test_scenario.py:144:        assert step["mode"] == "electrical", step["id"]
+motor_dt_viz/tests/test_scenario.py:149:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tests/test_scenario.py:150:        p = ScenarioPlayer.for_mode(mode)
+motor_dt_viz/tests/test_scenario.py:153:            assert step.get("source"), f"{mode}/{step['id']} 에 source 없음"
+motor_dt_viz/tests/test_scenario.py:154:            assert step.get("source_en"), f"{mode}/{step['id']} 에 source_en 없음"
+motor_dt_viz/tests/test_scenario.py:159:    p = ScenarioPlayer.for_mode("electrical")
+motor_dt_viz/tests/test_thresholds_provisional.py:29:    assert ns["status"] == "provisional" and ns["mode"] == "absolute" and ns["warn"] == 0.05 and ns["danger"] == 0.10
+motor_dt_viz/tests/test_thresholds_provisional.py:57:    ns["mode"] = "baseline_multiple"; ns["baseline"] = {"value": 0.02, "measured_at": "test", "n_windows": 600, "p95": 0.02}
+motor_dt_viz/tests/test_thresholds_provisional.py:59:    lo, hi, mode = j.i2i1_bounds()
+motor_dt_viz/tests/test_thresholds_provisional.py:60:    assert mode == "baseline_multiple" and lo == pytest.approx(0.02 * ns["warn_multiple"]) and hi == pytest.approx(0.02 * ns["danger_multiple"])
+motor_dt_viz/tests/test_thresholds_provisional.py:64:    ns["mode"] = "absolute"
+motor_dt_viz/tests/test_verify_tools.py:112:        assert all(s["time_scale"] == 90 and s["mode"] == "integrated" for s in c["steps"])
+motor_dt_viz/config/electrical.yaml:17:  mode: analytic                 # analytic | npz  (파형 생성기 종류 — legacy 와 공통)
+motor_dt_viz/config/live.yaml:26:  set_mode: { modes: [mechanical, electrical, integrated] }
+motor_dt_viz/config/live.yaml:31:    runtime: restart                     # 브리지 검증 분기용 (값은 restart 그대로 — 실제 방식은 switch_mode)
+motor_dt_viz/config/live.yaml:32:    switch_mode: hot                     # hot = 열회로·전류 모델·판정·카메라·HUD 만 새 모터로 재생성 (실측 1 s 미만) | restart = 프로세스 재기동(45~130 s)
+motor_dt_viz/config/scenario.yaml:20:    mode: integrated
+motor_dt_viz/config/scenario.yaml:31:    mode: integrated
+motor_dt_viz/config/scenario.yaml:42:    mode: integrated
+motor_dt_viz/config/scenario.yaml:53:    mode: integrated
+motor_dt_viz/config/scenario.yaml:64:    mode: integrated
+motor_dt_viz/config/scenario.yaml:72:  mode: integrated            # thermal | electrical | integrated
+motor_dt_viz/config/scenarios_M1.yaml:45:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:57:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:70:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:83:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:95:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:107:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:119:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:131:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:144:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:157:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:169:      mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:175:    mode: electrical
+motor_dt_viz/config/scenarios_M1.yaml:199:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:211:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:223:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:235:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:247:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:259:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:271:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:277:    mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:299:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:311:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:323:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:336:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:349:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:355:    mode: integrated
+motor_dt_viz/config/scenario_electrical.yaml:30:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:43:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:56:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:70:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:83:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:96:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:109:    mode: electrical
+motor_dt_viz/config/scenario_electrical.yaml:116:  mode: electrical
+motor_dt_viz/config/scenario_mechanical.yaml:31:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:44:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:57:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:70:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:83:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:96:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:109:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:117:  mode: mechanical
+motor_dt_viz/config/status_demo.yaml:4:# 상태는 판정 엔진 결과(logs/fleet/M1/<mode>/status_fleet.csv)를 그대로 읽는다 — 여기서 상태를 정하지 않는다.
+motor_dt_viz/config/status_demo.yaml:8:  M1: { mode: electrical, t_s: 40.0, expect: WARN, why: "턴간 단락 초기(4턴) — I₂/I₁ 0.0726 (경고 경계 0.05 바로 위, 임시 기준)" }
+motor_dt_viz/config/status_demo.yaml:10:  - { id: healthy,     label: "정상",            mode: electrical, t_s: 15.0,  expect: SAFE }
+motor_dt_viz/config/status_demo.yaml:11:  - { id: itsc_4turn,  label: "4턴 경계(경고)",  mode: electrical, t_s: 40.0,  expect: WARN }
+motor_dt_viz/config/status_demo.yaml:12:  - { id: itsc_12turn, label: "12턴 위험",       mode: electrical, t_s: 60.0,  expect: DANGER }
+motor_dt_viz/config/status_demo.yaml:13:  - { id: bearing,     label: "DE 베어링 경고",  mode: mechanical, t_s: 27.5,  expect: WARN }
+motor_dt_viz/config/status_demo.yaml:14:  - { id: overload,    label: "과부하 위험",     mode: electrical, t_s: 85.0,  expect: DANGER }
+motor_dt_viz/config/thresholds.yaml:13:#   source: nameplate | catalog | baseline | reference_dataset | simulation | standard    status: confirmed | provisional    mode: absolute | baseline_multiple
+motor_dt_viz/config/thresholds.yaml:57:    mode: absolute              # 실측 기준선 확보 후 baseline_multiple
+motor_dt_viz/config/thresholds.yaml:65:    warn_multiple: 2.0          # mode: baseline_multiple 일 때 warn = baseline.value × 2.0
+motor_dt_viz/config/thresholds.yaml:76:    mode: absolute
+dashboard/src/data.ts:4:export type Mode = "mechanical" | "electrical";
+dashboard/src/data.ts:18:  mode: Mode;
+dashboard/src/data.ts:53:  mode: Mode; video: string; video_offset_s: number; video_duration_s: number | null;
+dashboard/src/data.ts:59:  mode: Mode; n: number; t_real_s: number[]; step: string[];
+dashboard/src/data.ts:73:export interface Faults { mode: Mode; items: FaultItem[] }
+dashboard/src/data.ts:75:export interface ModeData { thresholds: Thresholds; scenarios: Scenarios; timeseries: Timeseries; faults: Faults }
+dashboard/src/data.ts:77:export async function loadModeData(mode: Mode): Promise<ModeData> {
+dashboard/src/data.ts:78:  const base = `data/${mode}/`;
+dashboard/src/elec/data.ts:2:// 공통 ModeData(data.ts) 와 공통 LiveData(live/types.ts) 위에 얹는다. 기계 대시보드는 이 파일을 쓰지 않는다.
+dashboard/src/elec/data.ts:3:import type { ElecStatus, ModeData, Thresholds, Timeseries } from "../data";
+dashboard/src/elec/data.ts:40:export interface ElecData extends ModeData, LiveData<ElecScene> {
+dashboard/src/elec/data.ts:41:  mode: "electrical";
+dashboard/src/elec/data.ts:50:export async function loadElecData(base: ModeData): Promise<ElecData> {
+dashboard/src/elec/data.ts:61:  if (!ts.ratio || !ts.phasor_deg) throw new Error("timeseries.json 에 전기 확장(ratio/phasor_deg)이 없다 — export --mode electrical 을 다시 실행");
+dashboard/src/elec/data.ts:65:    ...base, mode: "electrical", thresholds: th, timeseries: ts, events: events.events, values: values.scenes, waveforms: waves,
+dashboard/src/live/feed.ts:33:  motor_id: string; mode: "mechanical" | "electrical" | "integrated"; step: string; case: string; scene: LiveScene | null;
+dashboard/src/live/feed.ts:44:  narration_key: { mode: string; scene: string | null; reveal: "why" | "visible" | "result" | null };
+dashboard/src/live/feed.ts:64:  scenes?: { n: number; id: string; label: string; duration_s: number; electrical_case?: string; mode?: string }[];   // play_scenario {scene: n} 의 n 순서
+dashboard/src/live/livedata.ts:25:export function pageMode(m: LiveState["mode"]): "mechanical" | "electrical" { return m === "electrical" ? "electrical" : "mechanical"; }
+dashboard/src/live/livedata.ts:60:    motor: first?.motor_id ?? "", mode: pageMode(first?.mode ?? "mechanical"), n: S.length,
+dashboard/src/live/livedata.ts:82:export function liveEvents(buf: LiveBuffer, index: FleetIndex | null, mode: "mechanical" | "electrical", focusNode?: string): LiveEvent[] {
+dashboard/src/live/livedata.ts:103:      if (mode === "mechanical" && x.kind === "temperature") {
+dashboard/src/live/livedata.ts:109:      } else if (mode === "mechanical" && x.kind === "vibration") {
+dashboard/src/live/livedata.ts:113:      } else if (mode === "electrical" && x.kind === "current_ratio") {
+dashboard/src/live/livedata.ts:121:      } else if (mode === "electrical" && x.kind === "i2i1") {
+dashboard/src/live/livedata.ts:146:    mode: "mechanical", n: S.length, t_real_s: buf.t.slice(), step: col((s) => s.step),
+dashboard/src/live/livedata.ts:173:    mode: "electrical", n: S.length, t_real_s: buf.t.slice(), step: col((s) => s.step),
+dashboard/src/live/types.ts:6:export type Mode = "mechanical" | "electrical";
+dashboard/src/live/types.ts:24:  mode: Mode;
+dashboard/src/main.tsx:7:  <React.StrictMode>
+dashboard/src/main.tsx:9:  </React.StrictMode>,
+dashboard/src/mech/data.ts:2:// 공통 ModeData(data.ts) 와 공통 LiveData(live/types.ts) 위에 얹는다. 전기 대시보드는 이 파일을 쓰지 않는다.
+dashboard/src/mech/data.ts:3:import type { ModeData, Stage, Timeseries } from "../data";
+dashboard/src/mech/data.ts:30:export type MechThresholds = ModeData["thresholds"] & {
+dashboard/src/mech/data.ts:32:  thermal: ModeData["thresholds"]["thermal"] & { colormap: import("./colormap").ThermalColormap; couplings: { a: string; b: string; R_K_per_W: number }[]; loss_rated_W: Record<string, number> };
+dashboard/src/mech/data.ts:34:export interface MechData extends ModeData, LiveData<SceneNarration> {
+dashboard/src/mech/data.ts:35:  mode: "mechanical";
+dashboard/src/mech/data.ts:42:export async function loadMechData(base: ModeData): Promise<MechData> {
+dashboard/src/mech/data.ts:55:    ...base, mode: "mechanical", thresholds: th, timeseries: ts, events: events.events, values: values.scenes,
+dashboard/src/pages/LiveBoard.tsx:95:        conn={conn} wsUrl={live.url} onUrl={(u) => live.setUrl(u)} isaacMode={last?.mode ?? null}
+dashboard/src/pages/LiveBoard.tsx:98:      {drawer && <EvidenceDrawer index={index} s={series} i={i} stepId={step.id} electricalCase={step.electrical_case} mode="electrical" live={last} isLive={conn === "live"}
+dashboard/src/status/AnalysisRef.tsx:5:import type { Mode } from "../data";
+dashboard/src/status/AnalysisRef.tsx:59:export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive, extras, hideEmpty = false, defaultOpen = false, title = "④ 해석 근거 비교", traceTitle, limitsTitle }: {
+dashboard/src/status/AnalysisRef.tsx:60:  index: FleetIndex; s: MotorSeries | null; i: number; stepId: string; electricalCase: string; mode: Mode; live: LiveState | null; isLive: boolean;
+dashboard/src/status/AnalysisRef.tsx:75:    if (!ref || mode !== "electrical" || !s) return [];
+dashboard/src/status/AnalysisRef.tsx:87:    const noThermal = mode === "electrical" && (!isLive || live?.mode === "electrical");                 // 전기 모드(녹화·Isaac 전기 모드 라이브)는 열 적분 없음 → 온도 상수 25 °C 를 ΔT 0 으로 보이지 않게 null
+dashboard/src/status/AnalysisRef.tsx:106:  }, [ref, mode, s, i, stepId, electricalCase, live, isLive, extras]);
+dashboard/src/status/AnalysisRef.tsx:109:  if (mode !== "electrical") {
+dashboard/src/status/data.ts:4:import type { Mode } from "../data";
+dashboard/src/status/data.ts:43:  demo: { mode: Mode; t_s: number; expect?: string; why?: string };
+dashboard/src/status/data.ts:44:  files: Record<Mode, string>;
+dashboard/src/status/data.ts:61:      current_ratio?: MetricMeta; i2i1?: MetricMeta & { mode?: string; warn?: number; danger?: number; warn_multiple?: number; danger_multiple?: number; baseline?: unknown; reference_baseline?: { value?: number | null; dataset?: string } };
+dashboard/src/status/data.ts:66:  scenarios: Record<Mode, FleetScenario>;
+dashboard/src/status/data.ts:67:  scene_map?: { id: string; label: string; mode: Mode; t_s: number; expect?: string }[];   // 단일 모터(M1) 첫 화면 빠른 이동 칩 (config/status_demo.yaml)
+dashboard/src/status/data.ts:73:  motor: string; mode: Mode; n: number; source: string;
+dashboard/src/status/data.ts:105:  narration: Record<Mode, Record<string, StatusScene>>;
+dashboard/src/status/data.ts:114:export function loadSeries(index: FleetIndex, id: string, mode: Mode): Promise<MotorSeries> {
+dashboard/src/status/data.ts:117:  const key = `${id}/${mode}`;
+dashboard/src/status/data.ts:119:  if (!p) { p = getJson<MotorSeries>("data/fleet/" + m.files[mode]); cache.set(key, p); }
+dashboard/src/status/EvidenceDrawer.tsx:2:import type { Mode } from "../data";
+dashboard/src/status/EvidenceDrawer.tsx:16:export function EvidenceDrawer({ index, s, i, stepId, electricalCase, mode, live, isLive, sourceLabel, labels, onClose, tabs, initialTab }: {
+dashboard/src/status/EvidenceDrawer.tsx:17:  index: FleetIndex; s: MotorSeries | null; i: number; stepId: string; electricalCase: string; mode: Mode; live: LiveState | null; isLive: boolean; sourceLabel: string; labels: PlainLabels; onClose: () => void;
+dashboard/src/status/EvidenceDrawer.tsx:44:            <AnalysisRef index={index} s={s} i={i} stepId={stepId} electricalCase={electricalCase} mode={mode} live={live} isLive={isLive}
+dashboard/src/status/LayoutA.tsx:29:  conn: ConnStatus; wsUrl: string; onUrl: (u: string) => void; isaacMode: string | null;
+dashboard/src/status/LayoutA.tsx:82:        {p.isaacMode && p.isaacMode !== "electrical" && <span className="dim" title="Isaac 이 다른 모드로 실행 중 — 이 보드는 전기 신호만 보여준다">Isaac 모드 {p.isaacMode} · 전기 신호만</span>}
+dashboard/src/status/plain.tsx:2:import type { Mode } from "../data";
+dashboard/src/status/plain.tsx:50:export function primaryOf(index: FleetIndex, motor: MotorInfo, s: MotorSeries, i: number, mode: Mode, labels: PlainLabels): Primary {
+dashboard/src/status/plain.tsx:57:  const kind: Kind = mode === "electrical" ? "i2i1" : "temperature"; const comp = mode === "electrical" ? undefined : "bearing_de";
+dashboard/src/status/source.ts:4:// LiveSource 는 실측 스트림이 붙을 때 채울 자리다 — 같은 JSON 형태(index.json, <id>_<mode>.json)를 HTTP 로 주고
+dashboard/src/status/source.ts:7:import type { Mode } from "../data";
+dashboard/src/status/source.ts:12:  motor: string; mode: Mode; t: number; status: string; cause_signal: string; cause_component: string; cause_value: number;
+dashboard/src/status/source.ts:20:  loadSeries(index: FleetIndex, id: string, mode: Mode): Promise<MotorSeries>;
+dashboard/src/status/source.ts:28:  loadSeries(index: FleetIndex, id: string, mode: Mode) { return loadSeries(index, id, mode); }
+dashboard/src/status/source.ts:36:  loadSeries(index: FleetIndex, id: string, mode: Mode) {
+dashboard/src/status/source.ts:39:    return getJson<MotorSeries>(`${this.base}/${m.files[mode]}`);
+dashboard/src/status/TrendChart.tsx:20:  const sc = scenario ?? index.scenarios[series.mode];
+dashboard/src/status/TrendChart.tsx:91:  return <div ref={el} className="st-chart" title={`${motor.id} ${series.mode} — 클릭하면 그 시각으로 이동`} />;
+dashboard/tools/export_dashboard_data.py:5:숫자는 전부 motor_dt_viz/config/*.yaml 과 logs/<mode>/*.csv 에서 오고,
+dashboard/tools/export_dashboard_data.py:9:  python tools/export_dashboard_data.py --mode mechanical
+dashboard/tools/export_dashboard_data.py:10:  python tools/export_dashboard_data.py --mode electrical
+dashboard/tools/export_dashboard_data.py:11:  python tools/export_dashboard_data.py --mode all
+dashboard/tools/export_dashboard_data.py:13:출력: public/data/<mode>/
+dashboard/tools/export_dashboard_data.py:81:def build_thresholds(mode: str) -> dict:
+dashboard/tools/export_dashboard_data.py:135:        "mode": mode,
+dashboard/tools/export_dashboard_data.py:173:SOURCE = {"kind": "recording", "motor": None}      # D 후속 2 (2026-10-21): --source fleet 이면 M1 엔진 배치 로그(logs/fleet/M1/<mode>/demo_fleet.csv) 를 쓴다
+dashboard/tools/export_dashboard_data.py:176:def latest_csv(mode: str) -> str:
+dashboard/tools/export_dashboard_data.py:178:        p = os.path.join(VIZ, "logs", "fleet", SOURCE["motor"], mode, "demo_fleet.csv")
+dashboard/tools/export_dashboard_data.py:182:    files = sorted(glob.glob(os.path.join(VIZ, "logs", mode, "demo_*.csv")))
+dashboard/tools/export_dashboard_data.py:184:        raise FileNotFoundError(f"logs/{mode}/demo_*.csv 가 없다 — tools/record_mode.ps1 -Mode {mode} 먼저")
+dashboard/tools/export_dashboard_data.py:188:def build_timeseries(mode: str, csv_path: str, th_json: dict) -> dict:
+dashboard/tools/export_dashboard_data.py:216:        "mode": mode, "source_csv": os.path.basename(csv_path), "n": len(t), "t_real_s": t, "step": step,
+dashboard/tools/export_dashboard_data.py:224:def lead_time(mode: str, ts: dict, th_json: dict) -> dict:
+dashboard/tools/export_dashboard_data.py:227:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:270:def build_scenarios(mode: str, ts: dict, th_json: dict) -> dict:
+dashboard/tools/export_dashboard_data.py:271:    player = ScenarioPlayer.for_mode(mode)
+dashboard/tools/export_dashboard_data.py:272:    log_dir = os.path.join(VIZ, "logs", mode)
+dashboard/tools/export_dashboard_data.py:273:    media_dir = os.path.join(DASH, "public", "media", mode)
+dashboard/tools/export_dashboard_data.py:274:    meta_path = os.path.join(log_dir, f"recording_{mode}_full.json")
+dashboard/tools/export_dashboard_data.py:291:            "clip": f"media/{mode}/clips/{c['file']}" if c else None,
+dashboard/tools/export_dashboard_data.py:294:    has_video = SOURCE["kind"] != "fleet" and os.path.exists(os.path.join(media_dir, f"{mode}_full.mp4"))
+dashboard/tools/export_dashboard_data.py:296:        "mode": mode,
+dashboard/tools/export_dashboard_data.py:297:        "video": f"media/{mode}/{mode}_full.mp4" if has_video else None,
+dashboard/tools/export_dashboard_data.py:301:        "data_source": ("M1 엔진 배치 로그 logs/fleet/M1/<mode>/demo_fleet.csv (tools/run_fleet.py) — 영상 없음" if SOURCE["kind"] == "fleet" else "Isaac 녹화 로그 logs/<mode>/demo_*.csv"),
+dashboard/tools/export_dashboard_data.py:304:        "lead_time": _with_sim(lead_time(mode, ts, th_json), player),
+dashboard/tools/export_dashboard_data.py:317:def build_faults(mode: str) -> dict:
+dashboard/tools/export_dashboard_data.py:321:    out = {"mode": mode, "items": []}
+dashboard/tools/export_dashboard_data.py:322:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:362:def export(mode: str) -> dict:
+dashboard/tools/export_dashboard_data.py:363:    out_dir = os.path.join(DASH, "public", "data", mode)
+dashboard/tools/export_dashboard_data.py:368:    th = build_thresholds(mode)
+dashboard/tools/export_dashboard_data.py:369:    ts = build_timeseries(mode, latest_csv(mode), th)
+dashboard/tools/export_dashboard_data.py:370:    sc = build_scenarios(mode, ts, th)
+dashboard/tools/export_dashboard_data.py:371:    fa = build_faults(mode)
+dashboard/tools/export_dashboard_data.py:373:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:379:        files += [("events", {"mode": mode, "n": len(events), "events": events}),
+dashboard/tools/export_dashboard_data.py:380:                  ("narration_values", {"mode": mode, "scenes": values})]
+dashboard/tools/export_dashboard_data.py:382:        print(f"[{mode}] 재실행 검증: 경계 밖 최대 {max(rc['max_err_inner_C'].values()):.2f} °C "
+dashboard/tools/export_dashboard_data.py:390:        files += [("events", {"mode": mode, "n": len(events), "events": events}),
+dashboard/tools/export_dashboard_data.py:391:                  ("narration_values", {"mode": mode, "scenes": values}), ("waveforms", waves)]
+dashboard/tools/export_dashboard_data.py:393:        print(f"[{mode}] 엔진 재계산 검증: RMS 최대 {rc['max_rms_diff_A']} A, I₂/I₁ 최대 {rc['max_i2i1_diff']} "
+dashboard/tools/export_dashboard_data.py:399:    print(f"[{mode}] {ts['n']} 샘플, {len(sc['steps'])} 챕터, 오프셋 {sc['video_offset_s']} s, "
+dashboard/tools/export_dashboard_data.py:406:    ap.add_argument("--mode", default="all", choices=("mechanical", "electrical", "all"))
+dashboard/tools/export_dashboard_data.py:411:    for m in (("mechanical", "electrical") if a.mode == "all" else (a.mode,)):
+dashboard/tools/export_electrical_extras.py:357:    waves = {"mode": "electrical", "f0_Hz": tab.f0, "samples": WAVE_SAMPLES, "unit": "pu of sqrt2*rated_line_A",
+dashboard/tools/export_mechanical_extras.py:54:    player = ScenarioPlayer.for_mode("mechanical")
+dashboard/tools/export_status_data.py:8:  motor_dt_viz/logs/fleet/<id>/<mode>/demo_fleet.csv + status_fleet.csv   (tools/run_fleet.py 가 만든 엔진 배치 로그, 판정 포함)
+dashboard/tools/export_status_data.py:9:  dashboard/public/data/<mode>/{scenarios,thresholds,narration_values}.json (장면 경계·부품 이름·M5 해설 변수)
+dashboard/tools/export_status_data.py:12:  dashboard/public/data/fleet/<id>_<mode>.json    시계열(온도·전류·I₂/I₁·진동·베어링 kurtosis·고주파 배율) + 판정(status/cause) + 장면 변수
+dashboard/tools/export_status_data.py:41:MODES = ("mechanical", "electrical")
+dashboard/tools/export_status_data.py:70:def scene_values(motor: ml.Motor, mode: str, demo: list[dict], base: dict, steps: list[dict], th_mode: dict) -> dict:
+dashboard/tools/export_status_data.py:73:    e = th_mode.get("electrical", {})
+dashboard/tools/export_status_data.py:87:        if mode == "electrical":
+dashboard/tools/export_status_data.py:150:    d = rows(os.path.join(FLEET, motor.id, mode, "demo_fleet.csv"))
+dashboard/tools/export_status_data.py:151:    s = rows(os.path.join(FLEET, motor.id, mode, "status_fleet.csv"))
+dashboard/tools/export_status_data.py:152:    assert len(d) == len(s), f"{motor.id} {mode}: demo/status 행 수 불일치"
+dashboard/tools/export_status_data.py:154:    steps = sc_mode["steps"]
+dashboard/tools/export_status_data.py:161:        "motor": motor.id, "mode": mode, "n": len(d), "source": "logs/fleet (engine batch, tools/run_fleet.py) · 판정 engine/thresholds.py",
+dashboard/tools/export_status_data.py:164:        "time_scale": [scale.get(r["step"], 1.0) if mode == "mechanical" else 1.0 for r in d],
+dashboard/tools/export_status_data.py:180:        "scene_values": scene_values(motor, mode, d, nv_mode.get("scenes", {}), steps, th_mode),
+dashboard/tools/export_status_data.py:204:    th = {m: j(os.path.join(DASH, "public", "data", m, "thresholds.json")) for m in MODES}
+dashboard/tools/export_status_data.py:205:    sc = {m: j(os.path.join(DASH, "public", "data", m, "scenarios.json")) for m in MODES}
+dashboard/tools/export_status_data.py:206:    nv = {m: j(os.path.join(DASH, "public", "data", m, "narration_values.json")) for m in MODES}
+dashboard/tools/export_status_data.py:209:    raw_sub = {m: {s["id"]: s["subtitle"] for s in ScenarioPlayer.for_mode(m).steps} for m in MODES}
+dashboard/tools/export_status_data.py:220:        for mode in MODES:
+dashboard/tools/export_status_data.py:221:            data = export_motor(m, mode, th[mode], sc[mode], nv[mode], th_cfg, cm)
+dashboard/tools/export_status_data.py:222:            name = f"{mid}_{mode}.json"
+dashboard/tools/export_status_data.py:225:            files[mode] = name
+dashboard/tools/export_status_data.py:226:            print(f"[status] {mid} {mode}: {data['n']} 샘플 → {name}")
+dashboard/tools/export_status_data.py:238:            "demo": {"mode": pos["mode"], "t_s": f(pos["t_s"]), "expect": pos.get("expect"), "why": pos.get("why", "")},
+dashboard/tools/export_status_data.py:258:                "i2i1": {**{k: thr["current"]["negative_sequence"].get(k) for k in ("source", "status", "mode", "warn", "danger", "warn_multiple", "danger_multiple", "baseline")},
+dashboard/tools/export_status_data.py:272:                      for m in MODES},
+dashboard/tests/test_electrical_extras.py:36:        pytest.skip(f"{p} 없음 — export --mode electrical 먼저")
+dashboard/tests/test_export.py:5:export 를 먼저 돌려 public/data/<mode>/*.json 이 있어야 한다.
+dashboard/tests/test_export.py:28:MODES = ("mechanical", "electrical")
+dashboard/tests/test_export.py:31:def _data(mode, name):
+dashboard/tests/test_export.py:32:    p = os.path.join(DASH, "public", "data", mode, f"{name}.json")
+dashboard/tests/test_export.py:38:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:39:def test_rated_currents_match_config(mode):
+dashboard/tests/test_export.py:40:    th = _data(mode, "thresholds")
+dashboard/tests/test_export.py:49:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:50:def test_electrical_rows_are_ratio_times_rated(mode):
+dashboard/tests/test_export.py:51:    th = _data(mode, "thresholds")
+dashboard/tests/test_export.py:62:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:63:def test_part_thresholds_match_thermal_yaml(mode):
+dashboard/tests/test_export.py:64:    th = _data(mode, "thresholds")
+dashboard/tests/test_export.py:76:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:77:def test_colors_match_colors_yaml(mode):
+dashboard/tests/test_export.py:78:    th = _data(mode, "thresholds")
+dashboard/tests/test_export.py:89:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:90:def test_scenario_steps_match_yaml(mode):
+dashboard/tests/test_export.py:91:    sc = _data(mode, "scenarios")
+dashboard/tests/test_export.py:92:    player = ScenarioPlayer.for_mode(mode)
+dashboard/tests/test_export.py:105:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:106:def test_timeseries_matches_log_csv(mode):
+dashboard/tests/test_export.py:107:    ts = _data(mode, "timeseries")
+dashboard/tests/test_export.py:108:    files = sorted(glob.glob(os.path.join(VIZ, "logs", mode, "demo_*.csv")))
+dashboard/tests/test_export.py:121:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_export.py:122:def test_timeseries_covers_full_scenario(mode):
+dashboard/tests/test_export.py:123:    ts, sc = _data(mode, "timeseries"), _data(mode, "scenarios")
+dashboard/tests/test_export.py:141:    for mode in MODES:
+dashboard/tests/test_export.py:142:        sc = _data(mode, "scenarios")
+dashboard/tests/test_status_export.py:29:MODES = ("mechanical", "electrical")
+dashboard/tests/test_status_export.py:39:def _series(mid, mode):
+dashboard/tests/test_status_export.py:40:    return json.load(open(os.path.join(FLEET_DATA, f"{mid}_{mode}.json"), encoding="utf-8"))
+dashboard/tests/test_status_export.py:89:@pytest.mark.parametrize("mid,mode", [("M1", "mechanical"), ("M3", "electrical"), ("M5", "mechanical")])
+dashboard/tests/test_status_export.py:90:def test_series_equals_fleet_log(mid, mode):
+dashboard/tests/test_status_export.py:91:    s = _series(mid, mode)
+dashboard/tests/test_status_export.py:92:    rows = list(csv.DictReader(open(os.path.join(FLEET_LOGS, mid, mode, "demo_fleet.csv"), encoding="utf-8", newline="")))
+dashboard/tests/test_status_export.py:93:    st = list(csv.DictReader(open(os.path.join(FLEET_LOGS, mid, mode, "status_fleet.csv"), encoding="utf-8", newline="")))
+dashboard/tests/test_status_export.py:108:@pytest.mark.parametrize("mid,mode", [("M1", "mechanical"), ("M3", "mechanical"), ("M2", "electrical"), ("M5", "electrical")])
+dashboard/tests/test_status_export.py:109:def test_status_equals_judge_recompute(mid, mode):
+dashboard/tests/test_status_export.py:110:    s = _series(mid, mode)
+dashboard/tests/test_status_export.py:113:    rows = list(csv.DictReader(open(os.path.join(FLEET_LOGS, mid, mode, "demo_fleet.csv"), encoding="utf-8", newline="")))
+dashboard/tests/test_status_export.py:129:    assert mism == 0, f"{mid} {mode}: 판정 불일치 {mism} 행"
+dashboard/tests/test_status_export.py:139:        assert d["mode"] == cfg[m["id"]]["mode"] and d["t_s"] == float(cfg[m["id"]]["t_s"])
+dashboard/tests/test_status_export.py:140:        s = _series(m["id"], d["mode"])
+dashboard/tests/test_status_export.py:148:@pytest.mark.parametrize("mode", MODES)
+dashboard/tests/test_status_export.py:149:def test_cause_chain_variables_resolve_for_every_motor(mode):
+dashboard/tests/test_status_export.py:151:    nar = yaml.safe_load(open(os.path.join(DASH, "public", "content", mode, "narration.yaml"), encoding="utf-8"))["scenes"]
+dashboard/tests/test_status_export.py:153:        s = _series(m["id"], mode)
+dashboard/tests/test_status_export.py:154:        for step in idx["scenarios"][mode]["steps"]:
+dashboard/tests/test_status_export.py:161:                    assert var in v and v[var] is not None, (m["id"], mode, step["id"], var)
+dashboard/tests/test_status_export.py:163:        if mode == "electrical":
+dashboard/public/content/status/labels_plain.yaml:26:  no_temperature_in_mode: "온도: 이 모드에서는 계산하지 않음"

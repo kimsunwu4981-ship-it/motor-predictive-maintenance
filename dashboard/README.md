@@ -20,7 +20,8 @@ cd ..\dashboard && node serve.cjs            # http://localhost:4173/#/status   
 
 화면: 헤더(`● LIVE ws://…` 클릭 = 주소 바꾸기 · `시나리오 ▾` = Isaac `play_scenario`) → 상태 띠(판정·원인 신호 값·임계값·모터) → 2×2 [아이작심 실시간(JPEG 스트림 `<canvas>`, fps·지연) | 전류 파형 최근 2주기 / 전류 성분 I₁·I₂·I₀ | 추세] → 왜·무엇을 → `근거 보기 ›` 서랍(근거·임계값·사양·용어 탭).
 데이터는 Isaac state(10 Hz)와 `public/data/fleet/index.json`(임계값·색·라벨·사양, `tools/export_status_data.py`)뿐. 해설 문구는 `public/content/electrical/narration.yaml`(M1 추가 장면 8턴·16턴·저항성·반부하 포함)·`public/content/status/labels_plain.yaml`(`layout_a`·`elec_status`).
-스크린샷: `node tools/layout_a_shots.mjs ../docs/dashboard_layout_a/img`(PowerShell, Edge). 구성·측정·제거 목록은 `docs/dashboard_layout_a.md`.
+스크린샷: `node tools/layout_a_shots.mjs ../docs/dashboard_layout_a/img`(PowerShell, Edge), 현재 상태 한 장 `node tools/q1_shot.mjs <out.png>`. 구성·측정·제거 목록은 `docs/dashboard_layout_a.md`(§4 마감 수정: 상대 시간축·수동 조작 표시·부하 %·I₂ 스케일·선전류 0.01 A — 2026-10-27 패널 Q1).
+아이작심 패널로 결함을 바꾸면(`control_source: manual`) 헤더 시나리오 칸이 "수동 조작 (아이작심 패널)", "왜?" 가 `R상 코일 01 · 4턴 단락 (수동 주입)` 으로 바뀌고, 장면을 고르면 시나리오로 돌아간다.
 
 ## 실행 (발표장, 더블클릭)
 

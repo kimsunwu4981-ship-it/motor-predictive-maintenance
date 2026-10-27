@@ -1,9 +1,9 @@
 // elec/data.ts — 전기 실시간 해설 대시보드 전용 데이터 (export_electrical_extras.py 출력 + content YAML).
 // 공통 ModeData(data.ts) 와 공통 LiveData(live/types.ts) 위에 얹는다. 기계 대시보드는 이 파일을 쓰지 않는다.
-import type { ElecStatus, ModeData, Thresholds, Timeseries } from "../data";
-import { getJson, getYaml, getYamlOptional } from "../live/load";
-import type { GlossaryItem, LiveData, LiveEvent, LiveScene, QaItem, SceneValues, Templates } from "../live/types";
-import type { ElecSource } from "../live/feed";
+import type { ElecStatus, ModeData, Thresholds, Timeseries } from "../../data";
+import { getJson, getYaml, getYamlOptional } from "../../live/load";
+import type { GlossaryItem, LiveData, LiveEvent, LiveScene, QaItem, SceneValues, Templates } from "../../live/types";
+import type { ElecSource } from "../../live/feed";
 
 export type Phase = "A" | "B" | "C";
 export const PHASES: Phase[] = ["A", "B", "C"];

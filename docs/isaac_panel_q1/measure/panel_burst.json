@@ -1,0 +1,7 @@
+{
+ "writes": 144,
+ "applies_during_burst": 7,
+ "coalesced": 132,
+ "final_turns": 2,
+ "last_write_to_apply_ms": 80
+}
