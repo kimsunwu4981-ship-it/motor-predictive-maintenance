@@ -937,3 +937,9 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **판단·한계**: U/V/W 대신 config R·S·T, 코일은 상별 첫 프림, 전압 불평형 가변 % 불가(계산식 금지), 결함 상 순환은 엔진 밖 표현, 단축키 미완, 통합 열 검증 재현은 `_legacy` 데모(REPRODUCE).
 - 산출: `docs/isaac_panel_q1.md`(+img 9·measure 10), `docs/dashboard_layout_a.md` §4, README·REPRODUCE·CHANGELOG, 도구 `tools/live/{window_shot,state_snapshot,ui_font_probe}.py`, demo 인자 `--panel_selftest/--panel_selftest_hold/--panel_burst/--no_panel_notice`.
 
+## 29. 패널 Q1 후속 — "보기" 뷰포트 미반영 수정 + 소소 2건 (fix/panel-view-switch, 2026-10-27 저녁)
+
+- **진단(실행)**: 패널 버튼과 시나리오/cam_plan 은 같은 `M1Model.set_view` 를 부르고 USD variant 도 클릭 프레임에 바뀌지만, materials 구간의 `m1.set_view(args.view)` 가 **매 프레임** 시작 뷰를 재선택해 다음 프레임에 되돌아갔다(`--view_probe` 로그 `click frame: windings_only → +1 frame: half_translucent`). USD 는 variantSet 5종이 있는 같은 `M1.usd`; scenario/manual 무관. `scenarios_M1.yaml` 에 view 키 없음.
+- **수정**: `viz/view_mode.py` 뷰 전환 유일 진입점(`ViewMode.set(mode, source)` + USD readback + 로그), 매 프레임 재적용 삭제, x-ray 는 변화 때만, 장면 `view` 키는 전환 시 1회, state `view_mode/view_source/view_label` → 대시보드 타일 부제, 버튼 색 = readback. 소소: 패널 `데이터 n · 화면 n`, 시나리오 모드 슬라이더 읽기 전용 `n / 32 턴 (시나리오)`(명시 SimpleIntModel).
+- **검증**: 세 버튼 모두 클릭 후 +3 프레임·+30 s 유지, 장면 전환(4턴→12턴→과부하)에도 유지, 스크린샷 3×2, 스트림 30 fps. `docs/isaac_panel_q1.md` "보기 전환 수정" 절.
+

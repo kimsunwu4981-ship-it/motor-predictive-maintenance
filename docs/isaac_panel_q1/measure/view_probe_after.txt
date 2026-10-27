@@ -1,0 +1,25 @@
+Passing the following args to the base kit application:  ['--gui', '--autoplay', '--motor', 'M1', '--live', '--preset', 'demo', '--cam', 'side', '--judge_stream', 'simulation', '--view_probe', 'windings_only@8;cutaway@34;half_translucent@60', '--max_s', '110', '--log_subdir', 'view_probe_after']
+[view] variant → half_translucent (startup)
+[view_probe] usd=C:\Users\sunwu\OneDrive\바탕 화면\프로젝트\디지털 트윈\크레인 퀀선 모터 모델링\assets\motors\M1\M1.usd variants=['cutaway', 'full', 'half_translucent', 'half_translucent_front', 'windings_only']
+[view_probe] before click: variant=half_translucent m1.view=half_translucent control_source=scenario scenario_playing=True
+[view] variant → windings_only (manual)
+[view_probe] click frame: variant=windings_only m1.view=windings_only state.view_mode=windings_only
+[view_probe] +1 frame: variant=windings_only m1.view=windings_only
+[view_probe] +2 frame: variant=windings_only m1.view=windings_only
+[view_probe] +3 frame: variant=windings_only m1.view=windings_only
+[view_probe] before click: variant=windings_only m1.view=windings_only control_source=scenario scenario_playing=True
+[view] variant → cutaway (manual)
+[view_probe] click frame: variant=cutaway m1.view=cutaway state.view_mode=cutaway
+[view_probe] +1 frame: variant=cutaway m1.view=cutaway
+[view_probe] +2 frame: variant=cutaway m1.view=cutaway
+[view_probe] +3 frame: variant=cutaway m1.view=cutaway
+[view_probe] +30 s after windings_only: variant=cutaway scenario_playing=True step=itsc_4turn
+[view_probe] before click: variant=cutaway m1.view=cutaway control_source=scenario scenario_playing=True
+[view] variant → half_translucent (manual)
+[view_probe] click frame: variant=half_translucent m1.view=half_translucent state.view_mode=half_translucent
+[view_probe] +1 frame: variant=half_translucent m1.view=half_translucent
+[view_probe] +2 frame: variant=half_translucent m1.view=half_translucent
+[view_probe] +3 frame: variant=half_translucent m1.view=half_translucent
+[view_probe] +30 s after cutaway: variant=half_translucent scenario_playing=True step=itsc_12turn
+[view_probe] +30 s after half_translucent: variant=half_translucent scenario_playing=True step=overload
+[demo] DONE C:\Users\sunwu\OneDrive\바탕 화면\프로젝트\디지털 트윈\크레인 퀀선 모터 모델링\motor_dt_viz\logs\view_probe_after\demo_20261027_161123.csv

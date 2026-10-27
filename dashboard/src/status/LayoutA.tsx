@@ -123,7 +123,7 @@ export function LayoutA(p: {
       <section className="sv2-tiles la-tiles" aria-label="그림">
         <div className="tile tile-isaac">
           <div className="tile-h"><span className="t">{T.isaac ?? A.isaac_tile ?? "아이작심 실시간"}</span>
-            <span className="dim" title={`JPEG ${stream.size ? `${stream.size[0]}×${stream.size[1]}` : ""} · 지연 = 수신 시각 − 캡처 시각 (같은 PC)`}>{A.view_label ?? "반절 반투명"}{streamOk ? ` · ${stream.fps} fps · 지연 ${stream.latencyMs ?? "-"} ms` : ""}</span>
+            <span className="dim" title={`JPEG ${stream.size ? `${stream.size[0]}×${stream.size[1]}` : ""} · 지연 = 수신 시각 − 캡처 시각 (같은 PC)`}>{last?.view_label ?? last?.view_mode ?? A.view_label ?? "반절 반투명"}{last?.view_source === "manual" ? " (패널)" : ""}{streamOk ? ` · ${stream.fps} fps · 지연 ${stream.latencyMs ?? "-"} ms` : ""}</span>
             <b className="big" style={{ color: shortOn ? index.colors[s ? s.levels.i2i1[i] : "SAFE"] : undefined }}>{shortOn && es?.turns ? `단락 ${es.turns}턴` : ""}</b></div>
           <div className="tile-b tile-canvas">
             <canvas ref={p.canvasRef} className={"la-canvas" + (streamOk ? "" : " stale")} width={1280} height={720} />

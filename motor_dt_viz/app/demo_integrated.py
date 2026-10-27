@@ -56,6 +56,7 @@ ap.add_argument("--panel_selftest", type=int, default=0, metavar="N", help="패�
 ap.add_argument("--panel_selftest_hold", type=float, default=4.0, help="자동 측정에서 각 턴수 값을 유지하는 시간 [s] (스크린샷용으로 길게)")
 ap.add_argument("--panel_burst", action="store_true", help="2 Hz 제한 검사: t≈3 s 부터 3 s 동안 매 프레임 턴수를 바꿔 쓰고 마지막 값(4)이 반영되는지 로그")
 ap.add_argument("--no_panel_notice", action="store_true", help="패널 상단 '모드 항목 삭제됨' 안내줄 숨김")
+ap.add_argument("--view_probe", default="", metavar="MODE", help="진단: t≈8 s 에 패널 버튼과 같은 경로로 뷰를 MODE 로 바꾸고 그 프레임·다음 3 프레임의 USD variant 선택값을 로그 (fix/panel-view-switch §1)")
 ap.add_argument("--live", action="store_true",
                 help="라이브 모드: WebSocket 브리지(config/live.yaml)로 state 송신·명령 수신. 없으면 기존 동작과 완전히 같다")
 ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
@@ -168,10 +169,13 @@ world = World(stage_units_in_meters=1.0, physics_dt=1 / 240, rendering_dt=1 / 60
               physics_prim_path="/physicsScene")
 stage = get_current_stage()
 m1 = None
+VIEW = None
 if args.m1_model:
     from viz.m1_model import M1Model  # noqa: E402
     m1 = M1Model(stage, os.path.join(ROOT, "..", "assets", "motors", "M1"), view=args.view, shots_dir=args.m1_shots or None)
     m1.set_mount(args.mount)
+    from viz.view_mode import ViewMode  # noqa: E402   (뷰 전환 유일 진입점 — 패널·시나리오·cam_plan·xray 전부 이것)
+    VIEW = ViewMode(m1, log=lambda m: print(m, flush=True)); VIEW.set(args.view, "startup")
 
 
 def _player_for(mode_: str):
@@ -411,7 +415,7 @@ except Exception as e:
 if args.gui and fault_ctrl is not None:
     try:
         from ui.fault_control_window import FaultControlWindow  # noqa: E402
-        panel = FaultControlWindow(state, fault_ctrl, PHASE_LABELS, m1=m1, streamer=None, log=lambda m: print(m, flush=True), show_notice=not args.no_panel_notice)
+        panel = FaultControlWindow(state, fault_ctrl, PHASE_LABELS, m1=m1, view=VIEW, streamer=None, log=lambda m: print(m, flush=True), show_notice=not args.no_panel_notice)
     except Exception as e:
         print("[demo] 패널 생성 실패:", e, flush=True)
 if args.gui:
@@ -444,9 +448,10 @@ if STREAM_ON:
                                     quality=args.stream_quality, log=print).start()
         if panel is not None:
             panel.streamer = streamer
+            panel.bridge = bridge
         if bridge is not None:
             bridge.extra_hello["stream_ws"] = streamer.url          # 대시보드가 hello 에서 스트림 주소를 읽는다
-            bridge.extra_hello["stream"] = {"fps": args.stream_fps, "size": list(args.stream_size), "quality": args.stream_quality, "view": args.view}
+            bridge.extra_hello["stream"] = {"fps": args.stream_fps, "size": list(args.stream_size), "quality": args.stream_quality, "view": VIEW.mode if VIEW else args.view}
     except Exception as e:
         print("[stream] start failed - continuing without stream:", e, flush=True)
         streamer = None
@@ -878,6 +883,28 @@ while simulation_app.is_running():
     t_real += dt_real
     t_session += dt_real
 
+    # ---------- 진단 --view_probe: 패널 경로로 뷰 전환 뒤 USD variant 를 몇 프레임 읽는다 ----------
+    if args.view_probe and m1:
+        _vp = globals().setdefault("_VP", {"plan": [((lambda a: (a[0], float(a[1]) if len(a) > 1 else 8.0))(it.split("@"))) for it in args.view_probe.split(";") if it.strip()], "i": 0, "k": -1, "hold": []})
+        _vs = m1.prim.GetVariantSet("view")
+        if _vp["k"] < 0 and _vp["i"] < len(_vp["plan"]) and t_session >= _vp["plan"][_vp["i"]][1]:
+            _mode = _vp["plan"][_vp["i"]][0]
+            if _vp["i"] == 0:
+                print(f"[view_probe] usd={os.path.join(m1.asset_dir, 'M1.usd')} variants={list(_vs.GetVariantNames()) if _vs else None}", flush=True)
+            print(f"[view_probe] before click: variant={_vs.GetVariantSelection() if _vs else None} m1.view={m1.view} control_source={state.control_source} scenario_playing={state.playing_scenario}", flush=True)
+            (panel.set_view if panel else (lambda k: VIEW.set(k, "manual")))(_mode)
+            print(f"[view_probe] click frame: variant={_vs.GetVariantSelection() if _vs else None} m1.view={m1.view} state.view_mode={VIEW.mode}", flush=True)
+            _vp["k"] = 0; _vp["hold"].append((t_session + 30.0, _mode))
+        elif _vp["k"] >= 0:
+            _vp["k"] += 1
+            print(f"[view_probe] +{_vp['k']} frame: variant={_vs.GetVariantSelection() if _vs else None} m1.view={m1.view}", flush=True)
+            if _vp["k"] >= 3:
+                _vp["k"] = -1; _vp["i"] += 1
+        for _h in list(_vp["hold"]):
+            if t_session >= _h[0]:
+                _vp["hold"].remove(_h)
+                print(f"[view_probe] +30 s after {_h[1]}: variant={_vs.GetVariantSelection() if _vs else None} scenario_playing={state.playing_scenario} step={frame.step_id if frame else 'manual'}", flush=True)
+
     # ---------- 패널 Q1 2 Hz 제한 검사 (--panel_burst): 3 s 동안 매 프레임 속성을 바꿔 쓴다 → 마지막 값만 남아야 한다 ----------
     if BURST["on"] and not BURST["done"] and fault_ctrl is not None and t_session >= BURST["t0"]:
         if t_session < BURST["t1"]:
@@ -962,6 +989,11 @@ while simulation_app.is_running():
     frame = None
     if state.playing_scenario:
         frame = player.advance(dt_real)
+        if VIEW is not None and frame.step_id != globals().get("_LAST_STEP_VIEW"):     # 장면 전환 시 1회만: 장면 config 에 view 키가 있으면 그 뷰 (없으면 그대로 — 패널 선택 유지)
+            globals()["_LAST_STEP_VIEW"] = frame.step_id
+            _sv = next((st_.get("view") for st_ in player.steps if st_.get("id") == frame.step_id), None)
+            if _sv:
+                VIEW.set(str(_sv), "scenario")
         state.load = frame.load
         state.time_scale = frame.time_scale
         state.electrical_case = frame.electrical_case
@@ -1018,8 +1050,8 @@ while simulation_app.is_running():
     with _prof("materials"):
         xray_on = state.highlight_short_loop                   # 전기 전용: 단락루프 강조만 (베어링 투시는 _legacy)
         driver.set_opacity(["endshield_de"], 0.40 if xray_on else 1.0)
-        if m1:                                      # M1 모델: 하우징 투시 대신 cutaway variant (런타임 섹션 없이 절단 메시로). half_translucent* 는 이미 안이 비치므로 그대로 둔다
-            m1.set_view("cutaway" if (xray_on and not args.view.startswith("half_translucent")) else args.view)
+        if VIEW is not None:                        # M1 모델: 단락루프 강조는 임시 cutaway — 켜짐/꺼짐이 바뀔 때만 (매 프레임 재적용이 패널 전환을 되돌리던 버그, fix/panel-view-switch)
+            VIEW.xray(bool(xray_on))
         if state.highlight_short_loop:
             driver.housing_transparent(True, opacity=0.25)
         else:
@@ -1065,8 +1097,8 @@ while simulation_app.is_running():
             if t_session >= _e[0]:
                 _cur = _e
         if _cur is not None:
-            if _cur[1] and _cur[1] != args.view:
-                args.view = _cur[1]; m1.set_view(_cur[1])
+            if _cur[1] and _cur[1] != VIEW.base:
+                args.view = _cur[1]; VIEW.set(_cur[1], "cam_plan")
             if _cur[2] == "orbit":
                 _eye, _tgt = m1.orbit_cam(t_session - _cur[0]); set_camera_view(eye=_eye, target=_tgt)
             elif _cur is not CAM_PLAN_APPLIED[0]:
@@ -1192,11 +1224,13 @@ while simulation_app.is_running():
         # 패널 Q1 (덧붙임, 계산 없음): 조작 주체·수동 사양·I₂/I₁ 지속 시계(Judge 내부 시계 노출)
         _pk = ("i2i1", "-"); _since = judge._since.get(_pk); _curlv = judge._state.get(_pk)
         state_dict["control_source"] = state.control_source
+        if VIEW is not None:
+            state_dict.update(VIEW.state())                 # view_mode·view_source·view_label (USD readback, 계산 없음)
         state_dict["manual_fault"] = ({**state.manual.to_dict(), "phase_label": PHASE_LABELS.get(state.manual.phase, state.manual.phase), "case": case} if state.control_source == "manual" else None)
         state_dict["persistence"] = {"kind": "i2i1", "need_s": float(judge.persist.get("i2i1", 0.0)), "level": _curlv or "SAFE", "raw_level": _since[0] if _since else "SAFE",
                                      "pending_s": round(max(0.0, t_session - _since[1]), 2) if (_since and _since[0] != (_curlv or "SAFE")) else 0.0}
         if panel:
-            panel.update_readings(state_dict, state_dict["persistence"], streamer.clients if streamer is not None else 0)
+            panel.update_readings(state_dict, state_dict["persistence"], streamer.clients if streamer is not None else 0, bridge.clients if bridge is not None else 0)
         if SELFTEST["pending"] is not None and SELFTEST["pending"]["t_apply"] is not None and SELFTEST["pending"]["t_state"] is None and case == SELFTEST["pending"]["expect_case"]:
             _e = SELFTEST["pending"]; _e["t_state"] = time.perf_counter()
             SELFTEST["events"].append({"turns": _e["turns"], "case": case, "attr_to_apply_ms": round((_e["t_apply"] - _e["t_attr"]) * 1000, 1),
