@@ -43,9 +43,27 @@ thresholds_easy:
   vibration: "베어링 하우징이 흔들리는 세기 — 규격의 '주의/정비/정지' 경계"
   bearing_kurtosis: "진동 파형이 뾰족해지면 구름면이 깨지고 있다는 뜻"
   bearing_hf_ratio: "높은 소리 성분이 평소보다 커지면 윤활 부족을 의심"
+# 레이아웃 A (실시간 전기 상태 보드, 2026-10-27) — 헤더·타일 문구와 전류 상태 라벨 (숫자 없음)
+layout_a:
+  title: "전기 상태 보드 · 실시간"
+  isaac_tile: "아이작심 실시간"
+  isaac_lost: "아이작심 연결 끊김 — 재연결 중"
+  isaac_connecting: "아이작심 연결 중…"
+  state_lost: "Isaac 상태 스트림 끊김 — 재연결 중 (마지막 값 표시)"
+  state_waiting: "Isaac Sim 연결 대기 — --live 로 실행하세요"
+  scenario: "시나리오"
+  short_badge: "단락 코일 발광"
+  view_label: "반절 반투명"
+elec_status:
+  over_danger: "위험 과전류"
+  over_caution: "주의 과전류"
+  normal: "정상"
+  under_caution: "주의 저전류"
+  under_danger: "위험 저전류(결상 의심)"
 # 그림 타일 제목 (단순 보기 §1b) — 한 단어
 tiles:
   map: "열·결함 지도"
+  isaac: "아이작심 실시간"
   wave: "전류 파형"
   comp: "전류 성분"
   trend: "추세"

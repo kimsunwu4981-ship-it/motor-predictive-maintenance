@@ -1,0 +1,36 @@
+{
+ "started": "2026-10-27 14:26:22",
+ "seconds": 30.0,
+ "state": {
+  "url": "ws://127.0.0.1:8765",
+  "hello": {
+   "schema": 1,
+   "ws": "ws://172.30.1.37:8765",
+   "stream_ws": "ws://127.0.0.1:8766",
+   "motors": [
+    "M1"
+   ]
+  },
+  "states": 301,
+  "rate_hz": 10.0,
+  "isaac_fps_min": 50.6,
+  "isaac_fps_p50": 50.8,
+  "isaac_fps_max": 51.1,
+  "encode_ms_p50": 8.8,
+  "encode_ms_max": 8.8,
+  "capture_ms_p50": 19.3,
+  "capture_ms_max": 19.3,
+  "stream_clients_max": 0,
+  "cases_seen": {
+   "itsc_16turn": 30,
+   "itsc_4turn_resistive": 201,
+   "itsc_4turn_halfload": 70
+  },
+  "has_waveform_field": true,
+  "sym_components_last": {
+   "i1_A": 3.202,
+   "i2_A": 0.3051,
+   "i0_A": 0.0
+  }
+ }
+}

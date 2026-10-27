@@ -73,6 +73,74 @@ scenes:
       effect: "{ph_a}상 {a_rms_end} A ({a_pct_end} %), I₂/I₁ {i2i1_end}"
       action: "정지 후 재권선 — 예방 시점을 놓친 상태"
 
+  itsc_8turn:
+    title: "턴간 단락 확대 (8턴)"
+    fingerprint: "한 줄이 더 붉다"
+    focus_phases: [A]
+    focus_i2i1: true
+    matrix_label: "단락(확대)"
+    circuit: { short_loop: A }
+    reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
+    why: "붙은 턴이 {short_turns}턴으로 늘면 단락 루프의 순환 전류와 그 열이 커지고, 세 상 전류의 균형이 더 크게 깨집니다."
+    visible: "{ph_a}상이 더 진한 빨강입니다. {ph_a} {a_rms_now} A (정격의 {a_pct_now} %), I₂/I₁ {i2i1_now}."
+    result: "균형 지표가 위험 경계를 넘습니다 — 확실히 탐지되는 단계입니다."
+    data_source_note: "등가회로 LUT — 턴 수·접촉 저항·부하로 보간. 단락 루프는 시각적 표시"
+    cause_chain:
+      cause: "단락 범위 확대 ({short_turns}턴, 접촉 저항 {r_f_ohm} Ω)"
+      mechanism: "루프 순환 전류 {i_f_A} A · 추가 손실 {p_loop_W} W → {ph_a}상 전류 증가, 균형 붕괴"
+      effect: "{ph_a}상 {a_rms_end} A ({a_pct_end} %), I₂/I₁ {i2i1_end}"
+      action: "즉시 정비 계획 — 권선 절연 진단 후 재권선"
+  itsc_16turn:
+    title: "턴간 단락 코일 전체 (16턴)"
+    fingerprint: "한 줄이 과전류"
+    focus_phases: [A]
+    focus_i2i1: true
+    matrix_label: "단락(코일 전체)"
+    circuit: { short_loop: A }
+    reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
+    why: "코일 한 개({short_turns}턴)가 통째로 붙으면 그 상의 저항(임피던스)이 크게 줄어 선전류 자체가 과전류 영역으로 들어갑니다."
+    visible: "{ph_a}상이 짙은 빨강이고 입자가 가장 빠릅니다. {ph_a} {a_rms_now} A (정격의 {a_pct_now} %), I₂/I₁ {i2i1_now}."
+    result: "균형 지표와 전류 크기 둘 다 위험입니다 — 더 두면 권선이 탑니다."
+    data_source_note: "등가회로 LUT 격자 끝(턴 16.7 %) — 외삽 없음"
+    cause_chain:
+      cause: "코일 전체 단락 ({short_turns}턴)"
+      mechanism: "{ph_a}상 임피던스 급감 → 선전류 과전류, 루프 손실 {p_loop_W} W"
+      effect: "{ph_a}상 {a_rms_end} A ({a_pct_end} %, {a_status_end}), I₂/I₁ {i2i1_end}"
+      action: "정지 — 재권선 (예방 시점을 놓친 상태)"
+  itsc_4turn_resistive:
+    title: "턴간 단락 4턴, 접촉이 느슨함 (저항성)"
+    fingerprint: "거의 초록"
+    focus_phases: [A]
+    focus_i2i1: true
+    matrix_label: "단락(저항성)"
+    circuit: { short_loop: A }
+    reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
+    why: "같은 {short_turns}턴이 붙어도 접촉 저항이 {r_f_ohm} Ω 으로 크면 순환 전류가 작아 세 상 균형이 거의 깨지지 않습니다. 탐지를 가르는 것은 턴 수가 아니라 '얼마나 세게 붙었나' 입니다."
+    visible: "세 줄이 거의 초록입니다. {ph_a} {a_rms_now} A, I₂/I₁ {i2i1_now}."
+    result: "경계 아래라 안전으로 남습니다 — 초기 절연 열화는 이 지표만으로는 보이지 않습니다."
+    data_source_note: "등가회로 LUT (R_f 1.0 Ω 격자 끝)"
+    cause_chain:
+      cause: "코일 {short_turns}턴 절연 약화, 접촉 저항 {r_f_ohm} Ω"
+      mechanism: "순환 전류 {i_f_A} A 로 작음 → 균형 거의 유지"
+      effect: "I₂/I₁ {i2i1_end} (경계 아래), 추가 손실 {p_loop_W} W"
+      action: "정기 절연 진단(서지·절연저항)으로만 잡힘 — 추세 감시"
+  itsc_4turn_halfload:
+    title: "턴간 단락 4턴, 반부하 (50 %)"
+    fingerprint: "한 줄만 붉고 모두 낮다"
+    focus_phases: [A]
+    focus_i2i1: true
+    matrix_label: "단락(경부하)"
+    circuit: { short_loop: A }
+    reveal_timing: { why: 0.0, visible: 0.35, result: 0.7 }
+    why: "부하가 {load_pct} % 로 낮으면 정상분 전류(I₁)가 작아져 같은 단락이라도 균형 비율 I₂/I₁ 은 더 크게 보입니다. 그래서 부하와 무관한 I₂/I_n 을 함께 봅니다."
+    visible: "세 상 전류가 모두 정격보다 낮고 {ph_a}상만 상대적으로 큽니다. {ph_a} {a_rms_now} A (정격의 {a_pct_now} %), I₂/I₁ {i2i1_now}, I₂/I_n {i2_over_in_now}."
+    result: "경부하에서도 단락은 균형 지표로 드러납니다 — 다만 비율 해석에 부하를 함께 봐야 합니다."
+    data_source_note: "등가회로 LUT 부하 50 % 격자 — I₁ 은 LUT 정상분 (D3)"
+    cause_chain:
+      cause: "코일 {short_turns}턴 단락, 부하 {load_pct} %"
+      mechanism: "I₁ 감소로 I₂/I₁ 상승, I₂/I_n 은 부하 무관"
+      effect: "{ph_a}상 {a_rms_end} A ({a_pct_end} %), I₂/I₁ {i2i1_end} · I₂/I_n {i2_over_in_now}"
+      action: "부하를 함께 기록하고 절연 진단 계획"
   overload:
     title: "과부하 운전"
     fingerprint: "세 줄이 같이 붉다"

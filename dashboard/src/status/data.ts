@@ -92,7 +92,9 @@ export interface PlainLabels {
   replace: { from: string; to: string; tip?: string }[];
   notes: Record<string, string>;
   thresholds_easy: Record<string, string>;
-  tiles?: Record<string, string>;                 // 타일 제목 (map/wave/comp/trend/vib/bearing)
+  tiles?: Record<string, string>;                 // 타일 제목 (map/wave/comp/trend/vib/bearing/isaac)
+  layout_a?: Record<string, string>;              // 레이아웃 A 헤더·타일 문구 (2026-10-27)
+  elec_status?: Record<string, string>;           // 전류 상태 라벨 (over_danger … under_danger) — 해설 {a_status_*} 치환용
 }
 export const EMPTY_LABELS: PlainLabels = { signals: {}, replace: [], notes: {}, thresholds_easy: {}, tiles: {} };
 export function plainOf(labels: PlainLabels, kind: string, fallback: string): PlainLabel {

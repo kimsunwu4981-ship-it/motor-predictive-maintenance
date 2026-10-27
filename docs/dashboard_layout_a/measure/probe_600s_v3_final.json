@@ -1,0 +1,75 @@
+{
+ "started": "2026-10-27 14:44:37",
+ "seconds": 600.0,
+ "stream": {
+  "url": "ws://127.0.0.1:8766",
+  "hello": {
+   "type": "hello",
+   "stream": "jpeg",
+   "fps": 30.0,
+   "size": [
+    1280,
+    720
+   ],
+   "quality": 80,
+   "header_bytes": 32,
+   "t_wall": 1793079877.9154408
+  },
+  "seconds": 600.0,
+  "frames": 17969,
+  "fps": 29.95,
+  "fps_per_sec_min": 1,
+  "fps_per_sec_max": 32,
+  "latency_ms_p50": 31.1,
+  "latency_ms_p95": 39.0,
+  "latency_ms_max": 99.9,
+  "gap_ms_p50": 29.6,
+  "gap_ms_max": 100.9,
+  "bytes_p50": 29867,
+  "kbps": 7165,
+  "timeouts_5s": 0,
+  "t_session_first": 58.48441715240479,
+  "t_session_last": 658.4446475028992,
+  "saved_jpg": "logs/stream_a3/frame_600s.jpg"
+ },
+ "state": {
+  "url": "ws://127.0.0.1:8765",
+  "hello": {
+   "schema": 1,
+   "ws": "ws://172.30.1.37:8765",
+   "stream_ws": "ws://127.0.0.1:8766",
+   "motors": [
+    "M1"
+   ]
+  },
+  "states": 5942,
+  "rate_hz": 9.9,
+  "isaac_fps_min": 38.3,
+  "isaac_fps_p50": 40.1,
+  "isaac_fps_max": 48.1,
+  "encode_ms_p50": 8.2,
+  "encode_ms_max": 66.0,
+  "capture_ms_p50": 20.1,
+  "capture_ms_max": 67.8,
+  "stream_clients_max": 2,
+  "cases_seen": {
+   "itsc_12turn": 1002,
+   "healthy": 700,
+   "itsc_4turn": 690,
+   "overload": 373,
+   "itsc_8turn": 294,
+   "itsc_16turn": 296,
+   "itsc_4turn_resistive": 295,
+   "itsc_4turn_halfload": 1586,
+   "voltage_unbalance": 254,
+   "single_phasing": 252,
+   "no_load": 200
+  },
+  "has_waveform_field": true,
+  "sym_components_last": {
+   "i1_A": 3.202,
+   "i2_A": 0.3051,
+   "i0_A": 0.0
+  }
+ }
+}

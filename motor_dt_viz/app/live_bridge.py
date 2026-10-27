@@ -84,6 +84,7 @@ class LiveBridge:
         self.error: str | None = None
         self.perf: dict = {"vram_mb": None, "ram_mb": None}
         self.stats = {"sent": 0, "commands": 0, "rejected": 0, "heartbeats": 0}
+        self.extra_hello: dict = {}           # hello 에 덧붙이는 필드 (예: stream_ws — 뷰포트 스트림 주소, 레이아웃 A 2026-10-27). 기존 키는 그대로
 
     # ------------------------------------------------------------------ 수명
     def start(self) -> "LiveBridge":
@@ -215,7 +216,7 @@ class LiveBridge:
     def hello(self) -> dict:
         """접속 직후 보내는 허용 명령 목록·모터 목록 (대시보드 제어 패널의 단일 출처 = config/live.yaml)."""
         return {"type": "hello", "schema": self.schema, "commands": self.commands, "motors": ml.list_ids(),
-                "restart_eta_s": float((self.commands.get("select_motor") or {}).get("restart_eta_s", 45)), "ws": self.url, "t_wall": time.time()}
+                "restart_eta_s": float((self.commands.get("select_motor") or {}).get("restart_eta_s", 45)), "ws": self.url, "t_wall": time.time(), **self.extra_hello}
 
     async def _main(self) -> None:
         import websockets

@@ -69,6 +69,11 @@ export function toMotorSeries(buf: LiveBuffer, index: FleetIndex, template: Moto
     cause_value: col((s) => s.status.value), cause_threshold: col((s) => s.status.threshold),
     levels: { ...Object.fromEntries(kinds.map((k) => [k, col((s) => s.status.levels[k] ?? "SAFE")])), bearing: col((s) => s.status.levels.bearing ?? "SAFE") } as MotorSeries["levels"],
     scene_values: template?.scene_values ?? {},
+    // 레이아웃 A (2026-10-27): 라이브 state 의 케이스별 성분·파형 → case_signals, 근거 서랍 값(LUT 결함분·I₂/I_n·I_f·P_loop) — 전부 Isaac 쪽 엔진 값 그대로
+    case_signals: Object.fromEntries(S.filter((s) => s.waveform_last_2cycles && s.sym_components_A).map((s) => [s.case, { ...s.sym_components_A!, waveform: s.waveform_last_2cycles! }])),
+    i2i1_fault: col((s) => s.electrical_source?.lut_i2_over_i1 ?? null), i2_over_in: col((s) => s.i2_over_in ?? null),
+    i_f_A: col((s) => s.electrical_source?.i_f_A ?? null), p_loop_total_W: col((s) => s.p_loop_total_W ?? null), winding_dT_C: null,
+    extras_note: { i2i1_fault: "LUT 결함분 (Isaac electrical_source.lut_i2_over_i1)", i2_over_in: "I₂/I_n (Isaac state)", i_f_A: "단락 루프 전류 (Isaac electrical_source)", p_loop_total_W: "단락 루프 총손실 (Isaac state)", winding_dT_C: "라이브 전기 모드: 열 모델 미실행" },
   };
 }
 

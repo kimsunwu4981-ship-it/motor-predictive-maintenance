@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Mode } from "../data";
 import type { LiveState } from "../live/feed";
 import { AnalysisRef, type Extras } from "./AnalysisRef";
@@ -12,9 +12,13 @@ export function extrasAt(s: MotorSeries | null, i: number): Extras | undefined {
 }
 // 근거 서랍 (단순 보기 3층 "근거", 2026-10-26): ① 정직성 전문 ② 해석 근거 비교(시뮬값 있는 행만 기본) ③ 근거 사슬 ④ 한계 — 전부 AnalysisRef·index.honesty 의 기존 데이터.
 // 출처 등급 색은 이 서랍 안에서만 쓴다.
-export function EvidenceDrawer({ index, s, i, stepId, electricalCase, mode, live, isLive, sourceLabel, labels, onClose }: {
+export interface DrawerTab { key: string; label: string; node: React.ReactNode }
+export function EvidenceDrawer({ index, s, i, stepId, electricalCase, mode, live, isLive, sourceLabel, labels, onClose, tabs, initialTab }: {
   index: FleetIndex; s: MotorSeries | null; i: number; stepId: string; electricalCase: string; mode: Mode; live: LiveState | null; isLive: boolean; sourceLabel: string; labels: PlainLabels; onClose: () => void;
+  tabs?: DrawerTab[];            // 레이아웃 A (2026-10-27): 서랍 안 탭 (임계값·사양·용어) — 없으면 근거만
+  initialTab?: string;
 }) {
+  const [tab, setTab] = useState<string>(initialTab ?? "evidence");
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
     window.addEventListener("keydown", k, true);
@@ -24,7 +28,11 @@ export function EvidenceDrawer({ index, s, i, stepId, electricalCase, mode, live
   return (
     <div className="sv-drawer-bg" onClick={onClose}>
       <aside className="sv-drawer" onClick={(e) => e.stopPropagation()} aria-label="근거">
-        <header><span>근거</span><span className="dim">{labels.notes.honesty_chip?.replace(" · 근거 보기 ›", "") ?? "시뮬레이션 추정값"}</span><span className="grow" /><button onClick={onClose}>닫기 Esc</button></header>
+        <header>
+          {tabs?.length ? (<span className="sv-drawer-tabs"><button className={tab === "evidence" ? "on" : ""} onClick={() => setTab("evidence")}>근거</button>{tabs.map((t) => <button key={t.key} className={tab === t.key ? "on" : ""} onClick={() => setTab(t.key)}>{t.label}</button>)}</span>)
+            : <span>근거</span>}
+          <span className="dim">{labels.notes.honesty_chip?.replace(" · 근거 보기 ›", "") ?? "시뮬레이션 추정값"}</span><span className="grow" /><button onClick={onClose}>닫기 Esc</button></header>
+        {tab !== "evidence" && tabs ? <div className="body">{tabs.find((t) => t.key === tab)?.node}</div> : (
         <div className="body">
           <section>
             <h4>① 이 화면의 숫자는</h4>
@@ -36,7 +44,7 @@ export function EvidenceDrawer({ index, s, i, stepId, electricalCase, mode, live
             <AnalysisRef index={index} s={s} i={i} stepId={stepId} electricalCase={electricalCase} mode={mode} live={live} isLive={isLive}
               extras={extras} hideEmpty defaultOpen title="② 해석 근거 비교" traceTitle="③ 근거 사슬 — 표시량 → 엔진 → 파일(sha) → 해석 단계 → 등급" limitsTitle="④ 한계" />
           </section>
-        </div>
+        </div>)}
       </aside>
     </div>
   );

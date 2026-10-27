@@ -8,6 +8,20 @@ Isaac Sim 녹화 영상과 시뮬레이션 로그를 **동기 재생**하며, �
 - 모든 숫자는 `motor_dt_viz/config/*.yaml` 과 `logs/<mode>/*.csv` 에서 export 한 JSON 만 읽는다
 - 화면에는 항상 `시뮬레이션 기반 추정값` 과 정격 기준(M1 현대 HLP-2.2/4, 2.2 kW 4극 · 카탈로그 사양 — 2026-10-21 단일 모터 전환; 22 kW 6극 도면 JW-01-HTO-00 은 이전 기준)이 표시된다
 
+## 2026-10-27 — 실시간 전기 상태 보드 (레이아웃 A). 아래 절들은 이력
+
+대시보드는 이제 **실시간 전용·전기 해석 전용** 한 화면(`#/status`)이다. 녹화 재생·기계/전기 해설 화면·발표자 화면·전문가 보기·녹화/LIVE 토글·제어 패널(K)·발표 모드(F)·단축키는 UI 에서 뺐다
+(코드는 `src/_legacy/` 에 그대로, `tsconfig.json exclude` 로 빌드에서 제외 — 삭제 아님). 어느 해시로 열어도 `#/status` 로 간다.
+
+```
+cd ..\motor_dt_viz && C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --live --preset demo --cam side --judge_stream simulation
+cd ..\dashboard && node serve.cjs            # http://localhost:4173/#/status   (다른 PC: ?live=ws://<데스크탑 IP>:8765 — 뷰포트 스트림은 127.0.0.1 전용이라 같은 PC 에서만 보인다)
+```
+
+화면: 헤더(`● LIVE ws://…` 클릭 = 주소 바꾸기 · `시나리오 ▾` = Isaac `play_scenario`) → 상태 띠(판정·원인 신호 값·임계값·모터) → 2×2 [아이작심 실시간(JPEG 스트림 `<canvas>`, fps·지연) | 전류 파형 최근 2주기 / 전류 성분 I₁·I₂·I₀ | 추세] → 왜·무엇을 → `근거 보기 ›` 서랍(근거·임계값·사양·용어 탭).
+데이터는 Isaac state(10 Hz)와 `public/data/fleet/index.json`(임계값·색·라벨·사양, `tools/export_status_data.py`)뿐. 해설 문구는 `public/content/electrical/narration.yaml`(M1 추가 장면 8턴·16턴·저항성·반부하 포함)·`public/content/status/labels_plain.yaml`(`layout_a`·`elec_status`).
+스크린샷: `node tools/layout_a_shots.mjs ../docs/dashboard_layout_a/img`(PowerShell, Edge). 구성·측정·제거 목록은 `docs/dashboard_layout_a.md`.
+
 ## 실행 (발표장, 더블클릭)
 
 `run_dashboard_mechanical.bat` 또는 `run_dashboard_electrical.bat` 을 더블클릭한다.

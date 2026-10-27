@@ -8,6 +8,7 @@ server:
   perf_period_s: 5        # VRAM(nvidia-smi)·RAM(psutil) 샘플 주기 — 브리지 쪽 스레드에서, 메인 루프 밖
   max_clients: 32         # 발표자 노트북·심사용 화면·열어 둔 탭마다 1 (실측: 맥북+데스크탑 탭으로 8 을 넘겨 "too many clients" 거부 발생)
   bind_retry_s: 90        # 모터 전환 재기동 뒤 이전 인스턴스가 포트를 놓을 때까지 1 s 간격으로 다시 바인드 (R3)
+  stream_port: 8766       # 뷰포트 JPEG 스트림(viz/stream_viewport.py, 레이아웃 A 2026-10-27) — 127.0.0.1 에만 바인딩, 인증 없음 → 방화벽 열지 않는다
 dashboard:
   port: 4173              # dashboard/serve.cjs 포트 — 콘솔·HUD 에 접속 주소를 찍을 때 쓴다
   route: "#/status?live=ws://{ip}:{port}"

@@ -10,11 +10,11 @@ import { getYamlOptional } from "./load";
 export type Level = "SAFE" | "WARN" | "DANGER";
 export interface LiveCfg {
   default_url: string; heartbeat_timeout_s: number; reconnect_s: number; window_s: number; buffer_max_n: number;
-  command_timeout_s: number; video_panel: "hint" | "snapshot" | "webrtc";
+  command_timeout_s: number; video_panel: "hint" | "snapshot" | "webrtc"; stream_port?: number;
   switch_why_hot?: string; switch_why_restart?: string; switch_compare?: string;
 }
 export const LIVE_CFG_DEFAULT: LiveCfg = {
-  default_url: "ws://localhost:8765", heartbeat_timeout_s: 3, reconnect_s: 2, window_s: 300, buffer_max_n: 6000, command_timeout_s: 3, video_panel: "hint",
+  default_url: "ws://localhost:8765", heartbeat_timeout_s: 3, reconnect_s: 2, window_s: 300, buffer_max_n: 6000, command_timeout_s: 3, video_panel: "hint", stream_port: 8766,
 };
 let cfgPromise: Promise<LiveCfg> | null = null;
 export function loadLiveCfg(): Promise<LiveCfg> {
@@ -42,8 +42,11 @@ export interface LiveState {
   vibration_mms: number; iso_zone: string; bearing_kurtosis: number; bearing_hf_ratio: number;
   status: LiveStatus;
   narration_key: { mode: string; scene: string | null; reveal: "why" | "visible" | "result" | null };
-  perf: { fps: number | null; vram_mb?: number | null; ram_mb?: number | null };
+  perf: { fps: number | null; vram_mb?: number | null; ram_mb?: number | null; stream?: { clients: number; sent: number; encode_ms: number | null; capture_ms: number | null } | null };
   host: { ip: string; ws: string; clients: number };
+  // 레이아웃 A (2026-10-27) 추가 — 케이스별 대칭 성분·2주기 파형 (app/live_signals.py, export case_signals 와 같은 식). 없는 옛 스트림도 동작한다
+  sym_components_A?: { i1_A: number; i2_A: number; i0_A: number };
+  waveform_last_2cycles?: { fs_Hz: number; f0_Hz: number; cycles: number; unit: string; t_ms: number[]; A: number[]; B: number[]; C: number[] };
 }
 export interface ElecSourceCase { key: string; label: string; method: "lut" | "legacy"; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null; load: number }
 export interface ElecSource {
@@ -55,7 +58,11 @@ export interface ElecSource {
 }
 export interface LiveAck { type: "ack"; id: string | null; name?: string; ok: boolean; applied?: Record<string, unknown>; reason?: string; t_wall: number }
 export interface LiveHeartbeat { type: "heartbeat"; t_wall: number; clients: number; schema?: number }
-export interface LiveHello { type: "hello"; schema: number; commands: Record<string, Record<string, unknown>>; motors: string[]; restart_eta_s: number; ws: string; t_wall: number }
+export interface LiveHello {
+  type: "hello"; schema: number; commands: Record<string, Record<string, unknown>>; motors: string[]; restart_eta_s: number; ws: string; t_wall: number;
+  stream_ws?: string; stream?: { fps: number; size: number[]; quality: number; view: string };                 // 레이아웃 A: 뷰포트 스트림 주소·설정
+  scenes?: { n: number; id: string; label: string; duration_s: number; electrical_case?: string; mode?: string }[];   // play_scenario {scene: n} 의 n 순서
+}
 export type FeedStatus = "off" | "connecting" | "live" | "lost";
 
 export class LiveFeed {

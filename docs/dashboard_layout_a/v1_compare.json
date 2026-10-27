@@ -1,0 +1,536 @@
+{
+ "generated": "2026-10-27 14:47:52",
+ "state_ws": "ws://127.0.0.1:8765",
+ "v1_csv": "C:\\Users\\sunwu\\OneDrive\\바탕 화면\\프로젝트\\디지털 트윈\\크레인 퀀선 모터 모델링\\motor_dt_viz\\logs\\verify\\electrical_a0\\state.csv",
+ "tol_pct": 0.1,
+ "settle_s": 10.0,
+ "all_pass": true,
+ "results": [
+  {
+   "scene": "healthy",
+   "n": 1,
+   "switch_ms": 83,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 4.8,
+     "v1": 4.8214,
+     "dev_pct": -0.444,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 4.6,
+     "v1": 4.6326,
+     "dev_pct": -0.704,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.6,
+     "v1": 4.6326,
+     "dev_pct": -0.704,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.027,
+     "v1": 0.027,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.0268,
+     "v1": 0.0268,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 0.0,
+     "v1": null,
+     "dev_pct": null,
+     "pass": null
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 0.0,
+     "v1": 0.0,
+     "dev_pct": 0.0,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "SAFE",
+    "-"
+   ],
+   "status_v1": [
+    "SAFE",
+    "-"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 4.6946,
+    "i2_A": 0.1268,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.027",
+    "R": "4.8 A (1.01×)"
+   }
+  },
+  {
+   "scene": "itsc_4turn",
+   "n": 2,
+   "switch_ms": 107,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 5.2,
+     "v1": 5.2151,
+     "dev_pct": -0.29,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 4.9,
+     "v1": 4.8576,
+     "dev_pct": 0.873,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.6,
+     "v1": 4.6078,
+     "dev_pct": -0.169,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.0726,
+     "v1": 0.07262,
+     "dev_pct": -0.028,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.075,
+     "v1": 0.07503,
+     "dev_pct": -0.04,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 34.38097503470577,
+     "v1": 34.38097503470577,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 158.1,
+     "v1": 158.1,
+     "dev_pct": 0.0,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "WARN",
+    "i2i1"
+   ],
+   "status_v1": [
+    "WARN",
+    "i2i1"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 4.887,
+    "i2_A": 0.3549,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.073",
+    "R": "5.2 A (1.10×)"
+   }
+  },
+  {
+   "scene": "itsc_8turn",
+   "n": 8,
+   "switch_ms": 112,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 6.1,
+     "v1": 6.1339,
+     "dev_pct": -0.553,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 5.4,
+     "v1": 5.3584,
+     "dev_pct": 0.776,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.6,
+     "v1": 4.6014,
+     "dev_pct": -0.03,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.1676,
+     "v1": 0.16757,
+     "dev_pct": 0.018,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.1887,
+     "v1": 0.18871,
+     "dev_pct": -0.005,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 55.296364893082426,
+     "v1": 55.296364893082426,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 510.9,
+     "v1": 510.91,
+     "dev_pct": -0.002,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_v1": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 5.3266,
+    "i2_A": 0.8926,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.168",
+    "R": "6.1 A (1.29×)"
+   }
+  },
+  {
+   "scene": "itsc_12turn",
+   "n": 3,
+   "switch_ms": 194,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 7.4,
+     "v1": 7.3952,
+     "dev_pct": 0.065,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 6.0,
+     "v1": 6.0161,
+     "dev_pct": -0.268,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.7,
+     "v1": 4.6926,
+     "dev_pct": 0.158,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.2696,
+     "v1": 0.26958,
+     "dev_pct": 0.007,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.3376,
+     "v1": 0.33759,
+     "dev_pct": 0.003,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 69.80326109802972,
+     "v1": 69.80326109802972,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 977.5,
+     "v1": 977.46,
+     "dev_pct": 0.004,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_v1": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 5.9233,
+    "i2_A": 1.5968,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.270",
+    "R": "7.4 A (1.56×)"
+   }
+  },
+  {
+   "scene": "itsc_16turn",
+   "n": 9,
+   "switch_ms": 191,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 8.9,
+     "v1": 8.8954,
+     "dev_pct": 0.052,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 6.8,
+     "v1": 6.7767,
+     "dev_pct": 0.344,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.9,
+     "v1": 4.9276,
+     "dev_pct": -0.56,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.3625,
+     "v1": 0.36253,
+     "dev_pct": -0.008,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.5084,
+     "v1": 0.50838,
+     "dev_pct": 0.004,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 80.6431600796299,
+     "v1": 80.6431600796299,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 1523.3,
+     "v1": 1523.26,
+     "dev_pct": 0.003,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_v1": [
+    "DANGER",
+    "i2i1"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 6.6329,
+    "i2_A": 2.4046,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.362",
+    "R": "8.9 A (1.88×)"
+   }
+  },
+  {
+   "scene": "itsc_4turn_resistive",
+   "n": 10,
+   "switch_ms": 112,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 4.9,
+     "v1": 4.8711,
+     "dev_pct": 0.593,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 4.7,
+     "v1": 4.6615,
+     "dev_pct": 0.826,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 4.6,
+     "v1": 4.6285,
+     "dev_pct": -0.616,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.0324,
+     "v1": 0.03244,
+     "dev_pct": -0.123,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.0324,
+     "v1": 0.03236,
+     "dev_pct": 0.124,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 4.431004086541479,
+     "v1": 4.431004086541479,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 20.3,
+     "v1": 20.32,
+     "dev_pct": -0.098,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "SAFE",
+    "-"
+   ],
+   "status_v1": [
+    "SAFE",
+    "-"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 4.7191,
+    "i2_A": 0.1531,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.032",
+    "R": "4.9 A (1.04×)"
+   }
+  },
+  {
+   "scene": "itsc_4turn_halfload",
+   "n": 11,
+   "switch_ms": 194,
+   "ok": true,
+   "fields": [
+    {
+     "field": "Ia_rms",
+     "live": 3.5,
+     "v1": 3.4569,
+     "dev_pct": 1.247,
+     "pass": true
+    },
+    {
+     "field": "Ib_rms",
+     "live": 3.2,
+     "v1": 3.2418,
+     "dev_pct": -1.289,
+     "pass": true
+    },
+    {
+     "field": "Ic_rms",
+     "live": 2.9,
+     "v1": 2.9288,
+     "dev_pct": -0.983,
+     "pass": true
+    },
+    {
+     "field": "i2_over_i1",
+     "live": 0.0953,
+     "v1": 0.09529,
+     "dev_pct": 0.01,
+     "pass": true
+    },
+    {
+     "field": "i2_over_in",
+     "live": 0.0645,
+     "v1": 0.06451,
+     "dev_pct": -0.016,
+     "pass": true
+    },
+    {
+     "field": "i_f_A",
+     "live": 34.380975034705756,
+     "v1": 34.380975034705756,
+     "dev_pct": 0.0,
+     "pass": true
+    },
+    {
+     "field": "p_loop_total_W",
+     "live": 158.1,
+     "v1": 158.1,
+     "dev_pct": 0.0,
+     "pass": true
+    }
+   ],
+   "status_live": [
+    "WARN",
+    "i2i1"
+   ],
+   "status_v1": [
+    "WARN",
+    "i2i1"
+   ],
+   "status_pass": true,
+   "sym_components_A": {
+    "i1_A": 3.202,
+    "i2_A": 0.3051,
+    "i0_A": 0.0
+   },
+   "dashboard_shows": {
+    "i2i1": "0.095",
+    "R": "3.5 A (0.74×)"
+   }
+  }
+ ],
+ "note": "V1 = logs/verify/electrical_a0 (--inherent_angle_deg 0, --verify_dir). 라이브 state 전류는 1자리·I₂/I₁ 4자리 반올림이라 반올림 반 단위도 허용"
+}

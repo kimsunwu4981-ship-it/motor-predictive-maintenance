@@ -84,7 +84,8 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive, 
     const liveIf = liveSrc && typeof liveSrc.i_f_A === "number" ? (liveSrc.i_f_A as number) : null;
     const ex = !isLive ? extras : undefined;                                                           // 재생 모드: export 가 붙인 케이스별 엔진 값
     const exNote = (k: string) => (ex?.note?.[k] ? ` · ${ex.note[k]}` : "");
-    const dTshown = mode === "electrical" && !isLive ? (ex?.winding_dT_C ?? null) : (s.temperature_C.winding ? s.temperature_C.winding[i] - 25 : null);   // 전기 모드 녹화는 열 적분 없음 → export 값(없으면 회색)
+    const noThermal = mode === "electrical" && (!isLive || live?.mode === "electrical");                 // 전기 모드(녹화·Isaac 전기 모드 라이브)는 열 적분 없음 → 온도 상수 25 °C 를 ΔT 0 으로 보이지 않게 null
+    const dTshown = noThermal ? (isLive ? null : (ex?.winding_dT_C ?? null)) : (s.temperature_C.winding ? s.temperature_C.winding[i] - 25 : null);   // 전기 모드 녹화는 export 값(없으면 회색)
     const out: Row[] = [
       { item: "I₂/I₁ (합성 = 결함분 + 고유 비대칭)", shown: shownI2, ref: exp0, tol: 0.01, unit: "", src: R.i2_over_i1_fault,
         reason: shownI2 < lo || shownI2 > hi ? `고유 비대칭 각도에 따른 범위 ${lo.toFixed(4)}~${hi.toFixed(4)} 밖` : transient ? "과도 구간 — 판정 지속 3 s 전" : undefined },
@@ -97,7 +98,7 @@ export function AnalysisRef({ s, i, stepId, electricalCase, mode, live, isLive, 
       { item: "단락 루프 총손실 P_loop", shown: isLive && live?.p_loop_total_W != null ? live.p_loop_total_W : (ex?.p_loop_total_W ?? null), ref: R.p_loop_total_W.lut, tol: 0.02, unit: "W", src: R.p_loop_total_W,
         reason: isLive ? undefined : `권선 노드 추가 손실${exNote("p_loop_total_W")}` },
       { item: "권선 ΔT 정상 상태 (열 모델 역산)", shown: dTshown, ref: R.winding_dT_steady_C.model.winding, tol: 0.05, unit: "°C", src: { grade_key: "model", note: R.winding_dT_steady_C.note },
-        reason: mode === "electrical" && !isLive ? `전기 모드는 열 적분 없음(온도 상수) — 통합 모드 검증 로그 참조${exNote("winding_dT_C")}` : "주입 후 정상 상태 도달 전이면 작다" },
+        reason: noThermal ? `전기 모드는 열 적분 없음(온도 상수) — 통합 모드 검증 로그 참조${isLive ? "" : exNote("winding_dT_C")}` : "주입 후 정상 상태 도달 전이면 작다" },
       { item: "판정 (예상 vs 현재)", shown: s.status[i], ref: R.expected_judgment.overall_expected, tol: null, unit: "", src: { grade_key: "dataset", note: "thresholds.yaml 0.05/0.10, 지속 3 s, 시뮬레이션 정책(provisional 포함)" }, kind: "match",
         reason: transient ? "주입 후 3 s 지속 전" : undefined },
     ];

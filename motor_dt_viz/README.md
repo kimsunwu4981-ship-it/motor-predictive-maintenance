@@ -259,6 +259,20 @@ LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=
 **모터 전환**: 기본은 **핫 스위치**(`config/live.yaml select_motor.switch_mode: hot`) — Isaac 프로세스 안에서 모터 라이브러리의 열회로·전류 모델·판정·정격·카메라 거리·HUD 문구만 새 모터로 재생성한다(USD·Isaac 재로드 없음, 1 s 미만). 대시보드 띠는 최소 `switch_banner_min_s`(10 s) 동안 "왜 바뀌는지 + 무엇을 비교할지"(문구는 `dashboard/public/content/live.yaml switch_*`)를 보여준다. `switch_mode: restart` 로 두면 R3 방식(현재 모터 정리 → 같은 인자로 재기동, 45~130 s, 로그 `logs/live_restart_<모터>.log`). 실측은 `docs/live_r3_report.md`·`live_r4_report.md`.
 데모 대본 `docs/live_demo_script.md`(5단계), 자동 구동 `tools/live_demo_drive.py`, 녹화 `tools/record_live_demo.ps1`(화면을 비워야 한다).
 
+### 레이아웃 A — 실시간 전용 전기 상태 보드 + 뷰포트 스트림 (2026-10-27)
+
+대시보드(`#/status`)는 이제 **실시간 전용·전기 해석 전용** 한 화면이다: 헤더(LIVE 뱃지·시나리오 ▾) → 상태 띠 → 2×2[아이작심 실시간 | 전류 파형 / 전류 성분 | 추세] → 왜·무엇을 한 줄 → 근거 서랍(근거·임계값·사양·용어 탭).
+녹화/LIVE 토글·전문가 보기·기계 해설·발표 모드(F)·제어 패널(K)·단축키는 UI 에서 뺐다(코드는 `dashboard/src/_legacy/`, 빌드 제외 — 삭제 아님). 위 R2·R3 절의 토글·패널 설명은 이력이다.
+
+```bat
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --live --preset demo --cam side   # state 8765 + 뷰포트 JPEG 스트림 8766 (--live 면 스트림 기본 켜짐, --no_stream 으로 끔)
+cd ..\dashboard && node serve.cjs                                                                                            # http://localhost:4173/#/status  (다른 PC: ?live=ws://<데스크탑 IP>:8765)
+```
+
+- 스트림: `viz/stream_viewport.py` — `omni.kit.viewport.utility.capture_viewport_to_buffer`(RGBA readback, 추가 렌더 없음) → 인코더 스레드(cv2 JPEG q80, 1280×720) → WebSocket 바이너리(32 B 헤더 + JPEG) 를 `config/live.yaml server.stream_port`(8766, **127.0.0.1 바인딩**, 인증 없음 → 방화벽 열지 않음)로. 클라이언트가 없으면 캡처하지 않는다. 인자 `--stream_fps 30 --stream_size 1280 720 --stream_quality 80`, `--view`(스트림 때 기본 `half_translucent`), `--cam side`(카메라 프리셋).
+- state(8765)에 덧붙인 필드: `sym_components_A{i1_A,i2_A,i0_A}`·`waveform_last_2cycles`(`app/live_signals.py`, export `case_signals` 와 같은 식), `perf.stream`, hello 의 `stream_ws`·`stream`·`scenes`(시나리오 ▾ = `play_scenario {scene:n}`).
+- 측정: `py -3.12 -X utf8 tools/live/stream_probe.py --seconds 600 --out logs/stream_probe.json`(스트림 fps·지연 = 수신 − 캡처 벽시계, Isaac fps·encode/capture ms). 결과·화면은 `docs/dashboard_layout_a.md`.
+
 ### 다른 기기(맥북, 같은 Wi-Fi)에서 접속 — 윈도우 방화벽 인바운드 규칙
 
 1. 데스크탑 IP 확인: HUD 의 `LIVE ws://…` 또는 `ipconfig`(이더넷/Wi-Fi 의 IPv4). 맥북은 같은 공유기에 붙어 있어야 한다(같은 서브넷).

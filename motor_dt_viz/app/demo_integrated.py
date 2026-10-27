@@ -60,8 +60,18 @@ ap.add_argument("--preset", default="", metavar="demo|full", help="config/render
 # P4 (2026-10-21): M1 전체 3D 모델 장면 — 22 kW USD 는 숨기고(물리는 그대로 rpm 생성) assets/motors/M1/M1.usd 에 상태 JSON 값만 색·회전으로 매핑 (viz/m1_model.py)
 ap.add_argument("--m1_model", action="store_true", default=None, help="M1 전체 3D 모델(assets/motors/M1/M1.usd)을 장면에 올리고 22 kW 모델·전류 경로는 숨긴다 (--motor M1 이면 기본 켜짐)")
 ap.add_argument("--no_m1_model", action="store_true", help="M1 모델을 쓰지 않고 22 kW USD 그대로 (이력 비교용)")
-ap.add_argument("--view", default="full", choices=("full", "cutaway", "windings_only", "half_translucent", "half_translucent_front"),
-                help="--m1_model 의 USD variant view (half_translucent*: 한쪽 반을 반투명으로 — 자르지 않음, H2)")
+ap.add_argument("--view", default=None, choices=("full", "cutaway", "windings_only", "half_translucent", "half_translucent_front"),
+                help="--m1_model 의 USD variant view (half_translucent*: 한쪽 반을 반투명으로 — 자르지 않음, H2). 기본 full, 스트림 송출 때는 half_translucent")
+# 레이아웃 A (2026-10-27): 뷰포트 JPEG 를 WebSocket(config/live.yaml server.stream_port, 127.0.0.1) 으로 송출 — --live 면 기본 켜짐 (--no_stream 으로 끔)
+ap.add_argument("--stream", action="store_true", default=None, help="뷰포트 JPEG 스트림 송출 (viz/stream_viewport.py). --live 가 있으면 기본 켜짐")
+ap.add_argument("--no_stream", action="store_true", help="--live 여도 스트림을 켜지 않는다")
+ap.add_argument("--stream_fps", type=float, default=30.0, help="스트림 캡처 주기 [fps] (기본 30)")
+ap.add_argument("--stream_size", type=int, nargs=2, default=(1280, 720), metavar=("W", "H"), help="스트림 해상도 (기본 1280 720, 뷰포트와 다르면 리사이즈)")
+ap.add_argument("--stream_quality", type=int, default=80, help="JPEG 품질 (기본 80)")
+ap.add_argument("--judge_stream", default="auto", choices=("auto", "simulation", "live"),
+                help="판정 정책 스트림 라벨(config/thresholds.yaml judgment.provisional_policy): auto = --live 면 live(실측 정책, provisional 지표 advisory) 아니면 simulation. "
+                     "레이아웃 A 상태 보드처럼 Isaac 합성 신호를 배치 verify 와 같은 정책으로 판정하려면 simulation")
+ap.add_argument("--cam", default="", metavar="PRESET", help="--m1_model 기본 카메라 프리셋(iso|side|close|fault_focus|bearing_de|front_shaft|rotor_closeup). 비우면 기존 wide(=iso)")
 ap.add_argument("--m1_shots", default="", metavar="DIR", help="--m1_model: 전기 시나리오 재생 중 스크린샷 6장을 DIR 에 저장")
 ap.add_argument("--mount", default="B3", choices=("B3", "B35"), help="--m1_model 의 USD variant mount (B3 발 장착 기본 / B35 플랜지)")
 # V1 검증 로깅 훅 (2026-10-21, tools/verify): 값은 전부 기존 엔진 — 기록만 늘린다
@@ -76,6 +86,9 @@ ap.add_argument("--cam_plan", default="", help="카메라·뷰 일정 't:view:ca
 args = ap.parse_args()
 if args.m1_model is None:
     args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
+STREAM_ON = bool(args.stream) or (bool(args.live) and not args.no_stream)
+if args.view is None:
+    args.view = "half_translucent" if STREAM_ON else "full"          # 스트림 기본 뷰 = 반절 반투명 (레이아웃 A). --view 를 주면 그대로
 PRESET = None
 if args.preset:
     import yaml as _yaml
@@ -193,6 +206,8 @@ CAM_WIDE0, CAM_CLOSE0 = CAM_WIDE, CAM_CLOSE          # 스케일 전 기준값 (
 CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
 if m1:                                                 # M1 모델은 실치수(370 mm)라 전용 카메라
     CAM_WIDE, CAM_CLOSE = m1.CAM_WIDE, m1.CAM_CLOSE
+    if args.cam:
+        CAM_WIDE = m1.cam(args.cam)                      # --cam: 기본(넓은) 카메라를 프리셋으로 (스트림 기본 화면용, 레이아웃 A)
 set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
 world.reset()
 if PRESET and PRESET.get("single_viewport") and args.gui:
@@ -221,6 +236,8 @@ ecmap = ElectricalColormap()
 # ------------------------------------------------------------------ 엔진
 tm = ThermalModel(TH_CFG)
 cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR) if MOTOR else None)
+from live_signals import CaseSignalCache  # noqa: E402  (app/ — 레이아웃 A: state 에 I₁·I₂·I₀·2주기 파형 덧붙임, 케이스별 1회 계산)
+case_sig = CaseSignalCache(cm)
 injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds if MOTOR else None)
 player = _player_for(args.mode)
 # 판정은 한 곳에서 (TASK 실시간 §5.2): fleet 배치·상태 보드와 같은 엔진. HUD 색·CSV 판정 열·라이브 state 가 모두 이 결과를 쓴다.
@@ -410,7 +427,25 @@ if args.live:
     except Exception as e:
         print("[live] bridge start failed - continuing without live:", e, flush=True)   # 콘솔이 cp949 라 ASCII 로
         bridge = None
-judge.set_stream("live" if bridge is not None else "simulation")     # P1: 실측 스트림이면 provisional 지표는 advisory (config judgment.provisional_policy)
+streamer = None
+if STREAM_ON:
+    from viz.stream_viewport import ViewportStreamer  # noqa: E402
+    try:
+        streamer = ViewportStreamer(port=int(load("live")["server"].get("stream_port", 8766)), fps=args.stream_fps, size=tuple(args.stream_size),
+                                    quality=args.stream_quality, log=print).start()
+        if bridge is not None:
+            bridge.extra_hello["stream_ws"] = streamer.url          # 대시보드가 hello 에서 스트림 주소를 읽는다
+            bridge.extra_hello["stream"] = {"fps": args.stream_fps, "size": list(args.stream_size), "quality": args.stream_quality, "view": args.view}
+    except Exception as e:
+        print("[stream] start failed - continuing without stream:", e, flush=True)
+        streamer = None
+if bridge is not None:                                      # 레이아웃 A: 장면 목록을 hello 에 (play_scenario {scene: n} 의 n 과 같은 순서). 모드 전환 때 _refresh_hello_scenes()
+    def _refresh_hello_scenes():
+        bridge.extra_hello["scenes"] = [{"n": k + 1, "id": st_.get("id"), "label": st_.get("label"), "duration_s": float(st_.get("duration_s", 0)),
+                                         "electrical_case": st_.get("electrical_case"), "mode": st_.get("mode", args.mode)} for k, st_ in enumerate(player.steps)]
+    _refresh_hello_scenes()
+_STREAM_VP = [None]
+judge.set_stream(args.judge_stream if args.judge_stream != "auto" else ("live" if bridge is not None else "simulation"))     # P1: 실측 스트림이면 provisional 지표는 advisory (config judgment.provisional_policy). --judge_stream 으로 고정 가능
 print(f"[judge] stream={judge.stream} policy={judge.policy.get(judge.stream)}", flush=True)
 LIVE_CFG = load("live")
 LIVE_THERMAL = set(LIVE_CFG["commands"]["inject_fault"]["thermal"])
@@ -461,6 +496,7 @@ def hot_switch_motor(mid: str) -> dict:
     VIB_STD = str(MOTOR.vibration["standard"]).split(" (")[0]
     tm = ThermalModel(TH_CFG)
     cm = CurrentModel(EL_CFG, ml.motor_spec(MOTOR))
+    case_sig.cm = cm; case_sig.invalidate()
     injector = FaultInjector(TH_CFG, EL_CFG, vib_thresholds=MOTOR.vib_thresholds)
     judge = Judge(motor=MOTOR, stream=judge.stream)
     THRESHOLDS = {k: tm.thresholds(k) for k in tm.node_keys}
@@ -472,6 +508,8 @@ def hot_switch_motor(mid: str) -> dict:
     CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
     set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
     player = _player_for(state.mode)
+    if bridge is not None:
+        _refresh_hello_scenes()
     state.playing_scenario = False; state.thermal_faults.clear(); state.electrical_case = "healthy"; state.dirty = True
     driver.reset_to_base()
     t_real = 0.0
@@ -851,6 +889,8 @@ while simulation_app.is_running():
     if state.request_mode_reset:
         state.mode = normalize_mode(state.mode)
         player = _player_for(state.mode)
+        if bridge is not None:
+            _refresh_hello_scenes()
         tm.reset()
         judge.reset()
         driver.reset_to_base()                 # 발열 색·발광 제거
@@ -1084,6 +1124,15 @@ while simulation_app.is_running():
 
     with _prof("render"):
         world.render()
+    if streamer is not None:                                # 레이아웃 A: 뷰포트 캡처 예약 (클라이언트 없으면 비용 0)
+        if _STREAM_VP[0] is None:
+            try:
+                from omni.kit.viewport.utility import get_active_viewport
+                _STREAM_VP[0] = get_active_viewport()
+            except Exception as _e:  # noqa: BLE001
+                print("[stream] no active viewport:", _e, flush=True); streamer = None
+        if streamer is not None:
+            streamer.tick(_STREAM_VP[0], t_session)
     _prof_n += 1
     t_wall += 1 / 60
 
@@ -1114,8 +1163,12 @@ while simulation_app.is_running():
                        "signals": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4), "status": s_.status, "advisory": s_.advisory} for s_ in verdict.signals],
                        "advisory": [{"kind": s_.kind, "component": s_.component, "level": s_.level, "value": round(s_.value, 4)} for s_ in verdict.advisory]},
             "narration_key": {"mode": mode, "scene": frame.step_id if frame else None, "reveal": _reveal_stage(mode, frame)},
-            "perf": {"fps": round(_fps_hist[-1], 1) if _fps_hist else None},
+            "perf": {"fps": round(_fps_hist[-1], 1) if _fps_hist else None,
+                     "stream": ({"clients": streamer.clients, "sent": streamer.stats["sent"], "encode_ms": streamer.stats["encode_ms"], "capture_ms": streamer.stats["capture_ms"]} if streamer is not None else None)},
         }
+        _sig = case_sig.get(case)                           # 레이아웃 A (schema 1 유지 — 덧붙임): 케이스별 I₁·I₂·I₀ [A RMS] + 2주기 파형 (export case_signals 와 같은 식)
+        if _sig:
+            state_dict.update(_sig)
         if bridge is not None:
             bridge.publish(state_dict)
         if verify_log is not None:
@@ -1190,6 +1243,9 @@ if recorder is not None:
     with open(os.path.join(RUN_LOG_DIR, f"recording_{rec_name}.json"), "w", encoding="utf-8") as f:
         json.dump(rec_meta, f, ensure_ascii=False, indent=2)
 
+if streamer is not None:
+    print("[stream] stats", json.dumps(streamer.stats), flush=True)
+    streamer.stop()
 if bridge is not None:
     print("[live] stats", json.dumps(bridge.stats), flush=True)
     bridge.stop()                                   # 포트를 먼저 놓는다 — 새 인스턴스가 bind_retry_s 안에 잡는다

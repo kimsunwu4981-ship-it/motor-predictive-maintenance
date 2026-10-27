@@ -1,0 +1,48 @@
+/* layout_a.css — 레이아웃 A (2026-10-27): 헤더 40 + 상태 띠 72 + 2×2 + 하단 44. 다크 단일. 색은 상태 셋만.
+   글자: 상태 36 px · 큰 숫자 24 px · 본문 14 px (--sv 배율: 1366×768 .85). simple.css 의 .sv2-* 타일 스타일을 재사용한다. */
+.la { --sv: 1; display: grid; grid-template-rows: 40px 72px minmax(0, 1fr) 44px; gap: 8px; height: 100%; min-height: 0; padding: 8px 12px; box-sizing: border-box; }
+.la .grow { flex: 1; }
+.la abbr { text-decoration: underline dotted; text-underline-offset: 3px; cursor: help; }
+
+/* 헤더 */
+.la-head { display: flex; align-items: center; gap: 14px; padding: 0 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; white-space: nowrap; overflow: hidden; font-size: 14px; }
+.la-head .brand { font-size: 18px; font-weight: 800; letter-spacing: .04em; }
+.la-title { font-weight: 700; color: var(--fg2); }
+.la-head .live-badge { cursor: pointer; font-size: 13px; }
+.la-head .live-badge code { font-weight: 400; color: var(--fg2); font-size: 12px; }
+.la-scene { display: inline-flex; align-items: center; gap: 8px; }
+.la-scene select { font: inherit; color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; max-width: 360px; }
+
+/* 상태 띠 (simple.css .sv2-top 재사용) */
+.la-top .sv2-status { font-size: calc(36px * var(--sv)); }
+.la-top .sv2-cause { font-size: calc(24px * var(--sv)); }
+.la-thr { font-size: calc(14px * var(--sv)); color: var(--fg2); white-space: nowrap; }
+.la-top .sv2-motor, .la-top .sv2-scene { font-size: calc(14px * var(--sv)); }
+.la-lost { font-size: calc(13px * var(--sv)); color: var(--fg2); border: 1px dashed var(--fg3); border-radius: 8px; padding: 2px 8px; }
+
+/* 타일 (simple.css .tile 재사용) */
+.la-tiles .tile-h .big { font-size: calc(24px * var(--sv)); }
+.la-tiles .tile-h { font-size: calc(14px * var(--sv)); }
+.tile-canvas { position: relative; background: #000; border-radius: 10px; overflow: hidden; align-items: center; justify-content: center; }
+.la-canvas { width: 100%; height: 100%; object-fit: contain; display: block; transition: filter .3s ease; }
+.la-canvas.stale { filter: grayscale(.6) brightness(.5); }
+.la-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: calc(16px * var(--sv)); background: rgba(0,0,0,.35); text-align: center; }
+.la-glow { position: absolute; left: 12px; bottom: 10px; font-size: calc(14px * var(--sv)); font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(0,0,0,.55); border: 1px solid currentColor; animation: laglow 1.6s ease-in-out infinite; }
+@keyframes laglow { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+/* 하단 띠 */
+.la-foot { font-size: calc(16px * var(--sv)); }
+
+/* 서랍 탭 */
+.sv-drawer-tabs { display: inline-flex; gap: 4px; }
+.sv-drawer-tabs button { padding: 3px 10px; font-size: 13px; }
+
+@media (max-width: 1400px), (max-height: 800px) {
+  .la { --sv: .85; gap: 6px; grid-template-rows: 36px 60px minmax(0, 1fr) 40px; padding: 6px 10px; }
+  .la-head { font-size: 13px; gap: 10px; }
+  .la-tiles { gap: 6px; }
+  .la-tiles .tile { padding: 6px 10px 4px; }
+  .la-top { gap: 12px; padding: 0 12px; }
+  .la-foot { gap: 8px; padding: 0 12px; }
+  .tile-trend .st-chart { min-height: 60px; }
+}
