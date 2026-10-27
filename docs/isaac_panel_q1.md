@@ -130,3 +130,37 @@
 - 시작 시 첫 프레임이 속성을 '적용'으로 세어 자동 재생 시나리오를 멈추던 버그를 1차 실행에서 발견해 고쳤다(기준값을 생성 시점에 기록).
 - 지속 카운터는 Judge 내부 시계(`_since`)를 읽어 보여준다(계산 없음). 값이 정상으로 돌아가면 0 이 되고, [정상으로] 는 별도 리셋 없이 같은 경로를 탄다.
 - 로그 재생·export·배치는 기계 모드를 계속 지원한다(엔진·config 불변). 통합 열 검증 로그를 새로 만들 때는 `_legacy/app/demo_integrated_modes.py` 가 필요하다(REPRODUCE.md 표기).
+
+## 보기 전환 수정 (fix/panel-view-switch, 2026-10-27 저녁)
+
+### §1 진단 (실행 결과, `measure/view_probe_before.txt`)
+
+| # | 항목 | 결과 | 근거 |
+|---|---|---|---|
+| 1 | 패널 버튼 핸들러와 시나리오/cam_plan 이 부르는 함수 | ○ 같음 — 둘 다 `M1Model.set_view()`(USD variantSet "view" 선택). 단, `scenarios_M1.yaml` 에는 view/variant 키가 **없다**(뷰는 `--view`·`--cam_plan` 만) | grep |
+| 2 | 클릭 직후 콘솔 로그 | × `set_view` 는 로그가 없고 `[m1] render: fractionalCutoutOpacity …` 만 찍힘(반투명 ↔ 다른 뷰 왕복 때) | 로그 |
+| 3 | 클릭 직후 USD variant 선택값 | ○ 바뀜 — `click frame: variant=windings_only` | `--view_probe` 로 패널 경로(`panel.set_view`) 호출 뒤 readback |
+| 4 | 다음 프레임에 되돌아오는가 | **○ 되돌아옴 — 원인.** `+1 frame: variant=half_translucent`. materials 구간의 `m1.set_view("cutaway" if xray else args.view)` 가 **매 프레임** 시작 뷰를 다시 선택 | 로그 + `app/demo_integrated.py` (구 1022행) |
+| 5 | 로드된 USD 에 variantSet 이 있는가 | ○ `assets/motors/M1/M1.usd` 하나, variants `['cutaway','full','half_translucent','half_translucent_front','windings_only']` — `--preset demo` 도 같은 파일 | 로그 |
+| 6 | scenario / manual 차이 | × 차이 없음 — 재적용 코드가 조작 주체와 무관(둘 다 되돌아감) | 로그(`control_source=scenario`), 코드 |
+
+**결론 한 줄**: 버튼은 올바른 함수를 불렀지만, 메인 루프가 매 프레임 `args.view` 를 다시 적용해 한 프레임 만에 되돌렸다.
+
+### 수정
+- `viz/view_mode.py` **신설 — 뷰 전환 유일 진입점** `ViewMode.set(mode, source)`: `full|half_translucent|half_translucent_front|cutaway|windings_only` 검사 → `M1Model.set_view` → **USD readback** 으로 실제값 확정(`[view] variant → mode (source)` 로그, 실패면 경고). 패널 버튼(`source=manual`)·시작값(`startup`)·`--cam_plan`(`cam_plan`)·시나리오 장면(`scenario`)·단락루프 강조(`xray`) 전부 이 경로.
+- 매 프레임 재적용 삭제. 단락루프 강조(x-ray)는 `ViewMode.xray(on)` 으로 **켜짐/꺼짐이 바뀔 때만** 임시 cutaway ↔ base 복귀.
+- 시나리오: 장면 config(`steps[].view`)에 뷰가 있으면 **장면 전환 시 1회** 적용. 현재 `scenarios_M1.yaml` 에는 view 키가 없어 장면 전환이 뷰를 건드리지 않는다 → 패널 선택이 다음 장면에도 유지(키를 넣으면 그 장면에서 1회 전환, 코드 경로 있음).
+- 버튼 라벨 ↔ 모드: `PANEL_MAP` 반투명 = `half_translucent` · 절단 = `cutaway` · 권선만 = `windings_only`. 버튼 색은 0.5 s 마다 **USD readback** 으로(클릭 여부 아님), 실패면 회색 + `[panel] WARNING`.
+- state 에 `view_mode`·`view_source`·`view_label` 추가(readback 값, 계산 없음) → 대시보드 아이작심 타일 부제가 이 값을 읽는다(`권선만 (패널) · 30 fps · 지연 …`).
+- 소소 2건: 패널 우상단 `데이터 n · 화면 n`(8765 / 8766, 데이터 ≥ 1 초록); 조작 주체가 시나리오면 슬라이더에 현재 장면 주입 턴수(`electrical_source.turns`)를 읽기 전용 `n / 32 턴 (시나리오)` 으로 — 건드리면 manual(기존).
+
+### §4 검증 (after, `measure/view_probe_after.txt`)
+| 항목 | 결과 |
+|---|---|
+| 세 버튼 각각(패널 경로 `--view_probe`) → USD readback | 권선만·절단·반투명 모두 **클릭 프레임 + 다음 3 프레임 유지**(`+1/+2/+3 frame: variant=…`), 로그 `[view] variant → … (manual)` |
+| 시나리오 재생 중 유지(30 s 관찰) | `+30 s after cutaway: variant=half_translucent … step=itsc_12turn`(그 사이 패널로 반투명으로 바꿈), `+30 s after half_translucent: variant=half_translucent scenario_playing=True step=overload` — 장면이 바뀌어도(4턴→12턴→과부하) 패널 선택 유지 |
+| 시나리오 ▾ 로 장면 전환 시 지정 뷰 | `scenarios_M1.yaml` 에 view 키가 없어 전환 없음(설계대로 패널 선택 유지). 키를 넣으면 `VIEW.set(view, "scenario")` 가 장면 전환 시 1회 호출(코드 경로) |
+| 스크린샷(아이작심 창 · 대시보드 타일 부제) | `img/view_windings_only_{isaac,dash}.png`(부제 `권선만 (패널) · 29.9 fps`), `img/view_cutaway_{isaac,dash}.png`, `img/view_half_translucent_{isaac,dash}.png` — 버튼 색 = readback, 패널 우상단 `데이터 1 · 화면 0/1` |
+| FPS | 스트림 30 fps 유지, Isaac FPS ≥ 30 (뷰 전환은 variant 선택 1회라 비용 없음) |
+| 시나리오 모드 슬라이더 | 1차 재실행에서 슬라이더가 0 으로 되돌아감 → 원인: 장면 프레임마다 부르는 `sync_from_state()` 가 수동 사양(0)으로 재설정. 수정: 조작 주체가 manual 일 때만 슬라이더를 동기화. 재확인 `img/view_scenario_slider_isaac.png`(`4 / 32 턴 (시나리오)`, 슬라이더 4) |
+| 89/89 · pytest · build · 금지 diff | sim_vs_analysis PASS 89/89, pytest 157 passed·1 skipped, tsc·vite 통과, 금지 파일 diff 0 |

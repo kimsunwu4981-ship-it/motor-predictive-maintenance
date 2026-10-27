@@ -50,6 +50,7 @@ export interface LiveState {
   control_source?: "manual" | "scenario";
   manual_fault?: { phase: string; phase_label?: string; coil: string; turns: number; R_f_ohm: number; unbalance: number; case?: string } | null;
   persistence?: { kind: string; need_s: number; level: string; raw_level: string; pending_s: number };
+  view_mode?: string | null; view_source?: string; view_label?: string;      // fix/panel-view-switch: 실제 USD variant (readback) - 아이작심 타일 부제
   waveform_last_2cycles?: { fs_Hz: number; f0_Hz: number; cycles: number; unit: string; t_ms: number[]; A: number[]; B: number[]; C: number[] };
 }
 export interface ElecSourceCase { key: string; label: string; method: "lut" | "legacy"; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null; load: number }
