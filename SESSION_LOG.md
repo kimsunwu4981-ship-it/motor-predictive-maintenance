@@ -943,3 +943,11 @@ M1 은 5.0 A·2.9 A 입니다."** — 승인하면 세 곳(PDF 원고, 기계·�
 - **수정**: `viz/view_mode.py` 뷰 전환 유일 진입점(`ViewMode.set(mode, source)` + USD readback + 로그), 매 프레임 재적용 삭제, x-ray 는 변화 때만, 장면 `view` 키는 전환 시 1회, state `view_mode/view_source/view_label` → 대시보드 타일 부제, 버튼 색 = readback. 소소: 패널 `데이터 n · 화면 n`, 시나리오 모드 슬라이더 읽기 전용 `n / 32 턴 (시나리오)`(명시 SimpleIntModel).
 - **검증**: 세 버튼 모두 클릭 후 +3 프레임·+30 s 유지, 장면 전환(4턴→12턴→과부하)에도 유지, 스크린샷 3×2, 스트림 30 fps. `docs/isaac_panel_q1.md` "보기 전환 수정" 절.
 
+
+## 30. 아이작심 ↔ 대시보드 실시간 연동 세션 + 재연결 (2026-10-27 밤, 코드 변경 없음)
+
+- **기동**: `motor_dt_viz` 에서 `python.bat app\demo_integrated.py --gui --autoplay --motor M1 --live --preset demo --cam side --judge_stream simulation --no_panel_notice --log_subdir live_session`(PowerShell, `logs/live_session/run.txt`, 시간 제한 없음) + `dashboard` 에서 `node serve.cjs`(4173). 브라우저 `http://127.0.0.1:4173/#/status`(`?live=ws://localhost:8765`). 직전 Isaac 인스턴스가 포트를 놓기 전에 띄우면 access violation → 종료 대기 후 재기동.
+- **실측(`tools/live/stream_probe.py`)**: 스트림 30 fps·지연 ≈30 ms, state 9.8 Hz, Isaac 40 fps(패널+스트림+대시보드 1 탭). 사용자가 패널로 수동 조작(apply #1~#18: 32→3→7→0→4턴 등) → `control_source: manual`, 대시보드 "수동 조작" 표시·판정 전환 확인.
+- **재연결 요청**: "대시보드랑 연결 끊겼는데" → 포트 8765/8766/4173 모두 LISTEN, 6 s 프로브 `stream 181 frames 30.1 fps | state 59 msgs 9.8 Hz | errors 없음` → 서버 쪽 정상. 끊김은 브라우저 탭의 WebSocket 종료(로그 `client -`)였고 새 탭(`…#/status?live=ws://localhost:8765&r=<ms>`)으로 재오픈해 복구. 탭마다 클라이언트 1개로 잡히므로 옛 탭은 닫는다. 끊김 띠가 남으면 Ctrl+F5 또는 헤더 LIVE 뱃지 클릭으로 주소 재입력.
+- **진단 순서(재사용)**: ① `netstat -ano | findstr "8765 8766 4173"` ② `tail logs/live_session/run.txt`(client +/−, panel apply) ③ `py -3.12 -X utf8 tools/live/stream_probe.py --seconds 6` ④ 서버 정상이면 브라우저 탭 교체, 비정상이면 Isaac 종료 대기 후 재기동.
+- 저장소 변경 없음(로그는 gitignore). 금지 파일 diff 0.
