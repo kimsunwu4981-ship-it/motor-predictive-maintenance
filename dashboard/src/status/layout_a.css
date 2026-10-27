@@ -19,6 +19,9 @@
 .la-thr { font-size: calc(14px * var(--sv)); color: var(--fg2); white-space: nowrap; }
 .la-top .sv2-motor, .la-top .sv2-scene { font-size: calc(14px * var(--sv)); }
 .la-lost { font-size: calc(13px * var(--sv)); color: var(--fg2); border: 1px dashed var(--fg3); border-radius: 8px; padding: 2px 8px; }
+.la-load { font-size: calc(14px * var(--sv)); color: var(--fg2); white-space: nowrap; border-left: 1px solid var(--line); padding-left: 14px; }
+.la-load b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.la-load-s { font-size: calc(13px * var(--sv)); color: var(--fg2); margin-left: 10px; white-space: nowrap; }
 
 /* 타일 (simple.css .tile 재사용) */
 .la-tiles .tile-h .big { font-size: calc(24px * var(--sv)); }

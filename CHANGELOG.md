@@ -1,6 +1,6 @@
 # CHANGELOG — 크레인 퀀선 모터 모델링
 
-생성 2026-10-27 14:54 · `motor_dt_viz/tools/docs/changelog_from_log.py` · 출처 `SESSION_LOG.md` 장 제목 + `git log`. 최신 태그 `v1.0-m1`.
+생성 2026-10-27 15:55 · `motor_dt_viz/tools/docs/changelog_from_log.py` · 출처 `SESSION_LOG.md` 장 제목 + `git log`. 최신 태그 `v1.0-m1`.
 
 | # | 날짜 | 장 제목 | 같은 날 커밋 |
 |---|---|---|---|
@@ -40,7 +40,8 @@
 | 24 | 2026-10-21 | 시뮬 vs Maxwell 비교표(엑셀 9시트 + 한 장 요약) + 결함 크기 역추정 + FEM 불확실성 민감도 (C0~C4, 2026-10-21) | — |
 | 25 | 2026-10-26 | 보고용 미디어 팩 — 모터 구동·결함 장면·대시보드 영상과 사진 (M0~M6, 2026-10-26) | `3b6b6a1` media: report capture pack 20261026<br>`166ba85` dashboard: simple view (3-layer IA)<br>`c216099` dashboard: plain terms in hero threshold line<br>`79ca0e9` media: dashboard captures on simple view<br>`41acba4` media: drop stale export csv<br>`de32e04` docs: PROGRESS.md — 현재까지 진행 현황 한 장 요약 (2026-10-26)<br>`5e199d5` dashboard: simple view 1b — visual-first tiles (map · waveform · components · trend)<br>`53870f3` media: dashboard captures on tile layout + Maxwell path resolution after desktop reorg<br>`0088789` media: drop stale export csv duplicates |
 | 26 | 2026-10-26 | 상태 보드 단순화 — 첫 화면은 "상태 · 원인 · 조치" (3단 정보 구조, 2026-10-26) | — |
-| 27 | 2026-10-27 | 전기 상태 보드 레이아웃 A — 실시간 전용 + 아이작심 뷰포트 스트림, 녹화·전문가·기계·발표 제거 (A0~A4, 2026-10-27) | — |
+| 27 | 2026-10-27 | 전기 상태 보드 레이아웃 A — 실시간 전용 + 아이작심 뷰포트 스트림, 녹화·전문가·기계·발표 제거 (A0~A4, 2026-10-27) | `341d744` dashboard: layout A + Isaac live stream, legacy UI removed |
+| 28 | 2026-10-27 | 아이작심 컨트롤 패널 Q1 — 전기 결함 전용 · 모드 제거 · 실시간 수동 조작 + 대시보드 마감 8건 (2026-10-27, 브랜치 feat/isaac-panel-q1 → master, 태그 v1.1-panel-q1) | — |
 
 ## 태그
 

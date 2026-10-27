@@ -2,7 +2,7 @@
 //
 // 사건의 시각·수치는 export 가 로그에서 만든 events.json 에서만 온다. 여기서는 문구 템플릿(event_templates.yaml)에
 // 끼워 넣고, 같은 순간에 몰린 사건을 우선순위로 하나만 고르며, 장면 해설이 언제 공개되는지(reveal_timing)를 계산한다.
-import type { Step } from "../data";
+import type { Step } from "../../data";
 import { fill, fmtNum, type LiveData, type LiveEvent, type LiveScene, type Templates } from "./types";
 
 export const CLUSTER_S = 1.0;      // 이 시간 안에 몰린 사건은 "같은 순간" — 우선순위가 가장 높은 것만 자막

@@ -71,6 +71,15 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
   const sc: FleetScenario = useMemo(() => ({ total_duration_s: Math.max(live.buffer.tEnd, live.buffer.tMin + 1), t_min: live.buffer.tMin, steps: steps as unknown as FleetScenario["steps"] }), [live.version, steps]);   // eslint-disable-line react-hooks/exhaustive-deps
   const i = series ? series.t.length - 1 : 0;
   const scene = content.narration.electrical[step.id];
+  // 패널 Q1: 수동 조작이면 "무엇을?" 은 턴수가 가까운 등록 장면의 조치 문구를 빌린다 (숫자 없음, 출처 표시)
+  const manualAction = useMemo(() => {
+    const m = last?.control_source === "manual" ? last.manual_fault : null;
+    if (!m) return undefined;
+    if (m.turns <= 0) return m.unbalance > 0 ? (content.narration.electrical.voltage_unbalance?.cause_chain?.action ? `${content.narration.electrical.voltage_unbalance.cause_chain.action} (전압 불평형 장면 참고)` : "—") : "조치 없음 — 기준선 유지";
+    const cands = ["itsc_4turn", "itsc_8turn", "itsc_12turn", "itsc_16turn"].map((id) => ({ id, t: Number(id.match(/\d+/)?.[0] ?? 0) })).filter((c) => content.narration.electrical[c.id]?.cause_chain);
+    const near = cands.reduce((a, b) => (Math.abs(b.t - m.turns) < Math.abs(a.t - m.turns) ? b : a), cands[0]);
+    return near ? `${content.narration.electrical[near.id].cause_chain!.action} (${near.t}턴 장면 참고)` : undefined;
+  }, [last, content]);
   const sceneValues = useMemo(() => (last ? liveSceneValues(last, index, content.labels.elec_status ?? {}) : undefined), [last, index, content]);
   const scenes: SceneOpt[] = useMemo(() => (live.hello?.scenes?.length ? live.hello.scenes.map((h) => ({ n: h.n, id: h.id, label: h.label })) : index.scenarios.electrical.steps.map((s) => ({ n: s.n, id: s.id, label: s.label }))), [live.hello, index]);
   // 시나리오 전환: 명령 → 새 장면 첫 state 까지 시간 (A3 측정값으로 헤더에 표시)
@@ -94,7 +103,7 @@ function Board({ index, content }: { index: FleetIndex; content: StatusContent }
       <LayoutA index={index} motor={motor} labels={content.labels} s={series} i={i} last={last} step={step} sc={sc} scene={scene} sceneValues={sceneValues}
         conn={conn} wsUrl={live.url} onUrl={(u) => live.setUrl(u)} isaacMode={last?.mode ?? null}
         scenes={scenes} onScene={onScene} switching={switching} lastSwitchMs={lastSwitchMs}
-        stream={stream} canvasRef={canvasRef} sTrend={trendSeries} openDrawer={() => setDrawer("evidence")} />
+        stream={stream} canvasRef={canvasRef} sTrend={trendSeries} manualAction={manualAction} openDrawer={() => setDrawer("evidence")} />
       {drawer && <EvidenceDrawer index={index} s={series} i={i} stepId={step.id} electricalCase={step.electrical_case} mode="electrical" live={last} isLive={conn === "live"}
         sourceLabel={`Isaac Sim 라이브 ${live.url}`} labels={content.labels} onClose={() => setDrawer(null)} initialTab={drawer}
         tabs={[

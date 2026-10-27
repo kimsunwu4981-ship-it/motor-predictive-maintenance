@@ -55,6 +55,9 @@ py -3.12 -X utf8 tools\docs\verification_summary.py        # docs/verification_s
 - 실측: 위 순서대로 전부 통과(LUT sha 동일 `c6898c6e8d80`, pytest 135 passed·8 skipped, USD prims 110, 대시보드 빌드, verify 8/8).
 - `datasheet_to_yaml.py` 는 **돌리지 않는다**: 카탈로그 PDF(Maxwell `docs/sources`, gitignore)가 없으면 치수표가 빠진 `datasheet_v4.yaml` 로 덮어써 하우징 빌드가 깨진다. `assets/motors/M1/inputs/` 커밋본이 입력 정본(PROVENANCE.md).
 - 검증 대조·스크린샷(`tools/verify/sim_vs_analysis.py`, `tools/viz/shot_with_hud.py`)은 Isaac 배치 로그(`logs/verify`, ~30 분)가 필요 — 산출물은 `docs/verification/`·`docs/assets/screenshots/` 커밋본.
+- **전기 전용 데모(2026-10-27, `v1.1-panel-q1`)**: `app/demo_integrated.py` 는 이제 전기 결함만 돌린다(`--mode` 는 `electrical` 로 강제). 실시간 보드 + 패널:
+  `C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --motor M1 --live --preset demo --cam side --judge_stream simulation` (PowerShell/cmd) → `cd ..\dashboard ; node serve.cjs` → `http://localhost:4173/#/status`.
+  `--judge_stream simulation` 이 없으면 Judge 가 실측 정책(provisional advisory)이라 보드가 전부 '안전'. 기계·통합 모드 로그(열 검증 `logs/verify/thermal_*`)를 **다시 만들려면** 옛 전체본 `_legacy/app/demo_integrated_modes.py --mode integrated --scenario_yaml …` 를 쓴다(활성 데모로는 불가).
 
 ## 3. 실패 시 확인
 

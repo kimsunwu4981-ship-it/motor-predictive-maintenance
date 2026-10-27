@@ -46,6 +46,10 @@ export interface LiveState {
   host: { ip: string; ws: string; clients: number };
   // 레이아웃 A (2026-10-27) 추가 — 케이스별 대칭 성분·2주기 파형 (app/live_signals.py, export case_signals 와 같은 식). 없는 옛 스트림도 동작한다
   sym_components_A?: { i1_A: number; i2_A: number; i0_A: number };
+  // 패널 Q1 (2026-10-27) 추가 — 조작 주체·수동 결함 사양·I₂/I₁ 지속 시계 (Isaac 쪽 Judge 내부 시계, 계산 없음)
+  control_source?: "manual" | "scenario";
+  manual_fault?: { phase: string; phase_label?: string; coil: string; turns: number; R_f_ohm: number; unbalance: number; case?: string } | null;
+  persistence?: { kind: string; need_s: number; level: string; raw_level: string; pending_s: number };
   waveform_last_2cycles?: { fs_Hz: number; f0_Hz: number; cycles: number; unit: string; t_ms: number[]; A: number[]; B: number[]; C: number[] };
 }
 export interface ElecSourceCase { key: string; label: string; method: "lut" | "legacy"; expected_i2i1: number | null; turns: number | null; R_f_ohm: number | null; load: number }

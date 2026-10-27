@@ -145,14 +145,22 @@ class M1Model:
         for key, spec in (d.get("extra_cases") or {}).items():
             if key in cm.cases:
                 continue
-            tpl = dict(cm.cases[spec["template"]])
-            tpl["label"] = spec["label"]; tpl["lut"] = {"turns": spec["turns"], "R_f_ohm": spec["R_f_ohm"]}; tpl["load"] = float(spec.get("load", 1.0))
-            tpl["target_i2i1"] = None
-            if "short_loop" in tpl:
-                tpl["short_loop"] = {**tpl["short_loop"], "turns": spec["turns"]}
-            cm.cases[key] = tpl; cm._lut_cache.pop(key, None) if hasattr(cm, "_lut_cache") else None
+            M1Model.register_runtime_case(cm, key, spec["template"], spec["turns"], spec["R_f_ohm"], float(spec.get("load", 1.0)), spec["label"])
             added.append(key)
         return added
+
+    @staticmethod
+    def register_runtime_case(cm, key: str, template: str, turns, R_f_ohm, load: float, label: str) -> dict:
+        """템플릿 케이스 복사 + lut {turns, R_f_ohm}·load·label 교체 — extra_cases 와 패널 Q1 수동 케이스(app/fault_controller.py)가 같은 길을 쓴다. 파일 불변."""
+        tpl = dict(cm.cases[template])
+        tpl["label"] = label; tpl["lut"] = {"turns": turns, "R_f_ohm": R_f_ohm}; tpl["load"] = float(load)
+        tpl["target_i2i1"] = None
+        if "short_loop" in tpl:
+            tpl["short_loop"] = {**tpl["short_loop"], "turns": turns}
+        cm.cases[key] = tpl
+        if hasattr(cm, "_lut_cache"):
+            cm._lut_cache.pop(key, None)
+        return tpl
 
     def step_rotation(self, w_rad_s: float, dt_s: float) -> float:
         self.angle_deg = (self.angle_deg + math.degrees(w_rad_s * dt_s)) % 360.0
@@ -161,12 +169,14 @@ class M1Model:
         return self.angle_deg
 
     # ------------------------------------------------------------- 색
-    def update(self, temperatures: dict, stages: dict, time_s: float, thresholds: dict, p_loop_W: float, p_loop_max_W: float, mode: str) -> None:
+    def update(self, temperatures: dict | None, stages: dict, time_s: float, thresholds: dict, p_loop_W: float, p_loop_max_W: float, thermal_on: bool = True) -> None:
+        """부품 색·단락 발광. temperatures=None 또는 thermal_on=False 면 열 색은 끄고(전기 전용) 단락 발광만."""
         k_loop = 0.0 if p_loop_max_W <= 0 else max(0.0, min(1.0, p_loop_W / p_loop_max_W))
+        temperatures = temperatures or {}
         for name, g in self.groups.items():
             cfg = g["cfg"]; node = cfg["thermal"]; sh = g["shader"]
             base = tuple(cfg["base_color"])
-            if node in temperatures and mode in ("mechanical", "integrated"):
+            if node in temperatures and thermal_on:
                 s = self.cmap.sample(temperatures[node], None, stages.get(node, "normal"), time_s, thresholds.get(node))
                 b = s["blend"]
                 diffuse = tuple(base[i] * (1 - b) + s["diffuse"][i] * b for i in range(3))
@@ -178,6 +188,52 @@ class M1Model:
                 em = [em[i] + c * k_loop * glow for i, c in enumerate((1.0, 0.18, 0.05))]     # UsdPreviewSurface emissiveColor 는 강도 입력이 없어 색으로 세기를 준다
             sh.GetInput("diffuseColor").Set(Gf.Vec3f(*diffuse))
             sh.GetInput("emissiveColor").Set(Gf.Vec3f(*em))
+
+    # ------------------------------------------------------------- 수동 결함 코일 (패널 Q1)
+    def phase_coils(self) -> dict[str, list[str]]:
+        """prim_map 권선 그룹(winding_A/B/C) 의 코일 프림 이름 — 스테이지에 실제로 있는 것만 (하드코딩 없음)."""
+        out = {}
+        for p in ("A", "B", "C"):
+            g = self.pm["groups"].get(f"winding_{p}") or {}
+            names = []
+            for rel in g.get("prims", []):
+                pr = self.stage.GetPrimAtPath(M1_PRIM + rel)
+                if pr and pr.IsValid():
+                    names.append(rel.rsplit("/", 1)[-1])
+            out[p] = names
+        return out
+
+    def set_short_coil(self, phase: str, coil: str | None) -> None:
+        """수동 결함 코일: phase A 의 Coil_01 은 기존 Coil_01_short 껍질을 쓴다. 그 외 코일은 그 프림에 단락 재질을 묶고(발광은 update 의 winding_short 세기 그대로) Coil_01_short 를 숨긴다."""
+        cur = getattr(self, "_short_override", None)          # (prim_path, 원래 재질 경로)
+        want = None
+        if coil and not (phase == "A" and coil == "Coil_01"):
+            want = f"{M1_PRIM}/Stator/Coils/{coil}"
+        if cur and cur[0] != want:
+            pr = self.stage.GetPrimAtPath(cur[0])
+            if pr and pr.IsValid():
+                UsdShade.MaterialBindingAPI(pr).UnbindDirectBinding()
+                orig = UsdShade.Material(self.stage.GetPrimAtPath(cur[1])) if cur[1] else None
+                if orig and orig.GetPrim().IsValid():
+                    UsdShade.MaterialBindingAPI.Apply(pr).Bind(orig, bindingStrength=UsdShade.Tokens.strongerThanDescendants)
+            self._short_override = None
+        if want and (not cur or cur[0] != want):
+            pr = self.stage.GetPrimAtPath(want)
+            if pr and pr.IsValid() and "winding_short" in self.groups:
+                orig_mat = ""
+                for name, g in self.groups.items():
+                    if f"/Stator/Coils/{coil}" in g["cfg"].get("prims", []):
+                        orig_mat = f"{MAT_SCOPE}/{name}"
+                mat = UsdShade.Material(self.stage.GetPrimAtPath(f"{MAT_SCOPE}/winding_short"))
+                UsdShade.MaterialBindingAPI.Apply(pr).Bind(mat, bindingStrength=UsdShade.Tokens.strongerThanDescendants)
+                self._short_override = (want, orig_mat)
+        shell = self.stage.GetPrimAtPath(f"{M1_PRIM}/Stator/Coils/Coil_01_short")
+        if shell and shell.IsValid():
+            img = UsdGeom.Imageable(shell)
+            if want:
+                img.MakeInvisible()
+            else:
+                img.MakeVisible()
 
     # ------------------------------------------------------------- 스크린샷 계획
     def plan_shots(self, plan: list[tuple]) -> None:

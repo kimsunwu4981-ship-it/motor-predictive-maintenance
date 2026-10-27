@@ -63,7 +63,7 @@ Isaac `--live` 데모는 2026-10-21 P1 규칙대로 Judge 스트림 라벨을 `l
 | itsc_4turn_resistive | SAFE | −0.123 %(절대 0.00004, 4자리 반올림) | +0.124 % | 0.000 % | −0.098 % |
 | itsc_4turn_halfload | WARN/i2i1 | +0.010 % | −0.016 % | 0.000 % | 0.000 % |
 
-전부 PASS(±0.1 % 또는 반올림 반 단위). 선전류 Ia/Ib/Ic 는 라이브 state 가 기존 필드대로 **0.1 A 반올림**이라 겉보기 편차 최대 1.3 %(0.05 A 안) — 대시보드도 1자리로 보여준다. 판정·원인 신호는 7/7 일치.
+전부 PASS(±0.1 % 또는 반올림 반 단위). 선전류 Ia/Ib/Ic 는 2026-10-27 패널 Q1 §4.8 에서 송신 정밀도를 **0.01 A** 로 올려(엔진·판정 입력 불변) 겉보기 편차 ≤ 0.094 %(이전 0.1 A 반올림 때 1.3 %). 판정·원인 신호 7/7 일치.
 
 ## 제거 목록 (→ `dashboard/src/_legacy/`)
 
@@ -94,6 +94,21 @@ Isaac `--live` 데모는 2026-10-21 P1 규칙대로 Judge 스트림 라벨을 `l
 1. `cd motor_dt_viz` → `C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --live --preset demo --cam side --judge_stream simulation` (PowerShell/cmd). 콘솔에 `[stream] viewport JPEG ws://127.0.0.1:8766` 가 찍힌다.
 2. `cd dashboard` → `npm run build`(처음 한 번) → `node serve.cjs` → `http://localhost:4173/#/status`. 다른 PC 에서는 `?live=ws://<데스크탑 IP>:8765` — 단 ① 스트림은 127.0.0.1 전용이라 그 PC 에서는 "연결 끊김"으로 보인다(원격 노출 금지 규칙).
 3. 측정: `py -3.12 -X utf8 tools/live/stream_probe.py --seconds 600 --out logs/stream_probe.json` · 숫자 대조: `py -3.12 -X utf8 tools/live/verify_live_vs_v1.py --out docs/dashboard_layout_a/v1_compare` · 스크린샷: `node tools/layout_a_shots.mjs ../docs/dashboard_layout_a/img`.
+
+## §4 마감 수정 (패널 Q1, 2026-10-27 — 레이아웃 변경 없음)
+
+| # | 항목 | 원인·수정 | 확인 |
+|---|---|---|---|
+| 1 | 추세 제목 "최근 4 분" vs 축 12:25~16:40 | 축이 세션 절대 시각(m:ss)이라 창(=버퍼 길이)과 달라 보였다 → x 축 라벨을 "지금 기준 −m:ss … 지금"(`TrendChart relativeTo`)으로, 제목은 같은 창 길이 | `img/dash_12turn.png` 축 `-0:06 … 지금`, 제목 `최근 6 초` |
+| 2 | 헤더 시나리오 칸 | `control_source == "manual"` 이면 "수동 조작 (아이작심 패널)" 옵션 표시, 장면을 고르면 `play_scenario` → Isaac 이 scenario 로 복귀 | `isaac_panel_q1/measure/state_after_play_scenario.json` |
+| 3 | 하단 "왜?" | 수동이면 원인 문구 `R상 코일 01 · 4턴 단락 (수동 주입, R_f 0.1 Ω)`, 정상이면 `결함 없음 (수동 · 정상)`; "무엇을?" 은 턴수가 가까운 장면의 조치 문구 + "(n턴 장면 참고)" | 대시보드 사진 3장 |
+| 4 | 운전 부하 | 상태 띠 `부하 100 %` 칸 + 파형 타일 큰 숫자 옆 `부하 100 %` (state `load`, 새 계산 없음) | 〃 |
+| 5 | 추세 위험 영역의 외딴 "0" | 번호 없는 수동 스텝(n=0)의 장면 라벨이 "0" 으로 찍히던 것 → "수동" | 〃 |
+| 6 | 전류 성분 I₂ 스케일 | I₂ 막대 최대 = 위험 눈금(0.10·I₁)/0.7 → 위험 눈금이 높이 70 %, 넘으면 꽉 채우고 `▲ 범위 밖`; I₁·I₀ 는 보조(회색·좁게) | 〃 (12턴: ▲) |
+| 7 | 용어 탭 "임시" 뱃지 | `glossary.yaml` 에 1줄: "시뮬레이션 합성 신호 기준 판정 — 실측 센서 연결 전까지 참고용" | 근거 서랍 용어 탭 |
+| 8 | 선전류 정밀도 | state `Ia/Ib/Ic_rms` 0.1 → 0.01 A(송신부만, `demo_integrated.py`), 파형 타일 큰 숫자 2자리 | v1_compare 겉보기 편차 1.3 % → ≤ 0.094 % |
+
+전/후: 전 `dashboard_layout_a/img/itsc_12turn_1920.png`(절대 시각 축·"0" 라벨·I₂ 작은 막대) ↔ 후 `isaac_panel_q1/img/dash_12turn.png`.
 
 ## 한계
 

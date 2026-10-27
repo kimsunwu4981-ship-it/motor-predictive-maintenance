@@ -1,0 +1,197 @@
+{
+ "taken": "2026-10-27 15:49:02",
+ "ack": null,
+ "state": {
+  "t_session_s": 130.44,
+  "case": "healthy",
+  "step": "manual",
+  "control_source": "manual",
+  "manual_fault": {
+   "phase": "A",
+   "coil": "Coil_01",
+   "turns": 0,
+   "R_f_ohm": 0.1,
+   "unbalance": 0.0,
+   "phase_label": "R",
+   "case": "healthy"
+  },
+  "load": 1.0,
+  "Ia_rms": 4.82,
+  "Ib_rms": 4.63,
+  "Ic_rms": 4.63,
+  "i2_over_i1": 0.027,
+  "i2_over_in": 0.0268,
+  "p_loop_total_W": 0.0,
+  "persistence": {
+   "kind": "i2i1",
+   "need_s": 3.0,
+   "level": "SAFE",
+   "raw_level": "SAFE",
+   "pending_s": 0.0
+  },
+  "status": {
+   "status": "SAFE",
+   "label": "안전",
+   "cause_signal": "-",
+   "cause_component": "-",
+   "value": 0.0,
+   "threshold": "-",
+   "levels": {
+    "temperature": "SAFE",
+    "current_ratio": "SAFE",
+    "i2i1": "SAFE",
+    "vibration": "SAFE",
+    "bearing_kurtosis": "SAFE",
+    "bearing_hf_ratio": "SAFE",
+    "bearing": "SAFE"
+   },
+   "stream": "simulation",
+   "provisional_in_status": false,
+   "signals": [
+    {
+     "kind": "temperature",
+     "component": "winding",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "stator_core",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "rotor",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "shaft",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "bearing_de",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "bearing_nde",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "endshield_de",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "endshield_nde",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "temperature",
+     "component": "frame",
+     "level": "SAFE",
+     "value": 25.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "current_ratio",
+     "component": "A",
+     "level": "SAFE",
+     "value": 1.0148,
+     "status": "provisional",
+     "advisory": false
+    },
+    {
+     "kind": "current_ratio",
+     "component": "B",
+     "level": "SAFE",
+     "value": 0.9725,
+     "status": "provisional",
+     "advisory": false
+    },
+    {
+     "kind": "current_ratio",
+     "component": "C",
+     "level": "SAFE",
+     "value": 0.9725,
+     "status": "provisional",
+     "advisory": false
+    },
+    {
+     "kind": "i2i1",
+     "component": "-",
+     "level": "SAFE",
+     "value": 0.027,
+     "status": "provisional",
+     "advisory": false
+    },
+    {
+     "kind": "vibration",
+     "component": "-",
+     "level": "SAFE",
+     "value": 1.0,
+     "status": "confirmed",
+     "advisory": false
+    },
+    {
+     "kind": "bearing_kurtosis",
+     "component": "-",
+     "level": "SAFE",
+     "value": 3.0,
+     "status": "provisional",
+     "advisory": false
+    },
+    {
+     "kind": "bearing_hf_ratio",
+     "component": "-",
+     "level": "SAFE",
+     "value": 1.0,
+     "status": "provisional",
+     "advisory": false
+    }
+   ],
+   "advisory": []
+  },
+  "sym_components_A": {
+   "i1_A": 4.6946,
+   "i2_A": 0.1268,
+   "i0_A": 0.0
+  },
+  "electrical_source": {
+   "case": "healthy",
+   "turns": 0.0,
+   "R_f_ohm": 0.03,
+   "i_f_A": 0.0,
+   "p_loop_total_W": 0.0,
+   "lut_i2_over_i1": 4.099114640590471e-16,
+   "clamped": false
+  }
+ }
+}

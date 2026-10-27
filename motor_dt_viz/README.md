@@ -259,13 +259,20 @@ LIVE 상태에서 상단 `☐ 제어 K` 버튼 또는 **K** 키(주소에 `&ctl=
 **모터 전환**: 기본은 **핫 스위치**(`config/live.yaml select_motor.switch_mode: hot`) — Isaac 프로세스 안에서 모터 라이브러리의 열회로·전류 모델·판정·정격·카메라 거리·HUD 문구만 새 모터로 재생성한다(USD·Isaac 재로드 없음, 1 s 미만). 대시보드 띠는 최소 `switch_banner_min_s`(10 s) 동안 "왜 바뀌는지 + 무엇을 비교할지"(문구는 `dashboard/public/content/live.yaml switch_*`)를 보여준다. `switch_mode: restart` 로 두면 R3 방식(현재 모터 정리 → 같은 인자로 재기동, 45~130 s, 로그 `logs/live_restart_<모터>.log`). 실측은 `docs/live_r3_report.md`·`live_r4_report.md`.
 데모 대본 `docs/live_demo_script.md`(5단계), 자동 구동 `tools/live_demo_drive.py`, 녹화 `tools/record_live_demo.ps1`(화면을 비워야 한다).
 
+### 아이작심 컨트롤 패널 Q1 — 전기 결함 전용 · 모드 제거 · 실시간 수동 조작 (2026-10-27, `v1.1-panel-q1`)
+
+`demo_integrated.py` 는 **전기 전용**이다(`--mode` 는 `electrical` 외 값이면 경고 뒤 강제; 기계·통합 모드 코드는 `_legacy/app/demo_integrated_modes.py`). 아이작심 창 안의 옛 "VIGENT - Control" 패널(모드 선택·열 결함 토글) 대신
+**"VIGENT 전기 결함 조작"** 패널(`ui/fault_control_window.py`)이 뜬다: 결함 상/코일(USD 코일 프림 이름, 표시 R·S·T) · 단락 턴수 0~32(LUT 격자) · 접촉 저항(0.03/0.1/0.3/1.0 Ω) · 전압 불평형(config 케이스 켜기/끄기) · [적용]/[정상으로] · 즉시 반영 체크 · 실시간 판정(읽기 전용, state 값) · 보기(반투명/절단/권선만) · 송출 설정(런타임).
+값은 `/World/VigentFaultController` 의 USD 속성(`vigent:*`)으로 가고, 메인 루프가 2 Hz 로 읽어 시나리오와 같은 주입 경로(`DemoState.electrical_case` ← 런타임 케이스 `manual_itsc`)로 엔진 케이스를 바꾼다(`app/fault_controller.py`). 패널을 만지면 시나리오는 자동 정지(`control_source: manual`), 대시보드 시나리오 ▾ 를 고르면 복귀.
+한글 라벨은 PIL 비트맵(`ui/ko_text.py`) — omni.ui 에 한글 글리프가 없다(실측). 측정·스크린샷: `--panel_selftest N [--panel_selftest_hold s] [--panel_burst]` → `logs/<subdir>/panel_selftest.json`·`panel_burst.json`; 창 캡처 `tools/live/window_shot.py`, state 한 건 `tools/live/state_snapshot.py`. 문서 `docs/isaac_panel_q1.md`.
+
 ### 레이아웃 A — 실시간 전용 전기 상태 보드 + 뷰포트 스트림 (2026-10-27)
 
 대시보드(`#/status`)는 이제 **실시간 전용·전기 해석 전용** 한 화면이다: 헤더(LIVE 뱃지·시나리오 ▾) → 상태 띠 → 2×2[아이작심 실시간 | 전류 파형 / 전류 성분 | 추세] → 왜·무엇을 한 줄 → 근거 서랍(근거·임계값·사양·용어 탭).
 녹화/LIVE 토글·전문가 보기·기계 해설·발표 모드(F)·제어 패널(K)·단축키는 UI 에서 뺐다(코드는 `dashboard/src/_legacy/`, 빌드 제외 — 삭제 아님). 위 R2·R3 절의 토글·패널 설명은 이력이다.
 
 ```bat
-C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --live --preset demo --cam side   # state 8765 + 뷰포트 JPEG 스트림 8766 (--live 면 스트림 기본 켜짐, --no_stream 으로 끔)
+C:\ISSACS~1\python.bat app\demo_integrated.py --gui --autoplay --motor M1 --live --preset demo --cam side --judge_stream simulation   # state 8765 + 뷰포트 JPEG 스트림 8766 (--live 면 스트림 기본 켜짐, --no_stream 으로 끔). 전기 전용 — --mode 불필요
 cd ..\dashboard && node serve.cjs                                                                                            # http://localhost:4173/#/status  (다른 PC: ?live=ws://<데스크탑 IP>:8765)
 ```
 

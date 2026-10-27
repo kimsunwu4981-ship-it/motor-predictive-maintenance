@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""demo_integrated.py — Phase 4: 통합 모드 + 제어 패널 + 자동 재생 (원클릭 데모).
+"""demo_integrated.py — 전기 결함 전용 데모 + 전기 결함 조작 패널(Q1) + 자동 재생 (2026-10-27: 기계·통합 모드는 _legacy/app/demo_integrated_modes.py, 파일 이름은 이력 호환으로 유지).
 
 모듈 A(발열 색상) + 모듈 B(전류 흐름)를 한 화면에서 구동한다.
 통합 모드에서는 모듈 B 의 상전류가 모듈 A 의 권선 동손(I²R) 입력이 된다
@@ -38,8 +38,8 @@ sys.excepthook = _hook
 ap = argparse.ArgumentParser()
 ap.add_argument("--gui", action="store_true")
 ap.add_argument("--autoplay", action="store_true", help="기동 직후 자동 재생 시작")
-ap.add_argument("--mode", choices=("mechanical", "electrical", "integrated"),
-                default="integrated", help="시작 모드 (기계 전용 / 전기 전용 / 통합)")
+ap.add_argument("--mode", default="electrical",
+                help="전기 전용(패널 Q1, 2026-10-27). electrical 외 값은 경고 뒤 electrical 로 강제 — 기계·통합 모드 코드는 _legacy/app/demo_integrated_modes.py")
 ap.add_argument("--max_s", type=float, default=0.0, help="지정 시간 후 종료 (0=무제한)")
 ap.add_argument("--profile", action="store_true", help="구간별 소요 시간을 측정해 로그에 남긴다")
 ap.add_argument("--low", action="store_true",
@@ -48,11 +48,14 @@ ap.add_argument("--record", metavar="MP4",
                 help="ffmpeg 로 Isaac Sim 창을 녹화하고 영상↔로그 오프셋을 기록한다")
 ap.add_argument("--no_timecode", action="store_true",
                 help="HUD 타임코드를 숨긴다 (오프셋 확정 후 발표용 녹화에 쓴다)")
-ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: mechanical)")
+ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: panel_q1)")
 ap.add_argument("--motor", default="M1", metavar="M1",
                 help="모터 라이브러리 ID (기본 M1 = 현대 HLP-2.2/4, 유일한 등록 모터). 열회로·전류 모델·진동 규격·HUD 문구를 그 모터로")
-ap.add_argument("--switch_seq", metavar="mode:sec,...",
-                help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
+ap.add_argument("--switch_seq", metavar="mode:sec,...", help="(이력) 모드 전환 검증 — 전기 전용 빌드에서는 무시")
+ap.add_argument("--panel_selftest", type=int, default=0, metavar="N", help="패널 Q1 지연 자동 측정: 턴수 0→4→12→0 을 N 회 (USD 속성 경로) — logs/<subdir>/panel_selftest.json")
+ap.add_argument("--panel_selftest_hold", type=float, default=4.0, help="자동 측정에서 각 턴수 값을 유지하는 시간 [s] (스크린샷용으로 길게)")
+ap.add_argument("--panel_burst", action="store_true", help="2 Hz 제한 검사: t≈3 s 부터 3 s 동안 매 프레임 턴수를 바꿔 쓰고 마지막 값(4)이 반영되는지 로그")
+ap.add_argument("--no_panel_notice", action="store_true", help="패널 상단 '모드 항목 삭제됨' 안내줄 숨김")
 ap.add_argument("--live", action="store_true",
                 help="라이브 모드: WebSocket 브리지(config/live.yaml)로 state 송신·명령 수신. 없으면 기존 동작과 완전히 같다")
 ap.add_argument("--live_port", type=int, default=0, help="live.yaml 의 포트를 덮어쓴다 (0 = config)")
@@ -84,6 +87,9 @@ ap.add_argument("--res", type=int, nargs=2, default=None, metavar=("W", "H"), he
 ap.add_argument("--capture_layout", action="store_true", help="캡처용 레이아웃: 창 클라이언트 영역을 --res 크기로 (0,0) 에 맞추고 Kit 패널(Stage/Content/Console/툴바)·제어 패널을 숨긴다. 장면·엔진 불변")
 ap.add_argument("--cam_plan", default="", help="카메라·뷰 일정 't:view:cam;…' — cam 은 프리셋 이름 또는 orbit(축 중심 360°/20 s). 그 시각부터 다음 항목까지 적용 (--m1_model)")
 args = ap.parse_args()
+if args.mode != "electrical":
+    print(f"[demo] WARNING: --mode {args.mode} is not supported in the electrical-only build - forcing electrical", flush=True)
+    args.mode = "electrical"
 if args.m1_model is None:
     args.m1_model = (args.motor == "M1") and not args.no_m1_model      # 파트 C: M1 이 기본 모터·기본 모델
 STREAM_ON = bool(args.stream) or (bool(args.live) and not args.no_stream)
@@ -354,26 +360,19 @@ if m1:
     print(f"[m1] extra cases {_added}: " + ", ".join(f"{k} I2/I1 {cm.expected_i2i1(k):.4f}" for k in _added), flush=True)
 if m1 and args.m1_shots:
     # 시나리오 시각(t_session)에 맞춘 스크린샷 계획 — 모드별 (파트 C S2: 기계·통합 장면 추가)
-    _SHOT_PLANS = {
-        # 전기(정상 0~20 s, 4턴 20~45, 12턴 45~75): 외형, cutaway 정상, cutaway 4턴(발광), cutaway 12턴, windings_only, 축단
+    _SHOT_PLANS = {   # 전기 전용 (기계·통합 계획은 _legacy/app/demo_integrated_modes.py)
         "electrical": [(6.0, "full", "wide", "01_exterior.png"), (12.0, "cutaway", "wide", "02_cutaway_healthy.png"), (36.0, "cutaway", "fault_focus", "03_cutaway_itsc_4turn.png"),
                        (62.0, "cutaway", "fault_focus", "04_cutaway_itsc_12turn.png"), (66.0, "windings_only", "wide", "05_windings_only.png"), (70.0, "full", "shaft", "06_shaft_end.png")],
-        # 기계(정상 0~25, DE 베어링 25~60, 오정렬 60~85, 팬 85~110, 브레이크 110~130, 과부하 130~160, 냉각 160~180)
-        "mechanical": [(14.0, "full", "wide", "01_mech_normal.png"), (52.0, "cutaway", "bearing_de", "02_mech_bearing_de.png"), (78.0, "cutaway", "close", "03_mech_misalignment.png"),
-                       (102.0, "full", "wide", "04_mech_fan_failure.png"), (150.0, "cutaway", "wide", "05_mech_overload.png")],
-        # 통합(정상 0~30, 베어링 30~70, 4턴 70~105, 12턴 105~150, 결론 150~165)
-        "integrated": [(14.0, "full", "wide", "01_int_normal.png"), (58.0, "cutaway", "bearing_de", "02_int_bearing_de.png"), (92.0, "cutaway", "fault_focus", "03_int_itsc_4turn.png"),
-                       (135.0, "cutaway", "fault_focus", "04_int_itsc_12turn.png")],
     }
     if args.verify_dir:
         # V4: HUD 합성용 4장 (전기 시나리오: 4턴 주입 직후 20.6 s, WARN 전환 23.6 s, 12턴 DANGER 전환 48.6 s, 정상 상태 70 s) — 이름에 시각을 넣어 state.csv 와 합성
         _SHOT_PLANS = {m_: [(20.6, args.view, "wide", "hud_01_injection_t20.6.png"), (23.6, args.view, "fault_focus", "hud_02_warn_t23.6.png"),
-                            (48.6, args.view, "fault_focus", "hud_03_danger_t48.6.png"), (70.0, args.view, "wide", "hud_04_steady_t70.0.png")] for m_ in ("integrated", "mechanical", "electrical")}
+                            (48.6, args.view, "fault_focus", "hud_03_danger_t48.6.png"), (70.0, args.view, "wide", "hud_04_steady_t70.0.png")] for m_ in ("electrical",)}
     if args.view.startswith("half_translucent"):
         # H3: 반투명 뷰 4장 — 정상 측면·정상 등각(통합 0~30 s), DE 베어링(30~70), 4턴 fault_focus(70~105)
         _v = args.view
         _SHOT_PLANS = {m_: [(14.0, _v, "side", "01_half_side_normal.png"), (18.0, _v, "wide", "02_half_iso_normal.png"),
-                            (58.0, _v, "bearing_de", "04_half_bearing_de.png"), (92.0, _v, "fault_focus", "03_half_itsc_4turn.png")] for m_ in ("integrated", "mechanical", "electrical")}
+                            (58.0, _v, "bearing_de", "04_half_bearing_de.png"), (92.0, _v, "fault_focus", "03_half_itsc_4turn.png")] for m_ in ("electrical",)}
     if args.shot_plan:
         _SHOT_PLANS = {args.mode: [(float(t_), v_, c_, f_) for t_, v_, c_, f_ in (item.split(":", 3) for item in args.shot_plan.split(";") if item.strip())]}
     m1.plan_shots(_SHOT_PLANS.get(args.mode) or _SHOT_PLANS.get("electrical") or [])   # --shot_plan 은 그 모드 키만 있다 — 기본값 표현식을 미리 평가하면 KeyError (D3 실측: 기계 모드가 기동 직후 조용히 종료)
@@ -396,16 +395,26 @@ T_max = T_rated * 2.5
 sim = get_physx_simulation_interface()
 
 # ------------------------------------------------------------------ UI
-from ui.control_panel import ControlPanel, DemoState, normalize_mode  # noqa: E402
+from ui.demo_state import DemoState, MODE  # noqa: E402   (전기 전용 — 모드 선택 없음)
+from fault_controller import ManualFaultController, MANUAL_CASE  # noqa: E402
 
 state = DemoState()
-state.mode = args.mode
+state.mode = MODE
 panel = hud = None
-if args.gui:
+fault_ctrl = None
+PHASE_LABELS = dict((EL_CFG or {}).get("phase_labels") or {"A": "R", "B": "S", "C": "T"})
+try:
+    fault_ctrl = ManualFaultController(stage, cm, m1.phase_coils() if m1 else {"A": ["Coil_01"]}, rate_hz=2.0, log=lambda m: print(m, flush=True))
+    print(f"[panel] fault controller {fault_ctrl.prim.GetPath()} max_turns {fault_ctrl.max_turns} R_f {fault_ctrl.rf_values} coils {fault_ctrl.phase_coils}", flush=True)
+except Exception as e:
+    print("[panel] fault controller failed:", e, flush=True)
+if args.gui and fault_ctrl is not None:
     try:
-        panel = ControlPanel(state)
+        from ui.fault_control_window import FaultControlWindow  # noqa: E402
+        panel = FaultControlWindow(state, fault_ctrl, PHASE_LABELS, m1=m1, streamer=None, log=lambda m: print(m, flush=True), show_notice=not args.no_panel_notice)
     except Exception as e:
-        print("[demo] 제어 패널 생성 실패:", e, flush=True)
+        print("[demo] 패널 생성 실패:", e, flush=True)
+if args.gui:
     try:
         from viz.hud import MotorHUD
         hud = MotorHUD()
@@ -413,7 +422,7 @@ if args.gui:
             hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id} Hyundai HLP-2.2/4, {MOTOR.source} spec, "
                                f"{MOTOR.rated_rpm:g} rpm, {MOTOR.rated_line_current_a:g} A, {MOTOR.bearing_de}/{MOTOR.bearing_nde})")
             hud.vib_standard = VIB_STD
-        hud.set_mode(args.mode)
+        hud.set_mode(MODE)
     except Exception as e:
         print("[demo] HUD 생성 실패:", e, flush=True)
 
@@ -433,6 +442,8 @@ if STREAM_ON:
     try:
         streamer = ViewportStreamer(port=int(load("live")["server"].get("stream_port", 8766)), fps=args.stream_fps, size=tuple(args.stream_size),
                                     quality=args.stream_quality, log=print).start()
+        if panel is not None:
+            panel.streamer = streamer
         if bridge is not None:
             bridge.extra_hello["stream_ws"] = streamer.url          # 대시보드가 hello 에서 스트림 주소를 읽는다
             bridge.extra_hello["stream"] = {"fps": args.stream_fps, "size": list(args.stream_size), "quality": args.stream_quality, "view": args.view}
@@ -459,7 +470,7 @@ def _load_reveal_timing() -> dict:
     out = {}
     try:
         import yaml
-        for m in ("mechanical", "electrical"):
+        for m in ("electrical",):
             p = os.path.join(ROOT, "..", "dashboard", "public", "content", m, "narration.yaml")
             if os.path.exists(p):
                 sc = (yaml.safe_load(open(p, encoding="utf-8")) or {}).get("scenes") or {}
@@ -507,7 +518,7 @@ def hot_switch_motor(mid: str) -> dict:
     s_rated = float(V(mc["rating"]["slip"])); T_rated = float(V(mc["rating"]["torque_Nm"])); T_max = T_rated * 2.5
     CAM_WIDE, CAM_CLOSE = _scaled(CAM_WIDE0), _scaled(CAM_CLOSE0)
     set_camera_view(eye=CAM_WIDE[0], target=CAM_WIDE[1])
-    player = _player_for(state.mode)
+    player = _player_for(MODE)
     if bridge is not None:
         _refresh_hello_scenes()
     state.playing_scenario = False; state.thermal_faults.clear(); state.electrical_case = "healthy"; state.dirty = True
@@ -518,7 +529,7 @@ def hot_switch_motor(mid: str) -> dict:
     if hud:
         hud.basis_motor = (f"{MOTOR.rated_power_kw:g} kW {MOTOR.poles}-pole hoist motor ({MOTOR.id} Hyundai HLP-2.2/4, {MOTOR.source} spec, {MOTOR.rated_rpm:g} rpm, {MOTOR.rated_line_current_a:g} A, {MOTOR.bearing_de}/{MOTOR.bearing_nde})")
         hud.vib_standard = VIB_STD
-        hud.set_mode(state.mode)
+        hud.set_mode(MODE)
     dt = time.perf_counter() - t0
     print(f"[live] hot switch -> {mid} in {dt * 1000:.0f} ms", flush=True)
     return {"hot": True, "motor_id": mid, "switch_ms": round(dt * 1000)}
@@ -532,17 +543,15 @@ def apply_command(cmd: dict) -> tuple[bool, object]:
             return False, "scenario is playing — send stop_scenario first"
         f, on = a["fault"], bool(a.get("on", True))
         applied = {}
-        if f in LIVE_THERMAL and state.mode in ("mechanical", "integrated"):
-            if on and f not in state.thermal_faults:
-                state.thermal_faults.append(f)
-            elif not on and f in state.thermal_faults:
-                state.thermal_faults.remove(f)
-            applied["thermal_faults"] = list(state.thermal_faults)
-        if f in LIVE_ELECTRICAL and state.mode in ("electrical", "integrated"):
+        if f in LIVE_ELECTRICAL:
             state.electrical_case = f if on else "healthy"
             applied["electrical_case"] = state.electrical_case
+            if fault_ctrl is not None:
+                fault_ctrl.mark_scenario(state)                     # 대시보드/명령이 결함을 쥐면 수동 사양은 정상으로
+            if m1:
+                m1.set_short_coil("A", None)
         if not applied:
-            return False, f"fault {f} does not apply in mode {state.mode}"
+            return False, f"fault {f} is not an electrical case (electrical-only build)"
         state.dirty = True
         if panel:
             panel.sync_from_state()
@@ -559,25 +568,29 @@ def apply_command(cmd: dict) -> tuple[bool, object]:
         state.slowmo = 1.0 / float(a["x"]); state.dirty = True
         return True, {"slowmo": state.slowmo}
     if name == "set_mode":
-        m = normalize_mode(a["mode"])
-        if panel:
-            panel._set_mode(m)                      # 버튼과 같은 경로 (무관한 결함 해제 포함)
-        else:
-            state.mode = m; state.request_mode_reset = True
-        return True, {"mode": m}
+        if str(a.get("mode")) == MODE:
+            return True, {"mode": MODE, "note": "electrical-only build"}
+        return False, "electrical-only build - mode is fixed to electrical (set_mode is legacy)"
     if name == "play_scenario":
         LIVE_JUMP["scene"] = a.get("scene")
         state.request_play = True
+        if fault_ctrl is not None:
+            fault_ctrl.mark_scenario(state)                         # 시나리오 ▾ 를 다시 고르면 scenario 로 복귀
+        if m1:
+            m1.set_short_coil("A", None)
+        if panel:
+            panel.sync_from_state()
         return True, {"scene": a.get("scene") or 1}
     if name == "stop_scenario":
         state.playing_scenario = False
         player.stop()
         return True, {"playing": False}
     if name == "reset":
+        state.request_reset = True; state.thermal_faults.clear(); state.electrical_case = "healthy"
+        if fault_ctrl is not None:
+            fault_ctrl.mark_scenario(state)
         if panel:
-            panel._reset()
-        else:
-            state.request_reset = True; state.thermal_faults.clear(); state.electrical_case = "healthy"
+            panel.reset_to_healthy()
         return True, {"reset": True}
     if name == "select_motor":
         mid = str(a["motor_id"]).upper()
@@ -621,15 +634,7 @@ CASE_EN = {"healthy": "Healthy", "itsc_4turn": "Inter-turn short (4 turns)",
 SIGNAL_EN = {"temperature": "temp", "current_ratio": "current", "i2i1": "I2/I1", "vibration": "vibration",
              "bearing_kurtosis": "bearing kurtosis", "bearing_hf_ratio": "bearing HF ratio"}
 PHASE_EN = {"A": "Ph R", "B": "Ph S", "C": "Ph T"}
-STEP_EN_BY_MODE = {
-    "integrated": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
-                   "itsc_4turn": "3. Inter-turn short (early, 4T)",
-                   "itsc_12turn": "4. Inter-turn short (progressing, 12T)",
-                   "conclusion": "5. Conclusion"},
-    "mechanical": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
-                   "misalignment": "3. Shaft misalignment", "fan_failure": "4. Cooling fan failure",
-                   "brake_drag": "5. Brake drag", "overload": "6. Overload (thermal)",
-                   "cooldown": "7. Faults cleared - cooling down"},
+STEP_EN_BY_MODE = {    # 전기 전용 (기계·통합 표는 _legacy/app/demo_integrated_modes.py)
     "electrical": {"healthy": "1. Healthy (balanced)", "itsc_4turn": "2. Inter-turn short (4T)",
                    "itsc_12turn": "3. Inter-turn short (12T)", "overload": "4. Overload",
                    "voltage_unbalance": "5. Supply voltage unbalance",
@@ -716,13 +721,13 @@ except Exception:  # noqa: BLE001
 
 
 def analysis_ref_line(mode_: str, case_: str, st_) -> tuple[str, bool | None]:
-    """HUD 한 줄: 표시값 | 해석 기준 | 차이 % | 출처. 기계 모드는 근거 없음 문구."""
+    """HUD 한 줄: 표시값 | 해석 기준 | 차이 % | 출처 (전기 전용)."""
     if ANALYSIS_REF is None:
         return "", None
-    if mode_ == "mechanical":
-        return "ref: no Maxwell basis - vibration/bearing constants (standard / AI Hub reference)", None
     R = ANALYSIS_REF["scenarios"].get(case_)
     if not R:
+        if case_ == MANUAL_CASE:
+            return "ref: manual case - LUT interpolation (turns/R_f/load grid), no scenario reference row", None
         return f"ref: {case_} outside LUT (legacy analytic) - no analysis reference", None
     exp = float(R["i2_over_i1_composite"]["expected_by_angle"]["angle_0"]); shown = float(st_.i2_over_i1)
     dev = (shown / exp - 1) * 100 if exp else 0.0
@@ -855,13 +860,11 @@ if args.record:
     while time.time() < _preroll_end:
         world.render()
 
-# 모드 전환 잔상 검증: "모드:시각" 목록을 시간 순으로 적용한다
-switch_plan = []
 if args.switch_seq:
-    for item in args.switch_seq.split(","):
-        m, _, sec = item.partition(":")
-        switch_plan.append((float(sec), normalize_mode(m.strip())))
-    switch_plan.sort()
+    print("[demo] --switch_seq ignored (electrical-only build; see _legacy/app/demo_integrated_modes.py)", flush=True)
+# 패널 Q1 자동 측정 (--panel_selftest N): 턴수 0→4→12→0 을 USD 속성에 써서 속성→적용→발광→state 송신 지연을 잰다
+SELFTEST = {"n": int(args.panel_selftest), "seq": [4, 12, 0], "i": 0, "next_t": 6.0 + (3.5 if args.panel_burst else 0.0), "pending": None, "events": [], "done": int(args.panel_selftest) <= 0, "hold": float(args.panel_selftest_hold)}
+BURST = {"on": bool(args.panel_burst), "t0": 3.0, "t1": 6.0, "writes": 0, "done": False}
 
 if args.autoplay:
     state.request_play = True
@@ -875,20 +878,34 @@ while simulation_app.is_running():
     t_real += dt_real
     t_session += dt_real
 
-    # ---------- 예약된 모드 전환 (검증용) ----------
-    while switch_plan and t_session >= switch_plan[0][0]:
-        _, _m = switch_plan.pop(0)
-        if panel:
-            panel._set_mode(_m)          # 버튼 클릭과 같은 경로 (무관한 결함 해제 포함)
+    # ---------- 패널 Q1 2 Hz 제한 검사 (--panel_burst): 3 s 동안 매 프레임 속성을 바꿔 쓴다 → 마지막 값만 남아야 한다 ----------
+    if BURST["on"] and not BURST["done"] and fault_ctrl is not None and t_session >= BURST["t0"]:
+        if t_session < BURST["t1"]:
+            fault_ctrl.write(turns=int(1 + (BURST["writes"] % 30)), phase="A"); BURST["writes"] += 1
         else:
-            state.mode = _m
-            state.request_mode_reset = True
-        print(f"[demo] 모드 전환 → {_m} (t_session={t_session:.1f}s)", flush=True)
+            fault_ctrl.write(turns=2, phase="A"); BURST["writes"] += 1; BURST["done"] = True; BURST["t_last"] = time.perf_counter()   # 마지막 값 2턴 (뒤 자동 측정의 4턴과 구분)
+    if BURST["on"] and BURST["done"] and not BURST.get("reported") and fault_ctrl is not None and fault_ctrl._applied and fault_ctrl._applied.get("turns") == 2 and fault_ctrl._pending is None:
+        BURST["reported"] = True
+        _rep = {"writes": BURST["writes"], "applies_during_burst": fault_ctrl.stats["applied"], "coalesced": fault_ctrl.stats["coalesced"], "final_turns": fault_ctrl._applied["turns"],
+                "last_write_to_apply_ms": round((time.perf_counter() - BURST["t_last"]) * 1000)}
+        print("[panel] burst " + json.dumps(_rep), flush=True)
+        with open(os.path.join(RUN_LOG_DIR, "panel_burst.json"), "w", encoding="utf-8") as _f:
+            json.dump(_rep, _f, indent=1)
 
-    # ---------- 모드 전환: 이전 모드의 잔상을 모두 지운다 ----------
+    # ---------- 패널 Q1 자동 측정: 속성 쓰기 ----------
+    if not SELFTEST["done"] and fault_ctrl is not None and t_session >= SELFTEST["next_t"] and SELFTEST["pending"] is None:
+        _turns = SELFTEST["seq"][SELFTEST["i"] % len(SELFTEST["seq"])]
+        fault_ctrl.write(turns=_turns, R_f_ohm=0.1, phase="A", coil=(fault_ctrl.phase_coils.get("A") or ["Coil_01"])[0])
+        SELFTEST["pending"] = {"turns": _turns, "expect_case": MANUAL_CASE if _turns > 0 else "healthy", "t_attr": time.perf_counter(), "t_apply": None, "t_glow": None, "t_state": None}
+        SELFTEST["i"] += 1
+        SELFTEST["next_t"] = t_session + SELFTEST["hold"]
+        if SELFTEST["i"] >= SELFTEST["n"] * len(SELFTEST["seq"]):
+            SELFTEST["done"] = True
+
+    # ---------- 잔상 제거 요청 (핫 모터 스위치 뒤; 모드 전환은 없다) ----------
     if state.request_mode_reset:
-        state.mode = normalize_mode(state.mode)
-        player = _player_for(state.mode)
+        state.mode = MODE
+        player = _player_for(MODE)
         if bridge is not None:
             _refresh_hello_scenes()
         tm.reset()
@@ -900,7 +917,7 @@ while simulation_app.is_running():
         for _nm in tracks:                     # 전류 경로 커브 제거
             builder.set_visible(_nm, False)
         if hud:
-            hud.set_mode(state.mode)
+            hud.set_mode(MODE)
         state.playing_scenario = False
         state.request_mode_reset = False
         state.dirty = True
@@ -923,6 +940,7 @@ while simulation_app.is_running():
             LIVE_JUMP["scene"] = None
         state.playing_scenario = True
         state.request_play = False
+        state.control_source = "scenario"
         t_real = 0.0                 # 시나리오 t=0 을 실제 시간축의 원점으로 삼는다
         if recorder is not None and "scenario_start_wall" not in rec_meta:
             # 시나리오 t=0 의 벽시계 시각. 영상 오프셋의 기준점이다.
@@ -944,7 +962,6 @@ while simulation_app.is_running():
     frame = None
     if state.playing_scenario:
         frame = player.advance(dt_real)
-        state.mode = frame.mode
         state.load = frame.load
         state.time_scale = frame.time_scale
         state.electrical_case = frame.electrical_case
@@ -952,32 +969,39 @@ while simulation_app.is_running():
         if frame.finished:
             state.playing_scenario = False
             if panel:
-                panel.set_status("Scenario finished")
+                panel.set_status("시나리오 종료")
         if panel:
             panel.sync_from_state()
 
-    mode = state.mode
+    # ---------- 패널 Q1: USD 속성 → 수동 결함 (2 Hz 제한, 마지막 값 보장) ----------
+    if fault_ctrl is not None:
+        _spec = fault_ctrl.poll(time.perf_counter())
+        if _spec is not None:
+            fault_ctrl.apply(_spec, state, cm, player=player, case_cache=case_sig)
+            if m1:
+                m1.set_short_coil(state.fault_phase, state.manual.coil if state.electrical_case == MANUAL_CASE else None)
+            if panel:
+                panel.sync_from_state()
+            if SELFTEST["pending"] is not None and SELFTEST["pending"]["t_apply"] is None:
+                SELFTEST["pending"]["t_apply"] = time.perf_counter()
+
+    mode = MODE
     case = state.electrical_case
-    faults = list(state.thermal_faults)
+    faults = []                                                 # 전기 전용: 열 결함 없음
 
     # ---------- 전류 ----------
     with _prof("current"):
         t_slow = t_real * state.slowmo
-        st_line = cm.analyze(t_win, cm.waveform(t_win + t_slow, case, "rated_line_A"), case, "rated_line_A")
-        st_phase = cm.analyze(t_win, cm.waveform(t_win + t_slow, case, "rated_phase_A"), case, "rated_phase_A")
-        winding_pu = cm.winding_current_pu(st_phase) if mode in ("electrical", "integrated") else None
+        _shift = {"A": 0, "B": 1, "C": 2}.get(state.fault_phase, 0)      # 패널 Q1 결함 상 B/C = 엔진 파형의 상 순서 순환 (새 수치 없음, 대칭 성분 크기 불변)
+        _I_line = cm.waveform(t_win + t_slow, case, "rated_line_A"); _I_phase = cm.waveform(t_win + t_slow, case, "rated_phase_A")
+        if _shift:
+            _I_line = np.roll(_I_line, _shift, axis=0); _I_phase = np.roll(_I_phase, _shift, axis=0)
+        st_line = cm.analyze(t_win, _I_line, case, "rated_line_A")
+        st_phase = cm.analyze(t_win, _I_phase, case, "rated_phase_A")
 
     # ---------- 열 (통합 모드에서만 전류 연동) ----------
     with _prof("thermal"):
-        if mode in ("mechanical", "integrated"):
-            # ITSC 단락 루프 총손실(LUT P_loop_total)을 권선 노드 추가 손실로 (D4, electrical.yaml coupling_to_thermal.loop_loss_to_winding)
-            _loop_W = cm.loop_loss_W(case) if mode == "integrated" else 0.0
-            th = tm.step(dt_sim_s=dt_real * state.time_scale, load=state.load, faults=faults,
-                         winding_current_pu=winding_pu if mode == "integrated" else None,
-                         use_duty_cycle=False,
-                         extra_loss_W={"winding": _loop_W} if _loop_W > 0 else None)
-        else:
-            th = tm.step(dt_sim_s=0.0, load=state.load, faults=[], use_duty_cycle=False)
+        th = tm.step(dt_sim_s=0.0, load=state.load, faults=[], use_duty_cycle=False)     # 전기 전용: 열 적분 없음(온도 상수) — 통합 열 연동은 _legacy
 
     # ---------- 회전 ----------
     with _prof("physics"):
@@ -992,24 +1016,18 @@ while simulation_app.is_running():
 
     # ---------- 시각: 부품 색 ----------
     with _prof("materials"):
-        if mode in ("mechanical", "integrated"):
-            driver.update(th.temperature_C, th.stage, t_real, thresholds=THRESHOLDS)
-        # 결함 부위 하우징 투시 (베어링이 경고 이상일 때) 또는 단락루프 강조
-        xray_on = state.highlight_short_loop or (
-            mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
+        xray_on = state.highlight_short_loop                   # 전기 전용: 단락루프 강조만 (베어링 투시는 _legacy)
         driver.set_opacity(["endshield_de"], 0.40 if xray_on else 1.0)
         if m1:                                      # M1 모델: 하우징 투시 대신 cutaway variant (런타임 섹션 없이 절단 메시로). half_translucent* 는 이미 안이 비치므로 그대로 둔다
             m1.set_view("cutaway" if (xray_on and not args.view.startswith("half_translucent")) else args.view)
         if state.highlight_short_loop:
             driver.housing_transparent(True, opacity=0.25)
-        elif mode in ("electrical", "integrated"):
-            driver.set_opacity(["housing_frame"], 0.68)
         else:
-            driver.set_opacity(["housing_frame"], 1.0)
+            driver.set_opacity(["housing_frame"], 0.68)
 
     # ---------- 시각: 전류 경로·입자 ----------
     with _prof("paths"):
-        show_current = mode in ("electrical", "integrated")
+        show_current = True
         particles.set_visible(show_current)
         loop = cm.short_loop(case)
         cur, stt = {}, {}
@@ -1034,7 +1052,9 @@ while simulation_app.is_running():
     # ---------- M1 전체 모델: 회전(ω 적분)·열 색·단락 루프 발광 — 새 계산 없음 ----------
     if m1:
         m1.step_rotation(w, dt_real)
-        m1.update(th.temperature_C, th.stage, t_real, THRESHOLDS, cm.loop_loss_W(case), M1_PLOOP_MAX, mode)
+        m1.update(None, th.stage, t_real, THRESHOLDS, cm.loop_loss_W(case), M1_PLOOP_MAX, thermal_on=False)   # 전기 전용: 단락 발광만
+        if SELFTEST["pending"] is not None and SELFTEST["pending"]["t_apply"] is not None and SELFTEST["pending"]["t_glow"] is None and case == SELFTEST["pending"]["expect_case"]:
+            SELFTEST["pending"]["t_glow"] = time.perf_counter()
         m1.hide_prims(["/World/CurrentPaths"])      # 경로 set_visible(MakeVisible)이 매 프레임 조상을 다시 보이게 하므로 뒤에서 다시 숨긴다
         m1.run_shots(t_session, set_camera_view, world.render)
 
@@ -1086,18 +1106,11 @@ while simulation_app.is_running():
     # ---------- HUD ----------
     with _prof("hud"):
         if hud:
-            if mode in ("electrical", "integrated"):
-                hud.update_current(st_line, levels={p: levels.get(("current_ratio", p), "SAFE") for p in "ABC"},
-                                   i2i1_level=levels.get(("i2i1", "-"), "SAFE"))
-                _rl, _rok = analysis_ref_line(mode, case, st_line)
-                if _rl:
-                    hud.update_reference(_rl, _rok)
-            if mode in ("mechanical", "integrated"):
-                hud.update_thermal({k: th.temperature_C[k] for k in HUD_TEMP_KEYS},
-                                   {k: th.stage[k] for k in HUD_TEMP_KEYS},
-                                   HUD_TEMP_EN, HUD_TEMP_KEYS,
-                                   levels={k: levels.get(("temperature", k), "SAFE") for k in HUD_TEMP_KEYS})
-                hud.update_vibration(vib, zone, level=levels.get(("vibration", "-"), "SAFE"))
+            hud.update_current(st_line, levels={p: levels.get(("current_ratio", p), "SAFE") for p in "ABC"},
+                               i2i1_level=levels.get(("i2i1", "-"), "SAFE"))
+            _rl, _rok = analysis_ref_line(mode, case, st_line)
+            if _rl:
+                hud.update_reference(_rl, _rok)
             if verdict.status == "SAFE":
                 _cause = "all signals within safe range"
             else:
@@ -1108,9 +1121,12 @@ while simulation_app.is_running():
             if bridge is not None:
                 hud.set_live(f"LIVE  {bridge.url}   clients {bridge.clients}")
             _steps_en = STEP_EN_BY_MODE.get(mode, {})
-            title = _steps_en.get(frame.step_id, frame.label) if frame else CASE_EN.get(case, case)
+            if case == MANUAL_CASE:
+                title = f"Manual inter-turn short {state.manual.turns}T  R_f {state.manual.R_f_ohm:g} ohm  ({PHASE_EN.get(state.fault_phase, state.fault_phase)} {state.manual.coil})"
+            else:
+                title = _steps_en.get(frame.step_id, frame.label) if frame else CASE_EN.get(case, case)
             sub = (frame.subtitle_en if frame else
-                   f"Mode: {mode} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
+                   f"Electrical only / {'manual (panel)' if state.control_source == 'manual' else 'scenario'} / load {state.load * 100:.0f}% / time x{state.time_scale:.0f}")
             if MOTOR:
                 sub = sub.replace("ISO 20816-3", VIB_STD)      # 시나리오 자막의 규격 이름을 모터 규격으로
             if "{" in sub:                                     # 자막 변수 (모터별 전류 수치, D-1 ②)
@@ -1148,7 +1164,7 @@ while simulation_app.is_running():
             "faults": list(faults), "load": round(state.load, 2), "time_scale": state.time_scale, "slowmo": state.slowmo, "rpm": round(_rpm, 1),
             "T": {k: round(th.temperature_C[k], 1) for k in tm.node_keys}, "stage": dict(th.stage),
             "loss_W": {k: round(float(th.loss_W.get(k, 0.0)), 1) for k in tm.node_keys},        # 부품별 손실열 (대시보드 원인 패널)
-            "Ia_rms": round(st_line.rms_A[0], 1), "Ib_rms": round(st_line.rms_A[1], 1), "Ic_rms": round(st_line.rms_A[2], 1),
+            "Ia_rms": round(st_line.rms_A[0], 2), "Ib_rms": round(st_line.rms_A[1], 2), "Ic_rms": round(st_line.rms_A[2], 2),   # 송신 정밀도 0.01 A (패널 Q1 §4.8; 엔진·판정 입력은 그대로)
             "i2_over_i1": round(st_line.i2_over_i1, 4), "rated_line_A": i_line, "current_status": list(st_line.status),
             # D4/D5 추가 키 (schema 1 유지 — 기존 키·구조는 그대로, 아래는 덧붙임): 부하 무관 지표·근거 배지·단락 루프 손실·게이지 눈금
             "i2_over_in": None if st_line.i2_over_in is None else round(st_line.i2_over_in, 4),
@@ -1168,7 +1184,34 @@ while simulation_app.is_running():
         }
         _sig = case_sig.get(case)                           # 레이아웃 A (schema 1 유지 — 덧붙임): 케이스별 I₁·I₂·I₀ [A RMS] + 2주기 파형 (export case_signals 와 같은 식)
         if _sig:
+            if _shift:                                           # 결함 상 순환은 파형·성분 표시에도 같은 순서로
+                _wf = dict(_sig["waveform_last_2cycles"]); _abc = [_wf["A"], _wf["B"], _wf["C"]]
+                _wf["A"], _wf["B"], _wf["C"] = _abc[-_shift % 3], _abc[(1 - _shift) % 3], _abc[(2 - _shift) % 3]
+                _sig = {**_sig, "waveform_last_2cycles": _wf}
             state_dict.update(_sig)
+        # 패널 Q1 (덧붙임, 계산 없음): 조작 주체·수동 사양·I₂/I₁ 지속 시계(Judge 내부 시계 노출)
+        _pk = ("i2i1", "-"); _since = judge._since.get(_pk); _curlv = judge._state.get(_pk)
+        state_dict["control_source"] = state.control_source
+        state_dict["manual_fault"] = ({**state.manual.to_dict(), "phase_label": PHASE_LABELS.get(state.manual.phase, state.manual.phase), "case": case} if state.control_source == "manual" else None)
+        state_dict["persistence"] = {"kind": "i2i1", "need_s": float(judge.persist.get("i2i1", 0.0)), "level": _curlv or "SAFE", "raw_level": _since[0] if _since else "SAFE",
+                                     "pending_s": round(max(0.0, t_session - _since[1]), 2) if (_since and _since[0] != (_curlv or "SAFE")) else 0.0}
+        if panel:
+            panel.update_readings(state_dict, state_dict["persistence"], streamer.clients if streamer is not None else 0)
+        if SELFTEST["pending"] is not None and SELFTEST["pending"]["t_apply"] is not None and SELFTEST["pending"]["t_state"] is None and case == SELFTEST["pending"]["expect_case"]:
+            _e = SELFTEST["pending"]; _e["t_state"] = time.perf_counter()
+            SELFTEST["events"].append({"turns": _e["turns"], "case": case, "attr_to_apply_ms": round((_e["t_apply"] - _e["t_attr"]) * 1000, 1),
+                                       "attr_to_glow_ms": round(((_e["t_glow"] or _e["t_state"]) - _e["t_attr"]) * 1000, 1), "attr_to_state_ms": round((_e["t_state"] - _e["t_attr"]) * 1000, 1),
+                                       "i2i1": state_dict["i2_over_i1"], "status": state_dict["status"]["status"]})
+            SELFTEST["pending"] = None
+            if SELFTEST["done"] and not SELFTEST.get("saved"):
+                SELFTEST["saved"] = True
+                import statistics as _st
+                _ms = [x["attr_to_state_ms"] for x in SELFTEST["events"]]; _gl = [x["attr_to_glow_ms"] for x in SELFTEST["events"]]
+                _summary = {"n": len(_ms), "attr_to_state_ms": {"p50": _st.median(_ms), "p95": sorted(_ms)[max(0, int(len(_ms) * 0.95) - 1)], "max": max(_ms)},
+                            "attr_to_glow_ms": {"p50": _st.median(_gl), "p95": sorted(_gl)[max(0, int(len(_gl) * 0.95) - 1)], "max": max(_gl)}, "events": SELFTEST["events"]}
+                with open(os.path.join(RUN_LOG_DIR, "panel_selftest.json"), "w", encoding="utf-8") as _f:
+                    json.dump(_summary, _f, ensure_ascii=False, indent=1)
+                print("[panel] selftest " + json.dumps({k: v for k, v in _summary.items() if k != "events"}), flush=True)
         if bridge is not None:
             bridge.publish(state_dict)
         if verify_log is not None:

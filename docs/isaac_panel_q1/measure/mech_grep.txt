@@ -1,0 +1,220 @@
+motor_dt_viz/app/demo_integrated.py:2:"""demo_integrated.py — Phase 4: 통합 모드 + 제어 패널 + 자동 재생 (원클릭 데모).
+motor_dt_viz/app/demo_integrated.py:9:  C:\\ISSACS~1\\python.bat motor_dt_viz\\app\\demo_integrated.py --gui
+motor_dt_viz/app/demo_integrated.py:10:  C:\\ISSACS~1\\python.bat motor_dt_viz\\app\\demo_integrated.py --gui --autoplay   # 즉시 자동 재생
+motor_dt_viz/app/demo_integrated.py:32:    with open(os.path.join(LOG_DIR, "demo_integrated_error.txt"), "w", encoding="utf-8") as f:
+motor_dt_viz/app/demo_integrated.py:41:ap.add_argument("--mode", choices=("mechanical", "electrical", "integrated"),
+motor_dt_viz/app/demo_integrated.py:42:                default="integrated", help="시작 모드 (기계 전용 / 전기 전용 / 통합)")
+motor_dt_viz/app/demo_integrated.py:51:ap.add_argument("--log_subdir", default="", help="CSV·녹화 메타를 logs/<subdir>/ 에 둔다 (예: mechanical)")
+motor_dt_viz/app/demo_integrated.py:55:                help="모드 전환 잔상 검증용. 예) electrical:60,mechanical:80,integrated:100")
+motor_dt_viz/app/demo_integrated.py:362:        "mechanical": [(14.0, "full", "wide", "01_mech_normal.png"), (52.0, "cutaway", "bearing_de", "02_mech_bearing_de.png"), (78.0, "cutaway", "close", "03_mech_misalignment.png"),
+motor_dt_viz/app/demo_integrated.py:365:        "integrated": [(14.0, "full", "wide", "01_int_normal.png"), (58.0, "cutaway", "bearing_de", "02_int_bearing_de.png"), (92.0, "cutaway", "fault_focus", "03_int_itsc_4turn.png"),
+motor_dt_viz/app/demo_integrated.py:371:                            (48.6, args.view, "fault_focus", "hud_03_danger_t48.6.png"), (70.0, args.view, "wide", "hud_04_steady_t70.0.png")] for m_ in ("integrated", "mechanical", "electrical")}
+motor_dt_viz/app/demo_integrated.py:376:                            (58.0, _v, "bearing_de", "04_half_bearing_de.png"), (92.0, _v, "fault_focus", "03_half_itsc_4turn.png")] for m_ in ("integrated", "mechanical", "electrical")}
+motor_dt_viz/app/demo_integrated.py:462:        for m in ("mechanical", "electrical"):
+motor_dt_viz/app/demo_integrated.py:535:        if f in LIVE_THERMAL and state.mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:541:        if f in LIVE_ELECTRICAL and state.mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:625:    "integrated": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
+motor_dt_viz/app/demo_integrated.py:629:    "mechanical": {"normal": "1. Normal operation", "bearing_fault": "2. DE bearing degradation",
+motor_dt_viz/app/demo_integrated.py:722:    if mode_ == "mechanical":
+motor_dt_viz/app/demo_integrated.py:733:status_path = os.path.join(LOG_DIR, "demo_integrated_status.json")
+motor_dt_viz/app/demo_integrated.py:968:        winding_pu = cm.winding_current_pu(st_phase) if mode in ("electrical", "integrated") else None
+motor_dt_viz/app/demo_integrated.py:972:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:974:            _loop_W = cm.loop_loss_W(case) if mode == "integrated" else 0.0
+motor_dt_viz/app/demo_integrated.py:976:                         winding_current_pu=winding_pu if mode == "integrated" else None,
+motor_dt_viz/app/demo_integrated.py:995:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:999:            mode in ("mechanical", "integrated") and th.stage["bearing_de"] in ("warning", "danger"))
+motor_dt_viz/app/demo_integrated.py:1005:        elif mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1012:        show_current = mode in ("electrical", "integrated")
+motor_dt_viz/app/demo_integrated.py:1089:            if mode in ("electrical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1095:            if mode in ("mechanical", "integrated"):
+motor_dt_viz/app/demo_integrated.py:1276:with open(os.path.join(RUN_LOG_DIR, "demo_integrated.json"), "w", encoding="utf-8") as f:
+motor_dt_viz/ui/control_panel.py:22:MODES = ("mechanical", "electrical", "integrated")
+motor_dt_viz/ui/control_panel.py:23:MODE_LABEL = {"mechanical": "Mechanical only", "electrical": "Electrical only",
+motor_dt_viz/ui/control_panel.py:24:              "integrated": "Integrated"}
+motor_dt_viz/ui/control_panel.py:26:MODE_ALIAS = {"thermal": "mechanical"}
+motor_dt_viz/ui/control_panel.py:56:    mode: str = "integrated"
+motor_dt_viz/ui/control_panel.py:120:                    ui.Label("MECHANICAL FAULTS", style=S(15, 0xFF66DDFF))
+motor_dt_viz/ui/control_panel.py:176:        elif mode == "mechanical":
+motor_dt_viz/ui/control_panel.py:188:        self._sec_mech.visible = mode in ("mechanical", "integrated")
+motor_dt_viz/ui/control_panel.py:189:        self._sec_elec.visible = mode in ("electrical", "integrated")
+motor_dt_viz/viz/hud.py:181:        mechanical : 온도·진동만          electrical : 전류만
+motor_dt_viz/viz/hud.py:182:        integrated : 둘 다 (범례는 전류용 — 두 범례를 같이 띄우면 창을 넘는다)
+motor_dt_viz/viz/hud.py:184:        show_elec = mode in ("electrical", "integrated")
+motor_dt_viz/viz/hud.py:185:        show_therm = mode in ("mechanical", "thermal", "integrated")
+motor_dt_viz/viz/m1_model.py:4:새 계산 없음: 온도·단계·단락 루프 손실·각속도는 demo_integrated 가 이미 계산한 값을 받는다.
+motor_dt_viz/viz/m1_model.py:169:            if node in temperatures and mode in ("mechanical", "integrated"):
+motor_dt_viz/engine/scenario_player.py:67:        "mechanical": "scenario_mechanical",
+motor_dt_viz/engine/scenario_player.py:69:        "integrated": "scenario",
+motor_dt_viz/engine/scenario_player.py:123:            mode=step.get("mode", "integrated"),
+motor_dt_viz/engine/scenario_player.py:145:            mode=d.get("mode", "integrated"),
+motor_dt_viz/tools/compare_demo_logs.py:4:  <python> tools/compare_demo_logs.py --mode mechanical --ref logs/mechanical/demo_20260922_174529.csv --new logs/r1_live_mech/demo_*.csv
+motor_dt_viz/tools/compare_demo_logs.py:23:COLS = {"mechanical": (["T_winding", "T_stator_core", "T_rotor", "T_shaft", "T_bearing_de", "T_bearing_nde", "T_frame", "vibration_mms"],
+motor_dt_viz/tools/compare_demo_logs.py:45:    ap.add_argument("--mode", required=True, choices=("mechanical", "electrical"))
+motor_dt_viz/tools/electrical/verify_lut_integration.py:11:  V7  라이브 10 s: Isaac Sim demo_integrated --live --motor M1 --mode electrical 을 띄워 state 에 새 키가 오고 값이 맞는지 (--skip-live 로 생략)
+motor_dt_viz/tools/electrical/verify_lut_integration.py:205:    lines.append("\n## V7. 라이브 10 s (Isaac Sim `demo_integrated --live --motor M1 --mode electrical`, 검증 포트)\n")
+motor_dt_viz/tools/electrical/verify_lut_integration.py:230:               "app/demo_integrated.py(state 키 추가·열 연동·CSV 열), viz/hud.py, tools/electrical/*, tests/test_lut_source.py, data/electrical/*, dashboard(src 5개·css·dist 빌드). "
+motor_dt_viz/tools/electrical/verify_lut_integration.py:250:    cmd = f'"{ISAAC_PY}" app\\demo_integrated.py --mode electrical --motor M1 --live --live_port {port} --max_s 45 --log_subdir verify_lut'
+motor_dt_viz/tools/fleet_compare.py:73:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tools/fleet_compare.py:76:        L += [f"## {'기계' if mode == 'mechanical' else '전기'} 모드 — 장면 끝 상태 (원인 신호 값)", "",
+motor_dt_viz/tools/fleet_compare.py:87:        L += ["", f"### {'기계' if mode == 'mechanical' else '전기'} 모드 — 상태 시간 점유율·변경 행", "",
+motor_dt_viz/tools/fleet_summary.py:70:    player = ScenarioPlayer.for_mode("mechanical")
+motor_dt_viz/tools/fleet_summary.py:94:            rows = [r for r in read(mid, "mechanical", "status_fleet.csv") if t0 <= float(r["t_real_s"]) < t1]
+motor_dt_viz/tools/fleet_summary.py:95:            demo = [r for r in read(mid, "mechanical", "demo_fleet.csv") if t0 <= float(r["t_real_s"]) < t1]
+motor_dt_viz/tools/fleet_summary.py:124:        rows = [r for r in read(mid, "mechanical", "status_fleet.csv") if float(r["t_real_s"]) >= t0]
+motor_dt_viz/tools/fleet_summary.py:153:        rows = read(mid, "mechanical", "status_fleet.csv")
+motor_dt_viz/tools/live_demo_drive.py:7:통합 모드(--mode integrated)에서 돌려야 2·3 이 둘 다 적용된다. 각 ack 와 전환 시간을 stdout 과 --out JSON 에 남긴다.
+motor_dt_viz/tools/media/capture_all.py:70:    "mechanical": [
+motor_dt_viz/tools/media/capture_all.py:87:    "mechanical": [
+motor_dt_viz/tools/media/capture_all.py:92:PHOTO_RUNS = {"electrical": ("media_elec", 222), "mechanical": ("media_mech", 82)}       # (log_subdir, max_s)
+motor_dt_viz/tools/media/capture_all.py:97:    "vid_mech": ("mechanical", "0:full:iso;26:cutaway:bearing_de;61:cutaway:close", 86, False),
+motor_dt_viz/tools/media/capture_all.py:98:    "vid_int": ("integrated", "0:full:iso;31:cutaway:bearing_de;71:cutaway:fault_focus;106:cutaway:fault_focus;151:full:iso", 168, False),
+motor_dt_viz/tools/media/capture_all.py:106:    ("05_mechanical_bearing", "vid_mech", 10.0, 85.0, "기계 시나리오 — 정상 → DE 베어링 열화 → 축 정렬 불량", "기계 시나리오 10~85 s: 정상(~25)·DE 베어링 열화(25~60)·축 정렬 불량(60~85)"),
+motor_dt_viz/tools/media/capture_all.py:107:    ("06_integrated_full", "vid_int", 0.0, 166.0, "통합 시나리오 — 베어링 열화 + 턴간 단락 4턴 → 12턴", "통합 시나리오 전체 0~166 s: 정상·베어링·4턴·12턴·결론"),
+motor_dt_viz/tools/media/capture_all.py:188:        lines.append(f'echo [media] retake && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode electrical --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:194:        lines.append(f'echo [media] photos {mode} && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode {mode} --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:200:        lines.append(f'echo [media] video {name} && call {ISAAC_PY} app\\demo_integrated.py --gui --autoplay --mode {mode} --motor M1 --view full --res {W} {H} '
+motor_dt_viz/tools/media/capture_all.py:240:    if mode in ("electrical", "integrated"):
+motor_dt_viz/tools/media/capture_all.py:245:    if mode in ("mechanical", "integrated"):
+motor_dt_viz/tools/media/capture_all.py:250:        if mode == "mechanical":
+motor_dt_viz/tools/media/capture_all.py:313:            if r.get(k, "") not in ("", None) and (k.startswith("I") or k.startswith("i")) == (r["mode"] in ("electrical", "integrated")):
+motor_dt_viz/tools/media/capture_all.py:544:         "- 대시보드 네이티브 title 툴팁은 스크린샷에 안 찍혀 같은 문장을 DOM 오버레이로 그렸다(페이지 코드 변경 없음, 캡션에 원문).", "- 해설 화면(#/electrical, #/mechanical)은 이전 22 kW 녹화 영상을 재생하므로 제외했다 — 상태 보드(#/status) 기준으로 대체.",
+motor_dt_viz/tools/media/capture_all.py:574:    ap.add_argument("--skip", default="", help="plan: 건너뛸 run (electrical,mechanical,orbit,vid_elec,vid_mech,vid_int)")
+motor_dt_viz/tools/r0_proto/ws_proto_server.py:3:기존 demo_integrated.py 를 그대로 실행한다 (메인 루프는 수정하지 않음). FPS 저하·접속 가능 여부만 본다.
+motor_dt_viz/tools/run_fleet.py:4:  python tools/run_fleet.py                          # M1..M5 × mechanical,electrical → logs/fleet/<id>/<mode>/
+motor_dt_viz/tools/run_fleet.py:8:  demo_fleet.csv     데모(demo_integrated.py)와 같은 컬럼 — 기존 export 도구가 그대로 읽는다
+motor_dt_viz/tools/run_fleet.py:65:        faults = list(f.thermal_faults) if mode == "mechanical" else []
+motor_dt_viz/tools/run_fleet.py:67:        if mode == "mechanical":
+motor_dt_viz/tools/run_fleet.py:112:    for mode, cols, tol in (("mechanical", ["T_winding", "T_bearing_de", "T_shaft", "T_frame"], 2.5),
+motor_dt_viz/tools/run_fleet.py:135:    ap.add_argument("--modes", default="mechanical,electrical")
+motor_dt_viz/tools/split_clips.py:10:  python tools/split_clips.py --mode mechanical --video ../dashboard/public/media/mechanical/mechanical_full.mp4
+motor_dt_viz/tools/split_clips.py:30:MODE_KO = {"mechanical": "기계", "electrical": "전기", "integrated": "통합"}
+motor_dt_viz/tools/split_clips.py:62:    ap.add_argument("--mode", required=True, choices=("mechanical", "electrical", "integrated"))
+motor_dt_viz/tools/verify/build_analysis_reference.py:216:           "mechanical_note": "Maxwell 근거 없음 — 진동·베어링 상수(ISO 10816-1 Class I 표준 / AI Hub 참고 데이터셋)"}
+motor_dt_viz/tools/verify/hud_composite.py:6:  PNG 이름 규칙: hud_<nn>_<태그>_t<초>.png (demo_integrated --m1_shots + --verify_dir 의 verify 계획)
+motor_dt_viz/tools/verify/scenario_itsc_12turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_12turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_12turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_12turn_thermal.yaml:8:manual_defaults: { mode: integrated, load: 1.0, time_scale: 60, slowmo_factor: 0.016667, electrical_case: healthy, faults: [] }
+motor_dt_viz/tools/verify/scenario_itsc_16turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_16turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_16turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_16turn_thermal.yaml:8:manual_defaults: { mode: integrated, load: 1.0, time_scale: 60, slowmo_factor: 0.016667, electrical_case: healthy, faults: [] }
+motor_dt_viz/tools/verify/scenario_itsc_4turn_thermal.yaml:5:      duration_s: 20, time_scale: 90, mode: integrated, electrical_case: healthy, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_4turn_thermal.yaml:7:      duration_s: 200, time_scale: 90, mode: integrated, electrical_case: itsc_4turn, faults: [], load: 1.0 }
+motor_dt_viz/tools/verify/scenario_itsc_4turn_thermal.yaml:8:manual_defaults: { mode: integrated, load: 1.0, time_scale: 60, slowmo_factor: 0.016667, electrical_case: healthy, faults: [] }
+motor_dt_viz/tools/verify/sim_vs_analysis.py:225:        events_tbl.append({"scenario": sid + " (integrated thermal)", "t_inject_s": t_inj, "events": [{"t": fnum(e["t_real_s"]), "to": e["to"], "cause": e["cause_signal"], "value": e["cause_value"]} for e in ev], "final": post[-1]["status"], "cause": post[-1]["cause_signal"]})
+motor_dt_viz/tools/verify/write_report.py:38:         "", "> 새 계산·새 해석·설정 변경 없음. 시뮬은 기존 장면·엔진·LUT 로 돌렸고(Isaac Sim 헤드리스 자동 재생, `demo_integrated.py --verify_dir` 로깅 훅), 대조·그림·표는 스크립트가 로그와 해석 파일에서 읽어 만들었다(수기 숫자 없음). 기계 결함은 Maxwell 근거가 없어 출처만 표기한다.", "",
+motor_dt_viz/tools/viz/shot_with_hud.py:3:HUD 와 같은 내용(상태·I₂/I₁·I₂/I_n·전류·온도·판정·해석 기준 한 줄)을 오버레이로 합성한다. 새 계산 없음 — 값은 전부 demo_integrated 의 엔진 출력(state.csv)이다.
+motor_dt_viz/tools/viz/shot_with_hud.py:7:  py -3.12 -X utf8 tools\\viz\\shot_with_hud.py run  --scenario mechanical --view cutaway
+motor_dt_viz/tools/viz/shot_with_hud.py:35:    "mechanical": [("07_bearing_de", 52.0, "bearing_de", "DE 베어링 열화 — kurtosis·진동"), ("08_misalignment", 78.0, "close", "축 정렬 불량 — 양쪽 베어링·축 온도"),
+motor_dt_viz/tools/viz/shot_with_hud.py:46:    cmd = [ISAAC_PY, r"app\demo_integrated.py", "--gui", "--autoplay", "--mode", scenario, "--motor", "M1", "--view", view,
+motor_dt_viz/tools/viz/shot_with_hud.py:75:        if mode in ("electrical", "integrated"):
+motor_dt_viz/tools/viz/shot_with_hud.py:78:        if mode in ("mechanical", "integrated"):
+motor_dt_viz/tools/viz/shot_with_hud.py:83:            if mode == "mechanical":
+motor_dt_viz/tools/viz/shot_with_hud.py:110:    ap.add_argument("--scenario", default="electrical", choices=("electrical", "mechanical"))
+motor_dt_viz/tools/viz/shot_with_hud.py:117:    scen = ("electrical", "mechanical") if a.cmd == "all" else (a.scenario,)
+motor_dt_viz/tests/test_dashboard_fleet_export.py:26:@pytest.mark.parametrize("mode", ["electrical", "mechanical"])
+motor_dt_viz/tests/test_fleet.py:65:def test_mechanical_small_motor_runs_cooler_than_reference(tmp_path):
+motor_dt_viz/tests/test_fleet.py:67:    a = rf.run_one(ml.load_motor("M1"), "mechanical", str(tmp_path / "M1"))
+motor_dt_viz/tests/test_fleet.py:91:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tests/test_fleet.py:102:        assert os.path.exists(os.path.join(FLEET, mid, "mechanical", "status_fleet.csv"))
+motor_dt_viz/tests/test_live_bridge.py:66:            b.publish({"t_s": 1.0, "mode": "mechanical", "perf": {"fps": 60.0}})
+motor_dt_viz/tests/test_live_bridge.py:155:    # demo_integrated 는 Isaac 없이 import 할 수 없으므로 함수 소스만 떼어 실행한다
+motor_dt_viz/tests/test_live_bridge.py:156:    src = open(os.path.join(VIZ, "app", "demo_integrated.py"), encoding="utf-8").read()
+motor_dt_viz/tests/test_live_bridge.py:159:    out = ns["restart_args"](["--gui", "--autoplay", "--mode", "integrated", "--live", "--live_port", "8766", "--motor", "M5", "--max_s", "90", "--low"], "M1")
+motor_dt_viz/tests/test_live_bridge.py:160:    assert out == ["--gui", "--mode", "integrated", "--live", "--live_port", "8766", "--low", "--motor", "M1"]
+motor_dt_viz/tests/test_scenario.py:124:    for mode, expect_s in (("mechanical", 180.0), ("electrical", 165.0)):
+motor_dt_viz/tests/test_scenario.py:131:def test_mechanical_scenario_has_no_electrical_faults():
+motor_dt_viz/tests/test_scenario.py:133:    p = ScenarioPlayer.for_mode("mechanical")
+motor_dt_viz/tests/test_scenario.py:136:        assert step["mode"] == "mechanical", step["id"]
+motor_dt_viz/tests/test_scenario.py:149:    for mode in ("mechanical", "electrical"):
+motor_dt_viz/tests/test_scenario.py:166:def test_mechanical_winding_heats_without_current_coupling():
+motor_dt_viz/tests/test_verify_tools.py:95:    assert ref["mechanical_note"].startswith("Maxwell 근거 없음")
+motor_dt_viz/tests/test_verify_tools.py:112:        assert all(s["time_scale"] == 90 and s["mode"] == "integrated" for s in c["steps"])
+motor_dt_viz/config/live.yaml:1:# live.yaml — 라이브 모드 (Isaac Sim ↔ 대시보드 WebSocket) 설정. app/live_bridge.py 와 demo_integrated.py --live 가 읽는다.
+motor_dt_viz/config/live.yaml:26:  set_mode: { modes: [mechanical, electrical, integrated] }
+motor_dt_viz/config/render_demo.yaml:1:# render_demo.yaml — 데모 렌더 프리셋 (TASK 실시간 §8 R4). demo_integrated.py --preset <이름> 으로 한 줄 전환. 숫자는 여기에만.
+motor_dt_viz/config/scenario.yaml:20:    mode: integrated
+motor_dt_viz/config/scenario.yaml:31:    mode: integrated
+motor_dt_viz/config/scenario.yaml:42:    mode: integrated
+motor_dt_viz/config/scenario.yaml:53:    mode: integrated
+motor_dt_viz/config/scenario.yaml:64:    mode: integrated
+motor_dt_viz/config/scenario.yaml:72:  mode: integrated            # thermal | electrical | integrated
+motor_dt_viz/config/scenarios_M1.yaml:3:# mechanical / integrated: 공용 scenario_mechanical.yaml / scenario.yaml 과 같은 장면·배속, 자막만 M1 값 (파트 C S2, 2026-10-21).
+motor_dt_viz/config/scenarios_M1.yaml:182:# 기계 7 장면 (파트 C S2, 2026-10-21): 장면·배속·결함은 scenario_mechanical.yaml(22 kW 공용)과 같고, 자막만 M1 값(베어링 6206ZZC3, ISO 10816-1 Class I 위험 4.5 mm/s).
+motor_dt_viz/config/scenarios_M1.yaml:185:mechanical:
+motor_dt_viz/config/scenarios_M1.yaml:199:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:211:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:223:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:235:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:247:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:259:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:271:      mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:277:    mode: mechanical
+motor_dt_viz/config/scenarios_M1.yaml:285:integrated:
+motor_dt_viz/config/scenarios_M1.yaml:299:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:311:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:323:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:336:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:349:      mode: integrated
+motor_dt_viz/config/scenarios_M1.yaml:355:    mode: integrated
+motor_dt_viz/config/scenario_mechanical.yaml:1:# scenario_mechanical.yaml — 기계적 결함 전용 자동 재생 시나리오
+motor_dt_viz/config/scenario_mechanical.yaml:31:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:44:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:57:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:70:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:83:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:96:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:109:    mode: mechanical
+motor_dt_viz/config/scenario_mechanical.yaml:117:  mode: mechanical
+motor_dt_viz/config/status_demo.yaml:13:  - { id: bearing,     label: "DE 베어링 경고",  mode: mechanical, t_s: 27.5,  expect: WARN }
+dashboard/src/App.tsx:3:// 2026-10-27 레이아웃 A: 대시보드는 실시간 전기 상태 보드 하나다 (#/status). 녹화 재생·해설(#/mechanical, #/electrical)·발표자 화면·전문가 보기는
+dashboard/src/data.ts:4:export type Mode = "mechanical" | "electrical";
+dashboard/src/data.ts:28:    // 기계 모드 export 확장 (export_mechanical_extras.py) — 전기 모드 JSON 에는 없다
+dashboard/src/live/feed.ts:33:  motor_id: string; mode: "mechanical" | "electrical" | "integrated"; step: string; case: string; scene: LiveScene | null;
+dashboard/src/live/livedata.ts:25:export function pageMode(m: LiveState["mode"]): "mechanical" | "electrical" { return m === "electrical" ? "electrical" : "mechanical"; }
+dashboard/src/live/livedata.ts:60:    motor: first?.motor_id ?? "", mode: pageMode(first?.mode ?? "mechanical"), n: S.length,
+dashboard/src/live/livedata.ts:82:export function liveEvents(buf: LiveBuffer, index: FleetIndex | null, mode: "mechanical" | "electrical", focusNode?: string): LiveEvent[] {
+dashboard/src/live/livedata.ts:103:      if (mode === "mechanical" && x.kind === "temperature") {
+dashboard/src/live/livedata.ts:109:      } else if (mode === "mechanical" && x.kind === "vibration") {
+dashboard/src/live/livedata.ts:146:    mode: "mechanical", n: S.length, t_real_s: buf.t.slice(), step: col((s) => s.step),
+dashboard/src/live/livedata.ts:156:  const events = liveEvents(buf, index, "mechanical", focusNode) as MechEvent[];
+dashboard/src/live/session.ts:7:// 세 화면(#/status, #/mechanical, #/electrical)이 같은 훅을 쓴다. 토글은 localStorage(vigent-live)로 공유된다.
+dashboard/src/live/types.ts:6:export type Mode = "mechanical" | "electrical";
+dashboard/src/mech/data.ts:1:// mech/data.ts — 기계 실시간 해설 대시보드 전용 데이터 (export_mechanical_extras.py 출력 + content YAML).
+dashboard/src/mech/data.ts:35:  mode: "mechanical";
+dashboard/src/mech/data.ts:44:    getJson<{ events: MechEvent[] }>("data/mechanical/events.json"),
+dashboard/src/mech/data.ts:45:    getJson<{ scenes: Record<string, SceneValues> }>("data/mechanical/narration_values.json"),
+dashboard/src/mech/data.ts:46:    getYaml<{ scenes: Record<string, SceneNarration> }>("content/mechanical/narration.yaml"),
+dashboard/src/mech/data.ts:47:    getYaml<Templates>("content/mechanical/event_templates.yaml"),
+dashboard/src/mech/data.ts:48:    getYaml<{ items: QaItem[] }>("content/mechanical/qa.yaml"),
+dashboard/src/mech/data.ts:55:    ...base, mode: "mechanical", thresholds: th, timeseries: ts, events: events.events, values: values.scenes,
+dashboard/src/mech/data.ts:75:// 장면 종료 값({부품}_end 등)은 narration_values.json 그대로 쓴다. 테스트(test_mechanical_extras.py)가 이 목록을 안다.
+dashboard/src/state/playback.ts:61:  //   예) #/mechanical?t=40
+dashboard/src/status/AnalysisRef.tsx:33:  limitations: string[]; mechanical_note: string;
+dashboard/src/status/AnalysisRef.tsx:110:    return <div className="st-aref"><div className="st-aref-h">{title}</div><div className="st-aref-none">{ref.mechanical_note}</div></div>;
+dashboard/src/status/data.ts:124:    getYaml<{ scenes: Record<string, StatusScene> }>("content/mechanical/narration.yaml"),
+dashboard/src/status/data.ts:129:  return { narration: { mechanical: mech.scenes, electrical: elec.scenes }, glossary: gl.items ?? [], labels: { ...EMPTY_LABELS, ...lb } };
+dashboard/tools/export_dashboard_data.py:9:  python tools/export_dashboard_data.py --mode mechanical
+dashboard/tools/export_dashboard_data.py:227:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:322:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:366:    import export_mechanical_extras as _mx, export_electrical_extras as _ex
+dashboard/tools/export_dashboard_data.py:373:    if mode == "mechanical":
+dashboard/tools/export_dashboard_data.py:376:        from export_mechanical_extras import apply_extras
+dashboard/tools/export_dashboard_data.py:406:    ap.add_argument("--mode", default="all", choices=("mechanical", "electrical", "all"))
+dashboard/tools/export_dashboard_data.py:411:    for m in (("mechanical", "electrical") if a.mode == "all" else (a.mode,)):
+dashboard/tools/export_mechanical_extras.py:2:"""export_mechanical_extras.py — 기계 대시보드(실시간 해설)용 추가 데이터.
+dashboard/tools/export_mechanical_extras.py:37:CONTENT_DIR = os.path.join(DASH, "public", "content", "mechanical")
+dashboard/tools/export_mechanical_extras.py:54:    player = ScenarioPlayer.for_mode("mechanical")
+dashboard/tools/export_mechanical_extras.py:154:    # 투시(엔드실드 반투명): DE 베어링이 경고 이상이면 켜진다 (demo_integrated 의 xray_on 규칙)
+dashboard/tools/export_status_data.py:41:MODES = ("mechanical", "electrical")
+dashboard/tools/export_status_data.py:164:        "time_scale": [scale.get(r["step"], 1.0) if mode == "mechanical" else 1.0 for r in d],
+dashboard/tools/export_status_data.py:207:    node_labels = {p["key"]: p["label"] for p in th["mechanical"]["thermal"]["parts"]}
+dashboard/tests/test_export.py:28:MODES = ("mechanical", "electrical")
+dashboard/tests/test_export.py:127:def test_mechanical_lead_time_is_positive():
+dashboard/tests/test_export.py:128:    sc = _data("mechanical", "scenarios")
+dashboard/tests/test_mechanical_extras.py:24:DATA = os.path.join(DASH, "public", "data", "mechanical")
+dashboard/tests/test_mechanical_extras.py:25:CONTENT = os.path.join(DASH, "public", "content", "mechanical")
+dashboard/tests/test_mechanical_extras.py:36:    files = sorted(glob.glob(os.path.join(VIZ, "logs", "mechanical", "demo_*.csv")))
+dashboard/tests/test_status_export.py:29:MODES = ("mechanical", "electrical")
+dashboard/tests/test_status_export.py:89:@pytest.mark.parametrize("mid,mode", [("M1", "mechanical"), ("M3", "electrical"), ("M5", "mechanical")])
+dashboard/tests/test_status_export.py:108:@pytest.mark.parametrize("mid,mode", [("M1", "mechanical"), ("M3", "mechanical"), ("M2", "electrical"), ("M5", "electrical")])
+dashboard/public/content/mechanical/narration.yaml:5:# public/data/mechanical/narration_values.json 의 값으로 화면에서 치환된다.
